@@ -1,14 +1,14 @@
-import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
+import { getConfigDefaults, SystemRoles } from 'librechat-data-provider';
 import throttle from 'lodash/throttle';
-import { useRecoilValue } from 'recoil';
-import { getConfigDefaults } from 'librechat-data-provider';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ImperativePanelHandle } from 'react-resizable-panels';
+import { useRecoilValue } from 'recoil';
 import { ResizableHandleAlt, ResizablePanel, ResizablePanelGroup } from '~/components/ui/Resizable';
 import { useGetStartupConfig } from '~/data-provider';
-import { normalizeLayout } from '~/utils';
-import { useMediaQuery } from '~/hooks';
-import SidePanel from './SidePanel';
+import { useAuthContext, useMediaQuery } from '~/hooks';
 import store from '~/store';
+import { normalizeLayout } from '~/utils';
+import SidePanel from './SidePanel';
 
 interface SidePanelProps {
   defaultLayout?: number[] | undefined;
@@ -31,6 +31,7 @@ const SidePanelGroup = ({
   children,
 }: SidePanelProps) => {
   const { data: startupConfig } = useGetStartupConfig();
+  const { user } = useAuthContext();
   const interfaceConfig = useMemo(
     () => startupConfig?.interface ?? defaultInterface,
     [startupConfig],
@@ -115,22 +116,24 @@ const SidePanelGroup = ({
             </ResizablePanel>
           </>
         )}
-        {!hideSidePanel && interfaceConfig.sidePanel === true && (
-          <SidePanel
-            panelRef={panelRef}
-            minSize={minSize}
-            setMinSize={setMinSize}
-            isCollapsed={isCollapsed}
-            setIsCollapsed={setIsCollapsed}
-            collapsedSize={collapsedSize}
-            setCollapsedSize={setCollapsedSize}
-            fullCollapse={fullCollapse}
-            setFullCollapse={setFullCollapse}
-            defaultSize={currentLayout[currentLayout.length - 1]}
-            hasArtifacts={artifacts != null}
-            interfaceConfig={interfaceConfig}
-          />
-        )}
+        {!hideSidePanel &&
+          interfaceConfig.sidePanel === true &&
+          user?.role === SystemRoles.ADMIN && (
+            <SidePanel
+              panelRef={panelRef}
+              minSize={minSize}
+              setMinSize={setMinSize}
+              isCollapsed={isCollapsed}
+              setIsCollapsed={setIsCollapsed}
+              collapsedSize={collapsedSize}
+              setCollapsedSize={setCollapsedSize}
+              fullCollapse={fullCollapse}
+              setFullCollapse={setFullCollapse}
+              defaultSize={currentLayout[currentLayout.length - 1]}
+              hasArtifacts={artifacts != null}
+              interfaceConfig={interfaceConfig}
+            />
+          )}
       </ResizablePanelGroup>
       <button
         aria-label="Close right side panel"
