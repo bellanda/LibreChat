@@ -1,12 +1,10 @@
-import React, { useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
-import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, Constants } from 'librechat-data-provider';
-import type { TMessage, TStartupConfig } from 'librechat-data-provider';
-import { NewChatIcon, MobileSidebar, Sidebar } from '~/components/svg';
-import { getDefaultModelSpec, getModelSpecPreset } from '~/utils';
-import { TooltipAnchor, Button } from '~/components/ui';
+import type { TMessage } from 'librechat-data-provider';
+import { Constants, QueryKeys } from 'librechat-data-provider';
+import React, { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MobileSidebar, NewChatIcon, Sidebar } from '~/components/svg';
+import { Button, TooltipAnchor } from '~/components/ui';
 import { useLocalize, useNewConvo } from '~/hooks';
 import store from '~/store';
 
@@ -70,7 +68,8 @@ export default function NewChat({
           }
         />
         <div className="flex">
-          {headerButtons}
+          {/* {headerButtons} */}
+
           <TooltipAnchor
             description={localize('com_ui_new_chat')}
             render={
@@ -79,9 +78,12 @@ export default function NewChat({
                 variant="outline"
                 data-testid="nav-new-chat-button"
                 aria-label={localize('com_ui_new_chat')}
-                className="rounded-full border-none bg-transparent p-2 hover:bg-surface-hover md:rounded-xl"
+                className="w-full rounded-full border-none bg-transparent p-2 hover:bg-surface-hover md:rounded-xl"
                 onClick={clickHandler}
               >
+                <p className="flex items-center justify-center text-sm text-text-primary">
+                  + Novo Chat
+                </p>
                 <NewChatIcon className="icon-md md:h-6 md:w-6" />
               </Button>
             }
