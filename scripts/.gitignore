@@ -1,0 +1,23 @@
+# Logs de execução
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# Backups de dados
+*.bak
+*.backup
+
+# Arquivos de configuração local
+config.local.js
+.env.local
+
+# Dados sensíveis
+user-data/
+exports/
+dumps/
+
+# Arquivos de teste temporários
+test-*.js
+temp-*.js 
