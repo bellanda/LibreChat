@@ -585,6 +585,7 @@ export type TStartupConfig = {
   instanceProjectId: string;
   bundlerURL?: string;
   staticBundlerURL?: string;
+  endpointsOrder?: string;
   webSearch?: {
     searchProvider?: SearchProviders;
     scraperType?: ScraperTypes;
