@@ -94,6 +94,8 @@ function CodeInterpreter({ conversationId }: { conversationId?: string | null })
     return null;
   }
 
+  return (<></>)
+
   return (
     <>
       <CheckboxButton
