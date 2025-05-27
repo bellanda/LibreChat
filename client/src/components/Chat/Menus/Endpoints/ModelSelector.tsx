@@ -61,8 +61,11 @@ function ModelSelectorContent() {
           {selectedIcon}
         </div>
       )}
+
       <span className="flex-grow truncate text-left">
-        {modelsDisplayNames[selectedDisplayValue] || selectedDisplayValue}
+        {selectedDisplayValue in modelsDisplayNames
+          ? modelsDisplayNames[selectedDisplayValue]
+          : selectedDisplayValue}
       </span>
     </button>
   );
