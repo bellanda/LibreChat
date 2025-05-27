@@ -1,11 +1,11 @@
-import { z } from 'zod';
 import type { ZodError } from 'zod';
-import type { TModelsConfig } from './types';
-import { EModelEndpoint, eModelEndpointSchema } from './schemas';
-import { specsConfigSchema, TSpecsConfig } from './models';
+import { z } from 'zod';
 import { fileConfigSchema } from './file-config';
-import { FileSources } from './types/files';
 import { MCPServersSchema } from './mcp';
+import { specsConfigSchema, TSpecsConfig } from './models';
+import { EModelEndpoint, eModelEndpointSchema } from './schemas';
+import type { TModelsConfig } from './types';
+import { FileSources } from './types/files';
 
 export const defaultSocialLogins = ['google', 'facebook', 'openid', 'github', 'discord'];
 
@@ -290,6 +290,15 @@ export const endpointSchema = baseEndpointSchema.merge(
     customOrder: z.number().optional(),
     directEndpoint: z.boolean().optional(),
     titleMessageRole: z.string().optional(),
+    tokenConfig: z
+      .record(
+        z.object({
+          context: z.number().optional(),
+          prompt: z.number().optional(),
+          completion: z.number().optional(),
+        }),
+      )
+      .optional(),
   }),
 );
 
