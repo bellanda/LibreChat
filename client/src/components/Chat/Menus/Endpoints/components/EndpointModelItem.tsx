@@ -1,9 +1,9 @@
-import React from 'react';
-import { EarthIcon } from 'lucide-react';
 import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import { EarthIcon } from 'lucide-react';
 import type { Endpoint } from '~/common';
-import { useModelSelectorContext } from '../ModelSelectorContext';
+import modelsDisplayNames from '~/utils/translateModelsNames';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
+import { useModelSelectorContext } from '../ModelSelectorContext';
 
 interface EndpointModelItemProps {
   modelId: string | null;
@@ -45,11 +45,11 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
           </div>
         ) : (isAgentsEndpoint(endpoint.value) || isAssistantsEndpoint(endpoint.value)) &&
           endpoint.icon ? (
-            <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
-              {endpoint.icon}
-            </div>
-          ) : null}
-        <span>{modelName}</span>
+          <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
+            {endpoint.icon}
+          </div>
+        ) : null}
+        <span>{modelsDisplayNames[modelName || '']}</span>
       </div>
       {isGlobal && <EarthIcon className="ml-auto size-4 text-green-400" />}
       {isSelected && (
