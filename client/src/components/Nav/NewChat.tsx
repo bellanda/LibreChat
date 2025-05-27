@@ -82,7 +82,7 @@ export default function NewChat({
                 onClick={clickHandler}
               >
                 <p className="flex items-center justify-center text-sm text-text-primary">
-                  + Novo Chat
+                  + New Chat
                 </p>
                 <NewChatIcon className="icon-md md:h-6 md:w-6" />
               </Button>
