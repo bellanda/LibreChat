@@ -1,10 +1,10 @@
-import { TranslationKeys, useLocalize } from '~/hooks';
-import { BlinkAnimation } from './BlinkAnimation';
 import { TStartupConfig } from 'librechat-data-provider';
-import SocialLoginRender from './SocialLoginRender';
 import { ThemeSelector } from '~/components/ui';
+import { TranslationKeys, useLocalize } from '~/hooks';
 import { Banner } from '../Banners';
+import { BlinkAnimation } from './BlinkAnimation';
 import Footer from './Footer';
+import SocialLoginRender from './SocialLoginRender';
 
 const ErrorRender = ({ children }: { children: React.ReactNode }) => (
   <div className="mt-16 flex justify-center">
@@ -63,7 +63,8 @@ function AuthLayout({
       <BlinkAnimation active={isFetching}>
         <div className="mt-6 h-10 w-full bg-cover">
           <img
-            src="/assets/logo.svg"
+            // src="/assets/logo.svg"
+            src="/assets/hpe.png"
             className="h-full w-full object-contain"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
           />
@@ -87,8 +88,8 @@ function AuthLayout({
           {children}
           {!pathname.includes('2fa') &&
             (pathname.includes('login') || pathname.includes('register')) && (
-            <SocialLoginRender startupConfig={startupConfig} />
-          )}
+              <SocialLoginRender startupConfig={startupConfig} />
+            )}
         </div>
       </div>
       <Footer startupConfig={startupConfig} />
