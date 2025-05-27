@@ -1,14 +1,14 @@
-import { useMemo } from 'react';
-import { SettingsIcon } from 'lucide-react';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import { SettingsIcon } from 'lucide-react';
+import { useMemo } from 'react';
 import type { Endpoint } from '~/common';
-import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';
-import { useModelSelectorContext } from '../ModelSelectorContext';
-import { renderEndpointModels } from './EndpointModelItem';
-import { TooltipAnchor, Spinner } from '~/components';
-import { filterModels } from '../utils';
+import { Spinner, TooltipAnchor } from '~/components';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
+import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';
+import { useModelSelectorContext } from '../ModelSelectorContext';
+import { filterModels } from '../utils';
+import { renderEndpointModels } from './EndpointModelItem';
 
 interface EndpointItemProps {
   endpoint: Endpoint;
@@ -102,12 +102,12 @@ export function EndpointItem({ endpoint }: EndpointItemProps) {
   if (endpoint.hasModels) {
     const filteredModels = searchValue
       ? filterModels(
-        endpoint,
-        (endpoint.models || []).map((model) => model.name),
-        searchValue,
-        agentsMap,
-        assistantsMap,
-      )
+          endpoint,
+          (endpoint.models || []).map((model) => model.name),
+          searchValue,
+          agentsMap,
+          assistantsMap,
+        )
       : null;
     const placeholder =
       isAgentsEndpoint(endpoint.value) || isAssistantsEndpoint(endpoint.value)
@@ -184,6 +184,12 @@ export function EndpointItem({ endpoint }: EndpointItemProps) {
 }
 
 export function renderEndpoints(mappedEndpoints: Endpoint[]) {
+  // Sort endpoints by order
+  const mappedEndpointsOrder = ['agents', 'alibaba', 'groq', 'google', 'openAI', 'anthropic'];
+  mappedEndpoints.sort(
+    (a, b) => mappedEndpointsOrder.indexOf(a.value) - mappedEndpointsOrder.indexOf(b.value),
+  );
+
   return mappedEndpoints.map((endpoint) => (
     <EndpointItem endpoint={endpoint} key={`endpoint-${endpoint.value}-item`} />
   ));

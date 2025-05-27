@@ -49,7 +49,9 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
             {endpoint.icon}
           </div>
         ) : null}
-        <span>{modelsDisplayNames[modelName || '']}</span>
+        <span>
+          {modelId && modelId in modelsDisplayNames ? modelsDisplayNames[modelId] : modelId}
+        </span>
       </div>
       {isGlobal && <EarthIcon className="ml-auto size-4 text-green-400" />}
       {isSelected && (

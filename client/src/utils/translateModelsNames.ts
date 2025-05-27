@@ -1,6 +1,6 @@
 const modelsDisplayNames = {
-  // When no model is selected, display an empty string
-  '': '',
+  // Agents Models
+  agent_6U1ZE6B0jUgZXtHiT_pwK: 'HPE Ultimate Agent',
   // OpenAI Models
   // OPENAI_MODELS=chatgpt-4o-latest,o3-2025-04-16,o4-mini-2025-04-16,gpt-4.1-2025-04-14,gpt-4.1-mini-2025-04-14,gpt-4.1-nano-2025-04-14
   'chatgpt-4o-latest': 'gpt-4o',
