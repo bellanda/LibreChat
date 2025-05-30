@@ -1,5 +1,8 @@
 ### node etc ###
 
+# config
+groups-config.json
+
 # Logs
 data-node
 meili_data*
