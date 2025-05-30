@@ -23,12 +23,16 @@ const uaParser = require('./uaParser');
 const checkBan = require('./checkBan');
 const noIndex = require('./noIndex');
 const roles = require('./roles');
+const groupPermissions = require('./checkGroupPermissions');
+const conversationPermissions = require('./validateConversationPermissions');
 
 module.exports = {
   ...abortMiddleware,
   ...validate,
   ...limiters,
   ...roles,
+  ...groupPermissions,
+  ...conversationPermissions,
   noIndex,
   checkBan,
   uaParser,

@@ -50,7 +50,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
           </div>
         ) : null}
         <span>
-          {modelId && modelId in modelsDisplayNames ? modelsDisplayNames[modelId] : modelId}
+          {modelId && modelId in modelsDisplayNames ? modelsDisplayNames[modelId] : modelName}
         </span>
       </div>
       {isGlobal && <EarthIcon className="ml-auto size-4 text-green-400" />}

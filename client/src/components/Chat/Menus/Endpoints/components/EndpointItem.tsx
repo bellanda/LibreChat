@@ -3,7 +3,6 @@ import { SettingsIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import type { Endpoint } from '~/common';
 import { Spinner, TooltipAnchor } from '~/components';
-import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';
@@ -184,11 +183,9 @@ export function EndpointItem({ endpoint }: EndpointItemProps) {
   }
 }
 
-export function renderEndpoints(mappedEndpoints: Endpoint[]) {
-  const { data: startupConfig } = useGetStartupConfig();
-  console.log(startupConfig?.endpointsOrder);
+export function renderEndpoints(mappedEndpoints: Endpoint[], endpointsOrder?: string) {
   // Sort endpoints by order
-  const mappedEndpointsOrder = startupConfig?.endpointsOrder?.split(',') || [
+  const mappedEndpointsOrder = endpointsOrder?.split(',') || [
     'agents',
     'openAI',
     'google',

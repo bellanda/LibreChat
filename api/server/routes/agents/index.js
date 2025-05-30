@@ -6,6 +6,7 @@ const {
   messageIpLimiter,
   concurrentLimiter,
   messageUserLimiter,
+  checkAgentAccess,
 } = require('~/server/middleware');
 const { isEnabled } = require('~/server/utils');
 const { v1 } = require('./v1');
@@ -17,6 +18,7 @@ const router = express.Router();
 
 router.use(requireJwtAuth);
 router.use(checkBan);
+router.use(checkAgentAccess());
 router.use(uaParser);
 
 router.use('/', v1);

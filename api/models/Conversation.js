@@ -166,7 +166,13 @@ module.exports = {
       filters.push({ tags: { $in: tags } });
     }
 
-    filters.push({ $or: [{ expiredAt: null }, { expiredAt: { $exists: false } }] });
+    filters.push({
+      $or: [
+        { expiredAt: null },
+        { expiredAt: { $exists: false } },
+        { expiredAt: { $gt: new Date() } }, // Include temporary conversations that haven't expired yet
+      ],
+    });
 
     if (search) {
       try {
@@ -222,7 +228,11 @@ module.exports = {
       const results = await Conversation.find({
         user,
         conversationId: { $in: conversationIds },
-        $or: [{ expiredAt: { $exists: false } }, { expiredAt: null }],
+        $or: [
+          { expiredAt: { $exists: false } },
+          { expiredAt: null },
+          { expiredAt: { $gt: new Date() } }, // Include temporary conversations that haven't expired yet
+        ],
       }).lean();
 
       results.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));

@@ -1,5 +1,5 @@
-import { Schema, Document } from 'mongoose';
 import { SystemRoles } from 'librechat-data-provider';
+import { Document, Schema } from 'mongoose';
 
 export interface IUser extends Document {
   name?: string;
@@ -10,6 +10,7 @@ export interface IUser extends Document {
   avatar?: string;
   provider: string;
   role?: string;
+  userGroup?: string;
   googleId?: string;
   facebookId?: string;
   openidId?: string;
@@ -97,6 +98,10 @@ const User = new Schema<IUser>(
     role: {
       type: String,
       default: SystemRoles.USER,
+    },
+    userGroup: {
+      type: String,
+      default: 'default',
     },
     googleId: {
       type: String,

@@ -8,6 +8,7 @@ const {
   validateEndpoint,
   buildEndpointOption,
   moderateText,
+  validateChatModelAccess,
 } = require('~/server/middleware');
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.use(moderateText);
 
 router.post(
   '/',
+  validateChatModelAccess(),
   validateEndpoint,
   validateModel,
   buildEndpointOption,

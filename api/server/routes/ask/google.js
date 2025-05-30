@@ -1,23 +1,27 @@
 const express = require('express');
 const AskController = require('~/server/controllers/AskController');
-const { initializeClient, addTitle } = require('~/server/services/Endpoints/google');
+const { initializeClient } = require('~/server/services/Endpoints/google');
 const {
   setHeaders,
   validateModel,
   validateEndpoint,
   buildEndpointOption,
+  moderateText,
+  validateChatModelAccess,
 } = require('~/server/middleware');
 
 const router = express.Router();
+router.use(moderateText);
 
 router.post(
   '/',
+  validateChatModelAccess(),
   validateEndpoint,
   validateModel,
   buildEndpointOption,
   setHeaders,
   async (req, res, next) => {
-    await AskController(req, res, next, initializeClient, addTitle);
+    await AskController(req, res, next, initializeClient);
   },
 );
 

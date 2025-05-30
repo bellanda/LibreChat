@@ -11,6 +11,11 @@ const { deleteToolCalls } = require('~/models/ToolCall');
 const { isEnabled, sleep } = require('~/server/utils');
 const getLogStores = require('~/cache/getLogStores');
 const { logger } = require('~/config');
+const {
+  validateConversationPermissions,
+  filterConversationsByPermissions,
+} = require('~/server/middleware');
+const groupPermissionService = require('~/server/services/GroupPermissionService');
 
 const assistantClients = {
   [EModelEndpoint.azureAssistants]: require('~/server/services/Endpoints/azureAssistants'),
@@ -20,7 +25,7 @@ const assistantClients = {
 const router = express.Router();
 router.use(requireJwtAuth);
 
-router.get('/', async (req, res) => {
+router.get('/', filterConversationsByPermissions(), async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const cursor = req.query.cursor;
   const isArchived = isEnabled(req.query.isArchived);
@@ -47,7 +52,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:conversationId', async (req, res) => {
+router.get('/:conversationId', validateConversationPermissions(), async (req, res) => {
   const { conversationId } = req.params;
   const convo = await getConvo(req.user.id, conversationId);
 
@@ -60,22 +65,61 @@ router.get('/:conversationId', async (req, res) => {
 
 router.post('/gen_title', async (req, res) => {
   const { conversationId } = req.body;
-  const titleCache = getLogStores(CacheKeys.GEN_TITLE);
-  const key = `${req.user.id}-${conversationId}`;
-  let title = await titleCache.get(key);
 
-  if (!title) {
-    await sleep(2500);
-    title = await titleCache.get(key);
-  }
+  // Validate conversation access manually since conversationId is in body
+  const userGroup = req.user?.userGroup || 'default';
 
-  if (title) {
-    await titleCache.delete(key);
-    res.status(200).json({ title });
-  } else {
-    res.status(404).json({
-      message: "Title not found or method not implemented for the conversation's endpoint",
-    });
+  try {
+    const conversation = await getConvo(req.user.id, conversationId);
+
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    const { endpoint, model } = conversation;
+
+    // Check if user still has access to the endpoint
+    if (endpoint && !groupPermissionService.hasEndpointAccess(userGroup, endpoint)) {
+      logger.warn(
+        `User ${req.user?.email} (group: ${userGroup}) denied access to conversation ${conversationId} - no access to endpoint: ${endpoint}`,
+      );
+      return res.status(403).json({
+        error: 'Access denied',
+        message: `You no longer have permission to access conversations using the ${endpoint} endpoint`,
+      });
+    }
+
+    // Check if user still has access to the model
+    if (endpoint && model && !groupPermissionService.hasModelAccess(userGroup, endpoint, model)) {
+      logger.warn(
+        `User ${req.user?.email} (group: ${userGroup}) denied access to conversation ${conversationId} - no access to model: ${model}`,
+      );
+      return res.status(403).json({
+        error: 'Access denied',
+        message: `You no longer have permission to access conversations using the ${model} model`,
+      });
+    }
+
+    const titleCache = getLogStores(CacheKeys.GEN_TITLE);
+    const key = `${req.user.id}-${conversationId}`;
+    let title = await titleCache.get(key);
+
+    if (!title) {
+      await sleep(2500);
+      title = await titleCache.get(key);
+    }
+
+    if (title) {
+      await titleCache.delete(key);
+      res.status(200).json({ title });
+    } else {
+      res.status(404).json({
+        message: "Title not found or method not implemented for the conversation's endpoint",
+      });
+    }
+  } catch (error) {
+    logger.error('Error in gen_title:', error);
+    res.status(500).json({ error: 'Error generating title' });
   }
 });
 
@@ -131,7 +175,7 @@ router.delete('/all', async (req, res) => {
   }
 });
 
-router.post('/update', async (req, res) => {
+router.post('/update', validateConversationPermissions(), async (req, res) => {
   const update = req.body.arg;
 
   if (!update.conversationId) {
@@ -183,7 +227,7 @@ router.post(
  * @param {express.Response<TForkConvoResponse>} res - Express response object.
  * @returns {Promise<void>} - The response after forking the conversation.
  */
-router.post('/fork', async (req, res) => {
+router.post('/fork', validateConversationPermissions(), async (req, res) => {
   try {
     /** @type {TForkConvoRequest} */
     const { conversationId, messageId, option, splitAtTarget, latestMessageId } = req.body;
@@ -204,7 +248,7 @@ router.post('/fork', async (req, res) => {
   }
 });
 
-router.post('/duplicate', async (req, res) => {
+router.post('/duplicate', validateConversationPermissions(), async (req, res) => {
   const { conversationId, title } = req.body;
 
   try {

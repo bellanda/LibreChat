@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import type { ModelSelectorProps } from '~/common';
+import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import modelsDisplayNames from '~/utils/translateModelsNames';
 import { CustomMenu as Menu } from './CustomMenu';
@@ -10,6 +11,7 @@ import { getDisplayValue, getSelectedIcon } from './utils';
 
 function ModelSelectorContent() {
   const localize = useLocalize();
+  const { data: startupConfig } = useGetStartupConfig();
 
   const {
     // LibreChat
@@ -90,7 +92,7 @@ function ModelSelectorContent() {
         ) : (
           <>
             {renderModelSpecs(modelSpecs, selectedValues.modelSpec || '')}
-            {renderEndpoints(mappedEndpoints ?? [])}
+            {renderEndpoints(mappedEndpoints ?? [], startupConfig?.endpointsOrder)}
           </>
         )}
       </Menu>

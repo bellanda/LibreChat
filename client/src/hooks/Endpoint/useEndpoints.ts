@@ -1,24 +1,24 @@
-import React, { useMemo, useCallback } from 'react';
-import { useGetModelsQuery } from 'librechat-data-provider/react-query';
+import type {
+  Agent,
+  Assistant,
+  TAgentsMap,
+  TAssistantsMap,
+  TEndpointsConfig,
+  TStartupConfig,
+} from 'librechat-data-provider';
 import {
   EModelEndpoint,
   PermissionTypes,
   Permissions,
   alternateName,
 } from 'librechat-data-provider';
-import type {
-  Agent,
-  Assistant,
-  TEndpointsConfig,
-  TAgentsMap,
-  TAssistantsMap,
-  TStartupConfig,
-} from 'librechat-data-provider';
+import { useGetModelsQuery } from 'librechat-data-provider/react-query';
+import React, { useCallback, useMemo } from 'react';
 import type { Endpoint } from '~/common';
-import { mapEndpoints, getIconKey, getEndpointField } from '~/utils';
 import { useGetEndpointsQuery } from '~/data-provider';
-import { useChatContext } from '~/Providers';
 import { useHasAccess } from '~/hooks';
+import { useChatContext } from '~/Providers';
+import { getEndpointField, getIconKey } from '~/utils';
 import { icons } from './Icons';
 
 export const useEndpoints = ({
@@ -34,7 +34,8 @@ export const useEndpoints = ({
 }) => {
   const modelsQuery = useGetModelsQuery();
   const { conversation } = useChatContext();
-  const { data: endpoints = [] } = useGetEndpointsQuery({ select: mapEndpoints });
+  // Get the filtered endpoints config directly from backend (already filtered by group permissions)
+  const { data: filteredEndpointsConfig = {} } = useGetEndpointsQuery();
   const { instanceProjectId } = startupConfig ?? {};
   const interfaceConfig = startupConfig?.interface ?? {};
   const includedEndpoints = useMemo(
@@ -68,23 +69,41 @@ export const useEndpoints = ({
     [endpoint, assistantsMap],
   );
 
-  const filteredEndpoints = useMemo(() => {
+  // Convert the filtered endpoints config to an array of endpoint names
+  const availableEndpoints = useMemo(() => {
     if (!interfaceConfig.modelSelect) {
       return [];
     }
+
+    // Get endpoints that are available (not null/undefined) in the filtered config
+    const endpoints = Object.keys(filteredEndpointsConfig).filter(
+      (ep) => filteredEndpointsConfig[ep] != null,
+    ) as EModelEndpoint[];
+
+    // Sort by order if available
+    endpoints.sort((a, b) => {
+      const orderA = filteredEndpointsConfig[a]?.order ?? 999;
+      const orderB = filteredEndpointsConfig[b]?.order ?? 999;
+      return orderA - orderB;
+    });
+
+    return endpoints;
+  }, [filteredEndpointsConfig, interfaceConfig.modelSelect]);
+
+  const filteredEndpoints = useMemo(() => {
     const result: EModelEndpoint[] = [];
-    for (let i = 0; i < endpoints.length; i++) {
-      if (endpoints[i] === EModelEndpoint.agents && !hasAgentAccess) {
+    for (let i = 0; i < availableEndpoints.length; i++) {
+      if (availableEndpoints[i] === EModelEndpoint.agents && !hasAgentAccess) {
         continue;
       }
-      if (includedEndpoints.size > 0 && !includedEndpoints.has(endpoints[i])) {
+      if (includedEndpoints.size > 0 && !includedEndpoints.has(availableEndpoints[i])) {
         continue;
       }
-      result.push(endpoints[i]);
+      result.push(availableEndpoints[i]);
     }
 
     return result;
-  }, [endpoints, hasAgentAccess, includedEndpoints]);
+  }, [availableEndpoints, hasAgentAccess, includedEndpoints]);
 
   const endpointRequiresUserKey = useCallback(
     (ep: string) => {
@@ -113,11 +132,11 @@ export const useEndpoints = ({
         hasModels,
         icon: Icon
           ? React.createElement(Icon, {
-            size: 20,
-            className: 'text-text-primary shrink-0 icon-md',
-            iconURL: endpointIconURL,
-            endpoint: ep,
-          })
+              size: 20,
+              className: 'text-text-primary shrink-0 icon-md',
+              iconURL: endpointIconURL,
+              endpoint: ep,
+            })
           : null,
       };
 
@@ -158,7 +177,10 @@ export const useEndpoints = ({
           },
           {},
         );
-      } else if (ep === EModelEndpoint.azureAssistants && azureAssistants.length > 0) {
+      }
+
+      // Handle Azure assistants case
+      else if (ep === EModelEndpoint.azureAssistants && azureAssistants.length > 0) {
         result.models = azureAssistants.map((assistant: { id: string }) => ({
           name: assistant.id,
           isGlobal: false,
@@ -183,6 +205,7 @@ export const useEndpoints = ({
       else if (
         ep !== EModelEndpoint.agents &&
         ep !== EModelEndpoint.assistants &&
+        ep !== EModelEndpoint.azureAssistants &&
         (modelsQuery.data?.[ep]?.length ?? 0) > 0
       ) {
         result.models = modelsQuery.data?.[ep]?.map((model) => ({
@@ -193,7 +216,7 @@ export const useEndpoints = ({
 
       return result;
     });
-  }, [filteredEndpoints, endpointsConfig, modelsQuery.data, agents, assistants]);
+  }, [filteredEndpoints, endpointsConfig, modelsQuery.data, agents, assistants, azureAssistants]);
 
   return {
     mappedEndpoints,

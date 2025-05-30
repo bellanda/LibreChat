@@ -24,6 +24,7 @@ const { updateAgentProjects } = require('~/models/Agent');
 const { getProjectByName } = require('~/models/Project');
 const { deleteFileByFilter } = require('~/models/File');
 const { revertAgentVersion } = require('~/models/Agent');
+const groupPermissionService = require('~/server/services/GroupPermissionService');
 const { logger } = require('~/config');
 
 const systemTools = {
@@ -346,7 +347,15 @@ const getListAgentsHandler = async (req, res) => {
     const data = await getListAgents({
       author: req.user.id,
     });
-    return res.json(data);
+
+    // Apply group permissions filtering
+    const userGroup = req.user?.userGroup || 'default';
+    const filteredAgents = groupPermissionService.filterAgentsForUser(userGroup, data.data);
+
+    return res.json({
+      ...data,
+      data: filteredAgents,
+    });
   } catch (error) {
     logger.error('[/Agents] Error listing Agents', error);
     res.status(500).json({ error: error.message });

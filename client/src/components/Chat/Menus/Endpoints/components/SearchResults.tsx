@@ -1,12 +1,12 @@
-import React, { Fragment } from 'react';
-import { EarthIcon } from 'lucide-react';
-import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import type { TModelSpec } from 'librechat-data-provider';
+import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import { EarthIcon } from 'lucide-react';
+import { Fragment } from 'react';
 import type { Endpoint } from '~/common';
-import { useModelSelectorContext } from '../ModelSelectorContext';
-import { CustomMenuItem as MenuItem } from '../CustomMenu';
-import SpecIcon from './SpecIcon';
 import { cn } from '~/utils';
+import { CustomMenuItem as MenuItem } from '../CustomMenu';
+import { useModelSelectorContext } from '../ModelSelectorContext';
+import SpecIcon from './SpecIcon';
 
 interface SearchResultsProps {
   results: (TModelSpec | Endpoint)[] | null;
@@ -40,9 +40,43 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
     );
   }
 
+  // Filter results to avoid returning null in map
+  const filteredResults = results.filter((item) => {
+    if ('name' in item && 'label' in item) {
+      return true; // Always show model specs
+    } else {
+      const endpoint = item as Endpoint;
+      if (endpoint.hasModels && endpoint.models && endpoint.models.length > 0) {
+        const lowerQuery = searchValue.toLowerCase();
+        const filteredModels = endpoint.label.toLowerCase().includes(lowerQuery)
+          ? endpoint.models
+          : endpoint.models.filter((model) => {
+              let modelName = model.name;
+              if (
+                isAgentsEndpoint(endpoint.value) &&
+                endpoint.agentNames &&
+                endpoint.agentNames[model.name]
+              ) {
+                modelName = endpoint.agentNames[model.name];
+              } else if (
+                isAssistantsEndpoint(endpoint.value) &&
+                endpoint.assistantNames &&
+                endpoint.assistantNames[model.name]
+              ) {
+                modelName = endpoint.assistantNames[model.name];
+              }
+              return modelName.toLowerCase().includes(lowerQuery);
+            });
+        return filteredModels.length > 0; // Only show endpoints with matching models
+      } else {
+        return true; // Always show endpoints without models
+      }
+    }
+  });
+
   return (
     <>
-      {results.map((item, i) => {
+      {filteredResults.map((item, i) => {
         if ('name' in item && 'label' in item) {
           // Render model spec
           const spec = item as TModelSpec;
@@ -102,26 +136,22 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
             const filteredModels = endpoint.label.toLowerCase().includes(lowerQuery)
               ? endpoint.models
               : endpoint.models.filter((model) => {
-                let modelName = model.name;
-                if (
-                  isAgentsEndpoint(endpoint.value) &&
+                  let modelName = model.name;
+                  if (
+                    isAgentsEndpoint(endpoint.value) &&
                     endpoint.agentNames &&
                     endpoint.agentNames[model.name]
-                ) {
-                  modelName = endpoint.agentNames[model.name];
-                } else if (
-                  isAssistantsEndpoint(endpoint.value) &&
+                  ) {
+                    modelName = endpoint.agentNames[model.name];
+                  } else if (
+                    isAssistantsEndpoint(endpoint.value) &&
                     endpoint.assistantNames &&
                     endpoint.assistantNames[model.name]
-                ) {
-                  modelName = endpoint.assistantNames[model.name];
-                }
-                return modelName.toLowerCase().includes(lowerQuery);
-              });
-
-            if (!filteredModels.length) {
-              return null; // skip if no models match
-            }
+                  ) {
+                    modelName = endpoint.assistantNames[model.name];
+                  }
+                  return modelName.toLowerCase().includes(lowerQuery);
+                });
 
             return (
               <Fragment key={`endpoint-${endpoint.value}-search-${i}`}>
