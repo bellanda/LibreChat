@@ -1,25 +1,26 @@
-import { createUserModel } from './user';
-import { createTokenModel } from './token';
-import { createSessionModel } from './session';
-import { createBalanceModel } from './balance';
-import { createConversationModel } from './convo';
-import { createMessageModel } from './message';
-import { createAgentModel } from './agent';
-import { createRoleModel } from './role';
 import { createActionModel } from './action';
+import { createAgentModel } from './agent';
 import { createAssistantModel } from './assistant';
-import { createFileModel } from './file';
+import { createBalanceModel } from './balance';
 import { createBannerModel } from './banner';
-import { createProjectModel } from './project';
+import { createConversationHistoryModel } from './conversationHistory';
+import { createConversationTagModel } from './conversationTag';
+import { createConversationModel } from './convo';
+import { createFileModel } from './file';
 import { createKeyModel } from './key';
+import { createMessageModel } from './message';
 import { createPluginAuthModel } from './pluginAuth';
-import { createTransactionModel } from './transaction';
 import { createPresetModel } from './preset';
+import { createProjectModel } from './project';
 import { createPromptModel } from './prompt';
 import { createPromptGroupModel } from './promptGroup';
-import { createConversationTagModel } from './conversationTag';
+import { createRoleModel } from './role';
+import { createSessionModel } from './session';
 import { createSharedLinkModel } from './sharedLink';
+import { createTokenModel } from './token';
 import { createToolCallModel } from './toolCall';
+import { createTransactionModel } from './transaction';
+import { createUserModel } from './user';
 
 /**
  * Creates all database models for all collections
@@ -31,6 +32,7 @@ export function createModels(mongoose: typeof import('mongoose')) {
     Session: createSessionModel(mongoose),
     Balance: createBalanceModel(mongoose),
     Conversation: createConversationModel(mongoose),
+    ConversationHistory: createConversationHistoryModel(mongoose),
     Message: createMessageModel(mongoose),
     Agent: createAgentModel(mongoose),
     Role: createRoleModel(mongoose),

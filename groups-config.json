@@ -1,0 +1,41 @@
+{
+  "defaultGroup": "default",
+  "groups": {
+    "default": {
+      "name": "Default Users",
+      "description": "Standard user group with basic access",
+      "permissions": {
+        "endpoints": ["*"],
+        "models": {
+          "HPE Agents": ["*"],
+          "openai": ["*"],
+          "nvidia": ["*"],
+          "google": ["*"],
+          "anthropic": ["*"],
+          "alibaba": ["*"],
+          "groq": ["*"]
+        },
+        "assistants": false,
+        "plugins": []
+      }
+    },
+    "premium": {
+      "name": "Premium Users",
+      "description": "Premium users with extended access",
+      "permissions": {
+        "endpoints": ["*"],
+        "models": {
+          "HPE Agents": ["*"],
+          "openai": ["*"],
+          "nvidia": ["*"],
+          "google": ["*"],
+          "anthropic": ["*"],
+          "alibaba": ["*"],
+          "groq": ["*"]
+        },
+        "assistants": false,
+        "plugins": []
+      }
+    }
+  }
+}

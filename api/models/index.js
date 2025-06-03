@@ -20,7 +20,13 @@ const {
   deleteMessagesSince,
   deleteMessages,
 } = require('./Message');
-const { getConvoTitle, getConvo, saveConvo, deleteConvos } = require('./Conversation');
+const {
+  getConvoTitle,
+  getConvo,
+  saveConvo,
+  deleteConvos,
+  getConversationHistory,
+} = require('./Conversation');
 const { getPreset, getPresets, savePreset, deletePresets } = require('./Preset');
 
 module.exports = {
@@ -46,6 +52,7 @@ module.exports = {
   getConvo,
   saveConvo,
   deleteConvos,
+  getConversationHistory,
 
   getPreset,
   getPresets,

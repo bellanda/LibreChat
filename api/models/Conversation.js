@@ -1,6 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { getMessages, deleteMessages } = require('./Message');
-const { Conversation } = require('~/db/models');
+const { Conversation, ConversationHistory } = require('~/db/models');
 
 /**
  * Searches for a conversation by conversationId and returns a lean document with only conversationId and user.
@@ -78,6 +78,24 @@ module.exports = {
   getConvoFiles,
   searchConversation,
   deleteNullOrEmptyConversations,
+  /**
+   * Retrieves conversation history for a user
+   * @param {string} user - The user's ID.
+   * @param {Object} options - Query options (limit, skip, etc.)
+   * @returns {Promise<Array>} Array of deleted conversations with full messages
+   */
+  getConversationHistory: async (user, { limit = 10, skip = 0 } = {}) => {
+    try {
+      return await ConversationHistory.find({ deletedBy: user })
+        .sort({ deletedAt: -1 })
+        .limit(limit)
+        .skip(skip)
+        .lean();
+    } catch (error) {
+      logger.error('[getConversationHistory] Error getting conversation history', error);
+      throw new Error('Error getting conversation history');
+    }
+  },
   /**
    * Saves a conversation to the database.
    * @param {Object} req - The request object.
@@ -286,13 +304,51 @@ module.exports = {
   deleteConvos: async (user, filter) => {
     try {
       const userFilter = { ...filter, user };
-      const conversations = await Conversation.find(userFilter).select('conversationId');
-      const conversationIds = conversations.map((c) => c.conversationId);
+      const conversations = await Conversation.find(userFilter);
 
-      if (!conversationIds.length) {
+      if (!conversations.length) {
         throw new Error('Conversation not found or already deleted.');
       }
 
+      // Salvar conversas no histórico antes de excluir
+      const historyPromises = conversations.map(async (conversation) => {
+        try {
+          const conversationObj = conversation.toObject();
+
+          // Buscar todas as mensagens da conversa para salvar no histórico
+          const conversationMessages = await getMessages({
+            conversationId: conversationObj.conversationId,
+          });
+
+          const historyData = {
+            ...conversationObj,
+            originalConversationId: conversationObj.conversationId,
+            conversationId: `${conversationObj.conversationId}_deleted_${Date.now()}`,
+            fullMessages: conversationMessages, // Salvar mensagens completas
+            deletedAt: new Date(),
+            deletedBy: user,
+          };
+
+          // Remove o _id original para criar um novo documento
+          delete historyData._id;
+
+          await ConversationHistory.create(historyData);
+          logger.info(
+            `[deleteConvos] Conversation ${conversationObj.conversationId} with ${conversationMessages.length} messages saved to history`,
+          );
+        } catch (historyError) {
+          logger.error(
+            `[deleteConvos] Error saving conversation ${conversation.conversationId} to history:`,
+            historyError,
+          );
+          // Continua com a exclusão mesmo se falhar ao salvar no histórico
+        }
+      });
+
+      // Aguarda todas as operações de histórico completarem
+      await Promise.allSettled(historyPromises);
+
+      const conversationIds = conversations.map((c) => c.conversationId);
       const deleteConvoResult = await Conversation.deleteMany(userFilter);
 
       const deleteMessagesResult = await deleteMessages({
