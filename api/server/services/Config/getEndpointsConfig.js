@@ -1,6 +1,8 @@
 const { CacheKeys, EModelEndpoint, orderEndpointsConfig } = require('librechat-data-provider');
 const loadDefaultEndpointsConfig = require('./loadDefaultEConfig');
 const loadConfigEndpoints = require('./loadConfigEndpoints');
+const { filterEndpointsByGroup } = require('./GroupsService');
+const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
 const getLogStores = require('~/cache/getLogStores');
 
 /**
@@ -12,6 +14,11 @@ async function getEndpointsConfig(req) {
   const cache = getLogStores(CacheKeys.CONFIG_STORE);
   const cachedEndpointsConfig = await cache.get(CacheKeys.ENDPOINT_CONFIG);
   if (cachedEndpointsConfig) {
+    // Apply group-based filtering to cached config
+    if (req.user) {
+      const groupsConfig = await getCachedGroupsConfig();
+      return filterEndpointsByGroup(cachedEndpointsConfig, req.user, groupsConfig);
+    }
     return cachedEndpointsConfig;
   }
 
@@ -71,6 +78,13 @@ async function getEndpointsConfig(req) {
   const endpointsConfig = orderEndpointsConfig(mergedConfig);
 
   await cache.set(CacheKeys.ENDPOINT_CONFIG, endpointsConfig);
+
+  // Apply group-based filtering before returning
+  if (req.user) {
+    const groupsConfig = await getCachedGroupsConfig();
+    return filterEndpointsByGroup(endpointsConfig, req.user, groupsConfig);
+  }
+
   return endpointsConfig;
 }
 

@@ -3,6 +3,7 @@ const {
   EModelEndpoint,
   isAgentsEndpoint,
   EndpointURLs,
+  Constants,
 } = require('librechat-data-provider');
 const azureAssistants = require('~/server/services/Endpoints/azureAssistants');
 const { getModelsConfig } = require('~/server/controllers/ModelController');
@@ -16,6 +17,10 @@ const agents = require('~/server/services/Endpoints/agents');
 const custom = require('~/server/services/Endpoints/custom');
 const google = require('~/server/services/Endpoints/google');
 const { handleError } = require('~/server/utils');
+const { getCachedGroupsConfig } = require('./groupsMiddleware');
+const { getUserGroup, getGroupPermissions } = require('~/server/services/Config/GroupsService');
+const { isEnabled, extractEnvVariable } = require('~/server/utils');
+const { logger } = require('~/config');
 
 const buildFunction = {
   [EModelEndpoint.openAI]: openAI.buildOptions,
@@ -37,6 +42,54 @@ async function buildEndpointOption(req, res, next) {
     parsedBody = parseCompactConvo({ endpoint, endpointType, conversation: req.body });
   } catch (error) {
     return handleError(res, { text: 'Error parsing conversation' });
+  }
+
+  // Validate group permissions for endpoint and model
+  if (req.user) {
+    try {
+      const groupsConfig = await getCachedGroupsConfig();
+      if (groupsConfig) {
+        const userGroup = getUserGroup(req.user, groupsConfig);
+        const permissions = getGroupPermissions(userGroup, groupsConfig);
+
+        // Check endpoint permission
+        if (endpoint && permissions.endpoints && !permissions.endpoints.includes('*')) {
+          if (!permissions.endpoints.includes(endpoint)) {
+            logger.warn(
+              `[buildEndpointOption] User '${req.user.email}' in group '${userGroup}' attempted to use restricted endpoint '${endpoint}'`,
+            );
+            return handleError(res, {
+              text: 'Access denied: endpoint not allowed for your user group',
+            });
+          }
+        }
+
+        // Check model permission
+        if (parsedBody.model && endpoint && permissions.models) {
+          const endpointPermissions = permissions.models[endpoint];
+          if (endpointPermissions && !endpointPermissions.includes('*')) {
+            if (!endpointPermissions.includes(parsedBody.model)) {
+              logger.warn(
+                `[buildEndpointOption] User '${req.user.email}' in group '${userGroup}' attempted to use restricted model '${parsedBody.model}' for endpoint '${endpoint}'`,
+              );
+              return handleError(res, {
+                text: 'Access denied: model not allowed for your user group',
+              });
+            }
+          } else if (!endpointPermissions) {
+            logger.warn(
+              `[buildEndpointOption] User '${req.user.email}' in group '${userGroup}' attempted to use model '${parsedBody.model}' for endpoint '${endpoint}' (endpoint not allowed)`,
+            );
+            return handleError(res, {
+              text: 'Access denied: endpoint not allowed for your user group',
+            });
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('[buildEndpointOption] Error validating group permissions:', error);
+      // Continue without validation to avoid breaking the application
+    }
   }
 
   if (req.app.locals.modelSpecs?.list && req.app.locals.modelSpecs?.enforce) {

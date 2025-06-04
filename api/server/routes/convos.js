@@ -5,6 +5,7 @@ const { getConvosByCursor, deleteConvos, getConvo, saveConvo } = require('~/mode
 const { forkConversation, duplicateConversation } = require('~/server/utils/import/fork');
 const { storage, importFileFilter } = require('~/server/routes/files/multer');
 const requireJwtAuth = require('~/server/middleware/requireJwtAuth');
+const validateConversationParams = require('~/server/middleware/validateConversationParams');
 const { importConversations } = require('~/server/utils/import');
 const { createImportLimiters } = require('~/server/middleware');
 const { deleteToolCalls } = require('~/models/ToolCall');
@@ -47,7 +48,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:conversationId', async (req, res) => {
+router.get('/:conversationId', validateConversationParams, async (req, res) => {
   const { conversationId } = req.params;
   const convo = await getConvo(req.user.id, conversationId);
 

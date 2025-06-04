@@ -1,5 +1,5 @@
-import { Schema } from 'mongoose';
 import { SystemRoles } from 'librechat-data-provider';
+import { Schema } from 'mongoose';
 import { IUser } from '~/types';
 
 // Session sub-schema
@@ -64,6 +64,10 @@ const userSchema = new Schema<IUser>(
     role: {
       type: String,
       default: SystemRoles.USER,
+    },
+    group: {
+      type: String,
+      default: 'default',
     },
     googleId: {
       type: String,

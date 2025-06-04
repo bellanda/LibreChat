@@ -1,5 +1,7 @@
 const { CacheKeys } = require('librechat-data-provider');
 const { loadDefaultModels, loadConfigModels } = require('~/server/services/Config');
+const { filterModelsByGroup } = require('~/server/services/Config/GroupsService');
+const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
 const { getLogStores } = require('~/cache');
 const { logger } = require('~/config');
 
@@ -25,6 +27,11 @@ async function loadModels(req) {
   const cache = getLogStores(CacheKeys.CONFIG_STORE);
   const cachedModelsConfig = await cache.get(CacheKeys.MODELS_CONFIG);
   if (cachedModelsConfig) {
+    // Apply group-based filtering to cached models
+    if (req.user) {
+      const groupsConfig = await getCachedGroupsConfig();
+      return filterModelsByGroup(cachedModelsConfig, req.user, groupsConfig);
+    }
     return cachedModelsConfig;
   }
   const defaultModelsConfig = await loadDefaultModels(req);
@@ -33,6 +40,13 @@ async function loadModels(req) {
   const modelConfig = { ...defaultModelsConfig, ...customModelsConfig };
 
   await cache.set(CacheKeys.MODELS_CONFIG, modelConfig);
+
+  // Apply group-based filtering before returning
+  if (req.user) {
+    const groupsConfig = await getCachedGroupsConfig();
+    return filterModelsByGroup(modelConfig, req.user, groupsConfig);
+  }
+
   return modelConfig;
 }
 
