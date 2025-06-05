@@ -1,0 +1,156 @@
+{
+  "deepseek-ai/deepseek-r1": {
+    "title": "DeepSeek R1",
+    "description": "Modelo de 671 B parâmetros totais (37 B ativos) treinado quase só com reforço por aprendizado, resultando em cadeias de raciocínio longas, auto-verificação natural e desempenho no nível do OpenAI o1 em matemática, código e lógica — tudo com licença MIT e custo de treino extraordinariamente baixo.",
+    "image": "/assets/deepseek-logo.jpg",
+    "useCases": [
+      "Provas de matemática de alto nível (AIME, MATH-500)",
+      "Programação competitiva e depuração complexa",
+      "Pesquisa científica que exija raciocínio passo a passo",
+      "Distilação para modelos menores mantendo o padrão de raciocínio"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
+  "meta/llama-4-maverick-17b-128e-instruct": {
+    "title": "Llama 4 Maverick 17B-128E",
+    "description": "Versão de alta potência da série Llama 4: 17 B parâmetros ativados de um total de ~400 B distribuídos por 128 especialistas, janela de 128 k tokens e suporte nativo a texto+imagem. Indicada para geração de código complexa e aplicações multimodais exigentes com licença Llama 4 Community.",
+    "image": "/assets/meta-llama-logo.webp",
+    "useCases": [
+      "Agentes multimodais que chamam ferramentas externas",
+      "Geração e revisão de código em larga escala",
+      "Criação de conteúdos ricos (texto + imagem)",
+      "Pipelines de RAG com contexto muito extenso"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
+  "meta/llama-4-scout-17b-16e-instruct": {
+    "title": "Llama 4 Scout 17B-16E",
+    "description": "Modelo enxuto (17 B ativos / 109 B totais, 16 especialistas) pensado para servir chats multimodais em uma única GPU H100, trazendo janela de até 10 M tokens via RoPE e ótima relação custo-latência.",
+    "image": "/assets/meta-llama-logo.webp",
+    "useCases": [
+      "Chatbots multimodais de alta velocidade",
+      "Aplicações móveis ou edge com GPU única",
+      "Protótipos rápidos de IA conversacional",
+      "Experimentos de fine-tuning leve (custo acessível)"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
+  "nvidia/llama-3.1-nemotron-ultra-253b-v1": {
+    "title": "Llama 3.1 Nemotron Ultra 253B-v1",
+    "description": "Gigante de 253 B parâmetros denso, derivado do Llama-3.1-405B, otimizado via NAS para encaixar em um nó 8×H100 mantendo janela de 128 k tokens. Afinado para agentes, RAG e chamadas de ferramenta, com forte score em lógica, código e matemática.",
+    "image": "/assets/nvidia-nemotron-logo.webp",
+    "useCases": [
+      "Assistentes corporativos que integram APIs",
+      "Chatbots multilíngues com contexto extenso",
+      "Sistemas de RAG e análise documental",
+      "Pesquisa científica computacional pesada"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "slow",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
+  "qwen/qwen3-235b-a22b": {
+    "title": "Qwen 3-235B-A22B",
+    "description": "MoE com 235 B totais (22 B ativos) que alterna entre modo \"thinking\" para problemas difíceis e modo rápido para diálogo, suporta 100+ idiomas, janela nativa 32 k (até 131 k via YaRN) e licença Apache 2.0.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Plataformas globais de atendimento multicanal",
+      "Tradução e localização de grande volume",
+      "Geração de conteúdo intercultural",
+      "Agentes conversacionais com raciocínio profundo"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    }
+  },
+
+  "qwen3-235b-a22b": {
+    "title": "Qwen 3-235B-A22B",
+    "description": "Mesmo modelo descrito acima, listado sem o namespace original para compatibilidade legada.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": ["Todos os usos do item anterior"],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    }
+  },
+
+  "qwen3-32b": {
+    "title": "Qwen 3-32B",
+    "description": "Modelo denso de 32,8 B parâmetros, janela 32 k (até 131 k via YaRN) e suporte a 119 idiomas; oferece desempenho próximo a modelos de 70 B da geração anterior com menor custo e latência.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Deploy SaaS multilíngue em nuvem",
+      "Geração de relatórios e sumários longos",
+      "Assistentes de programação com contexto extenso",
+      "Aplicações de análise de documentos"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    }
+  },
+
+  "qwen3-4b": {
+    "title": "Qwen 3-4B",
+    "description": "Versão compacta (4,0 B parâmetros) que cabe em GPU simples, mantendo janela de 32 k tokens e suporte a 100+ idiomas – excelente para aplicações locais, mobile ou edge que exijam tradução e chat rápidos.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Apps móveis de tradução em tempo real",
+      "Chatbots embarcados em dispositivos IoT",
+      "Assistentes pessoais off-line",
+      "Fine-tuning leve para domínios específicos"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    }
+  }
+}
