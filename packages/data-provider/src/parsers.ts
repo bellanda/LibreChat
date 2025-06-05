@@ -1,25 +1,25 @@
 import dayjs from 'dayjs';
 import type { ZodIssue } from 'zod';
-import type * as a from './types/assistants';
+import { bedrockInputSchema } from './bedrock';
+import { alternateName } from './config';
 import type * as s from './schemas';
-import type * as t from './types';
-import { ContentTypes } from './types/runs';
 import {
-  openAISchema,
-  googleSchema,
   EModelEndpoint,
   anthropicSchema,
   assistantSchema,
-  gptPluginsSchema,
   // agentsSchema,
   compactAgentsSchema,
+  compactAssistantSchema,
   compactGoogleSchema,
   compactPluginsSchema,
-  compactAssistantSchema,
+  googleSchema,
+  gptPluginsSchema,
+  openAISchema,
 } from './schemas';
-import { bedrockInputSchema } from './bedrock';
+import type * as t from './types';
+import type * as a from './types/assistants';
+import { ContentTypes } from './types/runs';
 import { extractEnvVariable } from './utils';
-import { alternateName } from './config';
 
 type EndpointSchema =
   | typeof openAISchema
@@ -66,12 +66,42 @@ export function getEnabledEndpoints() {
 
   const endpointsEnv = process.env.ENDPOINTS ?? '';
   let enabledEndpoints = defaultEndpoints;
+
   if (endpointsEnv) {
     enabledEndpoints = endpointsEnv
       .split(',')
       .filter((endpoint) => endpoint.trim())
       .map((endpoint) => endpoint.trim());
   }
+
+  // Check if ENDPOINTS_ORDER exists and reorder accordingly
+  const endpointsOrderEnv = process.env.ENDPOINTS_ORDER ?? '';
+
+  if (endpointsOrderEnv) {
+    const orderedEndpoints = endpointsOrderEnv
+      .split(',')
+      .filter((endpoint) => endpoint.trim())
+      .map((endpoint) => endpoint.trim());
+
+    // Reorder enabledEndpoints based on ENDPOINTS_ORDER
+    const reorderedEndpoints: string[] = [];
+    const usedEndpoints = new Set<string>();
+
+    // Add endpoints in the order specified by ENDPOINTS_ORDER
+    for (const orderedEndpoint of orderedEndpoints) {
+      if (enabledEndpoints.includes(orderedEndpoint) && !usedEndpoints.has(orderedEndpoint)) {
+        reorderedEndpoints.push(orderedEndpoint);
+        usedEndpoints.add(orderedEndpoint);
+      }
+    }
+
+    // Add any remaining endpoints that weren't in ENDPOINTS_ORDER
+    const remainingEndpoints = enabledEndpoints.filter((endpoint) => !usedEndpoints.has(endpoint));
+    reorderedEndpoints.push(...remainingEndpoints);
+
+    enabledEndpoints = reorderedEndpoints;
+  }
+
   return enabledEndpoints;
 }
 
@@ -80,22 +110,28 @@ export function orderEndpointsConfig(endpointsConfig: t.TEndpointsConfig) {
   if (!endpointsConfig) {
     return {};
   }
+
   const enabledEndpoints = getEnabledEndpoints();
   const endpointKeys = Object.keys(endpointsConfig);
-  const defaultCustomIndex = enabledEndpoints.indexOf(EModelEndpoint.custom);
+
   return endpointKeys.reduce(
     (accumulatedConfig: Record<string, t.TConfig | null | undefined>, currentEndpointKey) => {
       const isCustom = !(currentEndpointKey in EModelEndpoint);
       const isEnabled = enabledEndpoints.includes(currentEndpointKey);
+      const index = enabledEndpoints.indexOf(currentEndpointKey);
+
       if (!isEnabled && !isCustom) {
         return accumulatedConfig;
       }
 
-      const index = enabledEndpoints.indexOf(currentEndpointKey);
-
-      if (isCustom) {
+      if (isCustom && isEnabled) {
         accumulatedConfig[currentEndpointKey] = {
-          order: defaultCustomIndex >= 0 ? defaultCustomIndex : 9999,
+          order: index,
+          ...(endpointsConfig[currentEndpointKey] as Omit<t.TConfig, 'order'> & { order?: number }),
+        };
+      } else if (isCustom && !isEnabled) {
+        accumulatedConfig[currentEndpointKey] = {
+          order: 9999,
           ...(endpointsConfig[currentEndpointKey] as Omit<t.TConfig, 'order'> & { order?: number }),
         };
       } else if (endpointsConfig[currentEndpointKey]) {
@@ -104,6 +140,7 @@ export function orderEndpointsConfig(endpointsConfig: t.TEndpointsConfig) {
           order: index,
         };
       }
+
       return accumulatedConfig;
     },
     {},

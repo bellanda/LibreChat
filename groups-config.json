@@ -8,6 +8,7 @@
         "endpoints": ["*"],
         "models": {
           "HPE Agents": ["*"],
+          "agents": ["*"],
           "openai": ["*"],
           "nvidia": ["*"],
           "google": ["*"],
@@ -26,6 +27,7 @@
         "endpoints": ["*"],
         "models": {
           "HPE Agents": ["*"],
+          "agents": ["*"],
           "openai": ["*"],
           "nvidia": ["*"],
           "google": ["*"],

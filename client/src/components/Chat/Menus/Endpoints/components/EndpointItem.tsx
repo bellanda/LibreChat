@@ -1,14 +1,14 @@
-import { useMemo } from 'react';
-import { SettingsIcon } from 'lucide-react';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import { SettingsIcon } from 'lucide-react';
+import { useMemo } from 'react';
 import type { Endpoint } from '~/common';
-import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';
-import { useModelSelectorContext } from '../ModelSelectorContext';
-import { renderEndpointModels } from './EndpointModelItem';
-import { TooltipAnchor, Spinner } from '~/components';
-import { filterModels } from '../utils';
+import { Spinner, TooltipAnchor } from '~/components';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
+import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';
+import { useModelSelectorContext } from '../ModelSelectorContext';
+import { filterModels } from '../utils';
+import { renderEndpointModels } from './EndpointModelItem';
 
 interface EndpointItemProps {
   endpoint: Endpoint;

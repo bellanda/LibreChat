@@ -4,6 +4,7 @@ const loadConfigEndpoints = require('./loadConfigEndpoints');
 const { filterEndpointsByGroup } = require('./GroupsService');
 const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
 const getLogStores = require('~/cache/getLogStores');
+const { logger } = require('~/config');
 
 /**
  *
@@ -78,6 +79,8 @@ async function getEndpointsConfig(req) {
   const endpointsConfig = orderEndpointsConfig(mergedConfig);
 
   await cache.set(CacheKeys.ENDPOINT_CONFIG, endpointsConfig);
+
+  logger.info('[getEndpointsConfig] Endpoints config:', endpointsConfig);
 
   // Apply group-based filtering before returning
   if (req.user) {

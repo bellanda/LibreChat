@@ -1,6 +1,5 @@
 # Get the directory of this script:
 BASE_DIR="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
-sudo cd $BASE_DIR
 
 # Install MongoDB
 wget https://repo.mongodb.org/apt/ubuntu/dists/noble/mongodb-org/8.0/multiverse/binary-amd64/mongodb-org-server_8.0.9_amd64.deb

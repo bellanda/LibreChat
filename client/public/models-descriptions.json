@@ -101,9 +101,14 @@
 
   "qwen3-235b-a22b": {
     "title": "Qwen 3-235B-A22B",
-    "description": "Mesmo modelo descrito acima, listado sem o namespace original para compatibilidade legada.",
+    "description": "MoE com 235 B totais (22 B ativos) que alterna entre modo \"thinking\" para problemas difíceis e modo rápido para diálogo, suporta 100+ idiomas, janela nativa 32 k (até 131 k via YaRN) e licença Apache 2.0.",
     "image": "/assets/alibaba-qwen-logo.jpg",
-    "useCases": ["Todos os usos do item anterior"],
+    "useCases": [
+      "Plataformas globais de atendimento multicanal",
+      "Tradução e localização de grande volume",
+      "Geração de conteúdo intercultural",
+      "Agentes conversacionais com raciocínio profundo"
+    ],
     "characteristics": {
       "reasoning": true,
       "speed": "medium",

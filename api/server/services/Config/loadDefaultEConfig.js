@@ -1,6 +1,7 @@
 const { EModelEndpoint, getEnabledEndpoints } = require('librechat-data-provider');
 const loadAsyncEndpoints = require('./loadAsyncEndpoints');
 const { config } = require('./EndpointService');
+const { logger } = require('~/config');
 
 /**
  * Load async endpoints and return a configuration object
@@ -26,13 +27,24 @@ async function loadDefaultEndpointsConfig(req) {
     [EModelEndpoint.bedrock]: config[EModelEndpoint.bedrock],
   };
 
+  logger.debug('[loadDefaultEndpointsConfig] Endpoint config before ordering:', endpointConfig);
+
   const orderedAndFilteredEndpoints = enabledEndpoints.reduce((config, key, index) => {
+    logger.debug(`[loadDefaultEndpointsConfig] Processing endpoint '${key}' at index ${index}`);
+
     if (endpointConfig[key]) {
+      logger.debug(`[loadDefaultEndpointsConfig] Adding '${key}' with order ${index}`);
       config[key] = { ...(endpointConfig[key] ?? {}), order: index };
+    } else {
+      logger.debug(`[loadDefaultEndpointsConfig] Skipping '${key}' - no config found`);
     }
     return config;
   }, {});
 
+  logger.debug(
+    '[loadDefaultEndpointsConfig] Final ordered and filtered endpoints:',
+    orderedAndFilteredEndpoints,
+  );
   return orderedAndFilteredEndpoints;
 }
 
