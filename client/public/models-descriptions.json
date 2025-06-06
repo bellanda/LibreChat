@@ -1,4 +1,124 @@
 {
+  "chatgpt-4o-latest": {
+    "title": "ChatGPT-4o (Omni, Latest)",
+    "description": "Modelo nativamente multimodal (texto + imagem + áudio) que responde em ~300 ms, entrega raciocínio nível GPT-4 com metade do custo e 5× mais chamadas por minuto. Licenciado para uso comercial via OpenAI API.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Assistentes de voz em tempo real",
+      "Chats multimodais com upload de imagem/voz",
+      "Tradução instantânea e interpretação simultânea",
+      "Ferramentas interativas de programação e depuração"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    }
+  },
+
+  "o3-2025-04-16": {
+    "title": "OpenAI o3",
+    "description": "Novo topo de linha em raciocínio: estabelece SOTA em Codeforces e MMMU, analisa imagens, gráficos e problemas multi-passo. Janela de 256 k tokens e forte desempenho em ciência, código e matemática.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Análises científicas com dados visuais",
+      "Depuração e refatoração de bases de código complexas",
+      "Explicação de gráficos e diagramas técnicos",
+      "Assistentes corporativos para decisões multi-fator"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    }
+  },
+
+  "o4-mini-2025-04-16": {
+    "title": "OpenAI o4-Mini",
+    "description": "Versão compacta da série o4: 4× menos custo que o o3, latência baixa e foco em diálogo e síntese; janela de 128 k tokens em uma única GPU.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Chatbots de alta inteligência em tempo real",
+      "Sumarização de documentos extensos",
+      "Raciocínio embarcado em apps móveis",
+      "Protótipos RAG rápidos e econômicos"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
+  "gpt-4.1-2025-04-14": {
+    "title": "GPT-4.1",
+    "description": "Família de uso geral com janela de até 1 M tokens, +21 % de ganho em código versus GPT-4o e custo reduzido. Atualizada até jun/2024 e focada em instruções longas e agentes RAG.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Processamento e consulta de documentos gigantes",
+      "Geração e auditoria de código avançado",
+      "Pipelines de RAG corporativos",
+      "Assistentes empresariais com contexto profundo"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
+  "gpt-4.1-mini-2025-04-14": {
+    "title": "GPT-4.1 Mini",
+    "description": "Redução de custo e latência da série 4.1 — janela 512 k, desempenho de código próximo ao GPT-4 clássico em apenas uma GPU A100.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "IDE assistants com contexto grande",
+      "Relatórios executivos gerados sob demanda",
+      "Chat apps SaaS com longas threads",
+      "Integração de agentes em micro-serviços"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
+  "gpt-4.1-nano-2025-04-14": {
+    "title": "GPT-4.1 Nano",
+    "description": "Primeiro modelo nano da OpenAI — cabe em laptop moderno ou edge GPU, janela 128 k e resposta quase instantânea; ideal para apps offline ou IoT.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Assistentes on-device sem conexão",
+      "Tradução local em tempo real",
+      "Chatbots embarcados em dispositivos IoT",
+      "Fine-tuning leve para domínios específicos"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "medium",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
   "deepseek-ai/deepseek-r1": {
     "title": "DeepSeek R1",
     "description": "Modelo de 671 B parâmetros totais (37 B ativos) treinado quase só com reforço por aprendizado, resultando em cadeias de raciocínio longas, auto-verificação natural e desempenho no nível do OpenAI o1 em matemática, código e lógica — tudo com licença MIT e custo de treino extraordinariamente baixo.",

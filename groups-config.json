@@ -7,9 +7,8 @@
       "permissions": {
         "endpoints": ["*"],
         "models": {
-          "HPE Agents": ["*"],
           "agents": ["*"],
-          "openai": ["*"],
+          "openAI": ["*"],
           "nvidia": ["*"],
           "google": ["*"],
           "anthropic": ["*"],
@@ -26,9 +25,8 @@
       "permissions": {
         "endpoints": ["*"],
         "models": {
-          "HPE Agents": ["*"],
           "agents": ["*"],
-          "openai": ["*"],
+          "openAI": ["*"],
           "nvidia": ["*"],
           "google": ["*"],
           "anthropic": ["*"],
