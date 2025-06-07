@@ -86,19 +86,20 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
       ? `${endpoint}:${req.user.id}`
       : endpoint;
 
-  let endpointTokenConfig =
-    !endpointConfig.tokenConfig &&
-    FetchTokenConfig[endpoint.toLowerCase()] &&
-    (await cache.get(tokenKey));
+  let endpointTokenConfig = endpointConfig.tokenConfig;
 
-  if (
-    FetchTokenConfig[endpoint.toLowerCase()] &&
-    endpointConfig &&
-    endpointConfig.models.fetch &&
-    !endpointTokenConfig
-  ) {
-    await fetchModels({ apiKey, baseURL, name: endpoint, user: req.user.id, tokenKey });
-    endpointTokenConfig = await cache.get(tokenKey);
+  if (!endpointTokenConfig) {
+    endpointTokenConfig = FetchTokenConfig[endpoint.toLowerCase()] && (await cache.get(tokenKey));
+
+    if (
+      FetchTokenConfig[endpoint.toLowerCase()] &&
+      endpointConfig &&
+      endpointConfig.models.fetch &&
+      !endpointTokenConfig
+    ) {
+      await fetchModels({ apiKey, baseURL, name: endpoint, user: req.user.id, tokenKey });
+      endpointTokenConfig = await cache.get(tokenKey);
+    }
   }
 
   const customOptions = {
