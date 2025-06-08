@@ -84,7 +84,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
     <MenuItem
       key={modelId}
       onClick={() => handleSelectModel(endpoint, modelId ?? '')}
-      className="flex h-8 w-full cursor-pointer items-center justify-start rounded-lg px-3 py-2 text-sm"
+      className="flex h-[40px] w-full cursor-pointer items-center justify-start rounded-lg px-3 py-2 text-sm"
     >
       {modelDescription ? (
         <HoverCard openDelay={100}>
@@ -105,7 +105,12 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                     {endpoint.icon}
                   </div>
                 ) : null}
-                <span>{modelName}</span>
+                <div className="flex flex-col">
+                  <span>{modelDescription.name}</span>
+                  <span className="text-xs text-text-secondary">
+                    {modelDescription.shortUseCase}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {isGlobal && <EarthIcon className="size-4 text-green-400" />}

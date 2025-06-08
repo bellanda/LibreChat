@@ -8,12 +8,15 @@
         "endpoints": ["*"],
         "models": {
           "agents": ["*"],
+          "HPEAgents": ["*"],
+
           "openAI": ["*"],
-          "nvidia": ["*"],
           "google": ["*"],
           "anthropic": ["*"],
-          "alibaba": ["*"],
-          "groq": ["*"]
+
+          "deepseek": ["*"],
+          "NVIDIA": ["*"],
+          "Groq": ["*"]
         },
         "assistants": false,
         "plugins": []
@@ -26,12 +29,15 @@
         "endpoints": ["*"],
         "models": {
           "agents": ["*"],
+          "HPEAgents": ["*"],
+
           "openAI": ["*"],
-          "nvidia": ["*"],
           "google": ["*"],
           "anthropic": ["*"],
-          "alibaba": ["*"],
-          "groq": ["*"]
+
+          "deepseek": ["*"],
+          "NVIDIA": ["*"],
+          "Groq": ["*"]
         },
         "assistants": false,
         "plugins": []

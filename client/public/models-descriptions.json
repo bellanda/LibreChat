@@ -1,13 +1,15 @@
 {
   "chatgpt-4o-latest": {
+    "name": "GPT-4o",
     "title": "ChatGPT-4o (Omni, Latest)",
-    "description": "Modelo nativamente multimodal (texto + imagem + áudio) que responde em ~300 ms, entrega raciocínio nível GPT-4 com metade do custo e 5× mais chamadas por minuto. Licenciado para uso comercial via OpenAI API.",
+    "shortUseCase": "Ótimo para a maioria das tarefas",
+    "description": "O modelo mais versátil da OpenAI que entende texto, imagens e áudio. Responde super rápido (300ms) e é perfeito para conversas naturais. Funciona como um assistente completo que vê, ouve e fala.",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Assistentes de voz em tempo real",
-      "Chats multimodais com upload de imagem/voz",
-      "Tradução instantânea e interpretação simultânea",
-      "Ferramentas interativas de programação e depuração"
+      "Assistente de voz que responde instantaneamente",
+      "Análise de fotos e documentos visuais",
+      "Tradução em tempo real de conversas",
+      "Ajuda com programação mostrando código na tela"
     ],
     "characteristics": {
       "reasoning": true,
@@ -20,14 +22,16 @@
   },
 
   "o3-2025-04-16": {
+    "name": "o3",
     "title": "OpenAI o3",
-    "description": "Novo topo de linha em raciocínio: estabelece SOTA em Codeforces e MMMU, analisa imagens, gráficos e problemas multi-passo. Janela de 256 k tokens e forte desempenho em ciência, código e matemática.",
+    "shortUseCase": "Usa raciocínio avançado",
+    "description": "O modelo mais inteligente para resolver problemas difíceis. Pensa passo a passo como um especialista, analisa gráficos e dados visuais, e resolve questões de ciência e matemática avançada.",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Análises científicas com dados visuais",
-      "Depuração e refatoração de bases de código complexas",
-      "Explicação de gráficos e diagramas técnicos",
-      "Assistentes corporativos para decisões multi-fator"
+      "Resolver problemas de matemática e física complexos",
+      "Analisar gráficos e dados científicos",
+      "Revisar e melhorar código complicado",
+      "Tomar decisões empresariais baseadas em dados"
     ],
     "characteristics": {
       "reasoning": true,
@@ -40,14 +44,16 @@
   },
 
   "o4-mini-2025-04-16": {
-    "title": "OpenAI o4-Mini",
-    "description": "Versão compacta da série o4: 4× menos custo que o o3, latência baixa e foco em diálogo e síntese; janela de 128 k tokens em uma única GPU.",
+    "name": "o4-mini",
+    "title": "OpenAI o4-mini",
+    "shortUseCase": "Mais rápido em raciocínio avançado",
+    "description": "Versão mais rápida e barata do o4, ideal para conversas inteligentes e resumos. Mantém a capacidade de raciocínio mas com respostas mais ágeis e custo reduzido.",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Chatbots de alta inteligência em tempo real",
-      "Sumarização de documentos extensos",
-      "Raciocínio embarcado em apps móveis",
-      "Protótipos RAG rápidos e econômicos"
+      "Chatbots inteligentes para sites e apps",
+      "Resumir documentos longos rapidamente",
+      "Assistente móvel com raciocínio avançado",
+      "Protótipos de IA com orçamento limitado"
     ],
     "characteristics": {
       "reasoning": true,
@@ -60,14 +66,16 @@
   },
 
   "gpt-4.1-2025-04-14": {
+    "name": "GPT-4.1",
     "title": "GPT-4.1",
-    "description": "Família de uso geral com janela de até 1 M tokens, +21 % de ganho em código versus GPT-4o e custo reduzido. Atualizada até jun/2024 e focada em instruções longas e agentes RAG.",
+    "shortUseCase": "Ótimo para análise e programação",
+    "description": "Especialista em ler e analisar documentos enormes (até 1 milhão de palavras). Perfeito para empresas que precisam processar contratos, relatórios e bases de conhecimento extensas.",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Processamento e consulta de documentos gigantes",
-      "Geração e auditoria de código avançado",
-      "Pipelines de RAG corporativos",
-      "Assistentes empresariais com contexto profundo"
+      "Analisar contratos e documentos legais extensos",
+      "Criar e revisar código de projetos grandes",
+      "Assistente empresarial com acesso a toda documentação",
+      "Sistemas de busca inteligente em bases de dados"
     ],
     "characteristics": {
       "reasoning": true,
@@ -80,14 +88,16 @@
   },
 
   "gpt-4.1-mini-2025-04-14": {
-    "title": "GPT-4.1 Mini",
-    "description": "Redução de custo e latência da série 4.1 — janela 512 k, desempenho de código próximo ao GPT-4 clássico em apenas uma GPU A100.",
+    "name": "GPT-4.1 mini",
+    "title": "GPT-4.1 mini",
+    "shortUseCase": "Mais rápido para tarefas do dia a dia",
+    "description": "Versão mais rápida e barata do GPT-4.1, ainda consegue ler documentos grandes mas com respostas mais ágeis. Ideal para aplicações que precisam de contexto extenso sem demora.",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "IDE assistants com contexto grande",
-      "Relatórios executivos gerados sob demanda",
-      "Chat apps SaaS com longas threads",
-      "Integração de agentes em micro-serviços"
+      "Assistente de programação com projetos grandes",
+      "Geração de relatórios executivos automáticos",
+      "Chat empresarial com histórico longo",
+      "Integração em sistemas web e mobile"
     ],
     "characteristics": {
       "reasoning": true,
@@ -100,14 +110,16 @@
   },
 
   "gpt-4.1-nano-2025-04-14": {
-    "title": "GPT-4.1 Nano",
-    "description": "Primeiro modelo nano da OpenAI — cabe em laptop moderno ou edge GPU, janela 128 k e resposta quase instantânea; ideal para apps offline ou IoT.",
+    "name": "GPT-4.1 nano",
+    "title": "GPT-4.1 nano",
+    "shortUseCase": "Roda localmente no seu dispositivo",
+    "description": "O primeiro modelo da OpenAI que roda no seu próprio computador, sem precisar de internet. Perfeito para privacidade total e aplicações que funcionam offline.",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Assistentes on-device sem conexão",
-      "Tradução local em tempo real",
-      "Chatbots embarcados em dispositivos IoT",
-      "Fine-tuning leve para domínios específicos"
+      "Assistente pessoal que funciona sem internet",
+      "Tradução local e privada",
+      "Dispositivos IoT com IA embarcada",
+      "Personalização para áreas específicas"
     ],
     "characteristics": {
       "reasoning": true,
@@ -119,35 +131,61 @@
     }
   },
 
-  "deepseek-ai/deepseek-r1": {
-    "title": "DeepSeek R1",
-    "description": "Modelo de 671 B parâmetros totais (37 B ativos) treinado quase só com reforço por aprendizado, resultando em cadeias de raciocínio longas, auto-verificação natural e desempenho no nível do OpenAI o1 em matemática, código e lógica — tudo com licença MIT e custo de treino extraordinariamente baixo.",
+  "deepseek-chat": {
+    "name": "DeepSeek V3",
+    "title": "DeepSeek V3",
+    "shortUseCase": "Excelente para programação e conversas",
+    "description": "Modelo conversacional da DeepSeek otimizado para diálogo natural e programação. Oferece respostas rápidas e precisas, especialmente forte em código e matemática, com custo muito baixo.",
     "image": "/assets/deepseek-logo.jpg",
     "useCases": [
-      "Provas de matemática de alto nível (AIME, MATH-500)",
-      "Programação competitiva e depuração complexa",
-      "Pesquisa científica que exija raciocínio passo a passo",
-      "Distilação para modelos menores mantendo o padrão de raciocínio"
+      "Assistente de programação para desenvolvimento",
+      "Chatbot inteligente para sites e aplicações",
+      "Suporte técnico automatizado",
+      "Tutoria em matemática e ciências"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    }
+  },
+
+  "deepseek-reasoner": {
+    "name": "DeepSeek R1",
+    "title": "DeepSeek R1",
+    "shortUseCase": "Raciocínio profundo com custo baixo",
+    "description": "Modelo revolucionário que pensa como um especialista, mostrando todo seu raciocínio passo a passo. Excelente em matemática e programação, com licença livre e custo 95% menor que concorrentes.",
+    "image": "/assets/deepseek-logo.jpg",
+    "useCases": [
+      "Resolver problemas de matemática de olimpíada",
+      "Programação competitiva e debugging complexo",
+      "Pesquisa científica com raciocínio detalhado",
+      "Ensinar outros modelos a pensar melhor"
     ],
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
-      "intelligence": "high",
+      "intelligence": "very-high",
       "coding": true,
       "math": true,
       "multimodal": false
     }
   },
 
-  "meta/llama-4-maverick-17b-128e-instruct": {
-    "title": "Llama 4 Maverick 17B-128E",
-    "description": "Versão de alta potência da série Llama 4: 17 B parâmetros ativados de um total de ~400 B distribuídos por 128 especialistas, janela de 128 k tokens e suporte nativo a texto+imagem. Indicada para geração de código complexa e aplicações multimodais exigentes com licença Llama 4 Community.",
+  "meta-llama/llama-4-maverick-17b-128e-instruct": {
+    "name": "Llama 4 Maverick",
+    "title": "♾️Meta Llama 4 Maverick 17B-128E",
+    "shortUseCase": "Poderoso e gratuito para uso comercial",
+    "description": "Modelo da Meta com arquitetura de especialistas que combina texto e imagem. Muito poderoso para código e criação de conteúdo, com licença gratuita para uso comercial.",
     "image": "/assets/meta-llama-logo.webp",
     "useCases": [
-      "Agentes multimodais que chamam ferramentas externas",
-      "Geração e revisão de código em larga escala",
-      "Criação de conteúdos ricos (texto + imagem)",
-      "Pipelines de RAG com contexto muito extenso"
+      "Assistentes que usam ferramentas externas",
+      "Criação e revisão de código em grande escala",
+      "Geração de conteúdo rico (texto + imagem)",
+      "Sistemas de busca com contexto muito extenso"
     ],
     "characteristics": {
       "reasoning": true,
@@ -155,19 +193,21 @@
       "intelligence": "high",
       "coding": true,
       "math": true,
-      "multimodal": false
+      "multimodal": true
     }
   },
 
-  "meta/llama-4-scout-17b-16e-instruct": {
-    "title": "Llama 4 Scout 17B-16E",
-    "description": "Modelo enxuto (17 B ativos / 109 B totais, 16 especialistas) pensado para servir chats multimodais em uma única GPU H100, trazendo janela de até 10 M tokens via RoPE e ótima relação custo-latência.",
+  "meta-llama/llama-4-scout-17b-16e-instruct": {
+    "name": "Llama 4 Scout",
+    "title": "♾️Meta Llama 4 Scout 17B-16E",
+    "shortUseCase": "Rápido e eficiente para apps",
+    "description": "Versão mais leve do Llama 4, otimizada para velocidade. Roda em uma única GPU mas mantém capacidades multimodais e contexto gigante de até 10 milhões de palavras.",
     "image": "/assets/meta-llama-logo.webp",
     "useCases": [
-      "Chatbots multimodais de alta velocidade",
-      "Aplicações móveis ou edge com GPU única",
+      "Chatbots multimodais super rápidos",
+      "Apps móveis com IA avançada",
       "Protótipos rápidos de IA conversacional",
-      "Experimentos de fine-tuning leve (custo acessível)"
+      "Personalização barata para empresas"
     ],
     "characteristics": {
       "reasoning": true,
@@ -175,18 +215,20 @@
       "intelligence": "high",
       "coding": true,
       "math": true,
-      "multimodal": false
+      "multimodal": true
     }
   },
 
   "nvidia/llama-3.1-nemotron-ultra-253b-v1": {
-    "title": "Llama 3.1 Nemotron Ultra 253B-v1",
-    "description": "Gigante de 253 B parâmetros denso, derivado do Llama-3.1-405B, otimizado via NAS para encaixar em um nó 8×H100 mantendo janela de 128 k tokens. Afinado para agentes, RAG e chamadas de ferramenta, com forte score em lógica, código e matemática.",
+    "name": "Nemotron Ultra",
+    "title": "NVIDIA Llama 3.1 Nemotron Ultra 253B-v1",
+    "shortUseCase": "Modelo gigante para empresas",
+    "description": "Modelo gigante da NVIDIA com 253 bilhões de parâmetros, especializado em integrar APIs e ferramentas empresariais. Ideal para grandes corporações que precisam de IA super inteligente.",
     "image": "/assets/nvidia-nemotron-logo.webp",
     "useCases": [
-      "Assistentes corporativos que integram APIs",
-      "Chatbots multilíngues com contexto extenso",
-      "Sistemas de RAG e análise documental",
+      "Assistentes corporativos que integram sistemas",
+      "Chatbots multilíngues para grandes empresas",
+      "Análise de documentos e relatórios complexos",
       "Pesquisa científica computacional pesada"
     ],
     "characteristics": {
@@ -200,79 +242,21 @@
   },
 
   "qwen/qwen3-235b-a22b": {
-    "title": "Qwen 3-235B-A22B",
-    "description": "MoE com 235 B totais (22 B ativos) que alterna entre modo \"thinking\" para problemas difíceis e modo rápido para diálogo, suporta 100+ idiomas, janela nativa 32 k (até 131 k via YaRN) e licença Apache 2.0.",
+    "name": "Qwen 3 Ultra",
+    "title": "Alibaba Qwen 3-235B-A22B",
+    "shortUseCase": "Multilíngue inteligente com raciocínio adaptativo",
+    "description": "Modelo da Alibaba que fala 119 idiomas e adapta seu modo de pensar: rápido para conversas simples, profundo para problemas complexos. Perfeito para aplicações globais.",
     "image": "/assets/alibaba-qwen-logo.jpg",
     "useCases": [
-      "Plataformas globais de atendimento multicanal",
-      "Tradução e localização de grande volume",
-      "Geração de conteúdo intercultural",
-      "Agentes conversacionais com raciocínio profundo"
+      "Atendimento ao cliente global multiidioma",
+      "Tradução e localização em massa",
+      "Criação de conteúdo para diferentes culturas",
+      "Assistentes que pensam quando necessário"
     ],
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    }
-  },
-
-  "qwen3-235b-a22b": {
-    "title": "Qwen 3-235B-A22B",
-    "description": "MoE com 235 B totais (22 B ativos) que alterna entre modo \"thinking\" para problemas difíceis e modo rápido para diálogo, suporta 100+ idiomas, janela nativa 32 k (até 131 k via YaRN) e licença Apache 2.0.",
-    "image": "/assets/alibaba-qwen-logo.jpg",
-    "useCases": [
-      "Plataformas globais de atendimento multicanal",
-      "Tradução e localização de grande volume",
-      "Geração de conteúdo intercultural",
-      "Agentes conversacionais com raciocínio profundo"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    }
-  },
-
-  "qwen3-32b": {
-    "title": "Qwen 3-32B",
-    "description": "Modelo denso de 32,8 B parâmetros, janela 32 k (até 131 k via YaRN) e suporte a 119 idiomas; oferece desempenho próximo a modelos de 70 B da geração anterior com menor custo e latência.",
-    "image": "/assets/alibaba-qwen-logo.jpg",
-    "useCases": [
-      "Deploy SaaS multilíngue em nuvem",
-      "Geração de relatórios e sumários longos",
-      "Assistentes de programação com contexto extenso",
-      "Aplicações de análise de documentos"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    }
-  },
-
-  "qwen3-4b": {
-    "title": "Qwen 3-4B",
-    "description": "Versão compacta (4,0 B parâmetros) que cabe em GPU simples, mantendo janela de 32 k tokens e suporte a 100+ idiomas – excelente para aplicações locais, mobile ou edge que exijam tradução e chat rápidos.",
-    "image": "/assets/alibaba-qwen-logo.jpg",
-    "useCases": [
-      "Apps móveis de tradução em tempo real",
-      "Chatbots embarcados em dispositivos IoT",
-      "Assistentes pessoais off-line",
-      "Fine-tuning leve para domínios específicos"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "high",
+      "intelligence": "very-high",
       "coding": true,
       "math": true,
       "multimodal": true

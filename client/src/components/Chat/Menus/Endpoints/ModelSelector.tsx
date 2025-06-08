@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import type { ModelSelectorProps } from '~/common';
-import { ModelSelectorProvider, useModelSelectorContext } from './ModelSelectorContext';
-import { renderModelSpecs, renderEndpoints, renderSearchResults } from './components';
-import { getSelectedIcon, getDisplayValue } from './utils';
+import { useLocalize } from '~/hooks';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
 import { CustomMenu as Menu } from './CustomMenu';
 import DialogManager from './DialogManager';
-import { useLocalize } from '~/hooks';
+import { ModelSelectorProvider, useModelSelectorContext } from './ModelSelectorContext';
+import { renderEndpoints, renderModelSpecs, renderSearchResults } from './components';
+import { getDisplayValue, getSelectedIcon } from './utils';
 
 function ModelSelectorContent() {
   const localize = useLocalize();
@@ -50,6 +51,9 @@ function ModelSelectorContent() {
     [localize, modelSpecs, selectedValues, mappedEndpoints],
   );
 
+  const { getModelDescription } = useModelDescriptions();
+  const modelDescription = getModelDescription(selectedValues.model);
+
   const trigger = (
     <button
       className="my-1 flex h-10 w-full max-w-[70vw] items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-secondary px-3 py-2 text-sm text-text-primary hover:bg-surface-tertiary"
@@ -60,7 +64,9 @@ function ModelSelectorContent() {
           {selectedIcon}
         </div>
       )}
-      <span className="flex-grow truncate text-left">{selectedDisplayValue}</span>
+      <span className="flex-grow truncate text-left">
+        {modelDescription?.name || selectedDisplayValue}
+      </span>
     </button>
   );
 
