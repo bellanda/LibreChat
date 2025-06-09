@@ -245,6 +245,156 @@
     "supportsImageAttachment": true
   },
 
+  "gemini-2.5-flash-preview-04-17": {
+    "name": "Gemini 2.5 Flash",
+    "title": "Google Gemini 2.5 Flash Preview",
+    "shortUseCase": "Raciocínio híbrido rápido e econômico",
+    "description": "Modelo híbrido que equilibra velocidade e raciocínio com 'orçamentos de pensamento' ajustáveis. Processa texto, imagens, vídeo e áudio com contexto de 1 milhão de tokens. Perfeito para tarefas que precisam pensar na medida certa.",
+    "image": "/assets/google-gemini-logo.png",
+    "useCases": [
+      "Assistente multimodal que analisa documentos e mídia",
+      "Chatbots que ajustam profundidade de raciocínio",
+      "Análise de código com execução e debugging",
+      "Busca inteligente com fundamentação em tempo real"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+
+  "gemini-2.5-pro-preview-06-05": {
+    "name": "Gemini 2.5 Pro",
+    "title": "Google Gemini 2.5 Pro Preview",
+    "shortUseCase": "Raciocínio avançado para problemas complexos",
+    "description": "O modelo mais avançado do Google para raciocínio complexo em programação, matemática e STEM. Com capacidades de pensamento aprimoradas e suporte multimodal completo, resolve os problemas mais desafiadores.",
+    "image": "/assets/google-gemini-logo.png",
+    "useCases": [
+      "Resolver problemas de matemática e física avançada",
+      "Desenvolvimento de software e arquitetura complexa",
+      "Pesquisa científica com análise de dados visuais",
+      "Consultoria técnica especializada"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+
+  "gemini-2.0-flash": {
+    "name": "Gemini 2.0 Flash",
+    "title": "Google Gemini 2.0 Flash",
+    "shortUseCase": "Próxima geração multimodal otimizada para velocidade",
+    "description": "Modelo de próxima geração otimizado para velocidade máxima com uso nativo de ferramentas. Combina capacidades multimodais avançadas com execução de código e pensamento experimental em tempo real.",
+    "image": "/assets/google-gemini-logo.png",
+    "useCases": [
+      "Assistentes que usam ferramentas externas nativamente",
+      "Desenvolvimento ágil com execução de código instantânea",
+      "Aplicações multimodais de alta performance",
+      "Prototipagem rápida com IA conversacional"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "very-fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+
+  "gemini-2.0-flash-lite": {
+    "name": "Gemini 2.0 Flash Lite",
+    "title": "Google Gemini 2.0 Flash Lite",
+    "shortUseCase": "Versão econômica e ultra-rápida",
+    "description": "Variante otimizada para custo e latência ultra-baixa do Gemini 2.0 Flash. Mantém o contexto extenso de 1 milhão de tokens mas com foco em eficiência máxima para aplicações em massa.",
+    "image": "/assets/google-gemini-logo.png",
+    "useCases": [
+      "Chatbots em massa com custo reduzido",
+      "Aplicações móveis com resposta instantânea",
+      "Integração em IoT e dispositivos embarcados",
+      "Sistemas de atendimento automatizado"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "very-fast",
+      "intelligence": "medium",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "gemini-2.0-flash-preview-image-generation": {
+    "name": "Gemini 2.0 Flash Image Gen",
+    "title": "Google Gemini 2.0 Flash Preview Image Generation",
+    "shortUseCase": "Geração e edição conversacional de imagens",
+    "description": "Especializado em geração e edição conversacional de imagens. Combina chat inteligente com criação visual, permitindo refinar e modificar imagens através de diálogo natural multimodal.",
+    "image": "/assets/google-gemini-logo.png",
+    "useCases": [
+      "Designer de imagens conversacional",
+      "Edição colaborativa de arte digital",
+      "Prototipagem visual para produtos",
+      "Criação de conteúdo visual personalizado"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": false,
+      "math": false,
+      "multimodal": true
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "imagen-3.0-generate-002": {
+    "name": "Imagen 3.0",
+    "title": "Google Imagen 3.0 Generate 002",
+    "shortUseCase": "Geração de imagens de altíssima qualidade",
+    "description": "O modelo de geração de imagens mais avançado do Google. Produz imagens com detalhes excepcionais, iluminação realista e mínimos artefatos. Líder em qualidade fotorrealística e criatividade artística.",
+    "image": "/assets/google-imagen-logo.png",
+    "useCases": [
+      "Criação de arte digital profissional",
+      "Fotografia conceitual e publicitária",
+      "Ilustrações técnicas e científicas",
+      "Conteúdo visual para marketing e mídia"
+    ],
+    "characteristics": {
+      "reasoning": false,
+      "speed": "medium",
+      "intelligence": "high",
+      "coding": false,
+      "math": false,
+      "multimodal": false
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
   "qwen/qwen3-235b-a22b": {
     "name": "Qwen 3 Ultra",
     "title": "Alibaba Qwen 3-235B-A22B",
