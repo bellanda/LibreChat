@@ -345,56 +345,6 @@
     "supportsImageAttachment": true
   },
 
-  "gemini-2.0-flash-preview-image-generation": {
-    "name": "Gemini 2.0 Flash Image Gen",
-    "title": "Google Gemini 2.0 Flash Preview Image Generation",
-    "shortUseCase": "Geração e edição conversacional de imagens",
-    "description": "Especializado em geração e edição conversacional de imagens. Combina chat inteligente com criação visual, permitindo refinar e modificar imagens através de diálogo natural multimodal.",
-    "image": "/assets/google-gemini-logo.png",
-    "useCases": [
-      "Designer de imagens conversacional",
-      "Edição colaborativa de arte digital",
-      "Prototipagem visual para produtos",
-      "Criação de conteúdo visual personalizado"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "high",
-      "coding": false,
-      "math": false,
-      "multimodal": true
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
-  "imagen-3.0-generate-002": {
-    "name": "Imagen 3.0",
-    "title": "Google Imagen 3.0 Generate 002",
-    "shortUseCase": "Geração de imagens de altíssima qualidade",
-    "description": "O modelo de geração de imagens mais avançado do Google. Produz imagens com detalhes excepcionais, iluminação realista e mínimos artefatos. Líder em qualidade fotorrealística e criatividade artística.",
-    "image": "/assets/google-imagen-logo.png",
-    "useCases": [
-      "Criação de arte digital profissional",
-      "Fotografia conceitual e publicitária",
-      "Ilustrações técnicas e científicas",
-      "Conteúdo visual para marketing e mídia"
-    ],
-    "characteristics": {
-      "reasoning": false,
-      "speed": "medium",
-      "intelligence": "high",
-      "coding": false,
-      "math": false,
-      "multimodal": false
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
   "qwen/qwen3-235b-a22b": {
     "name": "Qwen 3 Ultra",
     "title": "Alibaba Qwen 3-235B-A22B",
