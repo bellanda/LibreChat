@@ -266,7 +266,7 @@
       "multimodal": true
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": true,
+    "supportsCodeExecution": false,
     "supportsImageAttachment": true
   },
 
@@ -291,7 +291,7 @@
       "multimodal": true
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": true,
+    "supportsCodeExecution": false,
     "supportsImageAttachment": true
   },
 
@@ -316,7 +316,7 @@
       "multimodal": true
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": true,
+    "supportsCodeExecution": false,
     "supportsImageAttachment": true
   },
 
