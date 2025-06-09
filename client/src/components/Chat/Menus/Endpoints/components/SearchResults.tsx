@@ -1,12 +1,13 @@
-import React, { Fragment } from 'react';
-import { EarthIcon } from 'lucide-react';
-import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import type { TModelSpec } from 'librechat-data-provider';
+import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import { EarthIcon } from 'lucide-react';
+import { Fragment } from 'react';
 import type { Endpoint } from '~/common';
-import { useModelSelectorContext } from '../ModelSelectorContext';
-import { CustomMenuItem as MenuItem } from '../CustomMenu';
-import SpecIcon from './SpecIcon';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
 import { cn } from '~/utils';
+import { CustomMenuItem as MenuItem } from '../CustomMenu';
+import { useModelSelectorContext } from '../ModelSelectorContext';
+import SpecIcon from './SpecIcon';
 
 interface SearchResultsProps {
   results: (TModelSpec | Endpoint)[] | null;
@@ -22,6 +23,8 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
     handleSelectEndpoint,
     endpointsConfig,
   } = useModelSelectorContext();
+
+  const { getModelDescription } = useModelDescriptions();
 
   const {
     modelSpec: selectedSpec,
@@ -116,7 +119,15 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
                   ) {
                     modelName = endpoint.assistantNames[model.name];
                   }
-                  return modelName.toLowerCase().includes(lowerQuery);
+
+                  // Also check translated model name
+                  const modelDescription = getModelDescription(model.name);
+                  const translatedName = modelDescription?.name || modelName;
+
+                  return (
+                    modelName.toLowerCase().includes(lowerQuery) ||
+                    translatedName.toLowerCase().includes(lowerQuery)
+                  );
                 });
 
             if (!filteredModels.length) {
@@ -154,6 +165,10 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
                     modelName = endpoint.assistantNames[modelId];
                   }
 
+                  // Get translated model description
+                  const modelDescription = getModelDescription(modelId);
+                  const displayName = modelDescription?.name || modelName;
+
                   return (
                     <MenuItem
                       key={`${endpoint.value}-${modelId}-search-${i}`}
@@ -165,12 +180,19 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
                           <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
                             <img
                               src={endpoint.modelIcons[modelId]}
-                              alt={modelName}
+                              alt={displayName}
                               className="h-full w-full object-cover"
                             />
                           </div>
                         )}
-                        <span>{modelName}</span>
+                        <div className="flex flex-col">
+                          <span>{displayName}</span>
+                          {modelDescription?.shortUseCase && (
+                            <span className="text-xs text-text-secondary">
+                              {modelDescription.shortUseCase}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       {isGlobal && <EarthIcon className="ml-auto size-4 text-green-400" />}
                       {selectedEndpoint === endpoint.value && selectedModel === modelId && (
