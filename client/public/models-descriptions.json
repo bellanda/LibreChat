@@ -192,7 +192,10 @@
       "coding": true,
       "math": true,
       "multimodal": false
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
   },
 
   "claude-sonnet-4-20250514": {
@@ -417,7 +420,7 @@
     },
     "supportsWebSearch": true,
     "supportsCodeExecution": false,
-    "supportsImageAttachment": false
+    "supportsImageAttachment": true
   },
 
   "meta-llama/llama-4-scout-17b-16e-instruct": {
