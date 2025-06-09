@@ -1,24 +1,25 @@
-import { v4 } from 'uuid';
-import debounce from 'lodash/debounce';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import type { TEndpointsConfig, TError } from 'librechat-data-provider';
 import {
-  QueryKeys,
-  EModelEndpoint,
-  mergeFileConfig,
-  isAgentsEndpoint,
-  isAssistantsEndpoint,
   defaultAssistantsVersion,
   fileConfig as defaultFileConfig,
+  EModelEndpoint,
+  isAgentsEndpoint,
+  isAssistantsEndpoint,
+  mergeFileConfig,
+  QueryKeys,
 } from 'librechat-data-provider';
-import type { TEndpointsConfig, TError } from 'librechat-data-provider';
-import type { ExtendedFile, FileSetter } from '~/common';
-import { useUploadFileMutation, useGetFileConfig } from '~/data-provider';
-import useLocalize, { TranslationKeys } from '~/hooks/useLocalize';
-import { useDelayedUploadToast } from './useDelayedUploadToast';
-import { useToastContext } from '~/Providers/ToastContext';
+import debounce from 'lodash/debounce';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { v4 } from 'uuid';
 import { useChatContext } from '~/Providers/ChatContext';
+import { useToastContext } from '~/Providers/ToastContext';
+import type { ExtendedFile, FileSetter } from '~/common';
+import { useGetFileConfig, useUploadFileMutation } from '~/data-provider';
+import useLocalize, { TranslationKeys } from '~/hooks/useLocalize';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
 import { logger, validateFiles } from '~/utils';
+import { useDelayedUploadToast } from './useDelayedUploadToast';
 import useUpdateFiles from './useUpdateFiles';
 
 type UseFileHandling = {
@@ -32,6 +33,7 @@ const useFileHandling = (params?: UseFileHandling) => {
   const localize = useLocalize();
   const queryClient = useQueryClient();
   const { showToast } = useToastContext();
+  const { getModelDescription } = useModelDescriptions();
   const [errors, setErrors] = useState<string[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { startUploadTimer, clearUploadTimer } = useDelayedUploadToast();
@@ -53,6 +55,11 @@ const useFileHandling = (params?: UseFileHandling) => {
       params?.overrideEndpoint ?? conversation?.endpointType ?? conversation?.endpoint ?? 'default',
     [params?.overrideEndpoint, conversation?.endpointType, conversation?.endpoint],
   );
+
+  // Check if current model supports image attachments
+  const currentModel = conversation?.model ?? null;
+  const modelDescription = getModelDescription(currentModel);
+  const supportsImageAttachment = modelDescription?.supportsImageAttachment ?? true;
 
   const displayToast = useCallback(() => {
     if (errors.length > 1) {
@@ -235,6 +242,19 @@ const useFileHandling = (params?: UseFileHandling) => {
   const handleFiles = async (_files: FileList | File[], _toolResource?: string) => {
     abortControllerRef.current = new AbortController();
     const fileList = Array.from(_files);
+
+    // Check for image files when model doesn't support images
+    if (!supportsImageAttachment) {
+      const imageFiles = fileList.filter((file) => file.type.startsWith('image/'));
+      if (imageFiles.length > 0) {
+        setError(
+          'Este modelo não suporta anexos de imagem. Por favor, selecione apenas arquivos de texto ou documentos.',
+        );
+        setFilesLoading(false);
+        return;
+      }
+    }
+
     /* Validate files */
     let filesAreValid: boolean;
     try {
@@ -277,6 +297,14 @@ const useFileHandling = (params?: UseFileHandling) => {
         }
 
         const isImage = originalFile.type.split('/')[0] === 'image';
+
+        // Double check for image support
+        if (isImage && !supportsImageAttachment) {
+          setError('Este modelo não suporta anexos de imagem.');
+          URL.revokeObjectURL(preview);
+          continue;
+        }
+
         const tool_resource =
           extendedFile.tool_resource ?? params?.additionalMetadata?.tool_resource;
         if (isAgentsEndpoint(endpoint) && !isImage && tool_resource == null) {

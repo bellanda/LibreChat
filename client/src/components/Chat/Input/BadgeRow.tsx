@@ -1,22 +1,24 @@
-import React, {
-  memo,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  forwardRef,
-  useReducer,
-} from 'react';
-import { useRecoilValue, useRecoilCallback } from 'recoil';
 import type { LucideIcon } from 'lucide-react';
-import CodeInterpreter from './CodeInterpreter';
+import React, {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
+import { useRecoilCallback, useRecoilValue } from 'recoil';
 import type { BadgeItem } from '~/common';
-import { useChatBadges } from '~/hooks';
 import { Badge } from '~/components/ui';
+import { useChatBadges } from '~/hooks';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import { useChatContext } from '~/Providers';
+import store from '~/store';
+import CodeInterpreter from './CodeInterpreter';
 import MCPSelect from './MCPSelect';
 import WebSearch from './WebSearch';
-import store from '~/store';
 
 interface BadgeRowProps {
   showEphemeralBadges?: boolean;
@@ -140,6 +142,8 @@ function BadgeRow({
   onToggle,
   isInChat,
 }: BadgeRowProps) {
+  const { conversation } = useChatContext();
+  const { getModelDescription } = useModelDescriptions();
   const [orderedBadges, setOrderedBadges] = useState<BadgeItem[]>([]);
   const [dragState, dispatch] = useReducer(dragReducer, {
     draggedBadge: null,
@@ -161,6 +165,12 @@ function BadgeRow({
     () => allBadges.filter((badge) => badge.isAvailable !== false),
     [allBadges],
   );
+
+  // Get current model capabilities
+  const currentModel = conversation?.model ?? null;
+  const modelDescription = getModelDescription(currentModel);
+  const supportsWebSearch = modelDescription?.supportsWebSearch ?? true;
+  const supportsCodeExecution = modelDescription?.supportsCodeExecution ?? true;
 
   const toggleBadge = useRecoilCallback(
     ({ snapshot, set }) =>
@@ -355,8 +365,8 @@ function BadgeRow({
       )}
       {showEphemeralBadges === true && (
         <>
-          <WebSearch conversationId={conversationId} />
-          <CodeInterpreter conversationId={conversationId} />
+          {supportsWebSearch && <WebSearch conversationId={conversationId} />}
+          {supportsCodeExecution && <CodeInterpreter conversationId={conversationId} />}
           <MCPSelect conversationId={conversationId} />
         </>
       )}

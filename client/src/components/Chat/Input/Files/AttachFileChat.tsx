@@ -1,22 +1,24 @@
-import { memo, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   Constants,
-  supportsFiles,
-  mergeFileConfig,
-  isAgentsEndpoint,
-  isEphemeralAgent,
   EndpointFileConfig,
   fileConfig as defaultFileConfig,
+  isAgentsEndpoint,
+  isEphemeralAgent,
+  mergeFileConfig,
+  supportsFiles,
 } from 'librechat-data-provider';
+import { memo, useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
 import { useChatContext } from '~/Providers';
 import { useGetFileConfig } from '~/data-provider';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
 import { ephemeralAgentByConvoId } from '~/store';
-import AttachFileMenu from './AttachFileMenu';
 import AttachFile from './AttachFile';
+import AttachFileMenu from './AttachFileMenu';
 
 function AttachFileChat({ disableInputs }: { disableInputs: boolean }) {
   const { conversation } = useChatContext();
+  const { getModelDescription } = useModelDescriptions();
 
   const { endpoint: _endpoint, endpointType } = conversation ?? { endpoint: null };
 
@@ -36,13 +38,19 @@ function AttachFileChat({ disableInputs }: { disableInputs: boolean }) {
     | undefined;
 
   const endpointSupportsFiles: boolean = supportsFiles[endpointType ?? _endpoint ?? ''] ?? false;
+
+  // Check if current model supports image attachments
+  const currentModel = conversation?.model ?? null;
+  const modelDescription = getModelDescription(currentModel);
+  const supportsImageAttachment = modelDescription?.supportsImageAttachment ?? true;
+
   const isUploadDisabled = (disableInputs || endpointFileConfig?.disabled) ?? false;
 
   if (isAgents) {
     return <AttachFileMenu disabled={disableInputs} />;
   }
   if (endpointSupportsFiles && !isUploadDisabled) {
-    return <AttachFile disabled={disableInputs} />;
+    return <AttachFile disabled={isUploadDisabled} />;
   }
 
   return null;

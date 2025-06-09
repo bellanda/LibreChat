@@ -18,7 +18,10 @@
       "coding": true,
       "math": true,
       "multimodal": true
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   },
 
   "o3-2025-04-16": {
@@ -40,7 +43,10 @@
       "coding": true,
       "math": true,
       "multimodal": true
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   },
 
   "o4-mini-2025-04-16": {
@@ -62,7 +68,10 @@
       "coding": true,
       "math": true,
       "multimodal": false
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   },
 
   "gpt-4.1-2025-04-14": {
@@ -84,7 +93,10 @@
       "coding": true,
       "math": true,
       "multimodal": false
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   },
 
   "gpt-4.1-mini-2025-04-14": {
@@ -106,20 +118,22 @@
       "coding": true,
       "math": true,
       "multimodal": false
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   },
 
   "gpt-4.1-nano-2025-04-14": {
     "name": "GPT-4.1 nano",
     "title": "GPT-4.1 nano",
-    "shortUseCase": "Roda localmente no seu dispositivo",
-    "description": "O primeiro modelo da OpenAI que roda no seu próprio computador, sem precisar de internet. Perfeito para privacidade total e aplicações que funcionam offline.",
+    "shortUseCase": "Muito barato e rápido para tarefas simples",
+    "description": "Modelo barato e rápido para tarefas simples",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Assistente pessoal que funciona sem internet",
       "Tradução local e privada",
       "Dispositivos IoT com IA embarcada",
-      "Personalização para áreas específicas"
+      "Tarefas simples e rápidas"
     ],
     "characteristics": {
       "reasoning": true,
@@ -128,7 +142,10 @@
       "coding": true,
       "math": true,
       "multimodal": false
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   },
 
   "deepseek-chat": {
@@ -150,7 +167,10 @@
       "coding": true,
       "math": true,
       "multimodal": false
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
   },
 
   "deepseek-reasoner": {
@@ -175,70 +195,54 @@
     }
   },
 
-  "meta-llama/llama-4-maverick-17b-128e-instruct": {
-    "name": "Llama 4 Maverick",
-    "title": "♾️Meta Llama 4 Maverick 17B-128E",
-    "shortUseCase": "Poderoso e gratuito para uso comercial",
-    "description": "Modelo da Meta com arquitetura de especialistas que combina texto e imagem. Muito poderoso para código e criação de conteúdo, com licença gratuita para uso comercial.",
-    "image": "/assets/meta-llama-logo.webp",
+  "claude-sonnet-4-20250514": {
+    "name": "Claude Sonnet 4",
+    "title": "Anthropic Claude Sonnet 4",
+    "shortUseCase": "Especialista em programação e engenharia de software",
+    "description": "O melhor modelo para desenvolvimento de software, com expertise excepcional em programação, arquitetura de sistemas e debugging. Combina velocidade com inteligência superior para resolver problemas complexos de código.",
+    "image": "/assets/anthropic-logo.png",
     "useCases": [
-      "Assistentes que usam ferramentas externas",
-      "Criação e revisão de código em grande escala",
-      "Geração de conteúdo rico (texto + imagem)",
-      "Sistemas de busca com contexto muito extenso"
+      "Desenvolvimento full-stack e arquitetura de software",
+      "Code review e refatoração de código complexo",
+      "Debugging avançado e otimização de performance",
+      "Criação de APIs e integração de sistemas"
     ],
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    }
-  },
-
-  "meta-llama/llama-4-scout-17b-16e-instruct": {
-    "name": "Llama 4 Scout",
-    "title": "♾️Meta Llama 4 Scout 17B-16E",
-    "shortUseCase": "Rápido e eficiente para apps",
-    "description": "Versão mais leve do Llama 4, otimizada para velocidade. Roda em uma única GPU mas mantém capacidades multimodais e contexto gigante de até 10 milhões de palavras.",
-    "image": "/assets/meta-llama-logo.webp",
-    "useCases": [
-      "Chatbots multimodais super rápidos",
-      "Apps móveis com IA avançada",
-      "Protótipos rápidos de IA conversacional",
-      "Personalização barata para empresas"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    }
-  },
-
-  "nvidia/llama-3.1-nemotron-ultra-253b-v1": {
-    "name": "Nemotron Ultra",
-    "title": "NVIDIA Llama 3.1 Nemotron Ultra 253B-v1",
-    "shortUseCase": "Modelo gigante para empresas",
-    "description": "Modelo gigante da NVIDIA com 253 bilhões de parâmetros, especializado em integrar APIs e ferramentas empresariais. Ideal para grandes corporações que precisam de IA super inteligente.",
-    "image": "/assets/nvidia-nemotron-logo.webp",
-    "useCases": [
-      "Assistentes corporativos que integram sistemas",
-      "Chatbots multilíngues para grandes empresas",
-      "Análise de documentos e relatórios complexos",
-      "Pesquisa científica computacional pesada"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "slow",
       "intelligence": "very-high",
       "coding": true,
       "math": true,
-      "multimodal": false
-    }
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "claude-opus-4-20250514": {
+    "name": "Claude Opus 4",
+    "title": "Anthropic Claude Opus 4",
+    "shortUseCase": "Arquiteto de software e programação avançada",
+    "description": "O modelo mais avançado para engenharia de software complexa. Líder mundial em programação, capaz de trabalhar autonomamente em projetos extensos, refatoração de código e arquitetura de sistemas de grande escala.",
+    "image": "/assets/anthropic-logo.png",
+    "useCases": [
+      "Arquitetura e desenvolvimento de sistemas complexos",
+      "Refatoração autônoma de codebases grandes",
+      "Migração de tecnologias e modernização de código",
+      "Desenvolvimento de frameworks e bibliotecas"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   },
 
   "qwen/qwen3-235b-a22b": {
@@ -260,6 +264,84 @@
       "coding": true,
       "math": true,
       "multimodal": true
-    }
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "nvidia/llama-3.1-nemotron-ultra-253b-v1": {
+    "name": "Nemotron Ultra",
+    "title": "NVIDIA Llama 3.1 Nemotron Ultra 253B-v1",
+    "shortUseCase": "Modelo gigante para empresas",
+    "description": "Modelo gigante da NVIDIA com 253 bilhões de parâmetros, especializado em integrar APIs e ferramentas empresariais. Ideal para grandes corporações que precisam de IA super inteligente.",
+    "image": "/assets/nvidia-nemotron-logo.webp",
+    "useCases": [
+      "Assistentes corporativos que integram sistemas",
+      "Chatbots multilíngues para grandes empresas",
+      "Análise de documentos e relatórios complexos",
+      "Pesquisa científica computacional pesada"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "slow",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "meta-llama/llama-4-maverick-17b-128e-instruct": {
+    "name": "Llama 4 Maverick",
+    "title": "♾️Meta Llama 4 Maverick 17B-128E",
+    "shortUseCase": "Poderoso, Open Source e Multimodal",
+    "description": "Modelo da Meta com arquitetura de especialistas que combina texto e imagem. Muito poderoso para código e criação de conteúdo, com licença gratuita para uso comercial.",
+    "image": "/assets/meta-llama-logo.webp",
+    "useCases": [
+      "Assistentes que usam ferramentas externas",
+      "Criação e revisão de código em grande escala",
+      "Geração de conteúdo rico (texto + imagem)",
+      "Sistemas de busca com contexto muito extenso"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "meta-llama/llama-4-scout-17b-16e-instruct": {
+    "name": "Llama 4 Scout",
+    "title": "♾️Meta Llama 4 Scout 17B-16E",
+    "shortUseCase": "Muito rápido e eficiente, Multimodal",
+    "description": "Versão mais leve do Llama 4, otimizada para velocidade. Roda em uma única GPU mas mantém capacidades multimodais e contexto gigante de até 10 milhões de palavras.",
+    "image": "/assets/meta-llama-logo.webp",
+    "useCases": [
+      "Chatbots multimodais super rápidos",
+      "Apps móveis com IA avançada",
+      "Protótipos rápidos de IA conversacional",
+      "Personalização barata para empresas"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   }
 }

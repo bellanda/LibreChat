@@ -15,6 +15,9 @@ export interface ModelDescription {
     math?: boolean;
     multimodal?: boolean;
   };
+  supportsWebSearch?: boolean;
+  supportsCodeExecution?: boolean;
+  supportsImageAttachment?: boolean;
 }
 
 export const useModelDescriptions = () => {
@@ -25,8 +28,15 @@ export const useModelDescriptions = () => {
     const loadDescriptions = async () => {
       try {
         console.log('🔍 Loading model descriptions from /models-descriptions.json');
-        // Fetch the JSON file from the public directory or API
-        const response = await fetch('/models-descriptions.json');
+        // Fetch the JSON file from the public directory or API with cache busting
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/models-descriptions.json?t=${timestamp}`, {
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+          },
+        });
         console.log('📡 Response status:', response.status, response.statusText);
 
         if (response.ok) {

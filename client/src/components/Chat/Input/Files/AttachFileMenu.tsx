@@ -1,10 +1,12 @@
 import * as Ariakit from '@ariakit/react';
-import React, { useRef, useState, useMemo } from 'react';
-import { FileSearch, ImageUpIcon, TerminalSquareIcon, FileType2Icon } from 'lucide-react';
-import { EToolResources, EModelEndpoint, defaultAgentCapabilities } from 'librechat-data-provider';
-import { FileUpload, TooltipAnchor, DropdownPopup, AttachmentIcon } from '~/components';
+import { EModelEndpoint, EToolResources } from 'librechat-data-provider';
+import { FileSearch, FileType2Icon, ImageUpIcon, TerminalSquareIcon } from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+import { AttachmentIcon, DropdownPopup, FileUpload, TooltipAnchor } from '~/components';
 import { useGetEndpointsQuery } from '~/data-provider';
-import { useLocalize, useFileHandling } from '~/hooks';
+import { useFileHandling, useLocalize } from '~/hooks';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import { useChatContext } from '~/Providers';
 import { cn } from '~/utils';
 
 interface AttachFileProps {
@@ -13,6 +15,8 @@ interface AttachFileProps {
 
 const AttachFile = ({ disabled }: AttachFileProps) => {
   const localize = useLocalize();
+  const { conversation } = useChatContext();
+  const { getModelDescription } = useModelDescriptions();
   const isUploadDisabled = disabled ?? false;
   const inputRef = useRef<HTMLInputElement>(null);
   const [isPopoverActive, setIsPopoverActive] = useState(false);
@@ -31,6 +35,11 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
     [endpointsConfig],
   );
 
+  // Check if current model supports image attachments
+  const currentModel = conversation?.model ?? null;
+  const modelDescription = getModelDescription(currentModel);
+  const supportsImageAttachment = modelDescription?.supportsImageAttachment ?? true;
+
   const handleUploadClick = (isImage?: boolean) => {
     if (!inputRef.current) {
       return;
@@ -42,16 +51,19 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
   };
 
   const dropdownItems = useMemo(() => {
-    const items = [
-      {
+    const items = [];
+
+    // Only show image upload option if model supports it
+    if (supportsImageAttachment) {
+      items.push({
         label: localize('com_ui_upload_image_input'),
         onClick: () => {
           setToolResource(undefined);
           handleUploadClick(true);
         },
         icon: <ImageUpIcon className="icon-md" />,
-      },
-    ];
+      });
+    }
 
     if (capabilities.includes(EToolResources.ocr)) {
       items.push({
@@ -87,7 +99,7 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
     }
 
     return items;
-  }, [capabilities, localize, setToolResource]);
+  }, [capabilities, localize, setToolResource, supportsImageAttachment]);
 
   const menuTrigger = (
     <TooltipAnchor
