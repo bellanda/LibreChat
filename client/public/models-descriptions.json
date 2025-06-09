@@ -368,7 +368,7 @@
       "math": true,
       "multimodal": true
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": false
   },
@@ -418,7 +418,7 @@
       "math": true,
       "multimodal": true
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": true
   },
@@ -443,7 +443,7 @@
       "math": true,
       "multimodal": true
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": true
   }
