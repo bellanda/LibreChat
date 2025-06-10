@@ -17,6 +17,7 @@ const {
   removeNullishValues,
   hostImageNamePrefix,
   isAssistantsEndpoint,
+  Constants,
 } = require('librechat-data-provider');
 const { EnvVar } = require('@librechat/agents');
 const {
@@ -513,7 +514,10 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
     fileInfoMetadata = { fileIdentifier };
   } else if (tool_resource === EToolResources.file_search) {
     const isFileSearchEnabled = await checkCapability(req, AgentCapabilities.file_search);
-    if (!isFileSearchEnabled) {
+    // Allow file_search for ephemeral agents even if not explicitly enabled in endpoint config
+    // since we've added file_search to ephemeral agent tools by default
+    const isEphemeralAgent = agent_id === Constants.EPHEMERAL_AGENT_ID || messageAttachment;
+    if (!isFileSearchEnabled && !isEphemeralAgent) {
       throw new Error('File search is not enabled for Agents');
     }
   } else if (tool_resource === EToolResources.ocr) {

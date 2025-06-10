@@ -307,10 +307,12 @@ const useFileHandling = (params?: UseFileHandling) => {
 
         const tool_resource =
           extendedFile.tool_resource ?? params?.additionalMetadata?.tool_resource;
+
+        // For agents endpoint, default to file_search if no tool_resource is specified
+        // This enables file upload for ephemeral agents with web search active
         if (isAgentsEndpoint(endpoint) && !isImage && tool_resource == null) {
-          /** Note: this needs to be removed when we can support files to providers */
-          setError('com_error_files_unsupported_capability');
-          continue;
+          // Default to file_search for agents to enable RAG functionality
+          extendedFile.tool_resource = 'file_search';
         }
 
         addFile(extendedFile);

@@ -66,6 +66,11 @@ const loadEphemeralAgent = ({ req, agent_id, endpoint, model_parameters: _m }) =
   const mcpServers = new Set(ephemeralAgent?.mcp);
   /** @type {string[]} */
   const tools = [];
+
+  // Always include file_search for ephemeral agents to enable file upload/RAG
+  // This ensures file upload works independently of other capabilities
+  tools.push(Tools.file_search);
+
   if (ephemeralAgent?.execute_code === true) {
     tools.push(Tools.execute_code);
   }

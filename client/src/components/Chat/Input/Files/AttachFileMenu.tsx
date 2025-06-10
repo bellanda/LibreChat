@@ -2,6 +2,7 @@ import * as Ariakit from '@ariakit/react';
 import { EModelEndpoint, EToolResources } from 'librechat-data-provider';
 import { FileSearch, FileType2Icon, ImageUpIcon, TerminalSquareIcon } from 'lucide-react';
 import React, { useMemo, useRef, useState } from 'react';
+import type { MenuItemProps } from '~/common';
 import { AttachmentIcon, DropdownPopup, FileUpload, TooltipAnchor } from '~/components';
 import { useGetEndpointsQuery } from '~/data-provider';
 import { useFileHandling, useLocalize } from '~/hooks';
@@ -51,7 +52,7 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
   };
 
   const dropdownItems = useMemo(() => {
-    const items = [];
+    const items: MenuItemProps[] = [];
 
     // Only show image upload option if model supports it
     if (supportsImageAttachment) {
@@ -65,6 +66,17 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
       });
     }
 
+    // Always show basic file upload for RAG/file search, even if not explicitly in capabilities
+    // This ensures file upload works independently of web search being active
+    items.push({
+      label: localize('com_ui_upload_file_search'),
+      onClick: () => {
+        setToolResource(EToolResources.file_search);
+        handleUploadClick();
+      },
+      icon: <FileSearch className="icon-md" />,
+    });
+
     if (capabilities.includes(EToolResources.ocr)) {
       items.push({
         label: localize('com_ui_upload_ocr_text'),
@@ -73,17 +85,6 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
           handleUploadClick();
         },
         icon: <FileType2Icon className="icon-md" />,
-      });
-    }
-
-    if (capabilities.includes(EToolResources.file_search)) {
-      items.push({
-        label: localize('com_ui_upload_file_search'),
-        onClick: () => {
-          setToolResource(EToolResources.file_search);
-          handleUploadClick();
-        },
-        icon: <FileSearch className="icon-md" />,
       });
     }
 
