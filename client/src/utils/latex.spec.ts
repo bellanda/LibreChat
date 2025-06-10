@@ -117,6 +117,17 @@ describe('processLaTeX', () => {
       const content = 'Prices: R$ 50, US$ 100, CAD$ 75, AUD$ 80, EUR$ 60';
       expect(processLaTeX(content)).toBe(content);
     });
+
+    test('handles currency with decimals and commas', () => {
+      const content =
+        'A equipe econômica estima arrecadar R$ 20,5 bilhões em 2025 e R$ 41 bilhões em 2026';
+      expect(processLaTeX(content)).toBe(content);
+    });
+
+    test('handles currency with spaces and various formats', () => {
+      const content = 'Valores: R$ 1.000,50 e US$ 2,500.75 e EUR$ 3 456,89';
+      expect(processLaTeX(content)).toBe(content);
+    });
   });
 });
 
@@ -221,6 +232,17 @@ describe('preprocessLaTeX', () => {
 
   test('preserves common currency prefixes', () => {
     const content = 'Prices: R$ 50, US$ 100, CAD$ 75, AUD$ 80, EUR$ 60';
+    expect(preprocessLaTeX(content)).toBe(content);
+  });
+
+  test('handles currency with decimals and commas', () => {
+    const content =
+      'A equipe econômica estima arrecadar R$ 20,5 bilhões em 2025 e R$ 41 bilhões em 2026';
+    expect(preprocessLaTeX(content)).toBe(content);
+  });
+
+  test('handles currency with spaces and various formats', () => {
+    const content = 'Valores: R$ 1.000,50 e US$ 2,500.75 e EUR$ 3 456,89';
     expect(preprocessLaTeX(content)).toBe(content);
   });
 });
