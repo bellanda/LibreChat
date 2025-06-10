@@ -1,5 +1,4 @@
-
-import { processLaTeX, preprocessLaTeX } from './latex';
+import { preprocessLaTeX, processLaTeX } from './latex';
 
 describe('processLaTeX', () => {
   test('returns the same string if no LaTeX patterns are found', () => {
@@ -102,6 +101,22 @@ describe('processLaTeX', () => {
       const expected = 'Outside $x^2 + y^2 = z^2$ and inside code block: ```\n$100\n# $1000\n```';
       expect(processLaTeX(content)).toBe(expected);
     });
+
+    test('does not escape currency symbols like R$, US$, EUR$', () => {
+      const content = 'A arrecadação foi de R$ 20 bilhões, US$ 100 milhões e EUR$ 50 milhões.';
+      expect(processLaTeX(content)).toBe(content);
+    });
+
+    test('handles mixed currency symbols and standalone dollar signs', () => {
+      const content = 'R$ 100 and standalone $200 and US$ 300';
+      const expected = 'R$ 100 and standalone \\$200 and US$ 300';
+      expect(processLaTeX(content)).toBe(expected);
+    });
+
+    test('preserves common currency prefixes', () => {
+      const content = 'Prices: R$ 50, US$ 100, CAD$ 75, AUD$ 80, EUR$ 60';
+      expect(processLaTeX(content)).toBe(content);
+    });
   });
 });
 
@@ -190,6 +205,22 @@ describe('preprocessLaTeX', () => {
 
   test('preserves LaTeX expressions with special characters', () => {
     const content = 'The set is defined as $\\{x | x > 0\\}$.';
+    expect(preprocessLaTeX(content)).toBe(content);
+  });
+
+  test('does not escape currency symbols like R$, US$, EUR$', () => {
+    const content = 'A arrecadação foi de R$ 20 bilhões, US$ 100 milhões e EUR$ 50 milhões.';
+    expect(preprocessLaTeX(content)).toBe(content);
+  });
+
+  test('handles mixed currency symbols and standalone dollar signs', () => {
+    const content = 'R$ 100 and standalone $200 and US$ 300';
+    const expected = 'R$ 100 and standalone \\$200 and US$ 300';
+    expect(preprocessLaTeX(content)).toBe(expected);
+  });
+
+  test('preserves common currency prefixes', () => {
+    const content = 'Prices: R$ 50, US$ 100, CAD$ 75, AUD$ 80, EUR$ 60';
     expect(preprocessLaTeX(content)).toBe(content);
   });
 });

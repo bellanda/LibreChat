@@ -25,7 +25,8 @@ export const processLaTeX = (_content: string) => {
   });
 
   // Escape dollar signs followed by a digit or space and digit
-  let processedContent = content.replace(/(\$)(?=\s?\d)/g, '\\$');
+  // Improved regex to avoid escaping common currency symbols like R$, US$, etc.
+  let processedContent = content.replace(/(?<![A-Za-z])(\$)(?=\s?\d)/g, '\\$');
 
   // If no LaTeX patterns are found, restore code blocks and return the processed content
   if (!containsLatexRegex.test(processedContent)) {
@@ -63,7 +64,9 @@ export function preprocessLaTeX(content: string): string {
   });
 
   // Step 3: Escape dollar signs that are likely currency indicators
-  content = content.replace(/\$(?=\d)/g, '\\$');
+  // Improved regex to avoid escaping common currency symbols like R$, US$, etc.
+  // Only escape standalone $ followed by digits, but not when preceded by currency letters
+  content = content.replace(/(?<![A-Za-z])\$(?=\d)/g, '\\$');
 
   // Step 4: Restore LaTeX expressions
   content = content.replace(/<<LATEX_(\d+)>>/g, (_, index) => latexExpressions[parseInt(index)]);
