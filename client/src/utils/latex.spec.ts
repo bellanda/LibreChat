@@ -128,6 +128,23 @@ describe('processLaTeX', () => {
       const content = 'Valores: R$ 1.000,50 e US$ 2,500.75 e EUR$ 3 456,89';
       expect(processLaTeX(content)).toBe(content);
     });
+
+    test('handles currency with markdown formatting', () => {
+      const content =
+        'Arrecadação de **R$ 20 bilhões** para cerca de R$ 6 bilhões** a **R$ 7 bilhões';
+      expect(processLaTeX(content)).toBe(content);
+    });
+
+    test('handles currency with special unicode characters', () => {
+      const content = 'IOF de cerca de R$ 20 bilhões\\ue203Segundo a equipe econômica';
+      expect(processLaTeX(content)).toBe(content);
+    });
+
+    test('handles complex real-world example', () => {
+      const content =
+        'governo reduziu a arrecadação com a alta do IOF de cerca de **R$ 20 bilhões** para cerca de R$ 6 bilhões** a **R$ 7 bilhões';
+      expect(processLaTeX(content)).toBe(content);
+    });
   });
 });
 
@@ -243,6 +260,23 @@ describe('preprocessLaTeX', () => {
 
   test('handles currency with spaces and various formats', () => {
     const content = 'Valores: R$ 1.000,50 e US$ 2,500.75 e EUR$ 3 456,89';
+    expect(preprocessLaTeX(content)).toBe(content);
+  });
+
+  test('handles currency with markdown formatting', () => {
+    const content =
+      'Arrecadação de **R$ 20 bilhões** para cerca de R$ 6 bilhões** a **R$ 7 bilhões';
+    expect(preprocessLaTeX(content)).toBe(content);
+  });
+
+  test('handles currency with special unicode characters', () => {
+    const content = 'IOF de cerca de R$ 20 bilhões\\ue203Segundo a equipe econômica';
+    expect(preprocessLaTeX(content)).toBe(content);
+  });
+
+  test('handles complex real-world example', () => {
+    const content =
+      'governo reduziu a arrecadação com a alta do IOF de cerca de **R$ 20 bilhões** para cerca de R$ 6 bilhões** a **R$ 7 bilhões';
     expect(preprocessLaTeX(content)).toBe(content);
   });
 });
