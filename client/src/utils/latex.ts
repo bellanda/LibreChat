@@ -16,6 +16,11 @@ const codeBlockRegex = /(```[\s\S]*?```|`.*?`)/g;
 
 export const processLaTeX = (_content: string) => {
   let content = _content;
+
+  // Step 0: Clean up web search citation markers first to avoid interference
+  const citationCleanupRegex = /\\ue200|\\ue201|\\ue202|\\ue203|\\ue204|\\ue206/g;
+  content = content.replace(citationCleanupRegex, '');
+
   // Temporarily replace code blocks and inline code with placeholders
   const codeBlocks: string[] = [];
   let index = 0;
@@ -53,6 +58,11 @@ export const processLaTeX = (_content: string) => {
  * @returns The processed string with replaced delimiters and escaped characters.
  */
 export function preprocessLaTeX(content: string): string {
+  // Step 0: Clean up web search citation markers first to avoid interference
+  // This prevents LaTeX processing from interfering with citation processing
+  const citationCleanupRegex = /\\ue200|\\ue201|\\ue202|\\ue203|\\ue204|\\ue206/g;
+  content = content.replace(citationCleanupRegex, '');
+
   // Step 1: Protect code blocks
   const codeBlocks: string[] = [];
   content = content.replace(/(```[\s\S]*?```|`[^`\n]+`)/g, (match, code) => {
