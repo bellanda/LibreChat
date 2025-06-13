@@ -74,7 +74,57 @@
     "supportsImageAttachment": true
   },
 
+  "o4-mini": {
+    "name": "o4-mini",
+    "title": "OpenAI o4-mini",
+    "shortUseCase": "Mais rápido em raciocínio avançado",
+    "description": "Versão mais rápida e barata do o4, ideal para conversas inteligentes e resumos. Mantém a capacidade de raciocínio mas com respostas mais ágeis e custo reduzido.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Chatbots inteligentes para sites e apps",
+      "Resumir documentos longos rapidamente",
+      "Assistente móvel com raciocínio avançado",
+      "Protótipos de IA com orçamento limitado"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
   "gpt-4.1-2025-04-14": {
+    "name": "GPT-4.1",
+    "title": "GPT-4.1",
+    "shortUseCase": "Ótimo para análise e programação",
+    "description": "Especialista em ler e analisar documentos enormes (até 1 milhão de palavras). Perfeito para empresas que precisam processar contratos, relatórios e bases de conhecimento extensas.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Analisar contratos e documentos legais extensos",
+      "Criar e revisar código de projetos grandes",
+      "Assistente empresarial com acesso a toda documentação",
+      "Sistemas de busca inteligente em bases de dados"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "gpt-4.1": {
     "name": "GPT-4.1",
     "title": "GPT-4.1",
     "shortUseCase": "Ótimo para análise e programação",
@@ -124,7 +174,56 @@
     "supportsImageAttachment": true
   },
 
+  "gpt-4.1-mini": {
+    "name": "GPT-4.1 mini",
+    "title": "GPT-4.1 mini",
+    "shortUseCase": "Mais rápido para tarefas do dia a dia",
+    "description": "Versão mais rápida e barata do GPT-4.1, ainda consegue ler documentos grandes mas com respostas mais ágeis. Ideal para aplicações que precisam de contexto extenso sem demora.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Assistente de programação com projetos grandes",
+      "Geração de relatórios executivos automáticos",
+      "Chat empresarial com histórico longo",
+      "Integração em sistemas web e mobile"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
   "gpt-4.1-nano-2025-04-14": {
+    "name": "GPT-4.1 nano",
+    "title": "GPT-4.1 nano",
+    "shortUseCase": "Muito barato e rápido para tarefas simples",
+    "description": "Modelo barato e rápido para tarefas simples",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Tradução local e privada",
+      "Dispositivos IoT com IA embarcada",
+      "Tarefas simples e rápidas"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "medium",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "gpt-4.1-nano": {
     "name": "GPT-4.1 nano",
     "title": "GPT-4.1 nano",
     "shortUseCase": "Muito barato e rápido para tarefas simples",
