@@ -1,10 +1,13 @@
-import { memo, useMemo, ReactElement } from 'react';
+import { memo, ReactElement, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import Markdown from '~/components/Chat/Messages/Content/Markdown';
+import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
+import HPEAgentsProcessor from '~/components/HPEAgents/HPEAgentsProcessor';
+import '~/components/HPEAgents/styles.css';
+import { useHPEAgentsProcessor } from '~/hooks/useHPEAgentsProcessor';
 import { useChatContext, useMessageContext } from '~/Providers';
-import { cn } from '~/utils';
 import store from '~/store';
+import { cn } from '~/utils';
 
 type TextPartProps = {
   text: string;
@@ -27,7 +30,16 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
     [messageId, latestMessage?.messageId],
   );
 
+  // Hook para processar marcações HPEAgents
+  const { shouldUseProcessor } = useHPEAgentsProcessor(text);
+
   const content: ContentType = useMemo(() => {
+    // Se o texto contém marcações HPEAgents, usar o processador especial
+    if (shouldUseProcessor && !isCreatedByUser) {
+      return <HPEAgentsProcessor text={text} className="hpe-agents-content" />;
+    }
+
+    // Caso contrário, usar o comportamento padrão
     if (!isCreatedByUser) {
       return <Markdown content={text} isLatestMessage={isLatestMessage} />;
     } else if (enableUserMsgMarkdown) {
@@ -35,7 +47,7 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
     } else {
       return <>{text}</>;
     }
-  }, [isCreatedByUser, enableUserMsgMarkdown, text, isLatestMessage]);
+  }, [isCreatedByUser, enableUserMsgMarkdown, text, isLatestMessage, shouldUseProcessor]);
 
   return (
     <div
@@ -45,6 +57,8 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
         'markdown prose message-content dark:prose-invert light w-full break-words',
         isCreatedByUser && !enableUserMsgMarkdown && 'whitespace-pre-wrap',
         isCreatedByUser ? 'dark:text-gray-20' : 'dark:text-gray-100',
+        // Classe especial para conteúdo HPEAgents
+        shouldUseProcessor && !isCreatedByUser && 'hpe-agents-message',
       )}
     >
       {content}
