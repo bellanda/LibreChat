@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { EModelEndpoint } from './schemas';
-import type { FileConfig, EndpointFileConfig } from './types/files';
+import type { EndpointFileConfig, FileConfig } from './types/files';
 
 export const supportsFiles = {
   [EModelEndpoint.openAI]: true,
@@ -152,6 +152,35 @@ export const codeTypeMapping: { [key: string]: string } = {
   yaml: 'application/x-yaml',
   log: 'text/plain',
   tsv: 'text/tab-separated-values',
+  // Configuration files
+  toml: 'text/plain',
+  ini: 'text/plain',
+  cfg: 'text/plain',
+  conf: 'text/plain',
+  config: 'text/plain',
+  env: 'text/plain',
+  properties: 'text/plain',
+  // Git and version control files
+  gitignore: 'text/plain',
+  gitattributes: 'text/plain',
+  gitmodules: 'text/plain',
+  // Other common text-based files
+  dockerfile: 'text/plain',
+  makefile: 'text/plain',
+  cmake: 'text/plain',
+  requirements: 'text/plain',
+  txt: 'text/plain',
+  text: 'text/plain',
+  // Lock files and package files
+  lock: 'text/plain',
+  json: 'application/json',
+  xml: 'application/xml',
+  csv: 'text/csv',
+  html: 'text/html',
+  css: 'text/css',
+  scss: 'text/css',
+  sass: 'text/css',
+  less: 'text/css',
 };
 
 export const retrievalMimeTypes = [

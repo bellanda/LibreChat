@@ -1,9 +1,68 @@
 const fs = require('fs');
+const path = require('path');
 const axios = require('axios');
 const FormData = require('form-data');
-const { FileSources } = require('librechat-data-provider');
+const { FileSources, fileConfig } = require('librechat-data-provider');
 const { logAxiosError } = require('~/utils');
 const { logger } = require('~/config');
+
+/**
+ * Checks if a file type is supported by the RAG API
+ * @param {string} mimetype - The MIME type to check
+ * @returns {boolean} - Whether the file type is supported
+ */
+function isFileTypeSupported(mimetype) {
+  return fileConfig.checkType(mimetype);
+}
+
+/**
+ * Creates a temporary .txt file with the same content for unsupported file types
+ * @param {string} originalPath - Path to the original file
+ * @param {string} originalName - Original filename
+ * @returns {Promise<{path: string, mimetype: string, originalname: string}>} - Modified file info
+ */
+async function createTxtFallback(originalPath, originalName) {
+  try {
+    // Read the original file content
+    const content = await fs.promises.readFile(originalPath);
+
+    // Create a new filename with .txt extension
+    const nameWithoutExt = path.parse(originalName).name;
+    const txtFilename = `${nameWithoutExt}.txt`;
+
+    // Create a temporary file path
+    const tempDir = path.dirname(originalPath);
+    const txtPath = path.join(tempDir, `temp_${Date.now()}_${txtFilename}`);
+
+    // Write content to the new .txt file
+    await fs.promises.writeFile(txtPath, content);
+
+    logger.info(`Created .txt fallback for unsupported file: ${originalName} -> ${txtFilename}`);
+
+    return {
+      path: txtPath,
+      mimetype: 'text/markdown',
+      originalname: txtFilename,
+      isFallback: true,
+    };
+  } catch (error) {
+    logger.error('Error creating .txt fallback:', error);
+    throw error;
+  }
+}
+
+/**
+ * Cleans up temporary fallback files
+ * @param {string} filePath - Path to the temporary file
+ */
+async function cleanupTempFile(filePath) {
+  try {
+    await fs.promises.unlink(filePath);
+    logger.debug(`Cleaned up temporary file: ${filePath}`);
+  } catch (error) {
+    logger.warn(`Failed to cleanup temporary file ${filePath}:`, error);
+  }
+}
 
 /**
  * Deletes a file from the vector database. This function takes a file object, constructs the full path, and
@@ -69,11 +128,44 @@ async function uploadVectors({ req, file, file_id, entity_id }) {
     throw new Error('RAG_API_URL not defined');
   }
 
+  let fileToUpload = file;
+  let tempFilePath = null;
+
   try {
+    logger.debug(`Processing file: ${file.originalname}, MIME type: ${file.mimetype}`);
+
+    // Check if the file type is supported by RAG API specifically
+    // Some MIME types cause issues with RAG APIs even though they're technically supported
+    const problematicTypes = ['text/plain', 'application/xml'];
+    const isRAGCompatible =
+      isFileTypeSupported(file.mimetype) && !problematicTypes.includes(file.mimetype);
+
+    if (!isRAGCompatible) {
+      logger.info(
+        `File type ${file.mimetype} needs conversion for RAG compatibility: ${file.originalname}. Converting to .txt format for RAG processing.`,
+      );
+
+      // Create a .txt fallback version
+      const fallbackFile = await createTxtFallback(file.path, file.originalname);
+
+      // Update file info for upload
+      fileToUpload = {
+        ...file,
+        path: fallbackFile.path,
+        mimetype: fallbackFile.mimetype,
+        originalname: fallbackFile.originalname,
+      };
+
+      tempFilePath = fallbackFile.path;
+      logger.debug(
+        `Converted file: ${fallbackFile.originalname}, new MIME type: ${fallbackFile.mimetype}`,
+      );
+    }
+
     const jwtToken = req.headers.authorization.split(' ')[1];
     const formData = new FormData();
     formData.append('file_id', file_id);
-    formData.append('file', fs.createReadStream(file.path));
+    formData.append('file', fs.createReadStream(fileToUpload.path));
     if (entity_id != null && entity_id) {
       formData.append('entity_id', entity_id);
     }
@@ -92,7 +184,9 @@ async function uploadVectors({ req, file, file_id, entity_id }) {
     logger.debug('Response from embedding file', responseData);
 
     if (responseData.known_type === false) {
-      throw new Error(`File embedding failed. The filetype ${file.mimetype} is not supported`);
+      throw new Error(
+        `File embedding failed. The filetype ${fileToUpload.mimetype} is not supported`,
+      );
     }
 
     if (!responseData.status) {
@@ -100,8 +194,8 @@ async function uploadVectors({ req, file, file_id, entity_id }) {
     }
 
     return {
-      bytes: file.size,
-      filename: file.originalname,
+      bytes: file.size, // Use original file size
+      filename: file.originalname, // Use original filename for display
       filepath: FileSources.vectordb,
       embedded: Boolean(responseData.known_type),
     };
@@ -111,6 +205,11 @@ async function uploadVectors({ req, file, file_id, entity_id }) {
       message: 'Error uploading vectors',
     });
     throw new Error(error.message || 'An error occurred during file upload.');
+  } finally {
+    // Clean up temporary file if it was created
+    if (tempFilePath) {
+      await cleanupTempFile(tempFilePath);
+    }
   }
 }
 

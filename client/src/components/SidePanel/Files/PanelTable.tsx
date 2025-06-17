@@ -1,6 +1,3 @@
-import { useState, useCallback, useMemo } from 'react';
-import { ArrowUpLeft } from 'lucide-react';
-import { useSetRecoilState } from 'recoil';
 import {
   flexRender,
   getCoreRowModel,
@@ -9,18 +6,21 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
-  type ColumnFiltersState,
 } from '@tanstack/react-table';
 import {
-  fileConfig as defaultFileConfig,
   checkOpenAIStorage,
-  mergeFileConfig,
-  megabyte,
+  fileConfig as defaultFileConfig,
   isAssistantsEndpoint,
+  megabyte,
+  mergeFileConfig,
   type TFile,
 } from 'librechat-data-provider';
+import { ArrowUpLeft } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { useSetRecoilState } from 'recoil';
 
 import {
   Button,
@@ -32,9 +32,9 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui';
-import { useFileMapContext, useChatContext, useToastContext } from '~/Providers';
-import { useLocalize, useUpdateFiles } from '~/hooks';
 import { useGetFileConfig } from '~/data-provider';
+import { useLocalize, useUpdateFiles } from '~/hooks';
+import { useChatContext, useFileMapContext, useToastContext } from '~/Providers';
 import store from '~/store';
 
 interface DataTableProps<TData, TValue> {
@@ -139,7 +139,10 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
         return;
       }
 
-      if (!defaultFileConfig.checkType(file.type, supportedMimeTypes)) {
+      // Skip MIME type check for files originally uploaded for file_search (RAG API)
+      // as they may have been converted from unsupported formats to .txt
+      const isFileSearchFile = fileData.embedded === true || fileData.source === 'vectordb';
+      if (!isFileSearchFile && !defaultFileConfig.checkType(file.type, supportedMimeTypes)) {
         showToast({
           message: `${localize('com_ui_attach_error_type')} ${file.type} (${endpoint})`,
           status: 'error',

@@ -52,6 +52,13 @@ const createFileFilter = (customFileConfig) => {
     }
 
     const endpoint = req.body.endpoint;
+    const tool_resource = req.body.tool_resource;
+
+    // Allow any file type for file_search tool_resource (RAG API) as we can convert unsupported files to .txt
+    if (tool_resource === 'file_search') {
+      return cb(null, true);
+    }
+
     const supportedTypes =
       customFileConfig?.endpoints?.[endpoint]?.supportedMimeTypes ??
       customFileConfig?.endpoints?.default.supportedMimeTypes ??

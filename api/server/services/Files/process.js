@@ -115,6 +115,81 @@ function enqueueDeleteOperation({ req, file, deleteFile, promises, resolvedFileI
   }
 }
 
+/**
+ * Filters a file based on its size and the endpoint origin.
+ *
+ * @param {Object} params - The parameters for the function.
+ * @param {ServerRequest} params.req - The request object from Express.
+ * @param {string} [params.req.endpoint]
+ * @param {string} [params.req.file_id]
+ * @param {number} [params.req.width]
+ * @param {number} [params.req.height]
+ * @param {number} [params.req.version]
+ * @param {boolean} [params.image] - Whether the file expected is an image.
+ * @param {boolean} [params.isAvatar] - Whether the file expected is a user or entity avatar.
+ * @param {boolean} [params.skipMimeTypeCheck] - Whether to skip MIME type validation for RAG uploads.
+ * @returns {void}
+ *
+ * @throws {Error} If a file exception is caught (invalid file size or type, lack of metadata).
+ */
+function filterFile({ req, image, isAvatar, skipMimeTypeCheck = false }) {
+  const { file } = req;
+  const { endpoint, file_id, width, height, tool_resource } = req.body;
+
+  if (!file_id && !isAvatar) {
+    throw new Error('No file_id provided');
+  }
+
+  if (file.size === 0) {
+    throw new Error('Empty file uploaded');
+  }
+
+  /* parse to validate api call, throws error on fail */
+  if (!isAvatar) {
+    isUUID.parse(file_id);
+  }
+
+  if (!endpoint && !isAvatar) {
+    throw new Error('No endpoint provided');
+  }
+
+  const fileConfig = mergeFileConfig(req.app.locals.fileConfig);
+
+  const { fileSizeLimit: sizeLimit, supportedMimeTypes } =
+    fileConfig.endpoints[endpoint] ?? fileConfig.endpoints.default;
+  const fileSizeLimit = isAvatar === true ? fileConfig.avatarSizeLimit : sizeLimit;
+
+  if (file.size > fileSizeLimit) {
+    throw new Error(
+      `File size limit of ${fileSizeLimit / megabyte} MB exceeded for ${
+        isAvatar ? 'avatar upload' : `${endpoint} endpoint`
+      }`,
+    );
+  }
+
+  // Skip MIME type check for file_search tool_resource (RAG API) as we can convert unsupported files to .txt
+  const isRAGUpload = tool_resource === 'file_search';
+  if (!skipMimeTypeCheck && !isRAGUpload) {
+    const isSupportedMimeType = fileConfig.checkType(file.mimetype, supportedMimeTypes);
+
+    if (!isSupportedMimeType) {
+      throw new Error('Unsupported file type');
+    }
+  }
+
+  if (!image || isAvatar === true) {
+    return;
+  }
+
+  if (!width) {
+    throw new Error('No width provided');
+  }
+
+  if (!height) {
+    throw new Error('No height provided');
+  }
+}
+
 // TODO: refactor as currently only image files can be deleted this way
 // as other filetypes will not reside in public path
 /**
@@ -882,76 +957,6 @@ async function saveBase64Image(
     },
     true,
   );
-}
-
-/**
- * Filters a file based on its size and the endpoint origin.
- *
- * @param {Object} params - The parameters for the function.
- * @param {ServerRequest} params.req - The request object from Express.
- * @param {string} [params.req.endpoint]
- * @param {string} [params.req.file_id]
- * @param {number} [params.req.width]
- * @param {number} [params.req.height]
- * @param {number} [params.req.version]
- * @param {boolean} [params.image] - Whether the file expected is an image.
- * @param {boolean} [params.isAvatar] - Whether the file expected is a user or entity avatar.
- * @returns {void}
- *
- * @throws {Error} If a file exception is caught (invalid file size or type, lack of metadata).
- */
-function filterFile({ req, image, isAvatar }) {
-  const { file } = req;
-  const { endpoint, file_id, width, height } = req.body;
-
-  if (!file_id && !isAvatar) {
-    throw new Error('No file_id provided');
-  }
-
-  if (file.size === 0) {
-    throw new Error('Empty file uploaded');
-  }
-
-  /* parse to validate api call, throws error on fail */
-  if (!isAvatar) {
-    isUUID.parse(file_id);
-  }
-
-  if (!endpoint && !isAvatar) {
-    throw new Error('No endpoint provided');
-  }
-
-  const fileConfig = mergeFileConfig(req.app.locals.fileConfig);
-
-  const { fileSizeLimit: sizeLimit, supportedMimeTypes } =
-    fileConfig.endpoints[endpoint] ?? fileConfig.endpoints.default;
-  const fileSizeLimit = isAvatar === true ? fileConfig.avatarSizeLimit : sizeLimit;
-
-  if (file.size > fileSizeLimit) {
-    throw new Error(
-      `File size limit of ${fileSizeLimit / megabyte} MB exceeded for ${
-        isAvatar ? 'avatar upload' : `${endpoint} endpoint`
-      }`,
-    );
-  }
-
-  const isSupportedMimeType = fileConfig.checkType(file.mimetype, supportedMimeTypes);
-
-  if (!isSupportedMimeType) {
-    throw new Error('Unsupported file type');
-  }
-
-  if (!image || isAvatar === true) {
-    return;
-  }
-
-  if (!width) {
-    throw new Error('No width provided');
-  }
-
-  if (!height) {
-    throw new Error('No height provided');
-  }
 }
 
 module.exports = {

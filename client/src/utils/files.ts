@@ -1,17 +1,17 @@
+import type { QueryClient } from '@tanstack/react-query';
+import type { EndpointFileConfig, TFile } from 'librechat-data-provider';
 import {
-  megabyte,
-  QueryKeys,
-  excelMimeTypes,
   codeTypeMapping,
   fileConfig as defaultFileConfig,
+  excelMimeTypes,
+  megabyte,
+  QueryKeys,
 } from 'librechat-data-provider';
-import type { TFile, EndpointFileConfig } from 'librechat-data-provider';
-import type { QueryClient } from '@tanstack/react-query';
 import type { ExtendedFile } from '~/common';
+import CodePaths from '~/components/svg/Files/CodePaths';
+import FilePaths from '~/components/svg/Files/FilePaths';
 import SheetPaths from '~/components/svg/Files/SheetPaths';
 import TextPaths from '~/components/svg/Files/TextPaths';
-import FilePaths from '~/components/svg/Files/FilePaths';
-import CodePaths from '~/components/svg/Files/CodePaths';
 
 export const partialTypes = ['text/x-'];
 
@@ -206,11 +206,13 @@ export const validateFiles = ({
   fileList,
   setError,
   endpointFileConfig,
+  isFileSearchUpload = false,
 }: {
   fileList: File[];
   files: Map<string, ExtendedFile>;
   setError: (error: string) => void;
   endpointFileConfig: EndpointFileConfig;
+  isFileSearchUpload?: boolean;
 }) => {
   const { fileLimit, fileSizeLimit, totalSizeLimit, supportedMimeTypes } = endpointFileConfig;
   const existingFiles = Array.from(files.values());
@@ -239,8 +241,16 @@ export const validateFiles = ({
 
     // Check if the file type is still empty after the extension check
     if (!fileType) {
-      setError('Unable to determine file type for: ' + originalFile.name);
-      return false;
+      // For file_search uploads, default to text/plain if we can't determine the type
+      if (isFileSearchUpload) {
+        fileType = 'text/plain';
+        console.log(
+          `File ${originalFile.name} has unknown type, defaulting to text/plain for file_search upload`,
+        );
+      } else {
+        setError('Unable to determine file type for: ' + originalFile.name);
+        return false;
+      }
     }
 
     // Replace empty type with inferred type
@@ -250,7 +260,8 @@ export const validateFiles = ({
       fileList[i] = newFile;
     }
 
-    if (!checkType(originalFile.type, supportedMimeTypes)) {
+    // Skip MIME type check for file_search uploads (RAG API) as we can convert unsupported files to .txt
+    if (!isFileSearchUpload && !checkType(originalFile.type, supportedMimeTypes)) {
       console.log(originalFile);
       setError('Currently, unsupported file type: ' + originalFile.type);
       return false;

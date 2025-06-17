@@ -255,6 +255,11 @@ const useFileHandling = (params?: UseFileHandling) => {
       }
     }
 
+    // Determine if this is a file_search upload (RAG API)
+    const isFileSearchUpload =
+      _toolResource === 'file_search' ||
+      params?.additionalMetadata?.tool_resource === 'file_search';
+
     /* Validate files */
     let filesAreValid: boolean;
     try {
@@ -267,6 +272,7 @@ const useFileHandling = (params?: UseFileHandling) => {
           fileConfig?.endpoints.default ??
           defaultFileConfig.endpoints[endpoint] ??
           defaultFileConfig.endpoints.default,
+        isFileSearchUpload,
       });
     } catch (error) {
       console.error('file validation error', error);
