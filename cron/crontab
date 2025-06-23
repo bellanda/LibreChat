@@ -1,0 +1,1 @@
+0 8 * * * root cd /app && uv run python scripts/user_statistics.py >> /var/log/cron/stats.log 2>&1
