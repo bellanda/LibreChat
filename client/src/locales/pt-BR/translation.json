@@ -258,7 +258,7 @@
   "com_endpoint_use_active_assistant": "Usar Assistente Ativo",
   "com_error_expired_user_key": "A chave fornecida para {{0}} expirou em {{1}}. Por favor, forneça uma nova chave e tente novamente.",
   "com_error_files_dupe": "Foi detectado um arquivo duplicado.",
-  "com_error_files_empty": "Pensamento",
+  "com_error_files_empty": "ARQUIVO VAZIO",
   "com_error_files_process": "Ocorreu um erro ao processar o arquivo.",
   "com_error_files_unsupported_capability": "Não existem capacidades ativadas que suportem este tipo de arquivo.",
   "com_error_files_upload": "Ocorreu um erro ao carregar o arquivo.",

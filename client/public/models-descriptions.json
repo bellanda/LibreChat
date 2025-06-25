@@ -347,9 +347,9 @@
     "supportsImageAttachment": true
   },
 
-  "gemini-2.5-flash-preview-05-20": {
+  "gemini-2.5-flash": {
     "name": "Gemini 2.5 Flash",
-    "title": "Google Gemini 2.5 Flash Preview",
+    "title": "Google Gemini 2.5 Flash",
     "shortUseCase": "Raciocínio híbrido rápido e econômico",
     "description": "Modelo híbrido que equilibra velocidade e raciocínio com 'orçamentos de pensamento' ajustáveis. Processa texto, imagens, vídeo e áudio com contexto de 1 milhão de tokens. Perfeito para tarefas que precisam pensar na medida certa.",
     "image": "/assets/google-gemini-logo.png",
@@ -372,9 +372,9 @@
     "supportsImageAttachment": true
   },
 
-  "gemini-2.5-pro-preview-06-05": {
+  "gemini-2.5-pro": {
     "name": "Gemini 2.5 Pro",
-    "title": "Google Gemini 2.5 Pro Preview",
+    "title": "Google Gemini 2.5 Pro",
     "shortUseCase": "Raciocínio avançado para problemas complexos",
     "description": "O modelo mais avançado do Google para raciocínio complexo em programação, matemática e STEM. Com capacidades de pensamento aprimoradas e suporte multimodal completo, resolve os problemas mais desafiadores.",
     "image": "/assets/google-gemini-logo.png",
@@ -397,36 +397,11 @@
     "supportsImageAttachment": true
   },
 
-  "gemini-2.0-flash": {
-    "name": "Gemini 2.0 Flash",
-    "title": "Google Gemini 2.0 Flash",
-    "shortUseCase": "Próxima geração multimodal otimizada para velocidade",
-    "description": "Modelo de próxima geração otimizado para velocidade máxima com uso nativo de ferramentas. Combina capacidades multimodais avançadas com execução de código e pensamento experimental em tempo real.",
-    "image": "/assets/google-gemini-logo.png",
-    "useCases": [
-      "Assistentes que usam ferramentas externas nativamente",
-      "Desenvolvimento ágil com execução de código instantânea",
-      "Aplicações multimodais de alta performance",
-      "Prototipagem rápida com IA conversacional"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "very-fast",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
-  "gemini-2.0-flash-lite": {
-    "name": "Gemini 2.0 Flash Lite",
-    "title": "Google Gemini 2.0 Flash Lite",
+  "gemini-2.5-flash-lite-preview-06-17": {
+    "name": "Gemini 2.5 Flash Lite",
+    "title": "Google Gemini 2.5 Flash Lite Preview",
     "shortUseCase": "Versão econômica e ultra-rápida",
-    "description": "Variante otimizada para custo e latência ultra-baixa do Gemini 2.0 Flash. Mantém o contexto extenso de 1 milhão de tokens mas com foco em eficiência máxima para aplicações em massa.",
+    "description": "Variante otimizada para custo e latência ultra-baixa do Gemini 2.5 Flash. Mantém o contexto extenso de 1 milhão de tokens mas com foco em eficiência máxima para aplicações em massa.",
     "image": "/assets/google-gemini-logo.png",
     "useCases": [
       "Chatbots em massa com custo reduzido",

@@ -4,6 +4,7 @@ import {
   codeTypeMapping,
   fileConfig as defaultFileConfig,
   excelMimeTypes,
+  isLikelyTextFile,
   megabyte,
   QueryKeys,
 } from 'librechat-data-provider';
@@ -234,23 +235,45 @@ export const validateFiles = ({
     const extension = originalFile.name.split('.').pop() ?? '';
     const knownCodeType = codeTypeMapping[extension];
 
+    console.log(`🚀 Processing file: ${originalFile.name}`);
+    console.log(`📄 Original type: "${fileType}"`);
+    console.log(`🔤 Extension: "${extension}"`);
+    console.log(`🗂️ Known code type: "${knownCodeType}"`);
+
     // Infer MIME type for Known Code files when the type is empty or a mismatch
     if (knownCodeType && (!fileType || fileType !== knownCodeType)) {
+      console.log(
+        `🔧 Setting MIME type for ${originalFile.name} from extension "${extension}" to "${knownCodeType}"`,
+      );
       fileType = knownCodeType;
     }
 
     // Check if the file type is still empty after the extension check
     if (!fileType) {
-      // For file_search uploads, default to text/plain if we can't determine the type
-      if (isFileSearchUpload) {
+      console.log(
+        `❓ No file type detected for ${originalFile.name} with extension "${extension}"`,
+      );
+      // Try to determine if it's likely a text file based on extension
+      if (isLikelyTextFile(extension)) {
         fileType = 'text/plain';
         console.log(
-          `File ${originalFile.name} has unknown type, defaulting to text/plain for file_search upload`,
+          `✅ File ${originalFile.name} extension "${extension}" detected as likely text file, setting to text/plain`,
         );
       } else {
-        setError('Unable to determine file type for: ' + originalFile.name);
-        return false;
+        // For file_search uploads, default to text/plain if we can't determine the type
+        if (isFileSearchUpload) {
+          fileType = 'text/plain';
+          console.log(
+            `🔍 File ${originalFile.name} has unknown type, defaulting to text/plain for file_search upload`,
+          );
+        } else {
+          console.log(`❌ Unable to determine file type for: ${originalFile.name}`);
+          setError('Unable to determine file type for: ' + originalFile.name);
+          return false;
+        }
       }
+    } else {
+      console.log(`✅ File type already determined: ${originalFile.name} -> ${fileType}`);
     }
 
     // Replace empty type with inferred type
