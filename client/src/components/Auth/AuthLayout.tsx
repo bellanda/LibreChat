@@ -64,10 +64,10 @@ function AuthLayout({
     <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 h-[100px] w-full bg-cover">
+        <div className="mt-6 flex h-[100px] w-full items-center justify-center bg-cover">
           <img
             src={isThemeDark ? '/assets/hpe-ia-neural-dark-mode.png' : '/assets/hpe-ia-neural.png'}
-            className="h-full w-full object-contain"
+            className="h-full rounded-[10px] object-contain"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
           />
         </div>
