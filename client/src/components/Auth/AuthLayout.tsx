@@ -1,11 +1,13 @@
-import { TranslationKeys, useLocalize } from '~/hooks';
 import { TStartupConfig } from 'librechat-data-provider';
-import { ErrorMessage } from '~/components/Auth/ErrorMessage';
-import SocialLoginRender from './SocialLoginRender';
-import { BlinkAnimation } from './BlinkAnimation';
+import { useContext } from 'react';
 import { ThemeSelector } from '~/components';
+import { ErrorMessage } from '~/components/Auth/ErrorMessage';
+import { TranslationKeys, useLocalize } from '~/hooks';
+import { ThemeContext, isDark } from '~/hooks/ThemeContext';
 import { Banner } from '../Banners';
+import { BlinkAnimation } from './BlinkAnimation';
 import Footer from './Footer';
+import SocialLoginRender from './SocialLoginRender';
 
 function AuthLayout({
   children,
@@ -25,6 +27,8 @@ function AuthLayout({
   error: TranslationKeys | null;
 }) {
   const localize = useLocalize();
+  const { theme } = useContext(ThemeContext);
+  const isThemeDark = isDark(theme);
 
   const hasStartupConfigError = startupConfigError !== null && startupConfigError !== undefined;
   const DisplayError = () => {
@@ -60,9 +64,9 @@ function AuthLayout({
     <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 h-10 w-full bg-cover">
+        <div className="mt-6 h-[100px] w-full bg-cover">
           <img
-            src="/assets/logo.svg"
+            src={isThemeDark ? '/assets/hpe-ia-neural-dark-mode.png' : '/assets/hpe-ia-neural.png'}
             className="h-full w-full object-contain"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
           />
