@@ -1,1 +1,2 @@
-0 8 * * * root cd /app && uv run python scripts/user_statistics.py >> /var/log/cron/stats.log 2>&1
+0 8 * * * root cd /app && uv run python scripts/user_statistics.py >> /var/log/cron/user_statistics.log 2>&1
+0 8 * * * root cd /app && uv run python scripts/set_credits.py >> /var/log/cron/set_credits.log 2>&1
