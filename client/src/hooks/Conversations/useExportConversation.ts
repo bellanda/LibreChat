@@ -1,24 +1,24 @@
-import download from 'downloadjs';
-import { useCallback } from 'react';
-import exportFromJSON from 'export-from-json';
 import { useQueryClient } from '@tanstack/react-query';
+import download from 'downloadjs';
+import exportFromJSON from 'export-from-json';
+import type {
+  TConversation,
+  TMessage,
+  TMessageContentParts,
+  TPreset,
+} from 'librechat-data-provider';
 import {
-  QueryKeys,
   ContentTypes,
+  QueryKeys,
   ToolCallTypes,
   imageGenTools,
   isImageVisionTool,
 } from 'librechat-data-provider';
-import type {
-  TMessage,
-  TPreset,
-  TConversation,
-  TMessageContentParts,
-} from 'librechat-data-provider';
+import { useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import useBuildMessageTree from '~/hooks/Messages/useBuildMessageTree';
 import { useScreenshot } from '~/hooks/ScreenshotContext';
-import { cleanupPreset, buildTree } from '~/utils';
-import { useParams } from 'react-router-dom';
+import { buildTree, cleanupPreset } from '~/utils';
 
 type ExportValues = {
   fieldName: string;
@@ -41,6 +41,7 @@ export default function useExportConversation({
   exportBranches: boolean | 'indeterminate';
   recursive: boolean | 'indeterminate';
 }) {
+
   const queryClient = useQueryClient();
   const { captureScreenshot } = useScreenshot();
   const buildMessageTree = useBuildMessageTree();
@@ -77,6 +78,112 @@ export default function useExportConversation({
       })
       .join('\n\n\n');
   };
+
+
+
+
+  // // Função para gerar markdown (reutiliza lógica do exportMarkdown)
+  // const generateMarkdown = async () => {
+  //   let data =
+  //     '# Conversation\n' +
+  //     `- conversationId: ${conversation?.conversationId}\n` +
+  //     `- endpoint: ${conversation?.endpoint}\n` +
+  //     `- title: ${conversation?.title}\n` +
+  //     `- exportAt: ${new Date().toTimeString()}\n`;
+
+  //   if (includeOptions === true) {
+  //     data += '\n## Options\n';
+  //     const options = cleanupPreset({ preset: conversation as TPreset });
+  //     for (const key of Object.keys(options)) {
+  //       data += `- ${key}: ${options[key]}\n`;
+  //     }
+  //   }
+
+  //   const messages = await buildMessageTree({
+  //     messageId: conversation?.conversationId,
+  //     message: null,
+  //     messages: getMessageTree(),
+  //     branches: Boolean(exportBranches),
+  //     recursive: false,
+  //   });
+
+  //   data += '\n## History\n';
+  //   if (Array.isArray(messages)) {
+  //     for (const message of messages) {
+  //       data += renderMessageBranch(message, 0);
+  //     }
+  //   } else {
+  //     data += renderMessageBranch(messages, 0);
+  //   }
+  //   return data;
+  // };
+
+  // // Função auxiliar para renderizar mensagens e branches com recuo
+  // const renderMessageBranch = (message: any, level: number): string => {
+  //   if (!message) return '';
+  //   let md = `${'  '.repeat(level)}${getMessageText(message, 'md')}\n`;
+  //   if (message.error) {
+  //     md += `${'  '.repeat(level)}*(This is an error message)*\n`;
+  //   }
+  //   if (message.unfinished === true) {
+  //     md += `${'  '.repeat(level)}*(This is an unfinished message)*\n`;
+  //   }
+  //   if (message.children && Array.isArray(message.children)) {
+  //     for (const child of message.children) {
+  //       md += renderMessageBranch(child, level + 1);
+  //     }
+  //   }
+  //   md += '\n';
+  //   return md;
+  // }
+
+
+
+
+
+
+
+  // Exportar HTML via API Python
+  const exportHTML = async () => {
+    // const markdown = await generateMarkdown();
+    const markdown = await exportMarkdown();
+    const formData = new FormData();
+    const file = new Blob([markdown], { type: 'text/markdown' });
+    formData.append('file', file, 'conversation.md');
+    const response = await fetch('http://localhost:15784/convert/md-to-html', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      console.error('Erro ao exportar HTML');
+      return;
+    }
+    const blob = await response.blob();
+    download(blob, `${filename}.html`);
+    // return blob;    
+  };
+
+  // Exportar PDF via API Python
+  const exportPDF = async () => {
+    // const markdown = await generateMarkdown();
+    const markdown = await exportMarkdown();
+    const formData = new FormData();
+    const file = new Blob([markdown], { type: 'text/markdown' });
+    formData.append('file', file, 'conversation.md');
+    const response = await fetch('http://localhost:15784/convert/md-to-pdf', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      console.error('Erro ao exportar PDF');
+      return;
+    }
+    const blob = await response.blob();
+    download(blob, `${filename}.pdf`);
+    // return blob;`${filename}.pdf`
+  };
+
+
 
   /**
    * Format and return message texts according to the type of content.
@@ -263,12 +370,17 @@ export default function useExportConversation({
       }
     }
 
-    exportFromJSON({
-      data: data,
-      fileName: filename,
-      extension: 'md',
-      exportType: exportFromJSON.types.txt,
-    });
+    if (type === 'markdown') {
+      exportFromJSON({
+        data: data,
+        fileName: filename,
+        extension: 'md',
+        exportType: exportFromJSON.types.txt,
+      });
+    }
+
+    return data;
+
   };
 
   const exportText = async () => {
@@ -374,6 +486,10 @@ export default function useExportConversation({
       exportCSV();
     } else if (type == 'screenshot') {
       exportScreenshot();
+    } else if (type === 'webpage') {
+      exportHTML();
+    } else if (type === 'pdf') {
+      exportPDF();
     }
   };
 

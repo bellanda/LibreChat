@@ -1,9 +1,9 @@
 import filenamify from 'filenamify';
-import { useEffect, useState, useMemo, useCallback } from 'react';
 import type { TConversation } from 'librechat-data-provider';
-import { OGDialog, Button, Input, Label, Checkbox, Dropdown } from '~/components/ui';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, Checkbox, Dropdown, Input, Label, OGDialog } from '~/components/ui';
 import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
-import { useLocalize, useExportConversation } from '~/hooks';
+import { useExportConversation, useLocalize } from '~/hooks';
 
 const TYPE_OPTIONS = [
   { value: 'screenshot', label: 'screenshot (.png)' },
@@ -11,6 +11,8 @@ const TYPE_OPTIONS = [
   { value: 'markdown', label: 'markdown (.md)' },
   { value: 'json', label: 'json (.json)' },
   { value: 'csv', label: 'csv (.csv)' },
+  { value: 'webpage', label: 'webpage (.html)' },
+  { value: 'pdf', label: 'pdf (.pdf)' },
 ];
 
 export default function ExportModal({

@@ -61,3 +61,14 @@ services:
       - MEILI_MASTER_KEY=5c71cf56d672d009e36070b5bc5e47b743535ae55c818ae3b735bb6ebfb4ba63
     volumes:
       - ./meili_data_v1.5:/meili_data
+
+  markdown-html-pdf-api:
+    build:
+      context: ../markdown-html-pdf-api
+      dockerfile: Dockerfile
+    container_name: markdown-html-pdf-api
+    expose:
+      - 15784
+    ports:
+      - "8020:15784"
+    restart: unless-stopped
