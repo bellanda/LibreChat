@@ -52,7 +52,7 @@ export default function ExportModal({
   }, [conversation?.title, open]);
 
   const handleTypeChange = useCallback((newType: string) => {
-    const branches = newType === 'json' || newType === 'csv' || newType === 'webpage';
+    const branches = newType === 'json' || newType === 'csv' || newType === 'webpage' || newType === 'pdf';
     const options = newType !== 'csv' && newType !== 'screenshot';
     setExportBranches(branches);
     setIncludeOptions(options);
@@ -60,7 +60,7 @@ export default function ExportModal({
   }, []);
 
   const exportBranchesSupport = useMemo(
-    () => type === 'json' || type === 'csv' || type === 'webpage',
+    () => type === 'json' || type === 'csv' || type === 'webpage' || type === 'pdf',
     [type],
   );
   const exportOptionsSupport = useMemo(() => type !== 'csv' && type !== 'screenshot', [type]);

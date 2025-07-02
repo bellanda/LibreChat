@@ -142,7 +142,6 @@ export default function useExportConversation({
 
   // Exportar HTML via API Python
   const exportHTML = async () => {
-    // const markdown = await generateMarkdown();
     const markdown = await exportMarkdown();
     if (typeof markdown !== 'string') {
       console.error('Erro: markdown não é uma string válida');
@@ -161,12 +160,10 @@ export default function useExportConversation({
     }
     const blob = await response.blob();
     download(blob, `${filename}.html`);
-    // return blob;    
   };
 
   // Exportar PDF via API Python
   const exportPDF = async () => {
-    // const markdown = await generateMarkdown();
     const markdown = await exportMarkdown();
     if (typeof markdown !== 'string') {
       console.error('Erro: markdown não é uma string válida');
@@ -185,7 +182,6 @@ export default function useExportConversation({
     }
     const blob = await response.blob();
     download(blob, `${filename}.pdf`);
-    // return blob;`${filename}.pdf`
   };
 
 
@@ -355,33 +351,86 @@ export default function useExportConversation({
       messageId: conversation?.conversationId,
       message: null,
       messages: getMessageTree(),
-      branches: false,
+      branches: Boolean(exportBranches),
       recursive: false,
     });
 
     data += '\n## History\n';
-    if (Array.isArray(messages)) {
-      for (const message of messages) {
-        if (message && message.messageId) {
-          data += `${getMessageText(message as TMessage, 'md')}\n`;
-          if (message.error) {
+
+    if (exportBranches === true) {
+      // Exportar todas as mensagens quando branches estiver habilitado
+      if (Array.isArray(messages)) {
+        for (const message of messages) {
+          if (message && message.messageId) {
+            data += `${getMessageText(message as TMessage, 'md')}\n`;
+            if (message.error) {
+              data += '*(This is an error message)*\n';
+            }
+            if (message.unfinished === true) {
+              data += '*(This is an unfinished message)*\n';
+            }
+            data += '\n\n';
+          }
+        }
+      } else if (messages && typeof messages === 'object' && 'messageId' in messages) {
+        data += `${getMessageText(messages as TMessage, 'md')}\n`;
+        if ((messages as TMessage).error) {
+          data += '*(This is an error message)*\n';
+        }
+        if ((messages as TMessage).unfinished === true) {
+          data += '*(This is an unfinished message)*\n';
+        }
+        data += '\n\n';
+      }
+    } else {
+      // Quando branches estiver desabilitado, exportar apenas a última pergunta do usuário e a última resposta da IA
+      const allMessages = Array.isArray(messages) ? messages : [messages];
+      const validMessages = allMessages.filter(msg => msg && msg.messageId) as TMessage[];
+
+      if (validMessages.length > 0) {
+        // Encontrar a última pergunta do usuário e a última resposta da IA
+        let lastUserMessage: TMessage | undefined;
+        let lastAiMessage: TMessage | undefined;
+
+        // Percorrer as mensagens do final para o início para encontrar as últimas
+        for (let i = validMessages.length - 1; i >= 0; i--) {
+          const msg = validMessages[i];
+          if (!lastUserMessage && msg.isCreatedByUser === true) {
+            lastUserMessage = msg;
+          }
+          if (!lastAiMessage && msg.isCreatedByUser === false) {
+            lastAiMessage = msg;
+          }
+          // Se já encontrou ambos, pode parar
+          if (lastUserMessage && lastAiMessage) {
+            break;
+          }
+        }
+
+        // Adicionar a última pergunta do usuário
+        if (lastUserMessage) {
+          data += `${getMessageText(lastUserMessage, 'md')}\n`;
+          if (lastUserMessage.error) {
             data += '*(This is an error message)*\n';
           }
-          if (message.unfinished === true) {
+          if (lastUserMessage.unfinished === true) {
+            data += '*(This is an unfinished message)*\n';
+          }
+          data += '\n\n';
+        }
+
+        // Adicionar a última resposta da IA
+        if (lastAiMessage) {
+          data += `${getMessageText(lastAiMessage, 'md')}\n`;
+          if (lastAiMessage.error) {
+            data += '*(This is an error message)*\n';
+          }
+          if (lastAiMessage.unfinished === true) {
             data += '*(This is an unfinished message)*\n';
           }
           data += '\n\n';
         }
       }
-    } else if (messages && typeof messages === 'object' && 'messageId' in messages) {
-      data += `${getMessageText(messages as TMessage, 'md')}\n`;
-      if ((messages as TMessage).error) {
-        data += '*(This is an error message)*\n';
-      }
-      if ((messages as TMessage).unfinished === true) {
-        data += '*(This is an unfinished message)*\n';
-      }
-      data += '\n\n';
     }
 
     if (type === 'markdown') {
