@@ -46,7 +46,7 @@ export default function ExportModal({
   useEffect(() => {
     setFileName(filenamify(String(conversation?.title ?? 'file')));
     setType('screenshot');
-    setIncludeOptions(true);
+    setIncludeOptions(false);
     setExportBranches(false);
     setRecursive(true);
   }, [conversation?.title, open]);

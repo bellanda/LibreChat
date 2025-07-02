@@ -21,6 +21,7 @@ RUN apt-get update && \
 # Instalar Playwright e seus navegadores durante o build
 RUN uv run playwright install chromium
 RUN uv run playwright install-deps chromium
+RUN uv run install-emoji-fonts
 
 EXPOSE 15784
 
