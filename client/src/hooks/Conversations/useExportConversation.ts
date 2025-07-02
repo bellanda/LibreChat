@@ -140,9 +140,6 @@ export default function useExportConversation({
 
 
 
-
-
-
   // Exportar HTML via API Python
   const exportHTML = async () => {
     // const markdown = await generateMarkdown();
@@ -150,7 +147,7 @@ export default function useExportConversation({
     const formData = new FormData();
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
-    const response = await fetch('http://localhost:15784/convert/md-to-html', {
+    const response = await fetch('http://localhost:15785/convert/md-to-html', {
       method: 'POST',
       body: formData,
     });
@@ -170,7 +167,7 @@ export default function useExportConversation({
     const formData = new FormData();
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
-    const response = await fetch('http://localhost:15784/convert/md-to-pdf', {
+    const response = await fetch('http://localhost:15785/convert/md-to-pdf', {
       method: 'POST',
       body: formData,
     });

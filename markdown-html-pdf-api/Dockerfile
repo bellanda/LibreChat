@@ -13,12 +13,18 @@ RUN apt-get update && \
     wkhtmltopdf \
     fonts-dejavu-core \
     fonts-liberation \
+    wget \
+    gnupg \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Instalar Playwright e seus navegadores durante o build
+RUN uv run playwright install chromium
+RUN uv run playwright install-deps chromium
 
 EXPOSE 15784
 
 COPY app/ app/
 
+# Comando direto para iniciar a aplicação
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "15784"]
-# uv run uvicorn app.main:app --host 0.0.0.0 --port 15784

@@ -19,7 +19,7 @@ converter = Converter()
 # Adicionar CORS para permitir o frontend acessar a API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3090"],  # ou ["*"] para liberar geral
+    allow_origins=["*"],  # ou ["*"] para liberar geral
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
