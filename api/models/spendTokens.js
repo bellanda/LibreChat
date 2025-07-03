@@ -29,6 +29,7 @@ const spendTokens = async (txData, tokenUsage) => {
       completionTokens,
     },
   );
+  logger.debug(`[spendTokens] Model: ${txData.model}, User: ${txData.user}`);
   let prompt, completion;
   try {
     if (promptTokens !== undefined) {

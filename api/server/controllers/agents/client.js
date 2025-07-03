@@ -422,15 +422,56 @@ class AgentClient extends BaseClient {
     if (!collectedUsage || !collectedUsage.length) {
       return;
     }
-    const input_tokens =
-      (collectedUsage[0]?.input_tokens || 0) +
-      (Number(collectedUsage[0]?.input_token_details?.cache_creation) || 0) +
-      (Number(collectedUsage[0]?.input_token_details?.cache_read) || 0);
 
-    let output_tokens = 0;
-    let previousTokens = input_tokens; // Start with original input
-    for (let i = 0; i < collectedUsage.length; i++) {
-      const usage = collectedUsage[i];
+    // Prevent duplicate billing by checking if this context has already been recorded
+    const recordingKey = `${this.conversationId}-${context}`;
+    if (this._recordedUsage && this._recordedUsage.has(recordingKey)) {
+      logger.debug(`[recordCollectedUsage] SKIPPING - Already recorded usage for ${recordingKey}`);
+      return;
+    }
+
+    // Initialize the tracking set if it doesn't exist
+    if (!this._recordedUsage) {
+      this._recordedUsage = new Set();
+    }
+
+    logger.debug(
+      `[recordCollectedUsage] Called with context: ${context}, collectedUsage.length: ${collectedUsage.length}`,
+    );
+
+    // Log each usage entry to identify potential duplicates or inflated values
+    const uniqueUsageValues = new Set();
+    const duplicateEntries = [];
+
+    collectedUsage.forEach((usage, index) => {
+      if (usage) {
+        const usageKey = `${usage.input_tokens || 0}-${usage.output_tokens || 0}`;
+        if (uniqueUsageValues.has(usageKey)) {
+          duplicateEntries.push({ index, usage });
+        }
+        uniqueUsageValues.add(usageKey);
+
+        logger.debug(
+          `[recordCollectedUsage] Entry ${index}: input=${usage.input_tokens}, output=${usage.output_tokens}, model=${usage.model || 'unknown'}`,
+        );
+      }
+    });
+
+    if (duplicateEntries.length > 0) {
+      logger.warn(
+        `[recordCollectedUsage] DUPLICATE USAGE ENTRIES DETECTED: ${duplicateEntries.length} duplicates found`,
+        duplicateEntries,
+      );
+    }
+
+    // Aggregate all tokens from the collected usage to avoid multiple billing
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    let totalCacheCreation = 0;
+    let totalCacheRead = 0;
+    let hasStructuredTokens = false;
+
+    for (const usage of collectedUsage) {
       if (!usage) {
         continue;
       }
@@ -438,56 +479,138 @@ class AgentClient extends BaseClient {
       const cache_creation = Number(usage.input_token_details?.cache_creation) || 0;
       const cache_read = Number(usage.input_token_details?.cache_read) || 0;
 
-      const txMetadata = {
-        context,
-        conversationId: this.conversationId,
-        user: this.user ?? this.options.req.user?.id,
-        endpointTokenConfig: this.options.endpointTokenConfig,
-        model: usage.model ?? model ?? this.model ?? this.options.agent.model_parameters.model,
-      };
+      // Validate token values to prevent inflated numbers
+      const inputTokens = Number(usage.input_tokens) || 0;
+      let outputTokens = Number(usage.output_tokens) || 0;
 
-      if (i > 0) {
-        // Count new tokens generated (input_tokens minus previous accumulated tokens)
-        output_tokens +=
-          (Number(usage.input_tokens) || 0) + cache_creation + cache_read - previousTokens;
+      // REAL TOKEN VALIDATION: Check if output tokens seem excessive compared to actual content
+      if (outputTokens > 20000) {
+        // Lowered threshold for early detection
+        logger.warn(
+          `[recordCollectedUsage] SUSPICIOUS OUTPUT TOKENS - Reported: ${outputTokens}, validating against actual content...`,
+        );
+
+        // Calculate real tokens based on actual response content
+        let actualOutputTokens = 0;
+        let responseText = '';
+
+        if (this.contentParts && this.contentParts.length > 0) {
+          // Get all text content from the response
+          responseText = this.contentParts
+            .filter((part) => part.type === 'text' && part.text)
+            .map((part) => part.text)
+            .join(' ');
+        }
+
+        // If no content from contentParts, try to get from the run's final output
+        if (!responseText && this.run) {
+          try {
+            const runMessages = this.run.Graph?.getRunMessages() || [];
+            responseText = runMessages
+              .filter((msg) => msg.content && typeof msg.content === 'string')
+              .map((msg) => msg.content)
+              .join(' ');
+          } catch (err) {
+            logger.debug(`[recordCollectedUsage] Could not extract run messages: ${err.message}`);
+          }
+        }
+
+        if (responseText) {
+          // Use the same tokenizer that the client uses
+          actualOutputTokens = this.getTokenCount(responseText);
+          logger.debug(`[recordCollectedUsage] Actual content token count: ${actualOutputTokens}`);
+          logger.debug(
+            `[recordCollectedUsage] Response content length: ${responseText.length} characters`,
+          );
+
+          // Calculate ratio for analysis
+          const ratio = outputTokens / Math.max(actualOutputTokens, 1);
+          logger.debug(`[recordCollectedUsage] Token ratio (reported/actual): ${ratio.toFixed(2)}`);
+
+          // If reported tokens are significantly higher than actual content (more than 3x difference)
+          if (outputTokens > actualOutputTokens * 3 && actualOutputTokens > 0) {
+            logger.error(
+              `[recordCollectedUsage] TOKEN MISMATCH DETECTED - Reported: ${outputTokens}, Actual: ${actualOutputTokens}, Ratio: ${ratio.toFixed(2)}x, using actual count`,
+            );
+            outputTokens = actualOutputTokens;
+          } else if (ratio > 1.5) {
+            logger.warn(
+              `[recordCollectedUsage] Token count seems high but acceptable - Reported: ${outputTokens}, Actual: ${actualOutputTokens}, Ratio: ${ratio.toFixed(2)}x`,
+            );
+          } else {
+            logger.debug(
+              `[recordCollectedUsage] Token count seems reasonable - Reported: ${outputTokens}, Actual: ${actualOutputTokens}`,
+            );
+          }
+        } else {
+          logger.warn(
+            `[recordCollectedUsage] No content found to validate token count, using conservative cap`,
+          );
+          // More conservative fallback: cap at 30k if we can't validate
+          outputTokens = Math.min(outputTokens, 30000);
+          logger.warn(`[recordCollectedUsage] Applied conservative cap: ${outputTokens} tokens`);
+        }
       }
 
-      // Add this message's output tokens
-      output_tokens += Number(usage.output_tokens) || 0;
-
-      // Update previousTokens to include this message's output
-      previousTokens += Number(usage.output_tokens) || 0;
+      totalInputTokens += inputTokens;
+      totalOutputTokens += outputTokens;
+      totalCacheCreation += cache_creation;
+      totalCacheRead += cache_read;
 
       if (cache_creation > 0 || cache_read > 0) {
-        spendStructuredTokens(txMetadata, {
-          promptTokens: {
-            input: usage.input_tokens,
-            write: cache_creation,
-            read: cache_read,
-          },
-          completionTokens: usage.output_tokens,
-        }).catch((err) => {
-          logger.error(
-            '[api/server/controllers/agents/client.js #recordCollectedUsage] Error spending structured tokens',
-            err,
-          );
-        });
-        continue;
+        hasStructuredTokens = true;
       }
-      spendTokens(txMetadata, {
-        promptTokens: usage.input_tokens,
-        completionTokens: usage.output_tokens,
-      }).catch((err) => {
-        logger.error(
-          '[api/server/controllers/agents/client.js #recordCollectedUsage] Error spending tokens',
-          err,
-        );
-      });
+    }
+
+    logger.debug(
+      `[recordCollectedUsage] Aggregated tokens - Input: ${totalInputTokens}, Output: ${totalOutputTokens}, CacheCreation: ${totalCacheCreation}, CacheRead: ${totalCacheRead}`,
+    );
+    logger.debug(`[recordCollectedUsage] hasStructuredTokens: ${hasStructuredTokens}`);
+    logger.debug(
+      `[recordCollectedUsage] model: ${model ?? this.model ?? this.options.agent.model_parameters.model}`,
+    );
+    logger.debug(`[recordCollectedUsage] conversationId: ${this.conversationId}`);
+    logger.debug(`[recordCollectedUsage] user: ${this.user ?? this.options.req.user?.id}`);
+
+    const txMetadata = {
+      context,
+      conversationId: this.conversationId,
+      user: this.user ?? this.options.req.user?.id,
+      endpointTokenConfig: this.options.endpointTokenConfig,
+      model: model ?? this.model ?? this.options.agent.model_parameters.model,
+    };
+
+    try {
+      // Make a single transaction call with aggregated tokens
+      if (hasStructuredTokens) {
+        await spendStructuredTokens(txMetadata, {
+          promptTokens: {
+            input: totalInputTokens,
+            write: totalCacheCreation,
+            read: totalCacheRead,
+          },
+          completionTokens: totalOutputTokens,
+        });
+      } else {
+        await spendTokens(txMetadata, {
+          promptTokens: totalInputTokens,
+          completionTokens: totalOutputTokens,
+        });
+      }
+
+      // Mark this context as recorded to prevent duplicate billing
+      this._recordedUsage.add(recordingKey);
+      logger.debug(`[recordCollectedUsage] Successfully recorded usage for ${recordingKey}`);
+    } catch (err) {
+      logger.error(
+        '[api/server/controllers/agents/client.js #recordCollectedUsage] Error spending tokens',
+        err,
+      );
     }
 
     this.usage = {
-      input_tokens,
-      output_tokens,
+      input_tokens: totalInputTokens + totalCacheCreation + totalCacheRead,
+      output_tokens: totalOutputTokens,
     };
   }
 
@@ -887,7 +1010,11 @@ class AgentClient extends BaseClient {
       });
 
       try {
+        logger.debug(
+          `[chatCompletion] About to call recordCollectedUsage with collectedUsage.length: ${this.collectedUsage?.length || 0}`,
+        );
         await this.recordCollectedUsage({ context: 'message' });
+        logger.debug(`[chatCompletion] Finished calling recordCollectedUsage`);
       } catch (err) {
         logger.error(
           '[api/server/controllers/agents/client.js #chatCompletion] Error recording collected usage',

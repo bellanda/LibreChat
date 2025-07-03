@@ -51,7 +51,16 @@ class ModelEndHandler {
         usage.model = metadata.model;
       }
 
+      logger.debug(
+        `[ModelEndHandler] POTENTIAL BUG - Adding usage: input=${usage.input_tokens}, output=${usage.output_tokens}`,
+      );
+      logger.debug(
+        `[ModelEndHandler] Before push, collectedUsage.length=${this.collectedUsage.length}`,
+      );
       this.collectedUsage.push(usage);
+      logger.debug(
+        `[ModelEndHandler] After push, collectedUsage.length=${this.collectedUsage.length}`,
+      );
       const streamingDisabled = !!(
         graph.clientOptions?.disableStreaming || graph?.boundModel?.disableStreaming
       );
