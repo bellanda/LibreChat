@@ -33,9 +33,10 @@ export default function ExportModal({
   const [filename, setFileName] = useState('');
   const [type, setType] = useState<string>('screenshot');
 
-  const [includeOptions, setIncludeOptions] = useState<boolean | 'indeterminate'>(true);
+  const [includeOptions, setIncludeOptions] = useState<boolean | 'indeterminate'>(false);
   const [exportBranches, setExportBranches] = useState<boolean | 'indeterminate'>(false);
   const [recursive, setRecursive] = useState<boolean | 'indeterminate'>(true);
+  const [lastMessageOnly, setLastMessageOnly] = useState<boolean | 'indeterminate'>(true);
 
   useEffect(() => {
     if (!open && triggerRef && triggerRef.current) {
@@ -49,6 +50,7 @@ export default function ExportModal({
     setIncludeOptions(false);
     setExportBranches(false);
     setRecursive(true);
+    setLastMessageOnly(true);
   }, [conversation?.title, open]);
 
   const handleTypeChange = useCallback((newType: string) => {
@@ -57,6 +59,9 @@ export default function ExportModal({
     setExportBranches(branches);
     setIncludeOptions(options);
     setType(newType);
+    setIncludeOptions(false);
+    setExportBranches(false);
+    setLastMessageOnly(true);
   }, []);
 
   const exportBranchesSupport = useMemo(
@@ -64,7 +69,7 @@ export default function ExportModal({
     [type],
   );
   const exportOptionsSupport = useMemo(() => type !== 'csv' && type !== 'screenshot', [type]);
-
+  const lastMessageOnlySupport = useMemo(() => type === 'webpage' || type === 'pdf', [type]);
   const { exportConversation } = useExportConversation({
     conversation,
     filename,
@@ -72,6 +77,7 @@ export default function ExportModal({
     includeOptions,
     exportBranches,
     recursive,
+    lastMessageOnly
   });
 
   return (
@@ -164,6 +170,26 @@ export default function ExportModal({
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-gray-50"
                     >
                       {localize('com_nav_export_recursive')}
+                    </label>
+                  </div>
+                </div>
+              ) : null}
+              {lastMessageOnlySupport ? (
+                <div className="grid w-full items-center gap-2">
+                  <Label htmlFor="lastMessageOnly" className="text-left text-sm font-medium">
+                    Última mensagem
+                  </Label>
+                  <div className="flex h-[40px] w-full items-center space-x-3">
+                    <Checkbox
+                      id="lastMessageOnly"
+                      checked={lastMessageOnly}
+                      onCheckedChange={setLastMessageOnly}
+                    />
+                    <label
+                      htmlFor="lastMessageOnly"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-gray-50"
+                    >
+                      Exportar apenas a última mensagem da IA
                     </label>
                   </div>
                 </div>

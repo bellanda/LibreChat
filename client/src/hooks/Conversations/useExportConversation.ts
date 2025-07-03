@@ -33,6 +33,7 @@ export default function useExportConversation({
   includeOptions,
   exportBranches,
   recursive,
+  lastMessageOnly
 }: {
   conversation: TConversation | null;
   filename: string;
@@ -40,6 +41,7 @@ export default function useExportConversation({
   includeOptions: boolean | 'indeterminate';
   exportBranches: boolean | 'indeterminate';
   recursive: boolean | 'indeterminate';
+  lastMessageOnly: boolean | 'indeterminate';
 }) {
 
   const queryClient = useQueryClient();
@@ -62,9 +64,9 @@ export default function useExportConversation({
 
     const formatText = (sender: string, text: string) => {
       if (format === 'text') {
-        return `>> ${sender}:\n${text}`;
+        return `>> ${text}`;
       }
-      return `**${sender}**\n${text}`;
+      return `${text}`;
     };
 
     if (!message.content) {
@@ -78,71 +80,68 @@ export default function useExportConversation({
       })
       .join('\n\n\n');
   };
+  const getLastBotMessage = async () => {
+    const messages = await buildMessageTree({
+      messageId: conversation?.conversationId,
+      message: null,
+      messages: getMessageTree(),
+      branches: Boolean(exportBranches),
+      recursive: false,
+    });
+
+    const allMessages = Array.isArray(messages) ? messages : [messages];
+    const validMessages = allMessages.filter(msg => msg && msg.messageId) as TMessage[];
+
+    // Encontrar a última mensagem do bot
+    for (let i = validMessages.length - 1; i >= 0; i--) {
+      const msg = validMessages[i];
+      if (msg.isCreatedByUser === false) {
+        return msg;
+      }
+    }
+
+    return null;
+  };
 
 
+  // Função para gerar markdown da última mensagem apenas
+  const exportLastMessageMarkdown = async () => {
+    // let data = '# Last Bot Message\n';
 
+    let data = '';
 
-  // // Função para gerar markdown (reutiliza lógica do exportMarkdown)
-  // const generateMarkdown = async () => {
-  //   let data =
-  //     '# Conversation\n' +
-  //     `- conversationId: ${conversation?.conversationId}\n` +
-  //     `- endpoint: ${conversation?.endpoint}\n` +
-  //     `- title: ${conversation?.title}\n` +
-  //     `- exportAt: ${new Date().toTimeString()}\n`;
+    if (includeOptions === true) {
+      data += '\n## Options\n';
+      const options = cleanupPreset({ preset: conversation as TPreset });
+      for (const key of Object.keys(options)) {
+        data += `- ${key}: ${options[key]}\n`;
+      }
+    }
 
-  //   if (includeOptions === true) {
-  //     data += '\n## Options\n';
-  //     const options = cleanupPreset({ preset: conversation as TPreset });
-  //     for (const key of Object.keys(options)) {
-  //       data += `- ${key}: ${options[key]}\n`;
-  //     }
-  //   }
+    const lastMessage = await getLastBotMessage();
 
-  //   const messages = await buildMessageTree({
-  //     messageId: conversation?.conversationId,
-  //     message: null,
-  //     messages: getMessageTree(),
-  //     branches: Boolean(exportBranches),
-  //     recursive: false,
-  //   });
+    if (lastMessage) {
+      // data += '\n## Message\n';
+      data += `${getMessageText(lastMessage, 'md')}\n`;
+      if (lastMessage.error) {
+        data += '*(This is an error message)*\n';
+      }
+      if (lastMessage.unfinished === true) {
+        data += '*(This is an unfinished message)*\n';
+      }
+    } else {
+      data += '\n## Message\n';
+      data += '*No bot messages found*\n';
+    }
 
-  //   data += '\n## History\n';
-  //   if (Array.isArray(messages)) {
-  //     for (const message of messages) {
-  //       data += renderMessageBranch(message, 0);
-  //     }
-  //   } else {
-  //     data += renderMessageBranch(messages, 0);
-  //   }
-  //   return data;
-  // };
-
-  // // Função auxiliar para renderizar mensagens e branches com recuo
-  // const renderMessageBranch = (message: any, level: number): string => {
-  //   if (!message) return '';
-  //   let md = `${'  '.repeat(level)}${getMessageText(message, 'md')}\n`;
-  //   if (message.error) {
-  //     md += `${'  '.repeat(level)}*(This is an error message)*\n`;
-  //   }
-  //   if (message.unfinished === true) {
-  //     md += `${'  '.repeat(level)}*(This is an unfinished message)*\n`;
-  //   }
-  //   if (message.children && Array.isArray(message.children)) {
-  //     for (const child of message.children) {
-  //       md += renderMessageBranch(child, level + 1);
-  //     }
-  //   }
-  //   md += '\n';
-  //   return md;
-  // }
-
-
-
+    return data;
+  };
 
   // Exportar HTML via API Python
   const exportHTML = async () => {
-    const markdown = await exportMarkdown();
+    const markdown = lastMessageOnly === true
+      ? await exportLastMessageMarkdown()
+      : await exportMarkdown();
     if (typeof markdown !== 'string') {
       console.error('Erro: markdown não é uma string válida');
       return;
@@ -164,7 +163,9 @@ export default function useExportConversation({
 
   // Exportar PDF via API Python
   const exportPDF = async () => {
-    const markdown = await exportMarkdown();
+    const markdown = lastMessageOnly === true
+      ? await exportLastMessageMarkdown()
+      : await exportMarkdown();
     if (typeof markdown !== 'string') {
       console.error('Erro: markdown não é uma string válida');
       return;
