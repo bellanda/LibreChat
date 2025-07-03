@@ -1,17 +1,17 @@
+import type { TPromptGroup } from 'librechat-data-provider';
+import { replaceSpecialVars } from 'librechat-data-provider';
 import { useMemo } from 'react';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
-import rehypeKatex from 'rehype-katex';
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import { replaceSpecialVars } from 'librechat-data-provider';
-import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
-import type { TPromptGroup } from 'librechat-data-provider';
-import { cn, wrapVariable, defaultTextProps, extractVariableInfo } from '~/utils';
 import { codeNoExecution } from '~/components/Chat/Messages/Content/Markdown';
-import { TextareaAutosize, InputCombobox, Button } from '~/components/ui';
+import { Button, InputCombobox, TextareaAutosize } from '~/components/ui';
 import { useAuthContext, useLocalize, useSubmitMessage } from '~/hooks';
+import { cn, defaultTextProps, extractVariableInfo, wrapVariable } from '~/utils';
 import { PromptVariableGfm } from '../Markdown';
 
 type FieldType = 'text' | 'select';
@@ -138,7 +138,7 @@ export default function VariableForm({
   };
 
   return (
-    <div className="mx-auto p-1 md:container">
+    <div className="mx-auto p-1 md:container overflow-auto">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="mb-6 max-h-screen max-w-[90vw] overflow-auto rounded-md bg-surface-tertiary p-4 text-text-secondary dark:bg-surface-primary sm:max-w-full md:max-h-96">
           <ReactMarkdown
