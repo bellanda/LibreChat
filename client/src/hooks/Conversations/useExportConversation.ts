@@ -148,6 +148,7 @@ export default function useExportConversation({
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
     const apiUrl = import.meta.env.VITE_PYTHON_TOOLS_API_URL;
+    console.log('apiUrl', apiUrl);
     const response = await fetch(`${apiUrl}/convert/md-to-html`, {
       method: 'POST',
       body: formData,
@@ -172,6 +173,7 @@ export default function useExportConversation({
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
     const apiUrl = import.meta.env.VITE_PYTHON_TOOLS_API_URL;
+    console.log('apiUrl', apiUrl);
     const response = await fetch(`${apiUrl}/convert/md-to-pdf`, {
       method: 'POST',
       body: formData,
