@@ -16,7 +16,7 @@ import {
 } from 'librechat-data-provider';
 import { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetStartupConfig } from '~/data-provider';
+
 import useBuildMessageTree from '~/hooks/Messages/useBuildMessageTree';
 import { useScreenshot } from '~/hooks/ScreenshotContext';
 import { buildTree, cleanupPreset } from '~/utils';
@@ -137,9 +137,7 @@ export default function useExportConversation({
     return data;
   };
 
-  const { data: startupConfig } = useGetStartupConfig();
-
-  // Exportar HTML via API Python
+  // Exportar HTML via API Python (using backend proxy)
   const exportHTML = async () => {
     const markdown =
       lastMessageOnly === true ? await exportLastMessageMarkdown() : await exportMarkdown();
@@ -150,10 +148,9 @@ export default function useExportConversation({
     const formData = new FormData();
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
-    const apiUrl = startupConfig?.pythonToolsApiUrl;
-    console.log('[DEBUG] startupConfig:', startupConfig);
-    console.log('[DEBUG] apiUrl:', apiUrl);
-    const response = await fetch(`${apiUrl}/convert/md-to-html`, {
+
+    // Use backend proxy instead of direct API call
+    const response = await fetch('/api/python-tools/convert/md-to-html', {
       method: 'POST',
       body: formData,
     });
@@ -165,7 +162,7 @@ export default function useExportConversation({
     download(blob, `${filename}.html`);
   };
 
-  // Exportar PDF via API Python
+  // Exportar PDF via API Python (using backend proxy)
   const exportPDF = async () => {
     const markdown =
       lastMessageOnly === true ? await exportLastMessageMarkdown() : await exportMarkdown();
@@ -176,10 +173,9 @@ export default function useExportConversation({
     const formData = new FormData();
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
-    const apiUrl = startupConfig?.pythonToolsApiUrl;
-    console.log('[DEBUG] startupConfig:', startupConfig);
-    console.log('[DEBUG] apiUrl:', apiUrl);
-    const response = await fetch(`${apiUrl}/convert/md-to-pdf`, {
+
+    // Use backend proxy instead of direct API call
+    const response = await fetch('/api/python-tools/convert/md-to-pdf', {
       method: 'POST',
       body: formData,
     });
