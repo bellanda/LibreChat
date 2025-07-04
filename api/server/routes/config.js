@@ -19,10 +19,22 @@ const publicSharedLinksEnabled =
   (process.env.ALLOW_SHARED_LINKS_PUBLIC === undefined ||
     isEnabled(process.env.ALLOW_SHARED_LINKS_PUBLIC));
 
+// Temporary route to clear cache - remove after debugging
+router.get('/clear-cache', async function (req, res) {
+  const cache = getLogStores(CacheKeys.CONFIG_STORE);
+  await cache.delete(CacheKeys.STARTUP_CONFIG);
+  console.log('[DEBUG] Startup config cache cleared');
+  res.send({ message: 'Cache cleared' });
+});
+
 router.get('/', async function (req, res) {
   const cache = getLogStores(CacheKeys.CONFIG_STORE);
   const cachedStartupConfig = await cache.get(CacheKeys.STARTUP_CONFIG);
   if (cachedStartupConfig) {
+    console.log(
+      '[DEBUG] Using cached startup config, pythonToolsApiUrl:',
+      cachedStartupConfig.pythonToolsApiUrl,
+    );
     res.send(cachedStartupConfig);
     return;
   }
@@ -85,6 +97,10 @@ router.get('/', async function (req, res) {
         isEnabled(process.env.SHOW_BIRTHDAY_ICON) ||
         process.env.SHOW_BIRTHDAY_ICON === '',
       helpAndFaqURL: process.env.HELP_AND_FAQ_URL || 'https://librechat.ai',
+      pythonToolsApiUrl: (() => {
+        console.log('[DEBUG] PYTHON_TOOLS_API_URL env var:', process.env.PYTHON_TOOLS_API_URL);
+        return process.env.PYTHON_TOOLS_API_URL || 'http://localhost:15785';
+      })(),
       interface: req.app.locals.interfaceConfig,
       turnstile: req.app.locals.turnstileConfig,
       modelSpecs: req.app.locals.modelSpecs,

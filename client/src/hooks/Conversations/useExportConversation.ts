@@ -16,6 +16,7 @@ import {
 } from 'librechat-data-provider';
 import { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import { useGetStartupConfig } from '~/data-provider';
 import useBuildMessageTree from '~/hooks/Messages/useBuildMessageTree';
 import { useScreenshot } from '~/hooks/ScreenshotContext';
 import { buildTree, cleanupPreset } from '~/utils';
@@ -136,6 +137,8 @@ export default function useExportConversation({
     return data;
   };
 
+  const { data: startupConfig } = useGetStartupConfig();
+
   // Exportar HTML via API Python
   const exportHTML = async () => {
     const markdown =
@@ -147,8 +150,9 @@ export default function useExportConversation({
     const formData = new FormData();
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
-    const apiUrl = import.meta.env.VITE_PYTHON_TOOLS_API_URL;
-    console.log('apiUrl', apiUrl);
+    const apiUrl = startupConfig?.pythonToolsApiUrl;
+    console.log('[DEBUG] startupConfig:', startupConfig);
+    console.log('[DEBUG] apiUrl:', apiUrl);
     const response = await fetch(`${apiUrl}/convert/md-to-html`, {
       method: 'POST',
       body: formData,
@@ -172,8 +176,9 @@ export default function useExportConversation({
     const formData = new FormData();
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
-    const apiUrl = import.meta.env.VITE_PYTHON_TOOLS_API_URL;
-    console.log('apiUrl', apiUrl);
+    const apiUrl = startupConfig?.pythonToolsApiUrl;
+    console.log('[DEBUG] startupConfig:', startupConfig);
+    console.log('[DEBUG] apiUrl:', apiUrl);
     const response = await fetch(`${apiUrl}/convert/md-to-pdf`, {
       method: 'POST',
       body: formData,
