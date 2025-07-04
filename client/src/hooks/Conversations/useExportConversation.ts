@@ -33,7 +33,7 @@ export default function useExportConversation({
   includeOptions,
   exportBranches,
   recursive,
-  lastMessageOnly
+  lastMessageOnly,
 }: {
   conversation: TConversation | null;
   filename: string;
@@ -43,7 +43,6 @@ export default function useExportConversation({
   recursive: boolean | 'indeterminate';
   lastMessageOnly: boolean | 'indeterminate';
 }) {
-
   const queryClient = useQueryClient();
   const { captureScreenshot } = useScreenshot();
   const buildMessageTree = useBuildMessageTree();
@@ -51,10 +50,11 @@ export default function useExportConversation({
   const { conversationId: paramId } = useParams();
 
   const getMessageTree = useCallback(() => {
-    const queryParam = paramId === 'new' ? paramId : conversation?.conversationId ?? paramId ?? '';
+    const queryParam =
+      paramId === 'new' ? paramId : (conversation?.conversationId ?? paramId ?? '');
     const messages = queryClient.getQueryData<TMessage[]>([QueryKeys.messages, queryParam]) ?? [];
     const dataTree = buildTree({ messages });
-    return dataTree?.length === 0 ? null : dataTree ?? null;
+    return dataTree?.length === 0 ? null : (dataTree ?? null);
   }, [paramId, conversation?.conversationId, queryClient]);
 
   const getMessageText = (message: TMessage | undefined, format = 'text') => {
@@ -90,7 +90,7 @@ export default function useExportConversation({
     });
 
     const allMessages = Array.isArray(messages) ? messages : [messages];
-    const validMessages = allMessages.filter(msg => msg && msg.messageId) as TMessage[];
+    const validMessages = allMessages.filter((msg) => msg && msg.messageId) as TMessage[];
 
     // Encontrar a última mensagem do bot
     for (let i = validMessages.length - 1; i >= 0; i--) {
@@ -102,7 +102,6 @@ export default function useExportConversation({
 
     return null;
   };
-
 
   // Função para gerar markdown da última mensagem apenas
   const exportLastMessageMarkdown = async () => {
@@ -139,9 +138,8 @@ export default function useExportConversation({
 
   // Exportar HTML via API Python
   const exportHTML = async () => {
-    const markdown = lastMessageOnly === true
-      ? await exportLastMessageMarkdown()
-      : await exportMarkdown();
+    const markdown =
+      lastMessageOnly === true ? await exportLastMessageMarkdown() : await exportMarkdown();
     if (typeof markdown !== 'string') {
       console.error('Erro: markdown não é uma string válida');
       return;
@@ -149,7 +147,8 @@ export default function useExportConversation({
     const formData = new FormData();
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
-    const response = await fetch('http://localhost:15785/convert/md-to-html', {
+    const apiUrl = import.meta.env.VITE_PYTHON_TOOLS_API_URL;
+    const response = await fetch(`${apiUrl}/convert/md-to-html`, {
       method: 'POST',
       body: formData,
     });
@@ -163,9 +162,8 @@ export default function useExportConversation({
 
   // Exportar PDF via API Python
   const exportPDF = async () => {
-    const markdown = lastMessageOnly === true
-      ? await exportLastMessageMarkdown()
-      : await exportMarkdown();
+    const markdown =
+      lastMessageOnly === true ? await exportLastMessageMarkdown() : await exportMarkdown();
     if (typeof markdown !== 'string') {
       console.error('Erro: markdown não é uma string válida');
       return;
@@ -173,7 +171,8 @@ export default function useExportConversation({
     const formData = new FormData();
     const file = new Blob([markdown], { type: 'text/markdown' });
     formData.append('file', file, 'conversation.md');
-    const response = await fetch('http://localhost:15785/convert/md-to-pdf', {
+    const apiUrl = import.meta.env.VITE_PYTHON_TOOLS_API_URL;
+    const response = await fetch(`${apiUrl}/convert/md-to-pdf`, {
       method: 'POST',
       body: formData,
     });
@@ -184,8 +183,6 @@ export default function useExportConversation({
     const blob = await response.blob();
     download(blob, `${filename}.pdf`);
   };
-
-
 
   /**
    * Format and return message texts according to the type of content.
@@ -200,7 +197,7 @@ export default function useExportConversation({
     if (content.type === ContentTypes.ERROR) {
       // ERROR
       const textPart = content[ContentTypes.TEXT];
-      const text = typeof textPart === 'string' ? textPart : textPart?.value ?? '';
+      const text = typeof textPart === 'string' ? textPart : (textPart?.value ?? '');
       return [sender, text];
     }
 
@@ -386,7 +383,7 @@ export default function useExportConversation({
     } else {
       // Quando branches estiver desabilitado, exportar apenas a última pergunta do usuário e a última resposta da IA
       const allMessages = Array.isArray(messages) ? messages : [messages];
-      const validMessages = allMessages.filter(msg => msg && msg.messageId) as TMessage[];
+      const validMessages = allMessages.filter((msg) => msg && msg.messageId) as TMessage[];
 
       if (validMessages.length > 0) {
         // Encontrar a última pergunta do usuário e a última resposta da IA
@@ -444,7 +441,6 @@ export default function useExportConversation({
     }
 
     return data;
-
   };
 
   const exportText = async () => {
