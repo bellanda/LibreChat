@@ -24,6 +24,7 @@ const limiterOptions = {
   max: 1,
   handler,
   keyGenerator: function (req) {
+    console.log('[DEBUG] Tool Call Limiter - User ID:', req.user?.id);
     return req.user?.id;
   },
 };

@@ -817,13 +817,13 @@ class AgentClient extends BaseClient {
           agent.model_parameters.model.match(regex),
         );
 
-        const systemMessage = Object.values(agent.toolContextMap ?? {})
+        const toolContextMessage = Object.values(agent.toolContextMap ?? {})
           .join('\n')
           .trim();
 
         let systemContent = [
-          systemMessage,
           agent.instructions ?? '',
+          toolContextMessage,
           i !== 0 ? (agent.additional_instructions ?? '') : '',
         ]
           .join('\n')

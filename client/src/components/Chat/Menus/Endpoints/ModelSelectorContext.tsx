@@ -1,12 +1,19 @@
-import debounce from 'lodash/debounce';
-import React, { createContext, useContext, useState, useMemo } from 'react';
-import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import type * as t from 'librechat-data-provider';
+import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import debounce from 'lodash/debounce';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 import type { Endpoint, SelectedValues } from '~/common';
-import { useAgentsMapContext, useAssistantsMapContext, useChatContext } from '~/Providers';
-import { useEndpoints, useSelectorEffects, useKeyDialog } from '~/hooks';
-import useSelectMention from '~/hooks/Input/useSelectMention';
+import { NotificationSeverity } from '~/common';
 import { useGetEndpointsQuery } from '~/data-provider';
+import { useEndpoints, useKeyDialog, useSelectorEffects } from '~/hooks';
+import useSelectMention from '~/hooks/Input/useSelectMention';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import {
+  useAgentsMapContext,
+  useAssistantsMapContext,
+  useChatContext,
+  useToastContext,
+} from '~/Providers';
 import { filterItems } from './utils';
 
 type ModelSelectorContextType = {
@@ -52,6 +59,8 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   const assistantsMap = useAssistantsMapContext();
   const { data: endpointsConfig } = useGetEndpointsQuery();
   const { conversation, newConversation } = useChatContext();
+  const { getModelDescription } = useModelDescriptions();
+  const { showToast } = useToastContext();
   const modelSpecs = useMemo(() => startupConfig?.modelSpecs?.list ?? [], [startupConfig]);
   const { mappedEndpoints, endpointRequiresUserKey } = useEndpoints({
     agentsMap,
@@ -112,6 +121,17 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
 
   const handleSelectSpec = (spec: t.TModelSpec) => {
     let model = spec.preset.model ?? null;
+
+    // Check if the selected model supports web search
+    const modelDescription = getModelDescription(model);
+    if (modelDescription && modelDescription.supportsWebSearch === false) {
+      showToast({
+        message: `O modelo "${modelDescription.name || model}" não suporta busca na web. O recurso de busca na web não estará disponível para este modelo.`,
+        severity: NotificationSeverity.WARNING,
+        duration: 5000,
+      });
+    }
+
     onSelectSpec?.(spec);
     if (isAgentsEndpoint(spec.preset.endpoint)) {
       model = spec.preset.agent_id ?? '';
@@ -139,6 +159,16 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   };
 
   const handleSelectModel = (endpoint: Endpoint, model: string) => {
+    // Check if the selected model supports web search
+    const modelDescription = getModelDescription(model);
+    if (modelDescription && modelDescription.supportsWebSearch === false) {
+      showToast({
+        message: `O modelo "${modelDescription.name || model}" não suporta busca na web. O recurso de busca na web não estará disponível para este modelo.`,
+        severity: NotificationSeverity.WARNING,
+        duration: 5000,
+      });
+    }
+
     if (isAgentsEndpoint(endpoint.value)) {
       onSelectEndpoint?.(endpoint.value, {
         agent_id: model,

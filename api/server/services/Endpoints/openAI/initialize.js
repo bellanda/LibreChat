@@ -85,6 +85,7 @@ const initializeClient = async ({
 
     clientOptions.titleConvo = azureConfig.titleConvo;
     clientOptions.titleModel = azureConfig.titleModel;
+    clientOptions.promptPrefix = azureConfig.promptPrefix;
 
     const azureRate = modelName.includes('gpt-4') ? 30 : 17;
     clientOptions.streamRate = azureConfig.streamRate ?? azureRate;
@@ -115,6 +116,7 @@ const initializeClient = async ({
   if (!isAzureOpenAI && openAIConfig) {
     clientOptions.streamRate = openAIConfig.streamRate;
     clientOptions.titleModel = openAIConfig.titleModel;
+    clientOptions.promptPrefix = openAIConfig.promptPrefix;
   }
 
   /** @type {undefined | TBaseEndpoint} */

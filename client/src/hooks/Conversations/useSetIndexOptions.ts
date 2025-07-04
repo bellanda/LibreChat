@@ -1,9 +1,12 @@
+import { TConversation, tConvoUpdateSchema, TPlugin, TPreset } from 'librechat-data-provider';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { TPreset, TPlugin, TConversation, tConvoUpdateSchema } from 'librechat-data-provider';
-import type { TSetExample, TSetOption, TSetOptionsPayload } from '~/common';
-import usePresetIndexOptions from './usePresetIndexOptions';
+import { useToastContext } from '~/Providers';
 import { useChatContext } from '~/Providers/ChatContext';
+import type { TSetExample, TSetOption, TSetOptionsPayload } from '~/common';
+import { NotificationSeverity } from '~/common';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
 import store from '~/store';
+import usePresetIndexOptions from './usePresetIndexOptions';
 
 type TUseSetOptions = (preset?: TPreset | boolean | null) => TSetOptionsPayload;
 
@@ -11,6 +14,8 @@ const useSetIndexOptions: TUseSetOptions = (preset = false) => {
   const setShowPluginStoreDialog = useSetRecoilState(store.showPluginStoreDialog);
   const availableTools = useRecoilValue(store.availableTools);
   const { conversation, setConversation } = useChatContext();
+  const { getModelDescription } = useModelDescriptions();
+  const { showToast } = useToastContext();
 
   const result = usePresetIndexOptions(preset);
 
@@ -19,6 +24,17 @@ const useSetIndexOptions: TUseSetOptions = (preset = false) => {
   }
 
   const setOption: TSetOption = (param) => (newValue) => {
+    if (param === 'model' && typeof newValue === 'string') {
+      const modelDescription = getModelDescription(newValue);
+      if (modelDescription && modelDescription.supportsWebSearch === false) {
+        showToast({
+          message: `O modelo "${modelDescription.name || newValue}" não suporta busca na web. O recurso de busca na web não estará disponível para este modelo.`,
+          severity: NotificationSeverity.WARNING,
+          duration: 5000,
+        });
+      }
+    }
+
     const update = {};
     update[param] = newValue;
 

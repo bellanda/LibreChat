@@ -84,6 +84,7 @@ const initializeClient = async ({ req, res, endpointOption }) => {
 
     clientOptions.titleConvo = azureConfig.titleConvo;
     clientOptions.titleModel = azureConfig.titleModel;
+    clientOptions.promptPrefix = azureConfig.promptPrefix;
     clientOptions.titleMethod = azureConfig.titleMethod ?? 'completion';
 
     const azureRate = modelName.includes('gpt-4') ? 30 : 17;

@@ -28,6 +28,7 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
   if (anthropicConfig) {
     clientOptions.streamRate = anthropicConfig.streamRate;
     clientOptions.titleModel = anthropicConfig.titleModel;
+    clientOptions.promptPrefix = anthropicConfig.promptPrefix;
   }
 
   /** @type {undefined | TBaseEndpoint} */

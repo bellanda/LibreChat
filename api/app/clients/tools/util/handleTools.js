@@ -276,8 +276,9 @@ const loadTools = async ({
         webSearchConfig,
       });
       const { onSearchResults, onGetHighlights } = options?.[Tools.web_search] ?? {};
-      requestedTools[tool] = async () => {
-        toolContextMap[tool] = `# \`${tool}\`:
+
+      // Set toolContextMap immediately, not inside the async function
+      toolContextMap[tool] = `# \`${tool}\`:
 Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
 1. **Execute immediately without preface** when using \`${tool}\`.
 2. **After the search, begin with a brief summary** that directly addresses the query without headers or explaining your process.
@@ -287,6 +288,8 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
 6. **Provide comprehensive information** with specific details, examples, and as much relevant context as possible from search results.
 7. **Avoid moralizing language.**
 `.trim();
+
+      requestedTools[tool] = async () => {
         return createSearchTool({
           ...result.authResult,
           onSearchResults,

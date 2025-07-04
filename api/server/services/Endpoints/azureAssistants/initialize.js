@@ -125,6 +125,7 @@ const initializeClient = async ({ req, res, version, endpointOption, initAppClie
     if (initAppClient) {
       clientOptions.titleConvo = azureConfig.titleConvo;
       clientOptions.titleModel = azureConfig.titleModel;
+      clientOptions.promptPrefix = azureConfig.promptPrefix;
       clientOptions.titleMethod = azureConfig.titleMethod ?? 'completion';
 
       const groupName = modelGroupMap[modelName].group;

@@ -25,9 +25,9 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
   const credentials = isUserProvided
     ? userKey
     : {
-      [AuthKeys.GOOGLE_SERVICE_KEY]: serviceKey,
-      [AuthKeys.GOOGLE_API_KEY]: GOOGLE_KEY,
-    };
+        [AuthKeys.GOOGLE_SERVICE_KEY]: serviceKey,
+        [AuthKeys.GOOGLE_API_KEY]: GOOGLE_KEY,
+      };
 
   let clientOptions = {};
 
@@ -39,6 +39,7 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
   if (googleConfig) {
     clientOptions.streamRate = googleConfig.streamRate;
     clientOptions.titleModel = googleConfig.titleModel;
+    clientOptions.promptPrefix = googleConfig.promptPrefix;
   }
 
   if (allConfig) {

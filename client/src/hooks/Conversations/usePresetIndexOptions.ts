@@ -1,9 +1,12 @@
+import type { TPlugin, TPreset } from 'librechat-data-provider';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import type { TPreset, TPlugin } from 'librechat-data-provider';
-import type { TSetOptionsPayload, TSetExample, TSetOption, TSetOptions } from '~/common';
+import type { TSetExample, TSetOption, TSetOptions, TSetOptionsPayload } from '~/common';
+import { NotificationSeverity } from '~/common';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import { useToastContext } from '~/Providers';
 import { useChatContext } from '~/Providers/ChatContext';
-import { cleanupPreset } from '~/utils';
 import store from '~/store';
+import { cleanupPreset } from '~/utils';
 
 type TUsePresetOptions = (preset?: TPreset | boolean | null) => TSetOptionsPayload | boolean;
 
@@ -11,6 +14,8 @@ const usePresetIndexOptions: TUsePresetOptions = (_preset) => {
   const setShowPluginStoreDialog = useSetRecoilState(store.showPluginStoreDialog);
   const availableTools = useRecoilValue(store.availableTools);
   const { preset, setPreset } = useChatContext();
+  const { getModelDescription } = useModelDescriptions();
+  const { showToast } = useToastContext();
 
   if (!_preset) {
     return false;
@@ -30,6 +35,17 @@ const usePresetIndexOptions: TUsePresetOptions = (_preset) => {
   };
 
   const setOption: TSetOption = (param) => (newValue) => {
+    if (param === 'model' && typeof newValue === 'string') {
+      const modelDescription = getModelDescription(newValue);
+      if (modelDescription && modelDescription.supportsWebSearch === false) {
+        showToast({
+          message: `O modelo "${modelDescription.name || newValue}" não suporta busca na web. O recurso de busca na web não estará disponível para este modelo.`,
+          severity: NotificationSeverity.WARNING,
+          duration: 5000,
+        });
+      }
+    }
+
     const update = {};
     update[param] = newValue;
     setPreset((prevState) =>
@@ -45,7 +61,7 @@ const usePresetIndexOptions: TUsePresetOptions = (_preset) => {
   const setExample: TSetExample = (i, type, newValue = null) => {
     const update = {};
     const current = preset?.examples?.slice() || [];
-    const currentExample = { ...current[i] } || {};
+    const currentExample = { ...current[i] };
     currentExample[type] = { content: newValue };
     current[i] = currentExample;
     update['examples'] = current;
