@@ -1,24 +1,24 @@
-import download from 'downloadjs';
-import { useCallback } from 'react';
-import exportFromJSON from 'export-from-json';
 import { useQueryClient } from '@tanstack/react-query';
+import download from 'downloadjs';
+import exportFromJSON from 'export-from-json';
+import type {
+  TConversation,
+  TMessage,
+  TMessageContentParts,
+  TPreset,
+} from 'librechat-data-provider';
 import {
-  QueryKeys,
   ContentTypes,
+  QueryKeys,
   ToolCallTypes,
   imageGenTools,
   isImageVisionTool,
 } from 'librechat-data-provider';
-import type {
-  TMessage,
-  TPreset,
-  TConversation,
-  TMessageContentParts,
-} from 'librechat-data-provider';
+import { useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import useBuildMessageTree from '~/hooks/Messages/useBuildMessageTree';
 import { useScreenshot } from '~/hooks/ScreenshotContext';
-import { cleanupPreset, buildTree } from '~/utils';
-import { useParams } from 'react-router-dom';
+import { buildTree, cleanupPreset } from '~/utils';
 
 type ExportValues = {
   fieldName: string;
@@ -33,6 +33,7 @@ export default function useExportConversation({
   includeOptions,
   exportBranches,
   recursive,
+  lastMessageOnly
 }: {
   conversation: TConversation | null;
   filename: string;
@@ -40,7 +41,9 @@ export default function useExportConversation({
   includeOptions: boolean | 'indeterminate';
   exportBranches: boolean | 'indeterminate';
   recursive: boolean | 'indeterminate';
+  lastMessageOnly: boolean | 'indeterminate';
 }) {
+
   const queryClient = useQueryClient();
   const { captureScreenshot } = useScreenshot();
   const buildMessageTree = useBuildMessageTree();
@@ -61,9 +64,9 @@ export default function useExportConversation({
 
     const formatText = (sender: string, text: string) => {
       if (format === 'text') {
-        return `>> ${sender}:\n${text}`;
+        return `>> ${text}`;
       }
-      return `**${sender}**\n${text}`;
+      return `${text}`;
     };
 
     if (!message.content) {
@@ -77,6 +80,112 @@ export default function useExportConversation({
       })
       .join('\n\n\n');
   };
+  const getLastBotMessage = async () => {
+    const messages = await buildMessageTree({
+      messageId: conversation?.conversationId,
+      message: null,
+      messages: getMessageTree(),
+      branches: Boolean(exportBranches),
+      recursive: false,
+    });
+
+    const allMessages = Array.isArray(messages) ? messages : [messages];
+    const validMessages = allMessages.filter(msg => msg && msg.messageId) as TMessage[];
+
+    // Encontrar a última mensagem do bot
+    for (let i = validMessages.length - 1; i >= 0; i--) {
+      const msg = validMessages[i];
+      if (msg.isCreatedByUser === false) {
+        return msg;
+      }
+    }
+
+    return null;
+  };
+
+
+  // Função para gerar markdown da última mensagem apenas
+  const exportLastMessageMarkdown = async () => {
+    // let data = '# Last Bot Message\n';
+
+    let data = '';
+
+    if (includeOptions === true) {
+      data += '\n## Options\n';
+      const options = cleanupPreset({ preset: conversation as TPreset });
+      for (const key of Object.keys(options)) {
+        data += `- ${key}: ${options[key]}\n`;
+      }
+    }
+
+    const lastMessage = await getLastBotMessage();
+
+    if (lastMessage) {
+      // data += '\n## Message\n';
+      data += `${getMessageText(lastMessage, 'md')}\n`;
+      if (lastMessage.error) {
+        data += '*(This is an error message)*\n';
+      }
+      if (lastMessage.unfinished === true) {
+        data += '*(This is an unfinished message)*\n';
+      }
+    } else {
+      data += '\n## Message\n';
+      data += '*No bot messages found*\n';
+    }
+
+    return data;
+  };
+
+  // Exportar HTML via API Python
+  const exportHTML = async () => {
+    const markdown = lastMessageOnly === true
+      ? await exportLastMessageMarkdown()
+      : await exportMarkdown();
+    if (typeof markdown !== 'string') {
+      console.error('Erro: markdown não é uma string válida');
+      return;
+    }
+    const formData = new FormData();
+    const file = new Blob([markdown], { type: 'text/markdown' });
+    formData.append('file', file, 'conversation.md');
+    const response = await fetch('http://localhost:15785/convert/md-to-html', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      console.error('Erro ao exportar HTML');
+      return;
+    }
+    const blob = await response.blob();
+    download(blob, `${filename}.html`);
+  };
+
+  // Exportar PDF via API Python
+  const exportPDF = async () => {
+    const markdown = lastMessageOnly === true
+      ? await exportLastMessageMarkdown()
+      : await exportMarkdown();
+    if (typeof markdown !== 'string') {
+      console.error('Erro: markdown não é uma string válida');
+      return;
+    }
+    const formData = new FormData();
+    const file = new Blob([markdown], { type: 'text/markdown' });
+    formData.append('file', file, 'conversation.md');
+    const response = await fetch('http://localhost:15785/convert/md-to-pdf', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      console.error('Erro ao exportar PDF');
+      return;
+    }
+    const blob = await response.blob();
+    download(blob, `${filename}.pdf`);
+  };
+
+
 
   /**
    * Format and return message texts according to the type of content.
@@ -90,7 +199,9 @@ export default function useExportConversation({
 
     if (content.type === ContentTypes.ERROR) {
       // ERROR
-      return [sender, content[ContentTypes.TEXT].value];
+      const textPart = content[ContentTypes.TEXT];
+      const text = typeof textPart === 'string' ? textPart : textPart?.value ?? '';
+      return [sender, text];
     }
 
     if (content.type === ContentTypes.TEXT) {
@@ -168,10 +279,14 @@ export default function useExportConversation({
 
     if (Array.isArray(messages)) {
       for (const message of messages) {
-        data.push(message);
+        if (message && message.messageId) {
+          data.push(message as TMessage);
+        }
       }
     } else {
-      data.push(messages);
+      if (messages && messages.messageId) {
+        data.push(messages as TMessage);
+      }
     }
 
     exportFromJSON({
@@ -237,38 +352,99 @@ export default function useExportConversation({
       messageId: conversation?.conversationId,
       message: null,
       messages: getMessageTree(),
-      branches: false,
+      branches: Boolean(exportBranches),
       recursive: false,
     });
 
     data += '\n## History\n';
-    if (Array.isArray(messages)) {
-      for (const message of messages) {
-        data += `${getMessageText(message, 'md')}\n`;
-        if (message.error) {
+
+    if (exportBranches === true) {
+      // Exportar todas as mensagens quando branches estiver habilitado
+      if (Array.isArray(messages)) {
+        for (const message of messages) {
+          if (message && message.messageId) {
+            data += `${getMessageText(message as TMessage, 'md')}\n`;
+            if (message.error) {
+              data += '*(This is an error message)*\n';
+            }
+            if (message.unfinished === true) {
+              data += '*(This is an unfinished message)*\n';
+            }
+            data += '\n\n';
+          }
+        }
+      } else if (messages && typeof messages === 'object' && 'messageId' in messages) {
+        data += `${getMessageText(messages as TMessage, 'md')}\n`;
+        if ((messages as TMessage).error) {
           data += '*(This is an error message)*\n';
         }
-        if (message.unfinished === true) {
+        if ((messages as TMessage).unfinished === true) {
           data += '*(This is an unfinished message)*\n';
         }
         data += '\n\n';
       }
     } else {
-      data += `${getMessageText(messages, 'md')}\n`;
-      if (messages.error) {
-        data += '*(This is an error message)*\n';
-      }
-      if (messages.unfinished === true) {
-        data += '*(This is an unfinished message)*\n';
+      // Quando branches estiver desabilitado, exportar apenas a última pergunta do usuário e a última resposta da IA
+      const allMessages = Array.isArray(messages) ? messages : [messages];
+      const validMessages = allMessages.filter(msg => msg && msg.messageId) as TMessage[];
+
+      if (validMessages.length > 0) {
+        // Encontrar a última pergunta do usuário e a última resposta da IA
+        let lastUserMessage: TMessage | undefined;
+        let lastAiMessage: TMessage | undefined;
+
+        // Percorrer as mensagens do final para o início para encontrar as últimas
+        for (let i = validMessages.length - 1; i >= 0; i--) {
+          const msg = validMessages[i];
+          if (!lastUserMessage && msg.isCreatedByUser === true) {
+            lastUserMessage = msg;
+          }
+          if (!lastAiMessage && msg.isCreatedByUser === false) {
+            lastAiMessage = msg;
+          }
+          // Se já encontrou ambos, pode parar
+          if (lastUserMessage && lastAiMessage) {
+            break;
+          }
+        }
+
+        // Adicionar a última pergunta do usuário
+        if (lastUserMessage) {
+          data += `${getMessageText(lastUserMessage, 'md')}\n`;
+          if (lastUserMessage.error) {
+            data += '*(This is an error message)*\n';
+          }
+          if (lastUserMessage.unfinished === true) {
+            data += '*(This is an unfinished message)*\n';
+          }
+          data += '\n\n';
+        }
+
+        // Adicionar a última resposta da IA
+        if (lastAiMessage) {
+          data += `${getMessageText(lastAiMessage, 'md')}\n`;
+          if (lastAiMessage.error) {
+            data += '*(This is an error message)*\n';
+          }
+          if (lastAiMessage.unfinished === true) {
+            data += '*(This is an unfinished message)*\n';
+          }
+          data += '\n\n';
+        }
       }
     }
 
-    exportFromJSON({
-      data: data,
-      fileName: filename,
-      extension: 'md',
-      exportType: exportFromJSON.types.txt,
-    });
+    if (type === 'markdown') {
+      exportFromJSON({
+        data: data,
+        fileName: filename,
+        extension: 'md',
+        exportType: exportFromJSON.types.txt,
+      });
+    }
+
+    return data;
+
   };
 
   const exportText = async () => {
@@ -300,23 +476,26 @@ export default function useExportConversation({
     data += '\nHistory\n########################\n';
     if (Array.isArray(messages)) {
       for (const message of messages) {
-        data += `${getMessageText(message)}\n`;
-        if (message.error) {
-          data += '(This is an error message)\n';
+        if (message && message.messageId) {
+          data += `${getMessageText(message as TMessage)}\n`;
+          if (message.error) {
+            data += '(This is an error message)\n';
+          }
+          if (message.unfinished === true) {
+            data += '(This is an unfinished message)\n';
+          }
+          data += '\n\n';
         }
-        if (message.unfinished === true) {
-          data += '(This is an unfinished message)\n';
-        }
-        data += '\n\n';
       }
-    } else {
-      data += `${getMessageText(messages)}\n`;
-      if (messages.error) {
+    } else if (messages && typeof messages === 'object' && 'messageId' in messages) {
+      data += `${getMessageText(messages as TMessage)}\n`;
+      if ((messages as TMessage).error) {
         data += '(This is an error message)\n';
       }
-      if (messages.unfinished === true) {
+      if ((messages as TMessage).unfinished === true) {
         data += '(This is an unfinished message)\n';
       }
+      data += '\n\n';
     }
 
     exportFromJSON({
@@ -374,6 +553,10 @@ export default function useExportConversation({
       exportCSV();
     } else if (type == 'screenshot') {
       exportScreenshot();
+    } else if (type === 'webpage') {
+      exportHTML();
+    } else if (type === 'pdf') {
+      exportPDF();
     }
   };
 

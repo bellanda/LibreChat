@@ -1,13 +1,15 @@
-import React, { useState, useMemo, memo } from 'react';
+import type { TConversation, TFeedback, TMessage } from 'librechat-data-provider';
+import { Upload } from 'lucide-react';
+import React, { memo, useMemo, useState } from 'react';
 import { useRecoilState } from 'recoil';
-import type { TConversation, TMessage, TFeedback } from 'librechat-data-provider';
-import { EditIcon, Clipboard, CheckMark, ContinueIcon, RegenerateIcon } from '~/components';
-import { useGenerationsByLatest, useLocalize } from '~/hooks';
+import { CheckMark, Clipboard, ContinueIcon, EditIcon, RegenerateIcon } from '~/components';
 import { Fork } from '~/components/Conversations';
-import MessageAudio from './MessageAudio';
-import Feedback from './Feedback';
-import { cn } from '~/utils';
+import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
+import { useGenerationsByLatest, useLocalize } from '~/hooks';
 import store from '~/store';
+import { cn } from '~/utils';
+import Feedback from './Feedback';
+import MessageAudio from './MessageAudio';
 
 type THoverButtons = {
   isEditing: boolean;
@@ -184,6 +186,11 @@ const HoverButtons = ({
     enterEdit();
   };
 
+  
+  const [showExportModal, setShowExportModal] = useState(false);
+  const openExportModal = () => setShowExportModal(true);
+  
+
   const handleCopy = () => copyToClipboard(setIsCopied);
 
   return (
@@ -267,6 +274,23 @@ const HoverButtons = ({
           className="active"
         />
       )}
+
+
+      {/* Export button */}
+      <HoverButton
+        onClick={openExportModal}
+        title={localize('com_ui_export_convo_modal')}
+        icon={<Upload size="19" />}            // agora usa Upload
+        isLast={isLast}
+        className="active"
+      />
+        <ExportModal
+          open={showExportModal}
+          onOpenChange={setShowExportModal}
+          conversation={conversation}
+        />
+
+      {/*---------------------------------------------*/}
     </div>
   );
 };
