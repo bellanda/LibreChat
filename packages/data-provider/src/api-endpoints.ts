@@ -8,7 +8,7 @@ const buildQuery = (params: Record<string, unknown>): string => {
       if (Array.isArray(value)) {
         return value.length > 0;
       }
-      return value !== undefined && value !== null && value !== '';
+      return value !== undefined && value !== null && value !== '' && value !== false;
     })
     .map(([key, value]) => {
       if (Array.isArray(value)) {

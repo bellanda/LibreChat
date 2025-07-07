@@ -1,20 +1,23 @@
-import {
-  Constants,
-  defaultAssistantsVersion,
-  ConversationListResponse,
-} from 'librechat-data-provider';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { dataService, MutationKeys, QueryKeys, defaultOrderQuery } from 'librechat-data-provider';
 import type { InfiniteData, UseMutationResult } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type * as t from 'librechat-data-provider';
 import {
-  logger,
+  Constants,
+  ConversationListResponse,
+  dataService,
+  defaultAssistantsVersion,
+  defaultOrderQuery,
+  MutationKeys,
+  QueryKeys,
+} from 'librechat-data-provider';
+import useUpdateTagsInConvo from '~/hooks/Conversations/useUpdateTagsInConvo';
+import {
   /* Conversations */
   addConvoToAllQueries,
-  updateConvoInAllQueries,
+  logger,
   removeConvoFromAllQueries,
+  updateConvoInAllQueries,
 } from '~/utils';
-import useUpdateTagsInConvo from '~/hooks/Conversations/useUpdateTagsInConvo';
 import { updateConversationTag } from '~/utils/conversationTags';
 import { useConversationTagsQuery } from './queries';
 
@@ -386,6 +389,10 @@ export const useDeleteTagInConversations = () => {
     const data = queryClient.getQueryData<InfiniteData<ConversationListResponse>>([
       QueryKeys.allConversations,
     ]);
+
+    if (!data) {
+      return; // No conversation data to update
+    }
 
     const conversationIdsWithTag: string[] = [];
 

@@ -1,15 +1,15 @@
-import { useMemo } from 'react';
-import type { FC } from 'react';
-import { useRecoilValue } from 'recoil';
 import { Menu, MenuButton, MenuItems } from '@headlessui/react';
 import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
+import type { FC } from 'react';
+import { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
 import { BookmarkContext } from '~/Providers/BookmarkContext';
-import { useGetConversationTags } from '~/data-provider';
-import BookmarkNavItems from './BookmarkNavItems';
 import { TooltipAnchor } from '~/components/ui';
+import { useGetConversationTags } from '~/data-provider';
 import { useLocalize } from '~/hooks';
-import { cn } from '~/utils';
 import store from '~/store';
+import { cn } from '~/utils';
+import BookmarkNavItems from './BookmarkNavItems';
 
 type BookmarkNavProps = {
   tags: string[];
@@ -61,7 +61,7 @@ const BookmarkNav: FC<BookmarkNavProps> = ({ tags, setTags, isSmallScreen }: Boo
           />
           <MenuItems
             anchor="bottom"
-            className="absolute left-0 top-full z-[100] mt-1 w-60 translate-y-0 overflow-hidden rounded-lg bg-surface-secondary p-1.5 shadow-lg outline-none"
+            className="absolute left-0 top-full z-[100] mt-1 translate-y-0 overflow-hidden rounded-lg bg-surface-secondary p-1.5 shadow-lg outline-none"
           >
             {data && conversation && (
               <BookmarkContext.Provider value={{ bookmarks: data.filter((tag) => tag.count > 0) }}>

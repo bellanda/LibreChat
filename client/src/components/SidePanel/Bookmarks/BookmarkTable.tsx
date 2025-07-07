@@ -1,21 +1,21 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { BookmarkPlusIcon } from 'lucide-react';
 import type { ConversationTagsResponse, TConversationTag } from 'librechat-data-provider';
+import { BookmarkPlusIcon } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { BookmarkEditDialog } from '~/components/Bookmarks';
 import {
-  Table,
-  Input,
   Button,
-  TableRow,
-  TableHead,
+  Input,
+  OGDialogTrigger,
+  Table,
   TableBody,
   TableCell,
+  TableHead,
   TableHeader,
-  OGDialogTrigger,
+  TableRow,
 } from '~/components/ui';
-import { BookmarkContext, useBookmarkContext } from '~/Providers/BookmarkContext';
-import { BookmarkEditDialog } from '~/components/Bookmarks';
-import BookmarkTableRow from './BookmarkTableRow';
 import { useLocalize } from '~/hooks';
+import { BookmarkContext, useBookmarkContext } from '~/Providers/BookmarkContext';
+import BookmarkTableRow from './BookmarkTableRow';
 
 const removeDuplicates = (bookmarks: TConversationTag[]) => {
   const seen = new Set();
@@ -75,22 +75,22 @@ const BookmarkTable = () => {
           />
         </div>
 
-        <div className="rounded-lg border border-border-light bg-transparent shadow-sm transition-colors">
+        <div className="overflow-hidden rounded-lg border border-border-light bg-transparent shadow-sm transition-colors">
           <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow className="border-b border-border-light">
-                <TableHead className="w-[70%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
+                <TableHead className="w-[50%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
                   <div className="px-4">{localize('com_ui_bookmarks_title')}</div>
                 </TableHead>
-                <TableHead className="w-[30%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
+                <TableHead className="w-[20%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
                   <div className="px-4">{localize('com_ui_bookmarks_count')}</div>
                 </TableHead>
-                <TableHead className="w-[40%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
+                <TableHead className="w-[30%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
                   <div className="px-4">{localize('com_assistants_actions')}</div>
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="max-h-[400px] overflow-y-auto">
               {currentRows.length ? (
                 currentRows.map(renderRow)
               ) : (

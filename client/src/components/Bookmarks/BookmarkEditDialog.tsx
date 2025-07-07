@@ -1,13 +1,13 @@
-import React, { useRef, Dispatch, SetStateAction } from 'react';
 import { TConversationTag } from 'librechat-data-provider';
+import React, { Dispatch, SetStateAction, useRef } from 'react';
+import { NotificationSeverity } from '~/common';
+import { Button, OGDialog, Spinner } from '~/components';
 import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
 import { useConversationTagMutation } from '~/data-provider';
-import { OGDialog, Button, Spinner } from '~/components';
-import { NotificationSeverity } from '~/common';
-import { useToastContext } from '~/Providers';
-import BookmarkForm from './BookmarkForm';
 import { useLocalize } from '~/hooks';
+import { useToastContext } from '~/Providers';
 import { logger } from '~/utils';
+import BookmarkForm from './BookmarkForm';
 
 type BookmarkEditDialogProps = {
   open: boolean;
@@ -19,6 +19,7 @@ type BookmarkEditDialogProps = {
   conversationId?: string;
   children?: React.ReactNode;
   triggerRef?: React.RefObject<HTMLButtonElement>;
+  onSuccess?: () => void;
 };
 
 const BookmarkEditDialog = ({
@@ -31,11 +32,13 @@ const BookmarkEditDialog = ({
   children,
   triggerRef,
   conversationId,
+  onSuccess,
 }: BookmarkEditDialogProps) => {
   const localize = useLocalize();
   const formRef = useRef<HTMLFormElement>(null);
 
   const { showToast } = useToastContext();
+
   const mutation = useConversationTagMutation({
     context,
     tag: bookmark?.tag,
@@ -47,6 +50,7 @@ const BookmarkEditDialog = ({
             : localize('com_ui_bookmarks_create_success'),
         });
         setOpen(false);
+        onSuccess?.(); // Call the onSuccess callback to reset editingBookmark
         logger.log('tag_mutation', 'tags before setting', tags);
 
         if (setTags && vars.addToConversation === true) {

@@ -1,22 +1,22 @@
-import { useCallback, useEffect, useState, useMemo, memo, lazy, Suspense, useRef } from 'react';
-import { useRecoilValue } from 'recoil';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
-import type { ConversationListResponse } from 'librechat-data-provider';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
+import type { ConversationListResponse } from 'librechat-data-provider';
+import { Permissions, PermissionTypes } from 'librechat-data-provider';
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { Conversations } from '~/components/Conversations';
+import { useConversationsInfiniteQuery } from '~/data-provider';
 import {
-  useLocalize,
-  useHasAccess,
-  useMediaQuery,
   useAuthContext,
+  useHasAccess,
+  useLocalize,
   useLocalStorage,
+  useMediaQuery,
   useNavScrolling,
 } from '~/hooks';
-import { useConversationsInfiniteQuery } from '~/data-provider';
-import { Conversations } from '~/components/Conversations';
-import SearchBar from './SearchBar';
-import NewChat from './NewChat';
-import { cn } from '~/utils';
 import store from '~/store';
+import { cn } from '~/utils';
+import NewChat from './NewChat';
+import SearchBar from './SearchBar';
 
 const BookmarkNav = lazy(() => import('./Bookmarks/BookmarkNav'));
 const AccountSettings = lazy(() => import('./AccountSettings'));
@@ -73,6 +73,7 @@ const Nav = memo(
         {
           tags: tags.length === 0 ? undefined : tags,
           search: search.debouncedQuery || undefined,
+          excludeTaggedConversations: tags.length === 0,
         },
         {
           enabled: isAuthenticated,

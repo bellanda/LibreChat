@@ -1,12 +1,11 @@
-import { useCallback, useState } from 'react';
 import type { FC } from 'react';
-import { Label, OGDialog, OGDialogTrigger, TooltipAnchor } from '~/components/ui';
-import { useDeleteConversationTagMutation } from '~/data-provider';
-import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
-import { NotificationSeverity } from '~/common';
-import { useToastContext } from '~/Providers';
+import { useCallback, useState } from 'react';
 import { TrashIcon } from '~/components/svg';
+import { Label, OGDialog, OGDialogTrigger, TooltipAnchor } from '~/components/ui';
+import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
+import { useDeleteConversationTagMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
+import { useToastContext } from '~/Providers';
 
 const DeleteBookmarkButton: FC<{
   bookmark: string;
@@ -26,8 +25,7 @@ const DeleteBookmarkButton: FC<{
     },
     onError: () => {
       showToast({
-        message: localize('com_ui_bookmarks_delete_error'),
-        severity: NotificationSeverity.ERROR,
+        message: localize('com_ui_bookmarks_delete_success'),
       });
     },
   });
@@ -68,7 +66,7 @@ const DeleteBookmarkButton: FC<{
           className="w-11/12 max-w-lg"
           main={
             <Label className="text-left text-sm font-medium">
-              {localize('com_ui_bookmark_delete_confirm')} {bookmark}
+              {localize('com_ui_bookmark_delete_confirm')} <strong>"{bookmark}"</strong>?
             </Label>
           }
           selection={{

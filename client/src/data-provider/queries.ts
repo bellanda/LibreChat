@@ -1,36 +1,36 @@
-import {
-  QueryKeys,
-  dataService,
-  EModelEndpoint,
-  defaultOrderQuery,
-  defaultAssistantsVersion,
-} from 'librechat-data-provider';
-import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   InfiniteData,
-  UseInfiniteQueryOptions,
   QueryObserverResult,
+  UseInfiniteQueryOptions,
   UseQueryOptions,
 } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import type t from 'librechat-data-provider';
 import type {
   Action,
-  TPreset,
-  ConversationListResponse,
-  ConversationListParams,
-  MessagesListParams,
-  MessagesListResponse,
   Assistant,
+  AssistantDocument,
   AssistantListParams,
   AssistantListResponse,
-  AssistantDocument,
-  TEndpointsConfig,
-  TCheckUserKeyResponse,
+  ConversationListParams,
+  ConversationListResponse,
+  MessagesListParams,
+  MessagesListResponse,
   SharedLinksListParams,
   SharedLinksResponse,
+  TCheckUserKeyResponse,
+  TEndpointsConfig,
+  TPreset,
 } from 'librechat-data-provider';
-import type { ConversationCursorData } from '~/utils/convos';
+import {
+  EModelEndpoint,
+  QueryKeys,
+  dataService,
+  defaultAssistantsVersion,
+  defaultOrderQuery,
+} from 'librechat-data-provider';
 import { findConversationInInfinite } from '~/utils';
+import type { ConversationCursorData } from '~/utils/convos';
 
 export const useGetPresetsQuery = (
   config?: UseQueryOptions<TPreset[]>,
@@ -94,12 +94,12 @@ export const useConversationsInfiniteQuery = (
   params: ConversationListParams,
   config?: UseInfiniteQueryOptions<ConversationListResponse, unknown>,
 ) => {
-  const { isArchived, sortBy, sortDirection, tags, search } = params;
+  const { isArchived, sortBy, sortDirection, tags, search, excludeTaggedConversations } = params;
 
   return useInfiniteQuery<ConversationListResponse>({
     queryKey: [
       isArchived ? QueryKeys.archivedConversations : QueryKeys.allConversations,
-      { isArchived, sortBy, sortDirection, tags, search },
+      { isArchived, sortBy, sortDirection, tags, search, excludeTaggedConversations },
     ],
     queryFn: ({ pageParam }) =>
       dataService.listConversations({
@@ -108,6 +108,7 @@ export const useConversationsInfiniteQuery = (
         sortDirection,
         tags,
         search,
+        excludeTaggedConversations,
         cursor: pageParam?.toString(),
       }),
     getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,

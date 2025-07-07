@@ -27,6 +27,7 @@ router.get('/', async (req, res) => {
   const isArchived = isEnabled(req.query.isArchived);
   const search = req.query.search ? decodeURIComponent(req.query.search) : undefined;
   const order = req.query.order || 'desc';
+  const excludeTaggedConversations = isEnabled(req.query.excludeTaggedConversations);
 
   let tags;
   if (req.query.tags) {
@@ -41,6 +42,7 @@ router.get('/', async (req, res) => {
       tags,
       search,
       order,
+      excludeTaggedConversations,
     });
     res.status(200).json(result);
   } catch (error) {

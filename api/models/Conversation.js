@@ -169,7 +169,15 @@ module.exports = {
   },
   getConvosByCursor: async (
     user,
-    { cursor, limit = 25, isArchived = false, tags, search, order = 'desc' } = {},
+    {
+      cursor,
+      limit = 25,
+      isArchived = false,
+      tags,
+      search,
+      order = 'desc',
+      excludeTaggedConversations = false,
+    } = {},
   ) => {
     const filters = [{ user }];
     if (isArchived) {
@@ -180,6 +188,10 @@ module.exports = {
 
     if (Array.isArray(tags) && tags.length > 0) {
       filters.push({ tags: { $in: tags } });
+    } else if (excludeTaggedConversations) {
+      // When no tags are selected and excludeTaggedConversations is true,
+      // exclude conversations that have any tags (folder-like behavior)
+      filters.push({ $or: [{ tags: { $exists: false } }, { tags: { $size: 0 } }] });
     }
 
     filters.push({ $or: [{ expiredAt: null }, { expiredAt: { $exists: false } }] });

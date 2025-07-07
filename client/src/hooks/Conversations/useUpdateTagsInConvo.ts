@@ -1,9 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys } from 'librechat-data-provider';
-import type { ConversationListResponse } from 'librechat-data-provider';
 import type { InfiniteData } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type t from 'librechat-data-provider';
-import { updateConvoFieldsInfinite } from '~/utils/convos';
+import type { ConversationListResponse } from 'librechat-data-provider';
+import { QueryKeys } from 'librechat-data-provider';
 
 const useUpdateTagsInConvo = () => {
   const queryClient = useQueryClient();
@@ -52,6 +51,10 @@ const useUpdateTagsInConvo = () => {
     const data = queryClient.getQueryData<InfiniteData<ConversationListResponse>>([
       QueryKeys.allConversations,
     ]);
+
+    if (!data) {
+      return; // No conversation data to update
+    }
 
     const conversationIdsWithTag = [] as string[];
 

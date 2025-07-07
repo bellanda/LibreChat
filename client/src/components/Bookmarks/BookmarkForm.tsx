@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
-import { QueryKeys } from 'librechat-data-provider';
-import { Controller, useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TConversationTag, TConversationTagRequest } from 'librechat-data-provider';
-import { Checkbox, Label, TextareaAutosize, Input } from '~/components';
-import { useBookmarkContext } from '~/Providers/BookmarkContext';
+import { QueryKeys } from 'librechat-data-provider';
+import React, { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Checkbox, Input, Label, TextareaAutosize } from '~/components';
 import { useConversationTagMutation } from '~/data-provider';
-import { useToastContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
+import { useToastContext } from '~/Providers';
+import { useBookmarkContext } from '~/Providers/BookmarkContext';
 import { cn, logger } from '~/utils';
 
 type TBookmarkFormProps = {
@@ -62,21 +62,25 @@ const BookmarkForm = ({
     if (data.tag === bookmark?.tag && data.description === bookmark?.description) {
       return;
     }
-    if (data.tag != null && (tags ?? []).includes(data.tag)) {
-      showToast({
-        message: localize('com_ui_bookmarks_create_exists'),
-        status: 'warning',
-      });
-      return;
-    }
-    const allTags =
-      queryClient.getQueryData<TConversationTag[]>([QueryKeys.conversationTags]) ?? [];
-    if (allTags.some((tag) => tag.tag === data.tag)) {
-      showToast({
-        message: localize('com_ui_bookmarks_create_exists'),
-        status: 'warning',
-      });
-      return;
+
+    // Check if tag already exists (but allow editing current bookmark)
+    if (data.tag != null && data.tag !== bookmark?.tag) {
+      if ((tags ?? []).includes(data.tag)) {
+        showToast({
+          message: localize('com_ui_bookmarks_create_exists'),
+          status: 'warning',
+        });
+        return;
+      }
+      const allTags =
+        queryClient.getQueryData<TConversationTag[]>([QueryKeys.conversationTags]) ?? [];
+      if (allTags.some((tag) => tag.tag === data.tag)) {
+        showToast({
+          message: localize('com_ui_bookmarks_create_exists'),
+          status: 'warning',
+        });
+        return;
+      }
     }
 
     mutation.mutate(data);

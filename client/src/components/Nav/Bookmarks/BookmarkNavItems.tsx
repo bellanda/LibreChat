@@ -1,8 +1,8 @@
-import { useEffect, useState, type FC } from 'react';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import type { TConversation } from 'librechat-data-provider';
+import { useEffect, useState, type FC } from 'react';
 import { useBookmarkContext } from '~/Providers/BookmarkContext';
-import { BookmarkItems, BookmarkItem } from '~/components/Bookmarks';
+import { BookmarkItem, BookmarkItems } from '~/components/Bookmarks';
 import { useLocalize } from '~/hooks';
 
 const BookmarkNavItems: FC<{
@@ -68,6 +68,7 @@ const BookmarkNavItems: FC<{
       <BookmarkItems
         tags={tags}
         handleSubmit={handleSubmit}
+        showActions={true}
         header={
           <BookmarkItem
             tag={localize('com_ui_clear_all')}

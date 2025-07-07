@@ -1,7 +1,7 @@
 import type { InfiniteData } from '@tanstack/react-query';
-import type * as a from '../types/agents';
 import type * as s from '../schemas';
 import type * as t from '../types';
+import type * as a from '../types/agents';
 
 export type Conversation = {
   id: string;
@@ -18,6 +18,7 @@ export type ConversationListParams = {
   sortDirection?: 'asc' | 'desc';
   tags?: string[];
   search?: string;
+  excludeTaggedConversations?: boolean;
 };
 
 export type MinimalConversation = Pick<
