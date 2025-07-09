@@ -1,4 +1,0 @@
-fastapi
-uvicorn
-markdown-html-pdf==0.2.2
-python-multipart

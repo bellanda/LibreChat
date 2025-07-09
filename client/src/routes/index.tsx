@@ -1,22 +1,24 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import {
+  ApiErrorWatcher,
   Login,
   Registration,
   RequestPasswordReset,
   ResetPassword,
-  VerifyEmail,
-  ApiErrorWatcher,
   TwoFactorScreen,
+  VerifyEmail,
 } from '~/components/Auth';
 import { AuthContextProvider } from '~/hooks/AuthContext';
-import RouteErrorBoundary from './RouteErrorBoundary';
-import StartupLayout from './Layouts/Startup';
-import LoginLayout from './Layouts/Login';
-import dashboardRoutes from './Dashboard';
-import ShareRoute from './ShareRoute';
 import ChatRoute from './ChatRoute';
-import Search from './Search';
+import dashboardRoutes from './Dashboard';
+import LoginLayout from './Layouts/Login';
+import ReportLayout from './Layouts/ReportLayout';
+import StartupLayout from './Layouts/Startup';
+import Reports from './Reports';
 import Root from './Root';
+import RouteErrorBoundary from './RouteErrorBoundary';
+import Search from './Search';
+import ShareRoute from './ShareRoute';
 
 const AuthLayout = () => (
   <AuthContextProvider>
@@ -47,7 +49,7 @@ export const router = createBrowserRouter([
       {
         path: 'reset-password',
         element: <ResetPassword />,
-      },
+      }
     ],
   },
   {
@@ -70,7 +72,7 @@ export const router = createBrowserRouter([
           {
             path: 'login/2fa',
             element: <TwoFactorScreen />,
-          },
+          }
         ],
       },
       dashboardRoutes,
@@ -89,9 +91,19 @@ export const router = createBrowserRouter([
           {
             path: 'search',
             element: <Search />,
-          },
+          }
         ],
       },
     ],
+  },
+  {
+    path: 'reports',
+    element: <ReportLayout />,
+    children: [
+      {
+        index: true,
+        element: <Reports />,
+      }
+    ]
   },
 ]);
