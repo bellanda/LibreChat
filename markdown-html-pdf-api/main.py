@@ -113,7 +113,7 @@ dotenv.load_dotenv(override=True)
 SERVER_MONGO_URI = os.getenv("MONGO_URI_SERVER")
 client = MongoClient(SERVER_MONGO_URI)
 
-DEBUG_REPORTS = True
+DEBUG_REPORTS = False
 
 # GET USER DATA
 def get_user_data(search_term, search_by='name'):
@@ -135,13 +135,31 @@ def get_user_data(search_term, search_by='name'):
 # -------------------------------------------------------------------------
 # REPORTS ROUTES
 
+# 🔧 CORREÇÃO IMPORTANTE DE CONTAGEM DE MENSAGENS:
+# 
+# Cada conversa gera 2 transações na collection transactions:
+# - tokenType: "prompt" = mensagem do usuário  
+# - tokenType: "completion" = resposta da IA
+#
+# ANTES DA CORREÇÃO:
+# - get_usage_cost: ✅ CORRETO (já separava prompt/completion)
+# - get_top_users_volume: ❌ ERRADO (contava prompt + completion = dobrava)
+# - get_top_users_cost: ❌ ERRADO (contava prompt + completion = dobrava)  
+# - get_top_models: ❌ ERRADO (contava prompt + completion = dobrava)
+# - get_user_efficiency: ❌ ERRADO (contava prompt + completion = dobrava)
+#
+# APÓS A CORREÇÃO:
+# Todas as funções agora filtram por tokenType: 'prompt' para contar apenas
+# mensagens reais de usuário, representando conversas verdadeiras.
+
 # USAGE COST REPORT
-# RETURNS: [{ date: '05/07', Custo: 65, Mensagens: 4000 }, { date: 'Apr 11', Custo: 150, Mensagens: 9000 }]
+# RETURNS: [{ date: '05/07', 'IA msgs': 100, 'IA custo': 12.50, 'USER msgs': 95, 'USER custo': 8.75 }]
 @app.get("/reports/usage-cost")
 async def get_usage_cost(user: str | None = None, start_date: str | None = None, end_date: str | None = None, models: str | None = None, search_by: str = "username"):
     """
-    Get usage cost report.
-    Returns data grouped by date with cost and message count.
+    Get usage cost report separated by token type.
+    Returns data grouped by date with cost and CONVERSATION count (not individual transactions).
+    Now counts unique conversations by conversationId, so USER msgs should match IA msgs closely.
     """
     pipeline = []
     match = {}
@@ -201,7 +219,7 @@ async def get_usage_cost(user: str | None = None, start_date: str | None = None,
     if match:
         pipeline.append({'$match': match})
 
-    # Agrupa por data (dia/mês) e calcula totais
+    # Agrupa por data, tokenType e conversationId para contar conversas reais
     pipeline.extend([
         {
             '$addFields': {
@@ -215,44 +233,72 @@ async def get_usage_cost(user: str | None = None, start_date: str | None = None,
         },
         {
             '$group': {
-                '_id': '$dateOnly',
+                '_id': {
+                    'date': '$dateOnly',
+                    'tokenType': '$tokenType',
+                    'conversationId': '$conversationId'
+                },
                 'Custo': {
                     '$sum': {
                         '$divide': ['$tokenValue', -1_000_000]  # Converte para valor positivo em reais
                     }
                 },
-                'Mensagens': {'$sum': 1},  # Conta o número de transações/mensagens
                 'date_sort': {'$first': '$createdAt'}  # Para ordenação
             }
         },
         {
-            '$project': {
-                '_id': 0,
-                'date': '$_id',
-                'Custo': {'$round': ['$Custo', 2]},  # Arredonda para 2 casas decimais
-                'Mensagens': 1,
-                'date_sort': 1
+            '$group': {
+                '_id': {
+                    'date': '$_id.date',
+                    'tokenType': '$_id.tokenType'
+                },
+                'Custo': {'$sum': '$Custo'},
+                'Mensagens': {'$sum': 1},  # Agora conta conversas únicas por data/tipo
+                'date_sort': {'$first': '$date_sort'}
+            }
+        },
+        {
+            '$group': {
+                '_id': '$_id.date',
+                'data': {
+                    '$push': {
+                        'tokenType': '$_id.tokenType',
+                        'Custo': '$Custo',
+                        'Mensagens': '$Mensagens'
+                    }
+                },
+                'date_sort': {'$first': '$date_sort'}
             }
         },
         {
             '$sort': {'date_sort': 1}  # Ordena por data crescente
-        },
-        {
-            '$project': {
-                'date': 1,
-                'Custo': 1,
-                'Mensagens': 1
-            }
         }
     ])
 
     if DEBUG_REPORTS:
-        print(f"[DEBUG] Pipeline: {pipeline}\n\n\n Fim")
+        print(f"[DEBUG] Pipeline para contar conversas (não transações): {pipeline}\n\n")
 
     result = list(client.LibreChat.transactions.aggregate(pipeline))
     
     if DEBUG_REPORTS:
-        print(f"[DEBUG] Resultado bruto: {result}")
+        print(f"[DEBUG] Resultado bruto (conversas por data/tipo): {result}")
+        
+        # Debug adicional para entender a proporção USER vs IA
+        for day_data in result:
+            date = day_data['_id']
+            print(f"[DEBUG] Data {date}:")
+            user_msgs = 0
+            ia_msgs = 0
+            for token_data in day_data.get('data', []):
+                token_type = token_data['tokenType']
+                msgs = token_data['Mensagens']
+                print(f"[DEBUG]   {token_type}: {msgs} conversas")
+                if token_type == 'prompt':
+                    user_msgs = msgs
+                elif token_type == 'completion':
+                    ia_msgs = msgs
+            print(f"[DEBUG]   Proporção USER/IA: {user_msgs}/{ia_msgs}")
+            print()
 
     # Se não houver dados, retorna array vazio
     if not result:
@@ -260,10 +306,54 @@ async def get_usage_cost(user: str | None = None, start_date: str | None = None,
             print("[DEBUG] Nenhum dado encontrado")
         return []
 
-    if DEBUG_REPORTS:
-        print(f"[DEBUG] Retornando {len(result)} registros para usuário: {user_name}")
+    # Reorganiza os dados para o formato esperado pelo frontend
+    formatted_result = []
+    for day_data in result:
+        date = day_data['_id']
+        
+        # Inicializa valores padrão
+        entry = {
+            'date': date,
+            'IA msgs': 0,
+            'IA custo': 0.0,
+            'USER msgs': 0,
+            'USER custo': 0.0
+        }
+        
+        # Processa os dados de cada tipo de token
+        for token_data in day_data['data']:
+            token_type = token_data['tokenType']
+            custo = round(token_data['Custo'], 2)
+            mensagens = token_data['Mensagens']
+            
+            if token_type == 'completion':  # IA
+                entry['IA msgs'] = mensagens
+                entry['IA custo'] = custo
+            elif token_type == 'prompt':  # USER
+                entry['USER msgs'] = mensagens
+                entry['USER custo'] = custo
+        
+        # Calcula o total de mensagens (USER + IA)
+        entry['Total Mensagens'] = entry['IA msgs'] + entry['USER msgs']
+        
+        formatted_result.append(entry)
 
-    return result
+    if DEBUG_REPORTS:
+        print(f"[DEBUG] Resultado formatado (conversas por dia): {formatted_result}")
+        print(f"[DEBUG] Retornando {len(formatted_result)} registros para usuário: {user_name}")
+        
+        # Resumo final das conversas
+        total_user_conversations = sum(day['USER msgs'] for day in formatted_result)
+        total_ia_conversations = sum(day['IA msgs'] for day in formatted_result)
+        print(f"[DEBUG] 📊 RESUMO CONVERSAS:")
+        print(f"[DEBUG]   Total USER conversas: {total_user_conversations}")
+        print(f"[DEBUG]   Total IA conversas: {total_ia_conversations}")
+        print(f"[DEBUG]   Diferença: {abs(total_user_conversations - total_ia_conversations)}")
+        if total_user_conversations > 0:
+            ratio = total_ia_conversations / total_user_conversations
+            print(f"[DEBUG]   Proporção IA/USER: {ratio:.2f}")
+
+    return formatted_result
 
 # GET ALL AVAILABLE MODELS
 @app.get("/reports/available-models")
@@ -305,15 +395,22 @@ async def get_available_models():
 # TOP USERS BY MESSAGE VOLUME
 # RETURNS: [{ username: 'rm810774', name: 'Rafael Da Silva Melo', Volume: 12450, Custo: 145.80 }]
 @app.get("/reports/top-users-volume")
-async def get_top_users_volume(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int = 10):
+async def get_top_users_volume(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int | None = None):
     """
     Get top users by message volume.
     If user is specified, returns that user's message volume over time.
+    FIXED: Now counts only user messages (tokenType: 'prompt') instead of all transactions.
     """
+    # Se limit for None, não aplicamos limit (busca todos)
+    # Se limit for um número, aplica o limit
+    if limit is not None:
+        limit = int(limit)
+        print(f"[DEBUG] TOP-USERS-VOLUME: aplicando limit={limit}")
+    else:
+        print(f"[DEBUG] TOP-USERS-VOLUME: sem limit - buscando todos os dados")
+
     pipeline = []
     match = {}
-
-    print(f"[DEBUG] Top Users Volume - user: {user}, start_date: {start_date}, end_date: {end_date}")
 
     # Filtro por usuário específico
     if user:
@@ -361,7 +458,17 @@ async def get_top_users_volume(user: str | None = None, start_date: str | None =
             {
                 '$group': {
                     '_id': '$dateOnly',
-                    'Volume': {'$sum': 1},
+                    # Volume: conta apenas mensagens de usuário (prompt)
+                    'Volume': {
+                        '$sum': {
+                            '$cond': [
+                                {'$eq': ['$tokenType', 'prompt']},
+                                1,
+                                0
+                            ]
+                        }
+                    },
+                    # Custo: soma TODOS os tipos de token (prompt + completion)
                     'Custo': {
                         '$sum': {
                             '$divide': ['$tokenValue', -1_000_000]
@@ -396,7 +503,17 @@ async def get_top_users_volume(user: str | None = None, start_date: str | None =
             {
                 '$group': {
                     '_id': '$user',
-                    'Volume': {'$sum': 1},
+                    # Volume: conta apenas mensagens de usuário (prompt)
+                    'Volume': {
+                        '$sum': {
+                            '$cond': [
+                                {'$eq': ['$tokenType', 'prompt']},
+                                1,
+                                0
+                            ]
+                        }
+                    },
+                    # Custo: soma TODOS os tipos de token (prompt + completion)
                     'Custo': {
                         '$sum': {
                             '$divide': ['$tokenValue', -1_000_000]
@@ -420,22 +537,26 @@ async def get_top_users_volume(user: str | None = None, start_date: str | None =
                     '_id': 0,
                     'name': '$user_info.name',
                     'username': '$user_info.username',
+                    'costCenter': '$user_info.costCenterCode',
                     'Volume': 1,
                     'Custo': {'$round': ['$Custo', 2]}
                 }
             },
             {
                 '$sort': {'Volume': -1}
-            },
-            {
-                '$limit': limit
             }
         ])
+        
+        # Aplica limit só se foi especificado
+        if limit is not None:
+            pipeline.append({'$limit': limit})
 
     if DEBUG_REPORTS:
         print(f"[DEBUG] Top Users Volume Pipeline: {pipeline}")
 
     result = list(client.LibreChat.transactions.aggregate(pipeline))
+    
+    print(f"[DEBUG] TOP-USERS-VOLUME: retornando {len(result)} usuários")
     
     if DEBUG_REPORTS:
         print(f"[DEBUG] Top Users Volume Result: {result}")
@@ -445,11 +566,15 @@ async def get_top_users_volume(user: str | None = None, start_date: str | None =
 # TOP USERS BY COST
 # RETURNS: [{ name: 'Ana S.', Volume: 12450, Custo: 145.80 }]
 @app.get("/reports/top-users-cost")
-async def get_top_users_cost(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int = 10):
+async def get_top_users_cost(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int | None = None):
     """
     Get top users by cost.
     If user is specified, returns that user's cost over time.
+    FIXED: Now counts only user messages (tokenType: 'prompt') for volume to match real conversations.
     """
+    # Se limit for None, não aplicamos limit (busca todos)
+    if limit is not None:
+        limit = int(limit)
     pipeline = []
     match = {}
 
@@ -482,6 +607,7 @@ async def get_top_users_cost(user: str | None = None, start_date: str | None = N
         match['createdAt']['$gte'] = datetime.datetime.now() - datetime.timedelta(days=30)
         match['createdAt']['$lte'] = datetime.datetime.now()
 
+
     if match:
         pipeline.append({'$match': match})
 
@@ -501,7 +627,17 @@ async def get_top_users_cost(user: str | None = None, start_date: str | None = N
             {
                 '$group': {
                     '_id': '$dateOnly',
-                    'Volume': {'$sum': 1},
+                    # Volume: conta apenas mensagens de usuário (prompt)
+                    'Volume': {
+                        '$sum': {
+                            '$cond': [
+                                {'$eq': ['$tokenType', 'prompt']},
+                                1,
+                                0
+                            ]
+                        }
+                    },
+                    # Custo: soma TODOS os tipos de token (prompt + completion)
                     'Custo': {
                         '$sum': {
                             '$divide': ['$tokenValue', -1_000_000]
@@ -536,7 +672,17 @@ async def get_top_users_cost(user: str | None = None, start_date: str | None = N
             {
                 '$group': {
                     '_id': '$user',
-                    'Volume': {'$sum': 1},
+                    # Volume: conta apenas mensagens de usuário (prompt)
+                    'Volume': {
+                        '$sum': {
+                            '$cond': [
+                                {'$eq': ['$tokenType', 'prompt']},
+                                1,
+                                0
+                            ]
+                        }
+                    },
+                    # Custo: soma TODOS os tipos de token (prompt + completion)
                     'Custo': {
                         '$sum': {
                             '$divide': ['$tokenValue', -1_000_000]
@@ -560,17 +706,19 @@ async def get_top_users_cost(user: str | None = None, start_date: str | None = N
                     '_id': 0,
                     'name': '$user_info.name',
                     'username': '$user_info.username',
+                    'costCenter': '$user_info.costCenterCode',
                     'Volume': 1,
                     'Custo': {'$round': ['$Custo', 2]}
                 }
             },
             {
                 '$sort': {'Custo': -1}
-            },
-            {
-                '$limit': limit
             }
         ])
+        
+        # Aplica limit só se foi especificado
+        if limit is not None:
+            pipeline.append({'$limit': limit})
 
     if DEBUG_REPORTS:
         print(f"[DEBUG] Top Users Cost Pipeline: {pipeline}")
@@ -585,11 +733,16 @@ async def get_top_users_cost(user: str | None = None, start_date: str | None = N
 # TOP MODELS USAGE
 # RETURNS: [{ name: 'GPT-4o', value: 45, Volume: 12450, Custo: 145.80 }]
 @app.get("/reports/top-models")
-async def get_top_models(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int = 10):
+async def get_top_models(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int | None = None):
     """
     Get top models by usage.
     If user is specified, returns that user's model usage.
+    FIXED: Now counts only user messages (tokenType: 'prompt') for volume to match real conversations.
     """
+    # Se limit for None, não aplicamos limit (busca todos)
+    if limit is not None:
+        limit = int(limit)
+
     pipeline = []
     match = {}
 
@@ -622,6 +775,7 @@ async def get_top_models(user: str | None = None, start_date: str | None = None,
         match['createdAt']['$gte'] = datetime.datetime.now() - datetime.timedelta(days=30)
         match['createdAt']['$lte'] = datetime.datetime.now()
 
+
     if match:
         pipeline.append({'$match': match})
 
@@ -630,7 +784,17 @@ async def get_top_models(user: str | None = None, start_date: str | None = None,
         {
             '$group': {
                 '_id': '$model',
-                'Volume': {'$sum': 1},
+                # Volume: conta apenas mensagens de usuário (prompt)
+                'Volume': {
+                    '$sum': {
+                        '$cond': [
+                            {'$eq': ['$tokenType', 'prompt']},
+                            1,
+                            0
+                        ]
+                    }
+                },
+                # Custo: soma TODOS os tipos de token (prompt + completion)
                 'Custo': {
                     '$sum': {
                         '$divide': ['$tokenValue', -1_000_000]
@@ -649,11 +813,12 @@ async def get_top_models(user: str | None = None, start_date: str | None = None,
         },
         {
             '$sort': {'Volume': -1}
-        },
-        {
-            '$limit': limit
         }
     ])
+    
+    # Aplica limit só se foi especificado
+    if limit is not None:
+        pipeline.append({'$limit': limit})
 
     if DEBUG_REPORTS:
         print(f"[DEBUG] Top Models Pipeline: {pipeline}")
@@ -774,11 +939,16 @@ async def get_kpis(start_date: str | None = None, end_date: str | None = None):
 
 # USER EFFICIENCY - COST PER MESSAGE
 @app.get("/reports/user-efficiency")
-async def get_user_efficiency(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int = 10):
+async def get_user_efficiency(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int | None = None):
     """
     Get user efficiency data (cost per message ratio).
     Returns: [{ username: 'rm810774', name: 'Rafael Da Silva Melo', Volume: 100, Custo: 15.50, CostPerMessage: 0.155 }]
+    FIXED: Now counts only user messages (tokenType: 'prompt') for volume to match real conversations.
     """
+    # Se limit for None, não aplicamos limit (busca todos)
+    if limit is not None:
+        limit = int(limit)
+        
     try:
         pipeline = []
         match = {}
@@ -812,6 +982,7 @@ async def get_user_efficiency(user: str | None = None, start_date: str | None = 
             match['createdAt']['$gte'] = datetime.datetime.now() - datetime.timedelta(days=30)
             match['createdAt']['$lte'] = datetime.datetime.now()
 
+
         if match:
             pipeline.append({'$match': match})
 
@@ -820,7 +991,17 @@ async def get_user_efficiency(user: str | None = None, start_date: str | None = 
             {
                 '$group': {
                     '_id': '$user',
-                    'Volume': {'$sum': 1},
+                    # Volume: conta apenas mensagens de usuário (prompt)
+                    'Volume': {
+                        '$sum': {
+                            '$cond': [
+                                {'$eq': ['$tokenType', 'prompt']},
+                                1,
+                                0
+                            ]
+                        }
+                    },
+                    # Custo: soma TODOS os tipos de token (prompt + completion)
                     'Custo': {
                         '$sum': {
                             '$divide': ['$tokenValue', -1_000_000]
@@ -857,6 +1038,7 @@ async def get_user_efficiency(user: str | None = None, start_date: str | None = 
                     '_id': 0,
                     'name': '$user_info.name',
                     'username': '$user_info.username',
+                    'costCenter': '$user_info.costCenterCode',
                     'Volume': 1,
                     'Custo': {'$round': ['$Custo', 2]},
                     'CostPerMessage': {'$round': ['$CostPerMessage', 4]}
@@ -864,11 +1046,12 @@ async def get_user_efficiency(user: str | None = None, start_date: str | None = 
             },
             {
                 '$sort': {'CostPerMessage': -1}  # Ordena por maior custo por mensagem
-            },
-            {
-                '$limit': limit
             }
         ])
+        
+        # Aplica limit só se foi especificado
+        if limit is not None:
+            pipeline.append({'$limit': limit})
 
         if DEBUG_REPORTS:
             print(f"[DEBUG] User Efficiency Pipeline: {pipeline}")
@@ -883,6 +1066,272 @@ async def get_user_efficiency(user: str | None = None, start_date: str | None = 
     except Exception as e:
         print(f"[DEBUG] Erro ao calcular eficiência de usuários: {e}")
         return []
+
+# -------------------------------------------------------------------------
+# COST CENTER REPORTS - NEW FUNCTIONALITY
+# -------------------------------------------------------------------------
+
+# TOP COST CENTERS BY MESSAGE VOLUME
+# RETURNS: [{ name: 'CC001', Volume: 12450, Custo: 145.80 }]
+@app.get("/reports/top-cost-centers-volume")
+async def get_top_cost_centers_volume(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int | None = None):
+    """
+    Get top cost centers by message volume.
+    Groups transactions by cost center and counts user messages (tokenType: 'prompt').
+    """
+    # Se limit for None, não aplicamos limit (busca todos)
+    if limit is not None:
+        limit = int(limit)
+        print(f"[DEBUG] TOP-COST-CENTERS-VOLUME: aplicando limit={limit}")
+    else:
+        print(f"[DEBUG] TOP-COST-CENTERS-VOLUME: sem limit - buscando todos os dados")
+
+    pipeline = []
+    match = {}
+
+    print(f"[DEBUG] Top Cost Centers Volume - user: {user}, start_date: {start_date}, end_date: {end_date}")
+
+    # Filtro por usuário específico (se fornecido)
+    if user:
+        user_data = get_user_data(user, search_by)
+        if not user_data or isinstance(user_data, str):
+            print("Usuário não encontrado")
+            return []
+        match['user'] = user_data['_id']
+        if DEBUG_REPORTS:
+            print(f"[DEBUG] Filtrando por usuário: {user_data['username']}")
+
+    # Filtro por período
+    if start_date or end_date:
+        match['createdAt'] = {}
+        if start_date:
+            match['createdAt']['$gte'] = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        if end_date:
+            end_datetime = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+            end_datetime = end_datetime.replace(hour=23, minute=59, second=59)
+            match['createdAt']['$lte'] = end_datetime
+        if not match['createdAt']:
+            del match['createdAt']
+    else:
+        # Últimos 30 dias se não especificar período
+        match['createdAt'] = {}
+        match['createdAt']['$gte'] = datetime.datetime.now() - datetime.timedelta(days=30)
+        match['createdAt']['$lte'] = datetime.datetime.now()
+
+    if match:
+        pipeline.append({'$match': match})
+
+    # Pipeline para agrupar por centro de custo
+    pipeline.extend([
+        # Lookup para buscar dados do usuário (incluindo centro de custo)
+        {
+            '$lookup': {
+                'from': 'users',
+                'localField': 'user',
+                'foreignField': '_id',
+                'as': 'user_info'
+            }
+        },
+        {
+            '$unwind': '$user_info'
+        },
+        # Agrupa por centro de custo (usando costCenterName para melhor visualização)
+        {
+            '$group': {
+                '_id': '$user_info.costCenterName',
+                # Volume: conta apenas mensagens de usuário (prompt)
+                'Volume': {
+                    '$sum': {
+                        '$cond': [
+                            {'$eq': ['$tokenType', 'prompt']},
+                            1,
+                            0
+                        ]
+                    }
+                },
+                # Custo: soma TODOS os tipos de token (prompt + completion)
+                'Custo': {
+                    '$sum': {
+                        '$divide': ['$tokenValue', -1_000_000]
+                    }
+                },
+                # Mantém o código para referência
+                'costCenterCode': {'$first': '$user_info.costCenterCode'}
+            }
+        },
+        # Filtra apenas centros de custo válidos (não nulos/vazios)
+        {
+            '$match': {
+                '_id': {'$ne': None, '$ne': '', '$exists': True}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'name': '$_id',  # Nome do centro de custo
+                'code': '$costCenterCode',  # Código do centro de custo
+                'Volume': 1,
+                'Custo': {'$round': ['$Custo', 2]},
+                'value': '$Volume'  # Para compatibilidade com gráficos radiais
+            }
+        },
+        {
+            '$sort': {'Volume': -1}
+        }
+    ])
+    
+    # Aplica limit só se foi especificado
+    if limit is not None:
+        pipeline.append({'$limit': limit})
+
+    if DEBUG_REPORTS:
+        print(f"[DEBUG] Top Cost Centers Volume Pipeline: {pipeline}")
+
+    result = list(client.LibreChat.transactions.aggregate(pipeline))
+    
+    print(f"[DEBUG] TOP-COST-CENTERS-VOLUME: retornando {len(result)} centros de custo")
+    
+    if DEBUG_REPORTS:
+        print(f"[DEBUG] Top Cost Centers Volume Result: {result}")
+
+    # Se não houver dados, retorna array vazio
+    if not result:
+        if DEBUG_REPORTS:
+            print("[DEBUG] Nenhum centro de custo encontrado")
+        return []
+
+    return result
+
+# TOP COST CENTERS BY COST
+# RETURNS: [{ name: 'CC001', Volume: 12450, Custo: 145.80 }]
+@app.get("/reports/top-cost-centers-cost")
+async def get_top_cost_centers_cost(user: str | None = None, start_date: str | None = None, end_date: str | None = None, search_by: str = "username", limit: int | None = None):
+    """
+    Get top cost centers by cost.
+    Groups transactions by cost center and calculates total cost.
+    """
+    # Se limit for None, não aplicamos limit (busca todos)
+    if limit is not None:
+        limit = int(limit)
+        print(f"[DEBUG] TOP-COST-CENTERS-COST: aplicando limit={limit}")
+    else:
+        print(f"[DEBUG] TOP-COST-CENTERS-COST: sem limit - buscando todos os dados")
+
+    pipeline = []
+    match = {}
+
+    print(f"[DEBUG] Top Cost Centers Cost - user: {user}, start_date: {start_date}, end_date: {end_date}")
+
+    # Filtro por usuário específico (se fornecido)
+    if user:
+        user_data = get_user_data(user, search_by)
+        if not user_data or isinstance(user_data, str):
+            print("Usuário não encontrado")
+            return []
+        match['user'] = user_data['_id']
+        if DEBUG_REPORTS:
+            print(f"[DEBUG] Filtrando por usuário: {user_data['username']}")
+
+    # Filtro por período
+    if start_date or end_date:
+        match['createdAt'] = {}
+        if start_date:
+            match['createdAt']['$gte'] = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        if end_date:
+            end_datetime = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+            end_datetime = end_datetime.replace(hour=23, minute=59, second=59)
+            match['createdAt']['$lte'] = end_datetime
+        if not match['createdAt']:
+            del match['createdAt']
+    else:
+        # Últimos 30 dias se não especificar período
+        match['createdAt'] = {}
+        match['createdAt']['$gte'] = datetime.datetime.now() - datetime.timedelta(days=30)
+        match['createdAt']['$lte'] = datetime.datetime.now()
+
+    if match:
+        pipeline.append({'$match': match})
+
+    # Pipeline para agrupar por centro de custo
+    pipeline.extend([
+        # Lookup para buscar dados do usuário (incluindo centro de custo)
+        {
+            '$lookup': {
+                'from': 'users',
+                'localField': 'user',
+                'foreignField': '_id',
+                'as': 'user_info'
+            }
+        },
+        {
+            '$unwind': '$user_info'
+        },
+        # Agrupa por centro de custo (usando costCenterName para melhor visualização)
+        {
+            '$group': {
+                '_id': '$user_info.costCenterName',
+                # Volume: conta apenas mensagens de usuário (prompt)
+                'Volume': {
+                    '$sum': {
+                        '$cond': [
+                            {'$eq': ['$tokenType', 'prompt']},
+                            1,
+                            0
+                        ]
+                    }
+                },
+                # Custo: soma TODOS os tipos de token (prompt + completion)
+                'Custo': {
+                    '$sum': {
+                        '$divide': ['$tokenValue', -1_000_000]
+                    }
+                },
+                # Mantém o código para referência
+                'costCenterCode': {'$first': '$user_info.costCenterCode'}
+            }
+        },
+        # Filtra apenas centros de custo válidos (não nulos/vazios)
+        {
+            '$match': {
+                '_id': {'$ne': None, '$ne': '', '$exists': True}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'name': '$_id',  # Nome do centro de custo
+                'code': '$costCenterCode',  # Código do centro de custo
+                'Volume': 1,
+                'Custo': {'$round': ['$Custo', 2]},
+                'value': '$Volume'  # Para compatibilidade com gráficos radiais
+            }
+        },
+        {
+            '$sort': {'Custo': -1}  # Ordena por custo (maior para menor)
+        }
+    ])
+    
+    # Aplica limit só se foi especificado
+    if limit is not None:
+        pipeline.append({'$limit': limit})
+
+    if DEBUG_REPORTS:
+        print(f"[DEBUG] Top Cost Centers Cost Pipeline: {pipeline}")
+
+    result = list(client.LibreChat.transactions.aggregate(pipeline))
+    
+    print(f"[DEBUG] TOP-COST-CENTERS-COST: retornando {len(result)} centros de custo")
+    
+    if DEBUG_REPORTS:
+        print(f"[DEBUG] Top Cost Centers Cost Result: {result}")
+
+    # Se não houver dados, retorna array vazio
+    if not result:
+        if DEBUG_REPORTS:
+            print("[DEBUG] Nenhum centro de custo encontrado")
+        return []
+
+    return result
 
 import uvicorn
 if __name__ == "__main__":
