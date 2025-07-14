@@ -77,6 +77,16 @@ export const router = createBrowserRouter([
       },
       dashboardRoutes,
       {
+        path: 'reports',
+        element: <ReportLayout />,
+        children: [
+          {
+            index: true,
+            element: <Reports />,
+          }
+        ]
+      },
+      {
         path: '/',
         element: <Root />,
         children: [
@@ -96,14 +106,5 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  {
-    path: 'reports',
-    element: <ReportLayout />,
-    children: [
-      {
-        index: true,
-        element: <Reports />,
-      }
-    ]
-  },
+
 ]);
