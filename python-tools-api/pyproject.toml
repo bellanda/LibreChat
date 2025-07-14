@@ -1,0 +1,15 @@
+[project]
+name = "python-tools-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.14",
+    "markdown-html-pdf>=0.3.1",
+    "uvicorn",
+    "python-multipart",
+    "playwright>=1.40.0",
+    "dotenv>=0.9.9",
+    "pymongo>=4.13.2",
+]

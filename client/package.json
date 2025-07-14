@@ -93,6 +93,7 @@
     "react-textarea-autosize": "^8.4.0",
     "react-transition-group": "^4.4.5",
     "react-virtualized": "^9.22.6",
+    "recharts": "^3.1.0",
     "recoil": "^0.7.7",
     "regenerator-runtime": "^0.14.1",
     "rehype-highlight": "^6.0.0",
@@ -105,7 +106,8 @@
     "tailwind-merge": "^1.9.1",
     "tailwindcss-animate": "^1.0.5",
     "tailwindcss-radix": "^2.8.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.22.15",
