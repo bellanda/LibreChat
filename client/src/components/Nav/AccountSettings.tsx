@@ -1,16 +1,16 @@
-import { useState, memo } from 'react';
-import { useRecoilState } from 'recoil';
 import * as Select from '@ariakit/react/select';
 import { FileText, LogOut } from 'lucide-react';
-import { LinkIcon, GearIcon, DropdownMenuSeparator } from '~/components';
-import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
+import { memo, useState } from 'react';
+import { useRecoilState } from 'recoil';
+import { DropdownMenuSeparator, GearIcon, LinkIcon } from '~/components';
 import FilesView from '~/components/Chat/Input/Files/FilesView';
+import { UserIcon } from '~/components/svg';
+import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
+import { useLocalize } from '~/hooks';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useAvatar from '~/hooks/Messages/useAvatar';
-import { UserIcon } from '~/components/svg';
-import { useLocalize } from '~/hooks';
-import Settings from './Settings';
 import store from '~/store';
+import Settings from './Settings';
 
 function AccountSettings() {
   const localize = useLocalize();
@@ -72,7 +72,15 @@ function AccountSettings() {
         }}
       >
         <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
+          {user?.name}
+        </div>
+        {/* Break line if text is too long */}
+        <div
+          className="text-token-text-secondary ml-3 mr-2 text-wrap break-all py-2 text-sm"
+          role="note"
+        >
           {user?.email ?? localize('com_nav_user')}
+          {/* Break line if text is too long */}
         </div>
         <DropdownMenuSeparator />
         {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (
@@ -84,6 +92,15 @@ function AccountSettings() {
             <DropdownMenuSeparator />
           </>
         )}
+        <Select.SelectItem
+          value=""
+          onClick={() => window.open('/reports', '_blank')}
+          className="select-item text-sm"
+        >
+          <LinkIcon aria-hidden="true" />
+          Dashboard
+          {/* TODO: Add link to my files */}
+        </Select.SelectItem>
         <Select.SelectItem
           value=""
           onClick={() => setShowFiles(true)}
