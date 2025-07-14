@@ -7,6 +7,8 @@ export interface ModelDescription {
   description: string;
   image?: string | null;
   useCases?: string[];
+  prompt?: number;
+  completion?: number;
   characteristics?: {
     reasoning?: boolean;
     speed?: 'very-fast' | 'fast' | 'medium' | 'slow';

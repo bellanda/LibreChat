@@ -1,29 +1,4 @@
 {
-  "chatgpt-4o-latest": {
-    "name": "GPT-4o",
-    "title": "ChatGPT-4o (Omni, Latest)",
-    "shortUseCase": "Ótimo para a maioria das tarefas",
-    "description": "O modelo mais versátil da OpenAI que entende texto, imagens e áudio. Responde super rápido (300ms) e é perfeito para conversas naturais. Funciona como um assistente completo que vê, ouve e fala.",
-    "image": "/assets/openai-logo.jpg",
-    "useCases": [
-      "Assistente de voz que responde instantaneamente",
-      "Análise de fotos e documentos visuais",
-      "Tradução em tempo real de conversas",
-      "Ajuda com programação mostrando código na tela"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
   "o3-2025-04-16": {
     "name": "o3",
     "title": "OpenAI o3",
@@ -36,6 +11,58 @@
       "Revisar e melhorar código complicado",
       "Tomar decisões empresariais baseadas em dados"
     ],
+    "prompt": 2,
+    "completion": 8,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "o3": {
+    "name": "o3",
+    "title": "OpenAI o3",
+    "shortUseCase": "Usa raciocínio avançado",
+    "description": "O modelo mais inteligente para resolver problemas difíceis. Pensa passo a passo como um especialista, analisa gráficos e dados visuais, e resolve questões de ciência e matemática avançada.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": ["Análise de dados complexos", "Resolução de problemas complexos"],
+    "prompt": 2,
+    "completion": 8,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "o3-deep-research": {
+    "name": "o3-deep-research",
+    "title": "OpenAI o3-deep-research",
+    "shortUseCase": "Usa raciocínio avançado",
+    "description": "o3 com Deep Research ativado. Faz busca profunda no web para resolver problemas. É mais lento e mais caro, porém traz informações completas para resolver problemas complexos.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Pesquisa de mercado para comparação de preços e produtos",
+      "Orçamentos, BIDs, Projetos, etc",
+      "Análise de dados complexos",
+      "Resolução de problemas complexos",
+      "Pesquisa científica avançada"
+    ],
+    "prompt": 10,
+    "completion": 40,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
@@ -61,6 +88,8 @@
       "Assistente móvel com raciocínio avançado",
       "Protótipos de IA com orçamento limitado"
     ],
+    "prompt": 1.1,
+    "completion": 4.4,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -86,6 +115,8 @@
       "Assistente móvel com raciocínio avançado",
       "Protótipos de IA com orçamento limitado"
     ],
+    "prompt": 1.1,
+    "completion": 4.4,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -111,6 +142,8 @@
       "Assistente empresarial com acesso a toda documentação",
       "Sistemas de busca inteligente em bases de dados"
     ],
+    "prompt": 2,
+    "completion": 8,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
@@ -136,6 +169,8 @@
       "Assistente empresarial com acesso a toda documentação",
       "Sistemas de busca inteligente em bases de dados"
     ],
+    "prompt": 2,
+    "completion": 8,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
@@ -161,6 +196,8 @@
       "Chat empresarial com histórico longo",
       "Integração em sistemas web e mobile"
     ],
+    "prompt": 0.4,
+    "completion": 1.6,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -186,6 +223,8 @@
       "Chat empresarial com histórico longo",
       "Integração em sistemas web e mobile"
     ],
+    "prompt": 0.4,
+    "completion": 1.6,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -210,6 +249,8 @@
       "Dispositivos IoT com IA embarcada",
       "Tarefas simples e rápidas"
     ],
+    "prompt": 0.1,
+    "completion": 0.4,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -234,6 +275,8 @@
       "Dispositivos IoT com IA embarcada",
       "Tarefas simples e rápidas"
     ],
+    "prompt": 0.1,
+    "completion": 0.4,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -309,6 +352,8 @@
       "Debugging avançado e otimização de performance",
       "Criação de APIs e integração de sistemas"
     ],
+    "prompt": 3,
+    "completion": 15,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -334,6 +379,8 @@
       "Migração de tecnologias e modernização de código",
       "Desenvolvimento de frameworks e bibliotecas"
     ],
+    "prompt": 15,
+    "completion": 75,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
@@ -359,6 +406,8 @@
       "Análise de código com execução e debugging",
       "Busca inteligente com fundamentação em tempo real"
     ],
+    "prompt": 0.3,
+    "completion": 2.5,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -384,6 +433,8 @@
       "Pesquisa científica com análise de dados visuais",
       "Consultoria técnica especializada"
     ],
+    "prompt": 1.25,
+    "completion": 10,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
@@ -409,6 +460,8 @@
       "Integração em IoT e dispositivos embarcados",
       "Sistemas de atendimento automatizado"
     ],
+    "prompt": 0.1,
+    "completion": 0.4,
     "characteristics": {
       "reasoning": true,
       "speed": "very-fast",
@@ -484,6 +537,8 @@
       "Geração de conteúdo rico (texto + imagem)",
       "Sistemas de busca com contexto muito extenso"
     ],
+    "prompt": 0.2,
+    "completion": 0.6,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -509,6 +564,8 @@
       "Protótipos rápidos de IA conversacional",
       "Personalização barata para empresas"
     ],
+    "prompt": 0.11,
+    "completion": 0.34,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",

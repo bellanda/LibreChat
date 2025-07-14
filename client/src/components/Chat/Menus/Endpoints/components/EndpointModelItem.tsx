@@ -155,6 +155,32 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                   <h4 className="font-semibold text-text-primary">{modelDescription.title}</h4>
                   <p className="mt-1 text-sm text-text-secondary">{modelDescription.description}</p>
                 </div>
+                {/* Nova seção para Preços */}
+                <div>
+                  <h5 className="mb-2 text-sm font-medium text-text-primary">
+                    Preços (Em dólares por 1 milhão de tokens)
+                  </h5>
+                  <div className="flex flex-wrap gap-2">
+                    {modelDescription.prompt !== undefined && (
+                      <TooltipAnchor description="Preço para tokens de entrada (prompt)">
+                        <div className="flex cursor-help items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 dark:bg-emerald-900/30">
+                          <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                            Entrada: ${modelDescription.prompt}
+                          </span>
+                        </div>
+                      </TooltipAnchor>
+                    )}
+                    {modelDescription.completion !== undefined && (
+                      <TooltipAnchor description="Preço para tokens de saída (completion)">
+                        <div className="flex cursor-help items-center gap-1 rounded-full bg-rose-100 px-2 py-1 dark:bg-rose-900/30">
+                          <span className="text-xs font-medium text-rose-600 dark:text-rose-300">
+                            Saída: ${modelDescription.completion}
+                          </span>
+                        </div>
+                      </TooltipAnchor>
+                    )}
+                  </div>
+                </div>
 
                 {/* Características */}
                 {modelDescription.characteristics && (
