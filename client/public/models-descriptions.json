@@ -541,7 +541,7 @@
     "completion": 0.6,
     "characteristics": {
       "reasoning": true,
-      "speed": "fast",
+      "speed": "very-fast ",
       "intelligence": "high",
       "coding": true,
       "math": true,
@@ -568,7 +568,7 @@
     "completion": 0.34,
     "characteristics": {
       "reasoning": true,
-      "speed": "fast",
+      "speed": "very-fast",
       "intelligence": "high",
       "coding": true,
       "math": true,
