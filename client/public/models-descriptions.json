@@ -577,5 +577,33 @@
     "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": true
+  },
+
+  "moonshotai/kimi-k2-instruct": {
+    "name": "MoonshotAI Kimi K2",
+    "title": "MoonshotAI Kimi K2",
+    "shortUseCase": "IA multimodal de próxima geração especializada em software",
+    "description": "K2 é um modelo Mixture-of-Experts de 1 trilhão de parâmetros projetado para competir diretamente com o Anthropic Claude em desenvolvimento de software e agentic code. Com raciocínio avançado, processamento multimodal e execução autônoma de scripts, K2 gera, depura, orquestra e escala agentes de software em tempo real, sendo ideal para pipelines de DevOps, automação de tarefas complexas e consultoria técnica orientada por IA.",
+    "image": "/assets/moonshotai-logo.jpg",
+    "useCases": [
+      "Criação e revisão de **código** com execução integrada",
+      "Orquestração de **agentic code** para automação de DevOps",
+      "Análise de **logs** e debugging inteligente",
+      "Consultoria técnica automatizada em tempo real",
+      "Pesquisa e prototipagem em ambientes STEM"
+    ],
+    "prompt": 1,
+    "completion": 3,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
   }
 }
