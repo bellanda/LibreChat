@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Plataforma de IA – HPE Automotores</title>
+    <style>
+        :root {
+            --primary: #ff6600;
+            --dark: #1a1a1a;
+            --light: #f5f5f5;
+            --border: #ddd;
+            --shadow: 0 4px 12px rgba(0, 0, 0, .08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background: var(--primary);
+            color: #fff;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: .5rem;
+        }
+
+        nav {
+            background: #fff;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        nav ul {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            list-style: none;
+        }
+
+        nav a {
+            background: var(--light);
+            padding: .5rem 1rem;
+            border-radius: 20px;
+            text-decoration: none;
+            color: var(--dark);
+            transition: .3s;
+        }
+
+        nav a:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        section {
+            background: #fff;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        code {
+            background: var(--light);
+            padding: .2rem .4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            padding: .75rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        th {
+            background: var(--light);
+            font-weight: 600;
+        }
+
+        ol li {
+            margin-left: 1.2rem;
+            margin-bottom: .5rem;
+        }
+
+        .faq-item {
+            margin-bottom: 1rem;
+        }
+
+        .faq-q {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: .9rem;
+            color: #666;
+        }
+
+        @media(max-width:600px) {
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🤖 Plataforma de IA HPE Automotores</h1>
+        <p>Guia rápido para colaboradores – tudo em um único lugar</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#visao">Visão Geral</a></li>
+            <li><a href="#glossario">Glossário</a></li>
+            <li><a href="#passos">Passo a Passo</a></li>
+            <li><a href="#biblioteca">Biblioteca</a></li>
+            <li><a href="#boas">Boas Práticas</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#politica">Política</a></li>
+            <li><a href="#changelog">Atualizações</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="visao">
+            <h2>🎯 Visão Geral</h2>
+            <p><strong>Objetivo:</strong> Centralizar uso interno de modelos de IA generativa para aumentar
+                produtividade.</p>
+            <p><strong>Principais benefícios:</strong></p>
+            <ul>
+                <li>Redução de até 60 % do tempo em tarefas de texto</li>
+                <li>Templates prontos para comunicações corporativas</li>
+                <li>Suporte 24/7 sem custo adicional</li>
+            </ul>
+            <p><strong>Exemplos rápidos:</strong> Resumir atas, gerar e-mails de follow-up, traduzir documentos
+                técnicos.</p>
+        </section>
+
+        <section id="glossario">
+            <h2>✂️ Glossário Básico</h2>
+            <table>
+                <tr>
+                    <th>Termo</th>
+                    <th>O que significa</th>
+                </tr>
+                <tr>
+                    <td><strong>Modelo</strong></td>
+                    <td>Algoritmo treinado (ex.: GPT-4o)</td>
+                </tr>
+                <tr>
+                    <td><strong>Prompt</strong></td>
+                    <td>Instrução de texto que você digita</td>
+                </tr>
+                <tr>
+                    <td><strong>Token</strong></td>
+                    <td>Unidade básica de texto (≈ 4 letras)</td>
+                </tr>
+                <tr>
+                    <td><strong>Limite de uso</strong></td>
+                    <td>Quantos tokens você pode enviar por mês</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="passos">
+            <h2>🚀 Passo a Passo Inicial</h2>
+            <ol>
+                <li>Acesse o <em>link interno</em> (VPN necessária).</li>
+                <li>Escolha o modelo (recomendado: <strong>GPT-4o</strong>).</li>
+                <li>Digite seu prompt ou selecione um template.</li>
+                <li>Clique em <strong>Executar</strong>.</li>
+                <li>Copie ou baixe a resposta (ícones no canto superior direito).</li>
+            </ol>
+        </section>
+
+        <section id="biblioteca">
+            <h2>🧩 Biblioteca de Prompts</h2>
+            <table>
+                <tr>
+                    <th>Template</th>
+                    <th>Caso de uso</th>
+                    <th>Exemplo de resultado</th>
+                </tr>
+                <tr>
+                    <td>E-mail de follow-up</td>
+                    <td>Após reunião com fornecedor</td>
+                    <td>"Olá, conforme alinhado..."</td>
+                </tr>
+                <tr>
+                    <td>Resumo de ata</td>
+                    <td>Reuniões semanais</td>
+                    <td>3 bullets com decisões</td>
+                </tr>
+                <tr>
+                    <td>Tradução EN→PT</td>
+                    <td>Manuais técnicos</td>
+                    <td>Termos técnicos mantidos</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="boas">
+            <h2>⚠️ Boas Práticas Rápidas</h2>
+            <ul>
+                <li>Seja claro e específico no prompt.</li>
+                <li>Respeite o limite de 8 k tokens por requisição.</li>
+                <li><strong>Nunca</strong> insira dados sensíveis (CPF, contratos, etc.).</li>
+            </ul>
+        </section>
+
+        <section id="faq">
+            <h2>❓ Perguntas Frequentes</h2>
+            <div class="faq-item">
+                <p class="faq-q">Resposta ficou cortada?</p>
+                <p>Aumente o limite de tokens no campo <em>max_tokens</em>.</p>
+            </div>
+            <div class="faq-item">
+                <p class="faq-q">Demorou mais de 30 s?</p>
+                <p>Verifique a fila de execução no canto inferior esquerdo.</p>
+            </div>
+        </section>
+
+        <section id="politica">
+            <h2>🔒 Política de Uso</h2>
+            <p>Esta plataforma deve ser utilizada exclusivamente para fins corporativos. Compartilhamento de
+                credenciais, uso indevido de dados ou violação de segurança pode acarretar suspensão de acesso conforme
+                Código de Ética HPE.</p>
+        </section>
+
+        <section id="changelog">
+            <h2>🔄 Atualizações</h2>
+            <ul>
+                <li><strong>2024-06-01</strong> – Novo modelo GPT-4o disponível</li>
+                <li><strong>2024-05-15</strong> – Limite de tokens elevado para 8 k</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        &copy; 2024 HPE Automotores – Atualizado automaticamente
+    </footer>
+
+    <script>
+        // Smooth scroll para links de navegação
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', e => {
+                e.preventDefault();
+                document.querySelector(anchor.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+
+</html>

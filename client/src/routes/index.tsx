@@ -11,6 +11,8 @@ import {
 import { AuthContextProvider } from '~/hooks/AuthContext';
 import ChatRoute from './ChatRoute';
 import dashboardRoutes from './Dashboard';
+import Documentation from './Documentation';
+import DocumentationLayouts from './Layouts/DocumentationLayout';
 import LoginLayout from './Layouts/Login';
 import ReportLayout from './Layouts/ReportLayout';
 import StartupLayout from './Layouts/Startup';
@@ -83,6 +85,16 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <Reports />,
+          }
+        ]
+      },
+      {
+        path: 'documentation',
+        element: <DocumentationLayouts />,
+        children: [
+          {
+            index: true,
+            element: <Documentation />,
           }
         ]
       },
