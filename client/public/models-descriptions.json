@@ -579,7 +579,136 @@
     "supportsImageAttachment": true
   },
 
-  "moonshotai/kimi-k2-instruct": {
+  "accounts/fireworks/models/deepseek-v3-0324": {
+    "name": "DeepSeek V3 03/24",
+    "title": "DeepSeek V3 (03‑24)",
+    "shortUseCase": "LLM rápido para código e chat",
+    "description": "Modelo MoE de 671 → 37 B com 160 K de contexto, focado em programação, diálogo natural e custo ultrabaixo.",
+    "image": "/assets/deepseek-logo.jpg",
+    "useCases": [
+      "Assistente de programação em IDEs",
+      "Chatbot para sites com latência baixa",
+      "FAQs técnicas automatizadas",
+      "Tutoria em matemática e ciências"
+    ],
+    "prompt": 0.9,
+    "completion": 0.9,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/deepseek-r1-0528": {
+    "name": "DeepSeek R1 05/28",
+    "title": "DeepSeek R1 (0528 Fast)",
+    "shortUseCase": "Raciocínio passo a passo de alto nível",
+    "description": "Versão mais recente do DeepSeek R1 com 160 K de contexto e desempenho de ponta em matemática, oferecendo logs de raciocínio detalhados para explicabilidade.",
+    "image": "/assets/deepseek-logo.jpg",
+    "useCases": [
+      "Resolução de problemas olímpicos de matemática",
+      "Programação competitiva e debugging complexo",
+      "Pesquisa científica com explicações detalhadas",
+      "Treinar outros modelos via distil‑of‑thought"
+    ],
+    "prompt": 3.0,
+    "completion": 8.0,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/qwen3-235b-a22b-thinking-2507": {
+    "name": "Qwen3 235B Thinking",
+    "title": "Alibaba Qwen3‑235B‑A22B Thinking 2507",
+    "shortUseCase": "Raciocínio profundo multilíngue",
+    "description": "Flagship da série Qwen 3 com modo ‘thinking’ para lógica, matemática e planejamento, alternando para respostas rápidas em diálogos gerais.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Soluções passo a passo em STEM",
+      "Planejamento de projetos complexos",
+      "Atendimento multilíngue avançado",
+      "Integração com agentes de ferramenta"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/qwen3-coder-480b-a35b-instruct": {
+    "name": "Qwen3 Coder 480B",
+    "title": "Alibaba Qwen3 Coder 480B‑A35B Instruct",
+    "shortUseCase": "Geração e orquestração de código",
+    "description": "Modelo MoE gigante para programação, tool‑use e tarefas de navegador, com desempenho próximo a modelos proprietários de elite.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Gerar e depurar código em múltiplas linguagens",
+      "Automação de testes e CI/CD",
+      "Agentes que navegam na web e chamam APIs",
+      "Tutoria avançada em programação competitiva"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/qwen3-235b-a22b-instruct-2507": {
+    "name": "Qwen3 235B Instruct",
+    "title": "Alibaba Qwen3‑235B‑A22B Instruct 2507",
+    "shortUseCase": "Instruções, tool‑use e análise",
+    "description": "Versão FP8 afinada para seguir instruções rigorosas, com melhorias em uso de funções, escrita de código e compreensão textual.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Assistentes corporativos com chain‑of‑thought oculto",
+      "Geração de documentação técnica",
+      "Automação de workflows com function calling",
+      "Análise de grandes bases de conhecimento"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/kimi-k2-instruct": {
     "name": "MoonshotAI Kimi K2",
     "title": "MoonshotAI Kimi K2",
     "shortUseCase": "IA multimodal de próxima geração especializada em software",
