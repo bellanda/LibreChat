@@ -601,7 +601,7 @@
       "math": true,
       "multimodal": false
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": false
   },
@@ -628,7 +628,7 @@
       "math": true,
       "multimodal": false
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": false
   },
