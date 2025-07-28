@@ -4,19 +4,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  HelpCircle,
   History,
   Library,
   ShieldCheck,
   ThumbsUp
 } from "lucide-react";
 import { useState } from "react";
-import OqueEPromptPage from "../components/Documentation/subtopics/glossary/OqueEPromptPage";
-import ConfiguracaoPage from "../components/Documentation/subtopics/step-by-step/ConfiguracaoPage";
+import PrecoTokenizacaoLimitacoesPage from "../components/Documentation/subtopics/glossary/PrecoTokenizacaoLimitacoesPage";
+import AgentePage from "../components/Documentation/subtopics/step-by-step/AgentePage";
 import AtualizacoesPage from "../components/Documentation/topics/AtualizacoesPage";
 import BoasPraticasPage from "../components/Documentation/topics/BoasPraticasPage";
 import EngenhariaDePromptsPage from "../components/Documentation/topics/EngenhariaDePromptsPage";
-import FAQPage from "../components/Documentation/topics/FAQPage";
 import GlossarioPage from "../components/Documentation/topics/GlossarioPage";
 import PassoAPassoPage from "../components/Documentation/topics/PassoAPassoPage";
 import PoliticaUsoPage from "../components/Documentation/topics/PoliticaUsoPage";
@@ -43,7 +41,7 @@ const SECTIONS = [
     title: "Glossário Básico", 
     icon: BookOpen,
     subtopics: [
-      { id: "gb-prompt", title: "O que é um prompt?", component: "OqueEPromptPage" },
+      { id: "gb-preco-tokenizacao-limitacoes", title: "Preço, Tokenização e Limitações", component: "PrecoTokenizacaoLimitacoesPage" },
     ]
   },
   { 
@@ -51,7 +49,7 @@ const SECTIONS = [
     title: "Passo a Passo", 
     icon: CheckCircle,
     subtopics: [
-      { id: "pap-configuracao", title: "Configuração", component: "ConfiguracaoPage" }
+      { id: "pap-agentes", title: "Agentes", component: "AgentePage" }
     ]
   },
   { 
@@ -65,13 +63,15 @@ const SECTIONS = [
     title: "Boas Práticas Rápidas", 
     icon: ThumbsUp,
     subtopics: []
-  },
-  { 
-    id: "faq", 
-    title: "Perguntas Frequentes (FAQ)", 
-    icon: HelpCircle,
-    subtopics: []
-  },
+  }
+  // ,
+  // { 
+  //   id: "faq", 
+  //   title: "Perguntas Frequentes (FAQ)", 
+  //   icon: HelpCircle,
+  //   subtopics: []
+  // }
+  ,
   { 
     id: "politica-uso", 
     title: "Política de Uso", 
@@ -127,10 +127,10 @@ export default function Documentation() {
       const subtopic = currentSection.subtopics.find(s => s.id === currentSubtopic);
       if (subtopic) {
         switch (subtopic.component) {
-          case "ConfiguracaoPage":
-            return <ConfiguracaoPage />;
-          case "OqueEPromptPage":
-            return <OqueEPromptPage />;
+          case "AgentePage":
+            return <AgentePage />;
+          case "PrecoTokenizacaoLimitacoesPage":
+            return <PrecoTokenizacaoLimitacoesPage />;
           default:
             return <PassoAPassoPage />;
         }
@@ -149,8 +149,8 @@ export default function Documentation() {
         return <EngenhariaDePromptsPage />;
       case "boas-praticas":
         return <BoasPraticasPage />;
-      case "faq":
-        return <FAQPage />;
+      // case "faq":
+      //   return <FAQPage />;
       case "politica-uso":
         return <PoliticaUsoPage />;
       case "atualizacoes":
@@ -218,7 +218,7 @@ export default function Documentation() {
       <main className="flex-1 p-6 md:p-10 lg:ml-64">
         <div className="mx-auto max-w-4xl">
           {/* Header da página */}
-          <header className="mb-8">
+          <header className="mb-4">
             <div className="flex items-center gap-3 mb-4">
               <currentSection.icon className="text-indigo-400" size={32} />
               <div>

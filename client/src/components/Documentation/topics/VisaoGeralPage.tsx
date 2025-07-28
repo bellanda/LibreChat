@@ -45,6 +45,20 @@ export default function VisaoGeralPage() {
             </div>
           </div>
     
+          <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+            <h3 className="text-lg font-semibold text-white mb-4">📞 Suporte e Feedback</h3>
+            <p className="text-gray-300">
+              Para reportar bugs, sugerir melhorias ou obter suporte, entre em contato com a equipe através dos canais oficiais da empresa.
+            </p>
+            <div className="flex gap-6">
+              <ul className="list-disc list-inside text-gray-300">
+                <li><a href="https://teams.microsoft.com/l/chat/0/0?users=gb810437@hpeautos.com.br">Gustavo Bellanda</a></li>
+              </ul>
+              <ul className="list-disc list-inside text-gray-300">
+                <li><a href="https://teams.microsoft.com/l/chat/0/0?users=rm8107@hpeautos.com.br">Rafael Melo</a></li>
+              </ul>
+            </div>
+          </div>
           {/* <div className="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
             <h3 className="text-xl font-semibold text-indigo-800 mb-4">Modelo de IA Utilizado</h3>
             <p className="text-indigo-700">

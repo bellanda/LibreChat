@@ -1,85 +1,84 @@
 export default function BoasPraticasPage() {
-    return (
-        <div className="space-y-6">
-          <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-            <h3 className="text-xl font-semibold text-green-800 mb-4">✅ Melhores Práticas</h3>
-            <p className="text-green-700">
-              Siga estas diretrizes para obter os melhores resultados e usar a plataforma de forma eficiente e segura.
-            </p>
-          </div>
-    
-          <div className="grid gap-6">
-            {[
-              {
-                title: "Seja Claro e Específico",
-                description: "Dê contexto, exemplos e defina o formato da resposta desejada para obter melhores resultados.",
-                tips: [
-                  "Inclua o público-alvo da resposta",
-                  "Especifique o tom desejado (formal, informal, técnico)",
-                  "Defina o formato (lista, parágrafo, tabela)",
-                  "Mencione o nível de detalhamento esperado"
-                ],
-                icon: "🎯"
-              },
-              {
-                title: "Monitore o Limite de Tokens",
-                description: "Se precisar de uma resposta mais longa, ajuste o limite de tokens nas configurações antes de executar.",
-                tips: [
-                  "Verifique o tamanho do seu prompt",
-                  "Ajuste o limite conforme necessário",
-                  "Considere dividir solicitações muito grandes",
-                  "Use o contador de tokens quando disponível"
-                ],
-                icon: "📏"
-              },
-              {
-                title: "Proteja Informações Sensíveis",
-                description: "Nunca inclua dados pessoais, senhas, informações de clientes ou qualquer outra informação confidencial nos prompts.",
-                tips: [
-                  "Não inclua CPF, RG ou dados pessoais",
-                  "Evite informações de contratos ou acordos",
-                  "Não compartilhe credenciais de acesso",
-                  "Use dados fictícios para exemplos"
-                ],
-                icon: "🔒"
-              },
-              {
-                title: "Revise e Refine",
-                description: "As respostas da IA são um ponto de partida. Sempre revise, edite e personalize o conteúdo gerado.",
-                tips: [
-                  "Verifique a precisão das informações",
-                  "Adapte o tom para seu contexto",
-                  "Adicione exemplos específicos da sua área",
-                  "Teste diferentes abordagens se necessário"
-                ],
-                icon: "✏️"
-              }
-            ].map((practice, index) => (
-              <div key={index} className="bg-[#1c1c1c] p-6 rounded-lg shadow-sm border border-gray-700">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-green-900 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">{practice.icon}</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white mb-2">{practice.title}</h3>
-                    <p className="text-gray-300">{practice.description}</p>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <h4 className="font-semibold text-white mb-3">💡 Dicas Práticas:</h4>
-                  <ul className="space-y-2">
-                    {practice.tips.map((tip, tipIndex) => (
-                      <li key={tipIndex} className="flex items-start gap-2 text-gray-300">
-                        <span className="text-green-400 mt-1">•</span>
-                        <span>{tip}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
+  return (
+    <div className="mx-auto text-gray-100 space-y-8">
+      {/* Título da Página */}
+      <h1 className="text-3xl font-bold text-white mb-2">Guia de Boas Práticas</h1>
+      <p className="text-lg text-gray-300">
+        Siga estas dicas para extrair o máximo da nossa IA e garantir resultados incríveis.
+      </p>
+
+      {/* 1. Organização das Conversas */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-3 flex items-center">
+          <span className="text-2xl mr-3">🗂️</span> Mantenha Suas Conversas Organizadas
+        </h2>
+        <ul className="list-disc list-inside space-y-2">
+          <li><strong>Comece do zero para novos temas:</strong> Mudou de assunto? Use o botão “Nova Conversa”. Isso mantém a IA focada e as respostas mais precisas.</li>
+          <li><strong>Dê títulos claros:</strong> Nomeie seus chats (ex: “Resumo do contrato X”) para encontrar o que precisa rapidamente.</li>
+          <li><strong>Faça uma limpeza periódica:</strong> Arquive ou exclua conversas antigas para manter sua área de trabalho limpa e organizada.</li>
+        </ul>
+      </section>
+
+
+      {/* 3. Verificação de Conteúdo */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-3 flex items-center">
+          <span className="text-2xl mr-3">✅</span> Confie, mas Verifique
+        </h2>
+        <ul className="list-disc list-inside space-y-2">
+          <li><strong>A IA pode errar:</strong> Sempre cheque fatos, números e dados importantes gerados pelo modelo.</li>
+          <li><strong>Valide com fontes externas:</strong> Confirme dados estatísticos ou informações críticas em sites oficiais e fontes confiáveis.</li>
+          <li><strong>Peça por fontes:</strong> Se a resposta parecer vaga, peça para a IA citar de onde tirou a informação ou reformular com mais certeza.</li>
+        </ul>
+      </section>
+
+      {/* 4. Segurança de Dados */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-3 flex items-center">
+          <span className="text-2xl mr-3">🔒</span> Proteja Suas Informações
+        </h2>
+        <ul className="list-disc list-inside space-y-2">
+          <li><strong>NÃO insira dados sensíveis:</strong> Evite colocar CPFs, números de cartão, senhas ou informações detalhadas.</li>
+          <li><strong>Anonimize quando necessário:</strong> Antes de colar um texto, substitua nomes e dados confidenciais por pseudônimos (ex: "Cliente A").</li>
+        </ul>
+      </section>
+
+      {/* 6. Feedback */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-3 flex items-center">
+          <span className="text-2xl mr-3">👍</span> Ajude a IA a Melhorar
+        </h2>
+        <ul className="list-disc list-inside space-y-2">
+          <li><strong>Avalie as respostas:</strong> Use os botões de “Gostei / Não Gostei” para nos ajudar a calibrar o modelo. Seu feedback é valioso!</li>
+          <li><strong>Reporte problemas:</strong> Encontrou uma resposta estranha, incorreta ou enviesada? Informe nossa equipe de suporte.</li>
+          <li><strong>Compartilhe o que funciona:</strong> Crie e compartilhe com seu time os prompts que geram os melhores resultados.</li>
+        </ul>
+      </section>
+
+      {/* 7. Suporte */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-3 flex items-center">
+          <span className="text-2xl mr-3">🆘</span> Precisa de Ajuda?
+        </h2>
+        <ul className="list-disc list-inside space-y-2">
+          <li><strong>Perguntas Frequentes (FAQ):</strong> Dê uma olhada no nosso FAQ. Sua dúvida já pode ter sido respondida lá.</li>
+          <li><strong>O que há de novo (Changelog):</strong> Fique por dentro das últimas atualizações de modelos e funcionalidades.</li>
+          <li><strong>Fale conosco:</strong> Use nosso canal de suporte (e-mail ou teams) para resolver qualquer problema.</li>
+        </ul>
+      </section>
+
+      {/* 8. Acessibilidade */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-3 flex items-center">
+          <span className="text-2xl mr-3">⌨️</span> Use com Mais Conforto
+        </h2>
+        <ul className="list-disc list-inside space-y-2">
+          <li><strong>Descubra os atalhos:</strong> Agilize seu trabalho com atalhos de teclado, como <code>Ctrl+Enter</code> para enviar.</li>
+          <li><strong>Exporte suas conversas:</strong> Salve um registro de seus chats em PDF ou Markdown para consultar depois.</li>
+          <li><strong>Favorite chats:</strong> Salve suas conversas favoritas para acesso rápido.</li>
+        </ul>
+      </section>
+
+    </div>
+  );
+}
