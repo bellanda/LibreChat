@@ -1,17 +1,28 @@
 # main.py
+from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-
 from starlette.responses import JSONResponse
 
-from app.config import VectorDBType, debug_mode, RAG_HOST, RAG_PORT, CHUNK_SIZE, CHUNK_OVERLAP, PDF_EXTRACT_IMAGES, VECTOR_DB_TYPE, \
-    LogMiddleware, logger
+from app.config import (
+    CHUNK_OVERLAP,
+    CHUNK_SIZE,
+    PDF_EXTRACT_IMAGES,
+    RAG_HOST,
+    RAG_PORT,
+    VECTOR_DB_TYPE,
+    LogMiddleware,
+    VectorDBType,
+    debug_mode,
+    logger,
+)
 from app.middleware import security_middleware
 from app.routes import document_routes, pgvector_routes
 from app.services.database import PSQLDatabase, ensure_custom_id_index_on_embedding
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,6 +32,7 @@ async def lifespan(app: FastAPI):
         await ensure_custom_id_index_on_embedding()
 
     yield
+
 
 app = FastAPI(lifespan=lifespan, debug=debug_mode)
 
@@ -50,7 +62,7 @@ if debug_mode:
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     body = await request.body()
-    logger.debug(f"Validation error occurred")
+    logger.debug("Validation error occurred")
     logger.debug(f"Raw request body: {body.decode()}")
     logger.debug(f"Validation errors: {exc.errors()}")
     return JSONResponse(
@@ -61,6 +73,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "message": "Request validation failed",
         },
     )
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host=RAG_HOST, port=RAG_PORT, log_config=None)

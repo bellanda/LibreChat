@@ -1,26 +1,33 @@
-FROM python:3.10 AS main
+FROM python:3.12 AS main
 
 WORKDIR /app
 
-# Install pandoc and netcat
+# 🛡️ Instalar certificados e dependências
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     pandoc \
     netcat-openbsd \
-    libgl1-mesa-glx \  
+    libgl1-mesa-glx \
     libglib2.0-0 \
+    ca-certificates \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# 🚀 Adicionar `uv` 
+COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
+RUN uv --version
 
-# Download standard NLTK data, to prevent unstructured from downloading packages at runtime
-RUN python -m nltk.downloader -d /app/nltk_data punkt_tab averaged_perceptron_tagger
+COPY pyproject.toml .
+COPY .python-version .
+RUN uv sync
+
+# 📚 Download NLTK com tratamento de certificados
+RUN uv run python -c "import ssl; import nltk; nltk.download('punkt_tab', download_dir='/app/nltk_data'); nltk.download('averaged_perceptron_tagger', download_dir='/app/nltk_data')"
 ENV NLTK_DATA=/app/nltk_data
 
-# Disable Unstructured analytics
+# 🚫 Desativar analytics
 ENV SCARF_NO_ANALYTICS=true
 
 COPY . .
 
-CMD ["python", "main.py"]
+CMD ["uv", "run", "main.py"]

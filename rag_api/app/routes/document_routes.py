@@ -34,6 +34,7 @@ from app.models import (
 from app.services.vector_store.async_pg_vector import AsyncPgVector
 from app.utils.document_loader import clean_text, get_loader, process_documents
 from app.utils.health import is_health_ok
+from app.utils.preprocess_file import preprocess_pdf
 
 router = APIRouter()
 
@@ -372,7 +373,15 @@ async def embed_file(
         )
 
     try:
-        loader, known_type, file_ext = get_loader(file.filename, file.content_type, temp_file_path)
+        # Preprocess file if it is a PDF
+        if file.filename.endswith(".pdf"):
+            new_file_name, new_content_type, temp_file_path = preprocess_pdf(temp_file_path)
+        else:
+            new_file_name = file.filename
+            new_content_type = file.content_type
+
+        # Continue default flow
+        loader, known_type, file_ext = get_loader(new_file_name, new_content_type, temp_file_path)
         data = loader.load()
         result = await store_data_in_vector_db(data=data, file_id=file_id, user_id=user_id, clean_content=file_ext == "pdf")
 
