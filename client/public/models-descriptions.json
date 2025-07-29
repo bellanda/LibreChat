@@ -742,6 +742,8 @@
     "shortUseCase": "Modelo de IA mais inteligente do mundo",
     "description": "O modelo mais recente e avançado da xAI, oferecendo desempenho incomparável em linguagem natural, matemática e raciocínio. Inclui uso nativo de ferramentas e integração de busca em tempo real, capaz de criar documentos ricos e escrever código. Projetado para funcionar como um 'coringa' em diversas aplicações, com capacidade de colaboração entre múltiplos agentes de IA.",
     "image": "/assets/xai-grok-logo.png",
+    "prompt": 3,
+    "completion": 15,
     "useCases": [
       "Resolver problemas complexos de matemática e ciência",
       "Análise aprofundada de dados e informações",
@@ -775,6 +777,8 @@
       "Aplicações móveis com resposta rápida",
       "Assistentes para tarefas diárias"
     ],
+    "prompt": 0.3,
+    "completion": 0.5,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -783,7 +787,7 @@
       "math": true,
       "multimodal": false
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": false
   }
