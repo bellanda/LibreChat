@@ -250,6 +250,27 @@ const initializeAgentOptions = async ({
     agent.model_parameters.configuration = options.configOptions;
   }
 
+  // Extract endpointTokenConfig from custom endpoint configuration for custom endpoints
+  let endpointTokenConfig = options.endpointTokenConfig;
+  if (!endpointTokenConfig && getOptions === initCustom) {
+    const customEndpointConfig = await getCustomEndpointConfig(provider);
+    if (customEndpointConfig) {
+      endpointTokenConfig = customEndpointConfig.tokenConfig;
+
+      // If no tokenConfig in endpoint config, try to fetch from cache
+      if (!endpointTokenConfig) {
+        const { getLogStores } = require('~/cache');
+        const { CacheKeys, FetchTokenConfig } = require('librechat-data-provider');
+        const cache = getLogStores(CacheKeys.TOKEN_CONFIG);
+        const tokenKey = customEndpointConfig.userProvidedApiKey
+          ? `${provider}:${req.user.id}`
+          : provider;
+        endpointTokenConfig =
+          FetchTokenConfig[provider.toLowerCase()] && (await cache.get(tokenKey));
+      }
+    }
+  }
+
   if (!agent.model_parameters.model) {
     agent.model_parameters.model = agent.model;
   }
@@ -286,6 +307,7 @@ const initializeAgentOptions = async ({
     tools,
     attachments,
     toolContextMap,
+    endpointTokenConfig,
     maxContextTokens: (maxContextTokens - maxTokens) * 0.9,
   };
 };
@@ -373,6 +395,7 @@ const initializeClient = async ({ req, res, endpointOption }) => {
     iconURL: endpointOption.iconURL,
     attachments: primaryConfig.attachments,
     endpointType: endpointOption.endpointType,
+    endpointTokenConfig: primaryConfig.endpointTokenConfig,
     maxContextTokens: primaryConfig.maxContextTokens,
     resendFiles: primaryConfig.model_parameters?.resendFiles ?? true,
     endpoint:
