@@ -22,7 +22,7 @@ const Section = ({ id, title, children }) => (
 
 export default function EngenhariaDePromptsPage() {
   return (
-    <div className="mx-auto p-4 text-gray-100 text-justify">
+    <div className="mx-auto text-gray-100 text-justify">
       {/* Seção 1: Definição de Prompt */}
       <Section id="o-que-e-um-prompt" title="O que é um Prompt?">
         <p>

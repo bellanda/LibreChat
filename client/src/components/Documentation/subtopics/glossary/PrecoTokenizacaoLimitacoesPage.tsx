@@ -1,5 +1,7 @@
 // src/pages/PrecoTokenizacaoLimitacoesPage.jsx
-import { models } from '../../utils';
+import models_descriptions from '../../../../../public/models-descriptions.json';
+
+
 
 const Section = ({ id, title, children }) => (
   <section id={id} className="mt-12">
@@ -39,33 +41,21 @@ const PriceTable = () => (
     <table className="min-w-full bg-gray-800">
       <thead>
         <tr className="border-b border-gray-700">
-          <th className="px-4 py-2 text-left text-white">Empresa</th>
           <th className="px-4 py-2 text-left text-white">Modelo</th>
           <th className="px-4 py-2 text-left text-white">Descrição</th>
           <th className="px-4 py-2 text-left text-white">Preço Entrada</th>
           <th className="px-4 py-2 text-left text-white">Preço Saída</th>
         </tr>
       </thead>
-      <tbody>
-        {models.map((company) =>
-          company.models.map((model) => (
-            <tr
-              key={`${company.company}-${model.name}`}
-              className="hover:bg-gray-700 transition-colors"
-            >
-              <td className="px-4 py-2 text-gray-300">{company.company}</td>
-              <td className="px-4 py-2 font-semibold text-green-300">{model.name}</td>
-              <td className="px-4 py-2 text-gray-300">{model.description}</td>
-              <td className="px-4 py-2 text-gray-200">
-                {model.price_input} {model.price_currency}
-              </td>
-              <td className="px-4 py-2 text-gray-200">
-                {model.price_output} {model.price_currency}
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
+
+      {Object.keys(models_descriptions).map((model) => (
+        <tr key={model} className="hover:bg-gray-700 transition-colors">
+          <td className="px-4 py-2 text-gray-300 font-semibold text-green-300">{models_descriptions[model].name}</td>
+          <td className="px-4 py-2 text-gray-300">{models_descriptions[model].shortUseCase}</td>
+          <td className="px-4 py-2 text-gray-200">{models_descriptions[model].prompt.toFixed(1)}</td>
+          <td className="px-4 py-2 text-gray-200">{models_descriptions[model].completion.toFixed(1)}</td>
+        </tr>
+      ))}
     </table>
   </div>
 );
@@ -114,10 +104,7 @@ const ProfileRecommendations = () => (
 
 export default function PrecoTokenizacaoLimitacoesPage() {
   return (
-    <div className="mx-auto ">
-      <header>
-        <h1 className="text-4xl font-bold text-white">Preço e Limitações de Tokenização</h1>
-      </header>
+    <div className="mx-auto">
 
       <Section id="custo-token" title="Custos por Token">
         <p className="text-gray-200 leading-relaxed">
@@ -136,7 +123,7 @@ export default function PrecoTokenizacaoLimitacoesPage() {
         <CostExample />
       </Section>
 
-      <Section id="tabela-precos" title="Tabela de Preços por Modelo">
+      <Section id="tabela-precos" title="Tabela de Preços por Modelo ($USD/1M tokens)">
         <PriceTable />
       </Section>
 

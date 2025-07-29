@@ -1,9 +1,5 @@
-import { models } from "../utils";
-export default function GlossarioPage() {
-  
-  
 
-  
+export default function GlossarioPage() {
   return (
         <div className="space-y-6">
           <div >
@@ -37,23 +33,10 @@ export default function GlossarioPage() {
                   O "cérebro" da IA que processa suas solicitações. Diferentes modelos têm diferentes capacidades, velocidades e custos.
                 </p>
                 <div className="p-3 bg-gray-800 rounded text-sm">
-                  <div className="bg-gray-800 p-1 rounded ">
-                    {models[0].models.map((model) => (
-                      <p key={model.name}><strong>{model.name}:</strong>  {model.description}  <br /> </p>
-                    ))}
-                  </div>
-                      
-                  <div className="bg-gray-800 p-1 rounded-lg">
-                    {models[1].models.map((model) => (
-                        <p key={model.name}><strong>{model.name}:</strong>  {model.description}  <br /> </p>
-                      ))}
-                  </div>
-                    
-                  <div className="bg-gray-800 p-1 rounded-lg">
-                    {models[2].models.map((model) => (
-                        <p key={model.name}><strong>{model.name}:</strong>  {model.description}  <br /> </p>
-                      ))}
-                  </div>
+                  
+                <strong>Exemplo:</strong> GPT-4.1, Gemini 2.5 Pro, Claude 3.5 Sonnet, etc.
+                  
+
                     
                 </div>
 

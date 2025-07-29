@@ -219,15 +219,30 @@ export default function Documentation() {
         <div className="mx-auto max-w-4xl">
           {/* Header da página */}
           <header className="mb-4">
+            {/* Breadcrumbs */}
+            <div className="flex items-center text-sm text-gray-400 mb-3">
+              <span className="text-indigo-400 font-medium">Documentação</span>
+              <ChevronRight size={16} className="mx-2" />
+              <span className="text-white">{currentSection.title}</span>
+              {currentSubtopic && (
+                <>
+                  <ChevronRight size={16} className="mx-2" />
+                  <span className="text-indigo-300">
+                    {currentSection.subtopics.find(s => s.id === currentSubtopic)?.title}
+                  </span>
+                </>
+              )}
+            </div>
+            
             <div className="flex items-center gap-3 mb-4">
               <currentSection.icon className="text-indigo-400" size={32} />
               <div>
-                <h1 className="text-3xl font-bold text-white">{currentSection.title}</h1>
-                {currentSubtopic && (
-                  <h2 className="text-xl font-semibold text-indigo-300 mt-1">
-                    {currentSection.subtopics.find(s => s.id === currentSubtopic)?.title}
-                  </h2>
-                )}
+                <h1 className="text-3xl font-bold text-white">
+                  {currentSubtopic 
+                    ? currentSection.subtopics.find(s => s.id === currentSubtopic)?.title
+                    : currentSection.title
+                  }
+                </h1>
               </div>
             </div>
             <div className="text-sm text-gray-400">
