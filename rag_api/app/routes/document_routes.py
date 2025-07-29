@@ -373,9 +373,20 @@ async def embed_file(
         )
 
     try:
-        # Preprocess file if it is a PDF
+        # Preprocess file if it is a PDF and has more than 50 pages
         if file.filename.endswith(".pdf"):
-            new_file_name, new_content_type, temp_file_path = preprocess_pdf(temp_file_path)
+            import fitz  # PyMuPDF for PDF processing
+
+            # Open the PDF to get page count
+            with fitz.open(temp_file_path) as doc:
+                num_pages = doc.page_count
+
+            if num_pages < 50:
+                new_file_name, new_content_type, temp_file_path = preprocess_pdf(temp_file_path)
+            else:
+                new_file_name = file.filename
+                new_content_type = file.content_type
+                # Skip preprocessing for PDFs with ≤50 pages
         else:
             new_file_name = file.filename
             new_content_type = file.content_type
