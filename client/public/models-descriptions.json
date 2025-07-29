@@ -1,15 +1,15 @@
 {
-  "o3-2025-04-16": {
-    "name": "o3",
-    "title": "OpenAI o3",
-    "shortUseCase": "Usa raciocínio avançado",
-    "description": "O modelo mais inteligente para resolver problemas difíceis. Pensa passo a passo como um especialista, analisa gráficos e dados visuais, e resolve questões de ciência e matemática avançada.",
+  "gpt-4.1": {
+    "name": "GPT-4.1",
+    "title": "GPT-4.1",
+    "shortUseCase": "Ótimo para análise e programação",
+    "description": "Especialista em ler e analisar documentos enormes (até 1 milhão de palavras). Perfeito para empresas que precisam processar contratos, relatórios e bases de conhecimento extensas.",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Resolver problemas de matemática e física complexos",
-      "Analisar gráficos e dados científicos",
-      "Revisar e melhorar código complicado",
-      "Tomar decisões empresariais baseadas em dados"
+      "Analisar contratos e documentos legais extensos",
+      "Criar e revisar código de projetos grandes",
+      "Assistente empresarial com acesso a toda documentação",
+      "Sistemas de busca inteligente em bases de dados"
     ],
     "prompt": 2,
     "completion": 8,
@@ -19,7 +19,7 @@
       "intelligence": "very-high",
       "coding": true,
       "math": true,
-      "multimodal": true
+      "multimodal": false
     },
     "supportsWebSearch": true,
     "supportsCodeExecution": false,
@@ -48,61 +48,6 @@
     "supportsImageAttachment": true
   },
 
-  "o3-deep-research": {
-    "name": "o3-deep-research",
-    "title": "OpenAI o3-deep-research",
-    "shortUseCase": "Usa raciocínio avançado",
-    "description": "o3 com Deep Research ativado. Faz busca profunda no web para resolver problemas. É mais lento e mais caro, porém traz informações completas para resolver problemas complexos.",
-    "image": "/assets/openai-logo.jpg",
-    "useCases": [
-      "Pesquisa de mercado para comparação de preços e produtos",
-      "Orçamentos, BIDs, Projetos, etc",
-      "Análise de dados complexos",
-      "Resolução de problemas complexos",
-      "Pesquisa científica avançada"
-    ],
-    "prompt": 10,
-    "completion": 40,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
-  "o4-mini-2025-04-16": {
-    "name": "o4-mini",
-    "title": "OpenAI o4-mini",
-    "shortUseCase": "Mais rápido em raciocínio avançado",
-    "description": "Versão mais rápida e barata do o4, ideal para conversas inteligentes e resumos. Mantém a capacidade de raciocínio mas com respostas mais ágeis e custo reduzido.",
-    "image": "/assets/openai-logo.jpg",
-    "useCases": [
-      "Chatbots inteligentes para sites e apps",
-      "Resumir documentos longos rapidamente",
-      "Assistente móvel com raciocínio avançado",
-      "Protótipos de IA com orçamento limitado"
-    ],
-    "prompt": 1.1,
-    "completion": 4.4,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
   "o4-mini": {
     "name": "o4-mini",
     "title": "OpenAI o4-mini",
@@ -117,87 +62,6 @@
     ],
     "prompt": 1.1,
     "completion": 4.4,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
-  "gpt-4.1-2025-04-14": {
-    "name": "GPT-4.1",
-    "title": "GPT-4.1",
-    "shortUseCase": "Ótimo para análise e programação",
-    "description": "Especialista em ler e analisar documentos enormes (até 1 milhão de palavras). Perfeito para empresas que precisam processar contratos, relatórios e bases de conhecimento extensas.",
-    "image": "/assets/openai-logo.jpg",
-    "useCases": [
-      "Analisar contratos e documentos legais extensos",
-      "Criar e revisar código de projetos grandes",
-      "Assistente empresarial com acesso a toda documentação",
-      "Sistemas de busca inteligente em bases de dados"
-    ],
-    "prompt": 2,
-    "completion": 8,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
-  "gpt-4.1": {
-    "name": "GPT-4.1",
-    "title": "GPT-4.1",
-    "shortUseCase": "Ótimo para análise e programação",
-    "description": "Especialista em ler e analisar documentos enormes (até 1 milhão de palavras). Perfeito para empresas que precisam processar contratos, relatórios e bases de conhecimento extensas.",
-    "image": "/assets/openai-logo.jpg",
-    "useCases": [
-      "Analisar contratos e documentos legais extensos",
-      "Criar e revisar código de projetos grandes",
-      "Assistente empresarial com acesso a toda documentação",
-      "Sistemas de busca inteligente em bases de dados"
-    ],
-    "prompt": 2,
-    "completion": 8,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
-  "gpt-4.1-mini-2025-04-14": {
-    "name": "GPT-4.1 mini",
-    "title": "GPT-4.1 mini",
-    "shortUseCase": "Mais rápido para tarefas do dia a dia",
-    "description": "Versão mais rápida e barata do GPT-4.1, ainda consegue ler documentos grandes mas com respostas mais ágeis. Ideal para aplicações que precisam de contexto extenso sem demora.",
-    "image": "/assets/openai-logo.jpg",
-    "useCases": [
-      "Assistente de programação com projetos grandes",
-      "Geração de relatórios executivos automáticos",
-      "Chat empresarial com histórico longo",
-      "Integração em sistemas web e mobile"
-    ],
-    "prompt": 0.4,
-    "completion": 1.6,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -238,32 +102,6 @@
     "supportsImageAttachment": true
   },
 
-  "gpt-4.1-nano-2025-04-14": {
-    "name": "GPT-4.1 nano",
-    "title": "GPT-4.1 nano",
-    "shortUseCase": "Muito barato e rápido para tarefas simples",
-    "description": "Modelo barato e rápido para tarefas simples",
-    "image": "/assets/openai-logo.jpg",
-    "useCases": [
-      "Tradução local e privada",
-      "Dispositivos IoT com IA embarcada",
-      "Tarefas simples e rápidas"
-    ],
-    "prompt": 0.1,
-    "completion": 0.4,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "medium",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
   "gpt-4.1-nano": {
     "name": "GPT-4.1 nano",
     "title": "GPT-4.1 nano",
@@ -290,18 +128,49 @@
     "supportsImageAttachment": true
   },
 
-  "deepseek-chat": {
-    "name": "DeepSeek V3",
-    "title": "DeepSeek V3",
-    "shortUseCase": "Excelente para programação e conversas",
-    "description": "Modelo conversacional da DeepSeek otimizado para diálogo natural e programação. Oferece respostas rápidas e precisas, especialmente forte em código e matemática, com custo muito baixo.",
-    "image": "/assets/deepseek-logo.jpg",
+  "grok-4": {
+    "name": "Grok 4",
+    "title": "xAI Grok 4",
+    "shortUseCase": "Modelo de IA mais inteligente do mundo",
+    "description": "O modelo mais recente e avançado da xAI, oferecendo desempenho incomparável em linguagem natural, matemática e raciocínio. Inclui uso nativo de ferramentas e integração de busca em tempo real, capaz de criar documentos ricos e escrever código. Projetado para funcionar como um 'coringa' em diversas aplicações, com capacidade de colaboração entre múltiplos agentes de IA.",
+    "image": "/assets/xai-grok-logo.png",
+    "prompt": 3,
+    "completion": 15,
     "useCases": [
-      "Assistente de programação para desenvolvimento",
-      "Chatbot inteligente para sites e aplicações",
-      "Suporte técnico automatizado",
-      "Tutoria em matemática e ciências"
+      "Resolver problemas complexos de matemática e ciência",
+      "Análise aprofundada de dados e informações",
+      "Geração e revisão de código",
+      "Criação de documentos e conteúdo rico",
+      "Aplicações com busca e análise em tempo real"
     ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "grok-3-mini": {
+    "name": "Grok 3 Mini",
+    "title": "xAI Grok 3 Mini",
+    "shortUseCase": "Raciocínio leve e econômico",
+    "description": "Versão leve da família Grok 3, otimizada para ser rápida, inteligente e econômica. Treinado para resolver problemas de agente, codificação, matemática e ciências, pensando antes de responder. Ideal para tarefas baseadas em lógica que não exigem conhecimento de domínio muito profundo, com desempenho de raciocínio que supera outros modelos a um custo significativamente menor.",
+    "image": "/assets/xai-grok-logo.png",
+    "useCases": [
+      "Chatbots inteligentes e eficientes",
+      "Resolução de problemas de codificação e matemática",
+      "Tarefas lógicas e de raciocínio com custo otimizado",
+      "Aplicações móveis com resposta rápida",
+      "Assistentes para tarefas diárias"
+    ],
+    "prompt": 0.3,
+    "completion": 0.5,
     "characteristics": {
       "reasoning": true,
       "speed": "fast",
@@ -310,32 +179,7 @@
       "math": true,
       "multimodal": false
     },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
-  "deepseek-reasoner": {
-    "name": "DeepSeek R1",
-    "title": "DeepSeek R1",
-    "shortUseCase": "Raciocínio profundo com custo baixo",
-    "description": "Modelo revolucionário que pensa como um especialista, mostrando todo seu raciocínio passo a passo. Excelente em matemática e programação, com licença livre e custo 95% menor que concorrentes.",
-    "image": "/assets/deepseek-logo.jpg",
-    "useCases": [
-      "Resolver problemas de matemática de olimpíada",
-      "Programação competitiva e debugging complexo",
-      "Pesquisa científica com raciocínio detalhado",
-      "Ensinar outros modelos a pensar melhor"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": false
   },
@@ -367,20 +211,74 @@
     "supportsImageAttachment": true
   },
 
-  "claude-opus-4-20250514": {
-    "name": "Claude Opus 4",
-    "title": "Anthropic Claude Opus 4",
-    "shortUseCase": "Arquiteto de software e programação avançada",
-    "description": "O modelo mais avançado para engenharia de software complexa. Líder mundial em programação, capaz de trabalhar autonomamente em projetos extensos, refatoração de código e arquitetura de sistemas de grande escala.",
-    "image": "/assets/anthropic-logo.png",
+  "accounts/fireworks/models/deepseek-v3-0324": {
+    "name": "DeepSeek V3.1 (Versão 24/03/2025)",
+    "title": "DeepSeek V3.1 (Versão 24/03/2025)",
+    "shortUseCase": "LLM rápido para código e chat",
+    "description": "Modelo MoE de 671 → 37 B com 160 K de contexto, focado em programação, diálogo natural e custo ultrabaixo.",
+    "image": "/assets/deepseek-logo.jpg",
     "useCases": [
-      "Arquitetura e desenvolvimento de sistemas complexos",
-      "Refatoração autônoma de codebases grandes",
-      "Migração de tecnologias e modernização de código",
-      "Desenvolvimento de frameworks e bibliotecas"
+      "Assistente de programação em IDEs",
+      "Chatbot para sites com latência baixa",
+      "FAQs técnicas automatizadas",
+      "Tutoria em matemática e ciências"
     ],
-    "prompt": 15,
-    "completion": 75,
+    "prompt": 0.9,
+    "completion": 0.9,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/deepseek-r1-0528": {
+    "name": "DeepSeek R1 (Versão 28/05/2025)",
+    "title": "DeepSeek R1 (Versão 28/05/2025)",
+    "shortUseCase": "Raciocínio passo a passo de alto nível",
+    "description": "Versão mais recente do DeepSeek R1 com 160 K de contexto e desempenho de ponta em matemática, oferecendo logs de raciocínio detalhados para explicabilidade.",
+    "image": "/assets/deepseek-logo.jpg",
+    "useCases": [
+      "Resolução de problemas olímpicos de matemática",
+      "Programação competitiva e debugging complexo",
+      "Pesquisa científica com explicações detalhadas",
+      "Treinar outros modelos via distil‑of‑thought"
+    ],
+    "prompt": 3.0,
+    "completion": 8.0,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/qwen3-235b-a22b-thinking-2507": {
+    "name": "Qwen3 235B Thinking",
+    "title": "Alibaba Qwen3‑235B‑A22B Thinking (Versão 25/07/2025)",
+    "shortUseCase": "Raciocínio profundo multilíngue",
+    "description": "Flagship da série Qwen 3 com modo ‘thinking’ para lógica, matemática e planejamento, alternando para respostas rápidas em diálogos gerais.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Soluções passo a passo em STEM",
+      "Planejamento de projetos complexos",
+      "Atendimento multilíngue avançado",
+      "Integração com agentes de ferramenta"
+    ],
+    "prompt": 0.1,
+    "completion": 0.1,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
@@ -389,7 +287,89 @@
       "math": true,
       "multimodal": true
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/qwen3-coder-480b-a35b-instruct": {
+    "name": "Qwen3 Coder 480B",
+    "title": "Alibaba Qwen3 Coder 480B‑A35B Instruct (Versão 25/07/2025)",
+    "shortUseCase": "Geração e orquestração de código",
+    "description": "Modelo MoE gigante para programação, tool‑use e tarefas de navegador, com desempenho próximo a modelos proprietários de elite.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Gerar e depurar código em múltiplas linguagens",
+      "Automação de testes e CI/CD",
+      "Agentes que navegam na web e chamam APIs",
+      "Tutoria avançada em programação competitiva"
+    ],
+    "prompt": 0.45,
+    "completion": 1.8,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/qwen3-235b-a22b-instruct-2507": {
+    "name": "Qwen3 235B Instruct",
+    "title": "Alibaba Qwen3‑235B‑A22B Instruct (Versão 25/07/2025)",
+    "shortUseCase": "Instruções, tool‑use e análise",
+    "description": "Versão FP8 afinada para seguir instruções rigorosas, com melhorias em uso de funções, escrita de código e compreensão textual.",
+    "image": "/assets/alibaba-qwen-logo.jpg",
+    "useCases": [
+      "Assistentes corporativos com chain‑of‑thought oculto",
+      "Geração de documentação técnica",
+      "Automação de workflows com function calling",
+      "Análise de grandes bases de conhecimento"
+    ],
+    "prompt": 0.22,
+    "completion": 0.88,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": false,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
+  },
+
+  "accounts/fireworks/models/kimi-k2-instruct": {
+    "name": "MoonshotAI Kimi K2",
+    "title": "MoonshotAI Kimi K2",
+    "shortUseCase": "IA multimodal de próxima geração especializada em software",
+    "description": "K2 é um modelo Mixture-of-Experts de 1 trilhão de parâmetros projetado para competir diretamente com o Anthropic Claude em desenvolvimento de software e agentic code. Com raciocínio avançado, processamento multimodal e execução autônoma de scripts, K2 gera, depura, orquestra e escala agentes de software em tempo real, sendo ideal para pipelines de DevOps, automação de tarefas complexas e consultoria técnica orientada por IA.",
+    "image": "/assets/moonshotai-logo.jpg",
+    "useCases": [
+      "Criação e revisão de **código** com execução integrada",
+      "Orquestração de **agentic code** para automação de DevOps",
+      "Análise de **logs** e debugging inteligente",
+      "Consultoria técnica automatizada em tempo real",
+      "Pesquisa e prototipagem em ambientes STEM"
+    ],
+    "prompt": 1,
+    "completion": 3,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": true
   },
@@ -475,56 +455,6 @@
     "supportsImageAttachment": true
   },
 
-  "qwen/qwen3-235b-a22b": {
-    "name": "Qwen 3 Ultra",
-    "title": "Alibaba Qwen 3-235B-A22B",
-    "shortUseCase": "Multilíngue inteligente com raciocínio adaptativo",
-    "description": "Modelo da Alibaba que fala 119 idiomas e adapta seu modo de pensar: rápido para conversas simples, profundo para problemas complexos. Perfeito para aplicações globais.",
-    "image": "/assets/alibaba-qwen-logo.jpg",
-    "useCases": [
-      "Atendimento ao cliente global multiidioma",
-      "Tradução e localização em massa",
-      "Criação de conteúdo para diferentes culturas",
-      "Assistentes que pensam quando necessário"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
-  "nvidia/llama-3.1-nemotron-ultra-253b-v1": {
-    "name": "Nemotron Ultra",
-    "title": "NVIDIA Llama 3.1 Nemotron Ultra 253B-v1",
-    "shortUseCase": "Modelo gigante para empresas",
-    "description": "Modelo gigante da NVIDIA com 253 bilhões de parâmetros, especializado em integrar APIs e ferramentas empresariais. Ideal para grandes corporações que precisam de IA super inteligente.",
-    "image": "/assets/nvidia-nemotron-logo.webp",
-    "useCases": [
-      "Assistentes corporativos que integram sistemas",
-      "Chatbots multilíngues para grandes empresas",
-      "Análise de documentos e relatórios complexos",
-      "Pesquisa científica computacional pesada"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "slow",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
   "meta-llama/llama-4-maverick-17b-128e-instruct": {
     "name": "Llama 4 Maverick",
     "title": "♾️Meta Llama 4 Maverick 17B-128E",
@@ -577,218 +507,5 @@
     "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": true
-  },
-
-  "accounts/fireworks/models/deepseek-v3-0324": {
-    "name": "DeepSeek V3.1 (Versão 24/03/2025)",
-    "title": "DeepSeek V3.1 (Versão 24/03/2025)",
-    "shortUseCase": "LLM rápido para código e chat",
-    "description": "Modelo MoE de 671 → 37 B com 160 K de contexto, focado em programação, diálogo natural e custo ultrabaixo.",
-    "image": "/assets/deepseek-logo.jpg",
-    "useCases": [
-      "Assistente de programação em IDEs",
-      "Chatbot para sites com latência baixa",
-      "FAQs técnicas automatizadas",
-      "Tutoria em matemática e ciências"
-    ],
-    "prompt": 0.9,
-    "completion": 0.9,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
-  "accounts/fireworks/models/deepseek-r1-0528": {
-    "name": "DeepSeek R1 (Versão 28/05/2025)",
-    "title": "DeepSeek R1 (Versão 28/05/2025)",
-    "shortUseCase": "Raciocínio passo a passo de alto nível",
-    "description": "Versão mais recente do DeepSeek R1 com 160 K de contexto e desempenho de ponta em matemática, oferecendo logs de raciocínio detalhados para explicabilidade.",
-    "image": "/assets/deepseek-logo.jpg",
-    "useCases": [
-      "Resolução de problemas olímpicos de matemática",
-      "Programação competitiva e debugging complexo",
-      "Pesquisa científica com explicações detalhadas",
-      "Treinar outros modelos via distil‑of‑thought"
-    ],
-    "prompt": 3.0,
-    "completion": 8.0,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
-  "accounts/fireworks/models/qwen3-235b-a22b-thinking-2507": {
-    "name": "Qwen3 235B Thinking",
-    "title": "Alibaba Qwen3‑235B‑A22B Thinking (Versão 25/07/2025)",
-    "shortUseCase": "Raciocínio profundo multilíngue",
-    "description": "Flagship da série Qwen 3 com modo ‘thinking’ para lógica, matemática e planejamento, alternando para respostas rápidas em diálogos gerais.",
-    "image": "/assets/alibaba-qwen-logo.jpg",
-    "useCases": [
-      "Soluções passo a passo em STEM",
-      "Planejamento de projetos complexos",
-      "Atendimento multilíngue avançado",
-      "Integração com agentes de ferramenta"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
-  "accounts/fireworks/models/qwen3-coder-480b-a35b-instruct": {
-    "name": "Qwen3 Coder 480B",
-    "title": "Alibaba Qwen3 Coder 480B‑A35B Instruct (Versão 25/07/2025)",
-    "shortUseCase": "Geração e orquestração de código",
-    "description": "Modelo MoE gigante para programação, tool‑use e tarefas de navegador, com desempenho próximo a modelos proprietários de elite.",
-    "image": "/assets/alibaba-qwen-logo.jpg",
-    "useCases": [
-      "Gerar e depurar código em múltiplas linguagens",
-      "Automação de testes e CI/CD",
-      "Agentes que navegam na web e chamam APIs",
-      "Tutoria avançada em programação competitiva"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
-  "accounts/fireworks/models/qwen3-235b-a22b-instruct-2507": {
-    "name": "Qwen3 235B Instruct",
-    "title": "Alibaba Qwen3‑235B‑A22B Instruct (Versão 25/07/2025)",
-    "shortUseCase": "Instruções, tool‑use e análise",
-    "description": "Versão FP8 afinada para seguir instruções rigorosas, com melhorias em uso de funções, escrita de código e compreensão textual.",
-    "image": "/assets/alibaba-qwen-logo.jpg",
-    "useCases": [
-      "Assistentes corporativos com chain‑of‑thought oculto",
-      "Geração de documentação técnica",
-      "Automação de workflows com function calling",
-      "Análise de grandes bases de conhecimento"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
-  },
-
-  "accounts/fireworks/models/kimi-k2-instruct": {
-    "name": "MoonshotAI Kimi K2",
-    "title": "MoonshotAI Kimi K2",
-    "shortUseCase": "IA multimodal de próxima geração especializada em software",
-    "description": "K2 é um modelo Mixture-of-Experts de 1 trilhão de parâmetros projetado para competir diretamente com o Anthropic Claude em desenvolvimento de software e agentic code. Com raciocínio avançado, processamento multimodal e execução autônoma de scripts, K2 gera, depura, orquestra e escala agentes de software em tempo real, sendo ideal para pipelines de DevOps, automação de tarefas complexas e consultoria técnica orientada por IA.",
-    "image": "/assets/moonshotai-logo.jpg",
-    "useCases": [
-      "Criação e revisão de **código** com execução integrada",
-      "Orquestração de **agentic code** para automação de DevOps",
-      "Análise de **logs** e debugging inteligente",
-      "Consultoria técnica automatizada em tempo real",
-      "Pesquisa e prototipagem em ambientes STEM"
-    ],
-    "prompt": 1,
-    "completion": 3,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
-  "grok-4": {
-    "name": "Grok 4",
-    "title": "xAI Grok 4",
-    "shortUseCase": "Modelo de IA mais inteligente do mundo",
-    "description": "O modelo mais recente e avançado da xAI, oferecendo desempenho incomparável em linguagem natural, matemática e raciocínio. Inclui uso nativo de ferramentas e integração de busca em tempo real, capaz de criar documentos ricos e escrever código. Projetado para funcionar como um 'coringa' em diversas aplicações, com capacidade de colaboração entre múltiplos agentes de IA.",
-    "image": "/assets/xai-grok-logo.png",
-    "prompt": 3,
-    "completion": 15,
-    "useCases": [
-      "Resolver problemas complexos de matemática e ciência",
-      "Análise aprofundada de dados e informações",
-      "Geração e revisão de código",
-      "Criação de documentos e conteúdo rico",
-      "Aplicações com busca e análise em tempo real"
-    ],
-    "characteristics": {
-      "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
-      "coding": true,
-      "math": true,
-      "multimodal": true
-    },
-    "supportsWebSearch": true,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": true
-  },
-
-  "grok-3-mini": {
-    "name": "Grok 3 Mini",
-    "title": "xAI Grok 3 Mini",
-    "shortUseCase": "Raciocínio leve e econômico",
-    "description": "Versão leve da família Grok 3, otimizada para ser rápida, inteligente e econômica. Treinado para resolver problemas de agente, codificação, matemática e ciências, pensando antes de responder. Ideal para tarefas baseadas em lógica que não exigem conhecimento de domínio muito profundo, com desempenho de raciocínio que supera outros modelos a um custo significativamente menor.",
-    "image": "/assets/xai-grok-logo.png",
-    "useCases": [
-      "Chatbots inteligentes e eficientes",
-      "Resolução de problemas de codificação e matemática",
-      "Tarefas lógicas e de raciocínio com custo otimizado",
-      "Aplicações móveis com resposta rápida",
-      "Assistentes para tarefas diárias"
-    ],
-    "prompt": 0.3,
-    "completion": 0.5,
-    "characteristics": {
-      "reasoning": true,
-      "speed": "fast",
-      "intelligence": "high",
-      "coding": true,
-      "math": true,
-      "multimodal": false
-    },
-    "supportsWebSearch": false,
-    "supportsCodeExecution": false,
-    "supportsImageAttachment": false
   }
 }
