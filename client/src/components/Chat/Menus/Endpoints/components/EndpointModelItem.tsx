@@ -84,7 +84,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
     <MenuItem
       key={modelId}
       onClick={() => handleSelectModel(endpoint, modelId ?? '')}
-      className="flex h-[40px] w-full cursor-pointer items-center justify-start rounded-lg px-3 py-2 text-sm"
+      className="mb-1 flex h-[45px] w-full cursor-pointer items-center justify-start rounded-lg px-3 py-2 text-sm"
     >
       {modelDescription ? (
         <HoverCard openDelay={100}>
