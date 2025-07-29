@@ -734,5 +734,57 @@
     "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": true
+  },
+
+  "grok-4": {
+    "name": "Grok 4",
+    "title": "xAI Grok 4",
+    "shortUseCase": "Modelo de IA mais inteligente do mundo",
+    "description": "O modelo mais recente e avançado da xAI, oferecendo desempenho incomparável em linguagem natural, matemática e raciocínio. Inclui uso nativo de ferramentas e integração de busca em tempo real, capaz de criar documentos ricos e escrever código. Projetado para funcionar como um 'coringa' em diversas aplicações, com capacidade de colaboração entre múltiplos agentes de IA.",
+    "image": "/assets/xai-grok-logo.png",
+    "useCases": [
+      "Resolver problemas complexos de matemática e ciência",
+      "Análise aprofundada de dados e informações",
+      "Geração e revisão de código",
+      "Criação de documentos e conteúdo rico",
+      "Aplicações com busca e análise em tempo real"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "medium",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": true
+  },
+
+  "grok-3-mini": {
+    "name": "Grok 3 Mini",
+    "title": "xAI Grok 3 Mini",
+    "shortUseCase": "Raciocínio leve e econômico",
+    "description": "Versão leve da família Grok 3, otimizada para ser rápida, inteligente e econômica. Treinado para resolver problemas de agente, codificação, matemática e ciências, pensando antes de responder. Ideal para tarefas baseadas em lógica que não exigem conhecimento de domínio muito profundo, com desempenho de raciocínio que supera outros modelos a um custo significativamente menor.",
+    "image": "/assets/xai-grok-logo.png",
+    "useCases": [
+      "Chatbots inteligentes e eficientes",
+      "Resolução de problemas de codificação e matemática",
+      "Tarefas lógicas e de raciocínio com custo otimizado",
+      "Aplicações móveis com resposta rápida",
+      "Assistentes para tarefas diárias"
+    ],
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": false,
+    "supportsImageAttachment": false
   }
 }
