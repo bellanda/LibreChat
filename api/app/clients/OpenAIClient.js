@@ -794,6 +794,17 @@ class OpenAIClient extends BaseClient {
           this.azureEndpoint = genAzureChatCompletion(this.azure, modelOptions.model, this);
         }
 
+        // Apply dropParams to remove unsupported parameters
+        if (this.options.dropParams && Array.isArray(this.options.dropParams)) {
+          this.options.dropParams.forEach((param) => {
+            delete modelOptions[param];
+          });
+          logger.debug('[OpenAIClient] titleConvo: dropped params', {
+            dropParams: this.options.dropParams,
+            modelOptions,
+          });
+        }
+
         const instructionsPayload = [
           {
             role: this.options.titleMessageRole ?? (this.isOllama ? 'user' : 'system'),
