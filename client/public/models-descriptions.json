@@ -212,7 +212,7 @@
   },
 
   "accounts/fireworks/models/deepseek-v3-0324": {
-    "name": "DeepSeek V3.1 (Versão 24/03/2025)",
+    "name": "DeepSeek V3.1",
     "title": "DeepSeek V3.1 (Versão 24/03/2025)",
     "shortUseCase": "LLM rápido para código e chat",
     "description": "Modelo MoE de 671 → 37 B com 160 K de contexto, focado em programação, diálogo natural e custo ultrabaixo.",
@@ -239,7 +239,7 @@
   },
 
   "accounts/fireworks/models/deepseek-r1-0528": {
-    "name": "DeepSeek R1 (Versão 28/05/2025)",
+    "name": "DeepSeek R1",
     "title": "DeepSeek R1 (Versão 28/05/2025)",
     "shortUseCase": "Raciocínio passo a passo de alto nível",
     "description": "Versão mais recente do DeepSeek R1 com 160 K de contexto e desempenho de ponta em matemática, oferecendo logs de raciocínio detalhados para explicabilidade.",
@@ -277,8 +277,8 @@
       "Atendimento multilíngue avançado",
       "Integração com agentes de ferramenta"
     ],
-    "prompt": 0.1,
-    "completion": 0.1,
+    "prompt": 0.22,
+    "completion": 0.88,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
@@ -413,8 +413,8 @@
       "Pesquisa científica com análise de dados visuais",
       "Consultoria técnica especializada"
     ],
-    "prompt": 1.25,
-    "completion": 10,
+    "prompt": 2,
+    "completion": 12.5,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
