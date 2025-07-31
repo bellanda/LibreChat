@@ -32,18 +32,19 @@ RUN rpm2cpio oracle-basic.rpm | cpio -idmv && \
     rpm2cpio oracle-sqlplus.rpm | cpio -idmv
 
 # Create Oracle client directory structure
-RUN mkdir -p ${CLIENT_PATH}/network/admin
+RUN mkdir -p /usr/lib/oracle/23/client64
+RUN mkdir -p /usr/lib/oracle/23/client64/network/admin
 
 # Move extracted files to final location
-RUN cp -r usr/lib/oracle/23/client64/* ${CLIENT_PATH}/
+RUN cp -r usr/lib/oracle/23/client64/. /usr/lib/oracle/23/client64/
 
 # Set environment variables for Oracle
-ENV LD_LIBRARY_PATH=${CLIENT_PATH}/lib:$LD_LIBRARY_PATH
-ENV ORACLE_HOME=${CLIENT_PATH}
+ENV LD_LIBRARY_PATH=/usr/lib/oracle/23/client64/lib:$LD_LIBRARY_PATH
+ENV ORACLE_HOME=/usr/lib/oracle/23/client64
 ENV PATH=${ORACLE_HOME}/bin:$PATH
 
 # Copy tnsnames.ora file
-COPY tnsnames.ora ${CLIENT_PATH}/network/admin/tnsnames.ora
+COPY tnsnames.ora /usr/lib/oracle/23/client64/network/admin/tnsnames.ora
 
 ###########################
 
