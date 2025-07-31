@@ -1,14 +1,14 @@
 import { memo } from 'react';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import supersub from 'remark-supersub';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import supersub from 'remark-supersub';
 import type { PluggableList } from 'unified';
-import { code, codeNoExecution, a, p } from './Markdown';
-import { CodeBlockProvider, ArtifactProvider } from '~/Providers';
-import { langSubset } from '~/utils';
+import { ArtifactProvider, CodeBlockProvider } from '~/Providers';
+import { hasBrazilianCurrency, langSubset } from '~/utils';
+import { a, code, codeNoExecution, p } from './Markdown';
 
 const MarkdownLite = memo(
   ({ content = '', codeExecution = true }: { content?: string; codeExecution?: boolean }) => {
@@ -24,6 +24,9 @@ const MarkdownLite = memo(
       ],
     ];
 
+    // Conditionally disable singleDollarTextMath if Brazilian currency is detected
+    const shouldDisableSingleDollar = hasBrazilianCurrency(content);
+
     return (
       <ArtifactProvider>
         <CodeBlockProvider>
@@ -32,7 +35,7 @@ const MarkdownLite = memo(
               /** @ts-ignore */
               supersub,
               remarkGfm,
-              [remarkMath, { singleDollarTextMath: true }],
+              [remarkMath, { singleDollarTextMath: !shouldDisableSingleDollar }],
             ]}
             /** @ts-ignore */
             rehypePlugins={rehypePlugins}

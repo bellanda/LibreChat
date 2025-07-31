@@ -6,6 +6,14 @@ const containsLatexRegex =
 const inlineLatex = new RegExp(/\\\((.+?)\\\)/, 'g');
 const blockLatex = new RegExp(/\\\[(.*?[^\\])\\\]/, 'gs');
 
+/**
+ * Detects Brazilian currency patterns in content
+ * Used to prevent LaTeX processing when currency symbols are present
+ */
+export const hasBrazilianCurrency = (content: string): boolean => {
+  return /R\$\s*[\d.,]+/gi.test(content);
+};
+
 // Function to restore code blocks
 const restoreCodeBlocks = (content: string, codeBlocks: string[]) => {
   return content.replace(/<<CODE_BLOCK_(\d+)>>/g, (match, index) => codeBlocks[index]);
@@ -16,6 +24,13 @@ const codeBlockRegex = /(```[\s\S]*?```|`.*?`)/g;
 
 export const processLaTeX = (_content: string) => {
   let content = _content;
+
+  // Enhanced Brazilian currency detection
+  // Check for R$ patterns including price ranges and multiple occurrences
+  const hasBrazilianCurrency = /R\$\s*[\d.,]+/gi.test(content);
+  if (hasBrazilianCurrency) {
+    return content;
+  }
 
   // Temporarily replace code blocks and inline code with placeholders
   const codeBlocks: string[] = [];
@@ -54,6 +69,13 @@ export const processLaTeX = (_content: string) => {
  * @returns The processed string with replaced delimiters and escaped characters.
  */
 export function preprocessLaTeX(content: string): string {
+  // Enhanced Brazilian currency detection
+  // Check for R$ patterns including price ranges and multiple occurrences
+  const hasBrazilianCurrency = /R\$\s*[\d.,]+/gi.test(content);
+  if (hasBrazilianCurrency) {
+    return content;
+  }
+
   // Step 1: Protect code blocks
   const codeBlocks: string[] = [];
   content = content.replace(/(```[\s\S]*?```|`[^`\n]+`)/g, (match, code) => {

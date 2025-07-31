@@ -1,29 +1,29 @@
-import React, { memo, useMemo, useRef, useEffect } from 'react';
+import { PermissionTypes, Permissions } from 'librechat-data-provider';
+import React, { memo, useEffect, useMemo, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { useRecoilValue } from 'recoil';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
+import remarkDirective from 'remark-directive';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
-import rehypeKatex from 'rehype-katex';
-import { useRecoilValue } from 'recoil';
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import remarkDirective from 'remark-directive';
-import { PermissionTypes, Permissions } from 'librechat-data-provider';
 import type { Pluggable } from 'unified';
 import {
-  useToastContext,
   ArtifactProvider,
   CodeBlockProvider,
   useCodeBlockContext,
+  useToastContext,
 } from '~/Providers';
-import { Citation, CompositeCitation, HighlightedText } from '~/components/Web/Citation';
 import { Artifact, artifactPlugin } from '~/components/Artifacts/Artifact';
-import { langSubset, preprocessLaTeX, handleDoubleClick } from '~/utils';
 import CodeBlock from '~/components/Messages/Content/CodeBlock';
-import useHasAccess from '~/hooks/Roles/useHasAccess';
 import { unicodeCitation } from '~/components/Web';
+import { Citation, CompositeCitation, HighlightedText } from '~/components/Web/Citation';
 import { useFileDownload } from '~/data-provider';
+import useHasAccess from '~/hooks/Roles/useHasAccess';
 import useLocalize from '~/hooks/useLocalize';
 import store from '~/store';
+import { handleDoubleClick, hasBrazilianCurrency, langSubset, preprocessLaTeX } from '~/utils';
 
 type TCodeProps = {
   inline?: boolean;
@@ -199,12 +199,15 @@ const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
     [],
   );
 
+  // Conditionally disable singleDollarTextMath if Brazilian currency is detected
+  const shouldDisableSingleDollar = hasBrazilianCurrency(content);
+
   const remarkPlugins: Pluggable[] = [
     supersub,
     remarkGfm,
     remarkDirective,
     artifactPlugin,
-    [remarkMath, { singleDollarTextMath: true }],
+    [remarkMath, { singleDollarTextMath: !shouldDisableSingleDollar }],
     unicodeCitation,
   ];
 
