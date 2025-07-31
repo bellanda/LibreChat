@@ -24,7 +24,7 @@ COPY pyproject.toml uv.lock .python-version ruff.toml ./
 RUN uv sync --frozen
 
 # Copy scripts and crontab
-COPY scripts/ ./scripts/
+COPY . .
 COPY crontab /etc/cron.d/librechat-cron
 
 # Set proper permissions for crontab
