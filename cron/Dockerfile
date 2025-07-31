@@ -10,6 +10,44 @@ RUN apt-get update && apt-get install -y \
 ENV TZ=America/Sao_Paulo
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+
+###########################
+# Install Oracle Instant Client
+ENV ORACLE_VERSION=23.8.0.25.04-1
+RUN apt-get update && apt-get install -y \
+    wget \
+    rpm2cpio \
+    cpio \
+    alien \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp
+
+# Download Oracle Instant Client RPMs
+RUN wget https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_VERSION}/oracle-instantclient-basic-${ORACLE_VERSION}.el9.x86_64.rpm -O oracle-basic.rpm && \
+    wget https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_VERSION}/oracle-instantclient-sqlplus-${ORACLE_VERSION}.el9.x86_64.rpm -O oracle-sqlplus.rpm
+
+# Extract RPM files
+RUN rpm2cpio oracle-basic.rpm | cpio -idmv && \
+    rpm2cpio oracle-sqlplus.rpm | cpio -idmv
+
+# Create Oracle client directory structure
+RUN mkdir -p ${CLIENT_PATH}/network/admin
+
+# Move extracted files to final location
+RUN cp -r usr/lib/oracle/23/client64/* ${CLIENT_PATH}/
+
+# Set environment variables for Oracle
+ENV LD_LIBRARY_PATH=${CLIENT_PATH}/lib:$LD_LIBRARY_PATH
+ENV ORACLE_HOME=${CLIENT_PATH}
+ENV PATH=${ORACLE_HOME}/bin:$PATH
+
+# Copy tnsnames.ora file
+COPY tnsnames.ora ${CLIENT_PATH}/network/admin/tnsnames.ora
+
+###########################
+
+
 # Add `uv` for package management
 COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
 RUN uv --version

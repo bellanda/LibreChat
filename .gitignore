@@ -2,6 +2,7 @@
 groups-config.json
 *.local*
 create-admin-on-mongo.sh
+tnsnames.ora
 
 # Logs
 data-node
