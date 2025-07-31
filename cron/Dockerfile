@@ -24,8 +24,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /tmp
 
 # Download Oracle Instant Client RPMs
-RUN wget https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_VERSION}/oracle-instantclient-basic-${ORACLE_VERSION}.el9.x86_64.rpm -O oracle-basic.rpm && \
-    wget https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_VERSION}/oracle-instantclient-sqlplus-${ORACLE_VERSION}.el9.x86_64.rpm -O oracle-sqlplus.rpm
+RUN wget https://download.oracle.com/otn_software/linux/instantclient/2380000/oracle-instantclient-basic-23.8.0.25.04-1.el9.x86_64.rpm -O oracle-basic.rpm && \
+    wget https://download.oracle.com/otn_software/linux/instantclient/2380000/oracle-instantclient-sqlplus-23.8.0.25.04-1.el9.x86_64.rpm -O oracle-sqlplus.rpm
 
 # Extract RPM files
 RUN rpm2cpio oracle-basic.rpm | cpio -idmv && \
