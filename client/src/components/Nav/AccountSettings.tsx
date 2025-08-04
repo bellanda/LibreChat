@@ -99,7 +99,14 @@ function AccountSettings() {
         >
           <LinkIcon aria-hidden="true" />
           Dashboard
-          {/* TODO: Add link to my files */}
+        </Select.SelectItem>
+        <Select.SelectItem
+          value=""
+          onClick={() => window.open('/documentation', '_blank')}
+          className="select-item text-sm"
+        >
+          <LinkIcon aria-hidden="true" />
+          Documentação
         </Select.SelectItem>
         <Select.SelectItem
           value=""
