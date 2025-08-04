@@ -22,7 +22,7 @@
       "multimodal": false
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": true
   },
 
@@ -44,7 +44,7 @@
       "multimodal": true
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": true
   },
 
@@ -71,7 +71,7 @@
       "multimodal": false
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": true
   },
 
@@ -98,7 +98,7 @@
       "multimodal": false
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": true
   },
 
@@ -123,7 +123,7 @@
       "math": true,
       "multimodal": false
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": true
   },
@@ -152,7 +152,7 @@
       "multimodal": true
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": true
   },
 
@@ -207,7 +207,7 @@
       "multimodal": true
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": true
   },
 
@@ -315,7 +315,7 @@
       "multimodal": true
     },
     "supportsWebSearch": false,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": false
   },
 
@@ -342,7 +342,7 @@
       "multimodal": true
     },
     "supportsWebSearch": false,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": false
   },
 
@@ -397,7 +397,7 @@
       "multimodal": true
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": true
   },
 
@@ -424,7 +424,7 @@
       "multimodal": true
     },
     "supportsWebSearch": true,
-    "supportsCodeExecution": false,
+    "supportsCodeExecution": true,
     "supportsImageAttachment": true
   },
 
@@ -450,7 +450,7 @@
       "math": true,
       "multimodal": true
     },
-    "supportsWebSearch": true,
+    "supportsWebSearch": false,
     "supportsCodeExecution": false,
     "supportsImageAttachment": true
   },
