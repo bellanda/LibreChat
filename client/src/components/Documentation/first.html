@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação da Plataforma de IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the page */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Style for the active navigation link */
+        .nav-link.active {
+            background-color: #e0e7ff;
+            /* indigo-100 */
+            color: #3730a3;
+            /* indigo-800 */
+            font-weight: 600;
+        }
+
+        /* Custom scrollbar for a better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            /* slate-100 */
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            /* slate-300 */
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+            /* slate-400 */
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Main Container -->
+    <div class="flex min-h-screen">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 fixed top-0 left-0 h-full bg-white border-r border-slate-200 p-6 hidden lg:block">
+            <div class="flex items-center gap-3 mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="text-indigo-600">
+                    <path d="m12 14 4-4" />
+                    <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+                    <path d="m12 20 4-4" />
+                </svg>
+                <h1 class="text-xl font-bold text-slate-900">Plataforma IA</h1>
+            </div>
+            <nav id="sidebar-nav">
+                <ul class="space-y-2">
+                    <!-- Navigation links will be dynamically checked by JS -->
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="lg:ml-64 flex-1 p-6 md:p-10">
+            <div class="max-w-4xl mx-auto">
+                <header class="mb-12">
+                    <h1 class="text-4xl font-bold text-slate-900 mb-2">Guia Rápido da Plataforma</h1>
+                    <p class="text-lg text-slate-500">Tudo que você precisa para começar a usar nossa IA.</p>
+                </header>
+
+                <!-- Sections Container -->
+                <div class="space-y-16">
+
+                    <!-- Section 1: Visão Geral -->
+                    <section id="visao-geral" class="content-section">
+                        <h2 class="text-2xl font-semibold text-slate-900 border-b pb-2 mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-indigo-500">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            Visão Geral
+                        </h2>
+                        <div class="space-y-4 text-slate-600">
+                            <p><strong class="font-medium text-slate-800">Objetivo da Plataforma:</strong> Facilitar a
+                                criação de conteúdo, análise de dados e automação de tarefas através de uma interface de
+                                IA poderosa e intuitiva.</p>
+                            <p><strong class="font-medium text-slate-800">Principais Benefícios:</strong> Aumento de
+                                produtividade, geração de insights a partir de textos complexos e otimização de
+                                processos repetitivos.</p>
+                            <div>
+                                <strong class="font-medium text-slate-800">Exemplos Rápidos de Uso:</strong>
+                                <ul class="list-disc list-inside mt-2 space-y-1 pl-2">
+                                    <li>Gerar um resumo de um artigo longo.</li>
+                                    <li>Criar um e-mail de marketing para um novo produto.</li>
+                                    <li>Escrever um código simples em Python.</li>
+                                </ul>
+                            </div>
+                            <p><strong class="font-medium text-slate-800">Modelo de IA:</strong> Atualmente, a
+                                plataforma utiliza o modelo <span class="font-semibold text-indigo-600">GPT-4o</span>,
+                                otimizado para velocidade e precisão.</p>
+                        </div>
+                    </section>
+
+                    <!-- Section 2: Glossário Básico -->
+                    <section id="glossario" class="content-section">
+                        <h2 class="text-2xl font-semibold text-slate-900 border-b pb-2 mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-indigo-500">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                            </svg>
+                            Glossário Básico
+                        </h2>
+                        <div class="space-y-4 text-slate-600">
+                            <p><strong class="font-medium text-slate-800">Prompt:</strong> A instrução, pergunta ou
+                                texto que você envia para a IA. A qualidade do prompt define a qualidade da resposta.
+                            </p>
+                            <p><strong class="font-medium text-slate-800">Token:</strong> A IA processa texto em pedaços
+                                chamados tokens. Um token pode ser uma palavra, parte de uma palavra ou um caractere de
+                                pontuação. "Olá, mundo!" tem 3 tokens.</p>
+                            <p><strong class="font-medium text-slate-800">Limite de Uso:</strong> A quantidade máxima de
+                                tokens que pode ser usada em uma única requisição (prompt + resposta). Isso evita
+                                respostas excessivamente longas e controla custos.</p>
+                        </div>
+                    </section>
+
+                    <!-- Section 3: Passo a Passo Inicial -->
+                    <section id="passo-a-passo" class="content-section">
+                        <h2 class="text-2xl font-semibold text-slate-900 border-b pb-2 mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-indigo-500">
+                                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                                <path d="m9 12 2 2 4-4" />
+                            </svg>
+                            Passo a Passo Inicial
+                        </h2>
+                        <ol class="list-decimal list-inside space-y-4 text-slate-600">
+                            <li><strong class="font-medium text-slate-800">Acesse o link interno:</strong> Navegue para
+                                a página principal da plataforma.</li>
+                            <li><strong class="font-medium text-slate-800">Escolha o modelo:</strong> Selecione o modelo
+                                de IA desejado no menu suspenso (ex: GPT-4o).</li>
+                            <li><strong class="font-medium text-slate-800">Digite o prompt ou selecione um
+                                    template:</strong> Escreva sua instrução na caixa de texto ou use um modelo pronto
+                                da biblioteca.</li>
+                            <li><strong class="font-medium text-slate-800">Clique em "Executar":</strong> Envie seu
+                                prompt para a IA processar.</li>
+                            <li><strong class="font-medium text-slate-800">Copie ou baixe a resposta:</strong> Use os
+                                botões ao lado da resposta para copiá-la para a área de transferência ou fazer o
+                                download como arquivo de texto.</li>
+                        </ol>
+                    </section>
+
+                    <!-- Section 4: Biblioteca de Prompts -->
+                    <section id="biblioteca-prompts" class="content-section">
+                        <h2 class="text-2xl font-semibold text-slate-900 border-b pb-2 mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-indigo-500">
+                                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                            </svg>
+                            Biblioteca de Prompts
+                        </h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="p-3 font-semibold text-slate-800 border-b">Nome do Template</th>
+                                        <th class="p-3 font-semibold text-slate-800 border-b">Caso de Uso</th>
+                                        <th class="p-3 font-semibold text-slate-800 border-b">Exemplo de Resultado</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3 border-b text-slate-600">Resumo de Texto</td>
+                                        <td class="p-3 border-b text-slate-600">Sintetizar artigos ou documentos longos.
+                                        </td>
+                                        <td class="p-3 border-b text-slate-600 italic">"O texto discute o impacto da IA
+                                            no mercado de trabalho..."</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3 border-b text-slate-600">Brainstorm de Ideias</td>
+                                        <td class="p-3 border-b text-slate-600">Gerar ideias para um novo projeto ou
+                                            campanha.</td>
+                                        <td class="p-3 border-b text-slate-600 italic">"1. App de caronas. 2.
+                                            Marketplace de produtos artesanais..."</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3 border-b text-slate-600">Correção Gramatical</td>
+                                        <td class="p-3 border-b text-slate-600">Revisar e corrigir a gramática de um
+                                            texto.</td>
+                                        <td class="p-3 border-b text-slate-600 italic">"O relatório foi entregue aos
+                                            gerentes." (versão corrigida)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Section 5: Boas Práticas -->
+                    <section id="boas-praticas" class="content-section">
+                        <h2 class="text-2xl font-semibold text-slate-900 border-b pb-2 mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-indigo-500">
+                                <path
+                                    d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                            </svg>
+                            Boas Práticas Rápidas
+                        </h2>
+                        <ul class="list-disc list-inside space-y-3 text-slate-600">
+                            <li><strong class="font-medium text-slate-800">Seja claro e específico no prompt:</strong>
+                                Dê contexto, exemplos e defina o formato da resposta desejada para obter melhores
+                                resultados.</li>
+                            <li><strong class="font-medium text-slate-800">Monitore o limite de
+                                    caracteres/tokens:</strong> Se precisar de uma resposta mais longa, ajuste o limite
+                                de tokens nas configurações antes de executar.</li>
+                            <li><strong class="font-medium text-slate-800">Nunca insira dados sensíveis:</strong> Não
+                                inclua informações pessoais, senhas, dados de clientes ou qualquer outra informação
+                                confidencial nos prompts.</li>
+                        </ul>
+                    </section>
+
+                    <!-- Section 6: Perguntas Frequentes -->
+                    <section id="faq" class="content-section">
+                        <h2 class="text-2xl font-semibold text-slate-900 border-b pb-2 mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-indigo-500">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                <path d="M12 17h.01" />
+                            </svg>
+                            Perguntas Frequentes (FAQ)
+                        </h2>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Por que minha resposta veio cortada?</h4>
+                                <p class="text-slate-600 mt-1">Provavelmente a resposta excedeu o limite de tokens
+                                    definido. <strong class="text-indigo-600">Solução:</strong> Aumente o "Limite de
+                                    Tokens" nas configurações da ferramenta e execute o prompt novamente.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Por que a execução está demorando?</h4>
+                                <p class="text-slate-600 mt-1">A plataforma pode estar com uma alta demanda. <strong
+                                        class="text-indigo-600">Solução:</strong> Verifique o status da fila de execução
+                                    no painel principal. Se o problema persistir, tente novamente em alguns minutos.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 7: Política de Uso -->
+                    <section id="politica-uso" class="content-section">
+                        <h2 class="text-2xl font-semibold text-slate-900 border-b pb-2 mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-indigo-500">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
+                            Política de Uso
+                        </h2>
+                        <div class="space-y-4 text-slate-600 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                            <p class="font-semibold text-amber-800">Importante:</p>
+                            <p class="text-amber-700">O uso desta plataforma está sujeito às regras internas de
+                                segurança e confidencialidade da empresa. É proibido o uso de dados sensíveis de
+                                clientes ou informações estratégicas nos prompts. Consulte o documento completo na
+                                intranet para mais detalhes.</p>
+                        </div>
+                    </section>
+
+                    <!-- Section 8: Atualizações -->
+                    <section id="atualizacoes" class="content-section">
+                        <h2 class="text-2xl font-semibold text-slate-900 border-b pb-2 mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-indigo-500">
+                                <path
+                                    d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h4v-5h4v5h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4a2 2 0 0 1-2-2z" />
+                                <path d="M12 14v-4" />
+                                <path d="M10 12h4" />
+                            </svg>
+                            Atualizações (Changelog)
+                        </h2>
+                        <div class="space-y-3 text-slate-600">
+                            <p><span
+                                    class="font-semibold bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">2024-06-01</span>
+                                - <strong class="text-slate-800">NOVO:</strong> Adicionado suporte ao modelo GPT-4o.</p>
+                            <p><span
+                                    class="font-semibold bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">2024-05-15</span>
+                                - <strong class="text-slate-800">MELHORIA:</strong> Limite de tokens padrão aumentado
+                                para 8.000.</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Select all content sections and the navigation container
+            const sections = document.querySelectorAll('.content-section');
+            const navContainer = document.getElementById('sidebar-nav').querySelector('ul');
+
+            // Create navigation links from sections
+            sections.forEach(section => {
+                const navItem = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = `#${section.id}`;
+                // Taking the text from the h2 inside the section
+                link.textContent = section.querySelector('h2').textContent.trim();
+                link.className = 'nav-link block px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-md transition-colors duration-200';
+                navItem.appendChild(link);
+                navContainer.appendChild(navItem);
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            // Options for the Intersection Observer
+            const observerOptions = {
+                root: null, // relative to the viewport
+                rootMargin: '0px',
+                threshold: 0.4 // 40% of the section must be visible
+            };
+
+            // Observer to highlight the active nav link on scroll
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Remove active class from all links
+                        navLinks.forEach(link => link.classList.remove('active'));
+
+                        // Find the corresponding nav link and add active class
+                        const activeLink = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+
+</body>
+
+</html>
