@@ -4,17 +4,8 @@
     "title": "GPT-4.1",
     "shortUseCase": "Ótimo para análise e programação",
     "description": "Especialista em ler e analisar documentos enormes (até 1 milhão de palavras). Perfeito para empresas que precisam processar contratos, relatórios e bases de conhecimento extensas.",
-  "gpt-4.1": {
-    "name": "GPT-4.1",
-    "title": "GPT-4.1",
-    "shortUseCase": "Ótimo para análise e programação",
-    "description": "Especialista em ler e analisar documentos enormes (até 1 milhão de palavras). Perfeito para empresas que precisam processar contratos, relatórios e bases de conhecimento extensas.",
     "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Analisar contratos e documentos legais extensos",
-      "Criar e revisar código de projetos grandes",
-      "Assistente empresarial com acesso a toda documentação",
-      "Sistemas de busca inteligente em bases de dados"
       "Analisar contratos e documentos legais extensos",
       "Criar e revisar código de projetos grandes",
       "Assistente empresarial com acesso a toda documentação",
@@ -28,7 +19,6 @@
       "intelligence": "very-high",
       "coding": true,
       "math": true,
-      "multimodal": false
       "multimodal": false
     },
     "supportsWebSearch": true,
@@ -112,28 +102,26 @@
     "supportsImageAttachment": true
   },
 
-  "grok-4": {
-    "name": "Grok 4",
-    "title": "xAI Grok 4",
-    "shortUseCase": "Modelo de IA mais inteligente do mundo",
-    "description": "O modelo mais recente e avançado da xAI, oferecendo desempenho incomparável em linguagem natural, matemática e raciocínio. Inclui uso nativo de ferramentas e integração de busca em tempo real, capaz de criar documentos ricos e escrever código. Projetado para funcionar como um 'coringa' em diversas aplicações, com capacidade de colaboração entre múltiplos agentes de IA.",
-    "image": "/assets/xai-grok-logo.png",
-    "prompt": 3,
-    "completion": 15,
+  "gpt-4.1-nano": {
+    "name": "GPT-4.1 nano",
+    "title": "GPT-4.1 nano",
+    "shortUseCase": "Muito barato e rápido para tarefas simples",
+    "description": "Modelo barato e rápido para tarefas simples",
+    "image": "/assets/openai-logo.jpg",
     "useCases": [
-      "Resolver problemas complexos de matemática e ciência",
-      "Análise aprofundada de dados e informações",
-      "Geração e revisão de código",
-      "Criação de documentos e conteúdo rico",
-      "Aplicações com busca e análise em tempo real"
+      "Tradução local e privada",
+      "Dispositivos IoT com IA embarcada",
+      "Tarefas simples e rápidas"
     ],
+    "prompt": 0.1,
+    "completion": 0.4,
     "characteristics": {
       "reasoning": true,
-      "speed": "medium",
-      "intelligence": "very-high",
+      "speed": "fast",
+      "intelligence": "medium",
       "coding": true,
       "math": true,
-      "multimodal": true
+      "multimodal": false
     },
     "supportsWebSearch": false,
     "supportsCodeExecution": false,
@@ -155,8 +143,6 @@
       "Criação de documentos e conteúdo rico",
       "Aplicações com busca e análise em tempo real"
     ],
-    "prompt": 0.3,
-    "completion": 0.5,
     "characteristics": {
       "reasoning": true,
       "speed": "medium",
@@ -344,13 +330,7 @@
       "Geração de documentação técnica",
       "Automação de workflows com function calling",
       "Análise de grandes bases de conhecimento"
-      "Assistentes corporativos com chain‑of‑thought oculto",
-      "Geração de documentação técnica",
-      "Automação de workflows com function calling",
-      "Análise de grandes bases de conhecimento"
     ],
-    "prompt": 0.22,
-    "completion": 0.88,
     "prompt": 0.22,
     "completion": 0.88,
     "characteristics": {
