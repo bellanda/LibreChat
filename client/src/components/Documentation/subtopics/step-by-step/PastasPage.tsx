@@ -2,8 +2,7 @@
 // import Legend from './Legend'; // Componente para a legenda
 // import CodeBlock from './CodeBlock'; // Componente para blocos de código
 
-import { Legend } from '../../components/Legend';
-import { agent_step_by_step, legendItemsAgent } from '../../utils';
+import { pastas_step_by_step } from '../../utils';
 
 
 
@@ -30,29 +29,23 @@ function Step({ title, description, image, children }) {
   );
 }
 
-export default function AgentePage() {
+export default function PastasPage() {
   return (
     <main className="mx-auto space-y-12 ">
       {/* --- Capítulo --- */}
       <section>
         <h1 className="text-3xl font-bold mb-2">
-          O que é um Agente?
+          Como criar pastas?
         </h1>
         <p className="text-gray-300 leading-relaxed">
-          Um agente é uma instância de IA pré-configurada com um conjunto de
-          instruções (system prompt), modelo e capacidades adicionais. Ele age
-          de forma autônoma para executar tarefas específicas — como responder
-          perguntas, processar arquivos ou disparar APIs — seguindo sempre as
-          regras e limites definidos pelo usuário na configuração.
+          As pastas são uma forma de organizar seus chats e informações, você pode criar pastas para diferentes projetos, clientes, etc.
         </p>
       </section>
 
-      {/* --- Legenda de Importância --- */}
-      <Legend legendItems={legendItemsAgent} />
 
       {/* --- Passos --- */}
       <div className="space-y-10">
-        {agent_step_by_step.map((step, index) => (
+        {pastas_step_by_step.map((step, index) => (
           <Step
             key={index}
             title={step.title}

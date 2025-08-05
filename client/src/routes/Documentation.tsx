@@ -9,9 +9,10 @@ import {
   ShieldCheck,
   ThumbsUp
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PrecoTokenizacaoLimitacoesPage from "../components/Documentation/subtopics/glossary/PrecoTokenizacaoLimitacoesPage";
 import AgentePage from "../components/Documentation/subtopics/step-by-step/AgentePage";
+import PastasPage from "../components/Documentation/subtopics/step-by-step/PastasPage";
 import AtualizacoesPage from "../components/Documentation/topics/AtualizacoesPage";
 import BoasPraticasPage from "../components/Documentation/topics/BoasPraticasPage";
 import EngenhariaDePromptsPage from "../components/Documentation/topics/EngenhariaDePromptsPage";
@@ -49,7 +50,8 @@ const SECTIONS = [
     title: "Passo a Passo", 
     icon: CheckCircle,
     subtopics: [
-      { id: "pap-agentes", title: "Agentes", component: "AgentePage" }
+      { id: "pap-agentes", title: "Agentes", component: "AgentePage" },
+      { id: "pap-pastas", title: "Pastas", component: "PastasPage" }
     ]
   },
   { 
@@ -100,14 +102,63 @@ export default function Documentation() {
   const hasSubtopics = currentSection.subtopics && currentSection.subtopics.length > 0;
 
   const goToPrevious = () => {
+    if (currentSubtopic && hasSubtopics) {
+      const currentSubtopicIndex = currentSection.subtopics.findIndex(s => s.id === currentSubtopic);
+      if (currentSubtopicIndex > 0) {
+        const previousSubtopic = currentSection.subtopics[currentSubtopicIndex - 1];
+        if (previousSubtopic) {
+          setCurrentSubtopic(previousSubtopic.id);
+        }
+        return;
+      } else {
+        setCurrentSubtopic(null);
+        return;
+      }
+    }
+
     if (hasPrevious) {
-      setCurrentPage(SECTIONS[currentIndex - 1].id);
+      const previousSection = SECTIONS[currentIndex - 1];
+      if (previousSection.subtopics && previousSection.subtopics.length > 0) {
+        const lastSubtopic = previousSection.subtopics[previousSection.subtopics.length - 1];
+        if (lastSubtopic) {
+          setCurrentPage(previousSection.id);
+          setCurrentSubtopic(lastSubtopic.id);
+        }
+      } else {
+        setCurrentPage(previousSection.id);
+        setCurrentSubtopic(null);
+      }
     }
   };
 
   const goToNext = () => {
-    if (hasNext) {
-      setCurrentPage(SECTIONS[currentIndex + 1].id);
+    if (currentSubtopic && hasSubtopics) {
+      const currentSubtopicIndex = currentSection.subtopics.findIndex(s => s.id === currentSubtopic);
+      if (currentSubtopicIndex < currentSection.subtopics.length - 1) {
+        const nextSubtopic = currentSection.subtopics[currentSubtopicIndex + 1];
+        if (nextSubtopic) {
+          setCurrentSubtopic(nextSubtopic.id);
+        }
+        return;
+      } else {
+        if (hasNext) {
+          const nextSection = SECTIONS[currentIndex + 1];
+          setCurrentPage(nextSection.id);
+          setCurrentSubtopic(null);
+        }
+        return;
+      }
+    }
+
+    if (hasSubtopics) {
+      const firstSubtopic = currentSection.subtopics[0];
+      if (firstSubtopic) {
+        setCurrentSubtopic(firstSubtopic.id);
+      }
+    } else if (hasNext) {
+      const nextSection = SECTIONS[currentIndex + 1];
+      setCurrentPage(nextSection.id);
+      setCurrentSubtopic(null);
     }
   };
 
@@ -129,6 +180,8 @@ export default function Documentation() {
         switch (subtopic.component) {
           case "AgentePage":
             return <AgentePage />;
+          case "PastasPage":
+            return <PastasPage />;  
           case "PrecoTokenizacaoLimitacoesPage":
             return <PrecoTokenizacaoLimitacoesPage />;
           default:
@@ -159,6 +212,10 @@ export default function Documentation() {
         return <VisaoGeralPage />;
     }
   };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage, currentSubtopic]);
 
   return (
     <div className="flex min-h-screen bg-gray-800 text-white font-sans">

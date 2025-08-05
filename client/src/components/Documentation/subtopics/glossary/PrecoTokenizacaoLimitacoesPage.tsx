@@ -1,14 +1,10 @@
 // src/pages/PrecoTokenizacaoLimitacoesPage.jsx
 import models_descriptions from '../../../../../public/models-descriptions.json';
 
+import SectionRecommendations from '../../components/SectionRecommendations';
 
 
-const Section = ({ id, title, children }) => (
-  <section id={id} className="mt-12">
-    <h2 className="text-2xl font-semibold text-white mb-4">{title}</h2>
-    {children}
-  </section>
-);
+
 
 const CostExample = () => (
   <div className="bg-gray-800 p-6 ">
@@ -60,80 +56,138 @@ const PriceTable = () => (
   </div>
 );
 
-const TipsList = () => (
-  <ul className="list-disc list-inside space-y-2 text-gray-200">
-    <li>
-      <span className="font-semibold">Seja objetivo:</span> Use prompts curtos e claros para reduzir
-      tokens de entrada.
-    </li>
-    <li>
-      <span className="font-semibold">Limite a resposta:</span> Formule a resposta conforme sua preferência, a fim de restringir o escopo das respostas.
-    </li>
-    <li>
-      <span className="font-semibold">Escolha o modelo certo:</span> Siga a tabela de preços por modelo e verifique necessidades específicas.
-    </li>
-    <li>
-      <span className="font-semibold">Batching:</span> Agrupe múltiplas solicitações em uma só quando
-      possível.
-    </li>
-  </ul>
-);
+const models_task_day_to_day_items = [
+  'Escrever e-mails formais',
+  'Resumir textos longos',
+  'Fazer pesquisas de senso-comum',
+  'Tirar dúvidas de curiosidade',
+  'Gerar rascunhos de posts',
+  'Reformular frases',
+  'Traduzir trechos rápidos',
+]
+const models_task_day_to_day = [
+  { emoji: '🟢', name: 'Qwen3 235B Instruct', cost: '0.2 / 0.9', speed: '⚡⚡⚡', capacity: '🧩🧩🧩',},
+  { emoji: '🟢', name: 'DeepSeek V3.1', cost: '0.9 / 0.9', speed: '⚡⚡', capacity: '🧩🧩',},
+  { emoji: '🟢', name: 'Gemini 2.5 Flash', cost: '0.3 / 2.5', speed: '⚡⚡⚡', capacity: '🧩🧩',},
+  { emoji: '🟢', name: 'GPT-4.1 Mini', cost: '0.4 / 1.6', speed: '⚡⚡', capacity: '🧩🧩🧩', },
+  { emoji: '🟢', name: 'Llama 4 Maverick',cost: '0.2 / 0.6',speed: '⚡⚡⚡',capacity: '🧩🧩',
+  },
+]
 
-const ProfileRecommendations = () => (
-  <div className="space-y-2 text-gray-200">
-    <div>
-      <h4 className="text-lg font-semibold text-green-400">Requisições Simples</h4>
-      <p className="ml-4 text-gray-300 text-sm">
-        Modelos: GPT-4.1-nano, Gemini 2.5 Flash Lite
-      </p>
-    </div>
-    <div>
-      <h4 className="text-lg font-semibold text-yellow-400">Requisições Médias</h4>
-      <p className="ml-4 text-gray-300 text-sm">
-        Modelos: GPT-o4-mini, Gemini 2.5 Flash, Kimi K2 (Groq)
-      </p>
-    </div>
-    <div>
-      <h4 className="text-lg font-semibold text-red-400">Requisições Complexas</h4>
-      <p className="ml-4 text-gray-300 text-sm">
-        Modelos: Claude Sonnet 4, Gemini 2.5 Pro, GPT-4.1
-      </p>
-    </div>
-  </div>
-);
+const models_web_search_items = [
+  'Checar notícias de última hora',
+  'Comparar preços de produtos',
+  'Coletar estatísticas atualizadas',
+  'Confirmar fatos históricos ou científicos',
+  'Encontrar referências acadêmicas',
+  'Descobrir tendências de mercado',
+]
+
+const models_web_search = [
+  { emoji: '🟡', name: 'GPT-4.1', cost: '2.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
+  { emoji: '🟡', name: 'o4-Mini', cost: '1.1 / 4.4', speed: '⚡⚡⚡', capacity: '🧩🧩🧩' },
+  { emoji: '🟡', name: 'Gemini 2.5 Flash', cost: '0.3 / 2.5', speed: '⚡⚡⚡', capacity: '🧩🧩' },
+]
+
+const models_code_and_software_engineering_items = [
+  'Gerar & rodar scripts Python',
+  'Depurar código JavaScript',
+  'Converter APIs REST → GraphQL',
+  'Criar planilhas dinâmicas',
+  'Automatizar relatórios',
+  'Plotar gráficos',
+  'Analisar CSVs',
+  'Produzir testes unitários',
+  'Refatorar monólitos',
+]
+const models_code_and_software_engineering = [
+  { emoji: '🔵', name: 'Claude Sonnet 4', cost: '3.0 / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
+  { emoji: '🔵', name: 'Qwen3 Coder 480B', cost: '0.5 / 1.8', speed: '⚡⚡⚡', capacity: '🧩🧩🧩🧩' },
+  { emoji: '🔵', name: 'GPT-4.1', cost: '2.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
+  { emoji: '🔵', name: 'o3', cost: '2.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
+  { emoji: '🔵', name: 'Grok 4', cost: '3.0 / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
+  { emoji: '🔵', name: 'Gemini 2.5 Pro', cost: '2.0 / 12.5', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
+]
+
+const models_maximum_complexity_items = [
+  'Raciocínio multietapa',
+  'Análises estratégicas',
+  'Pesquisa científica avançada',
+  'Design de algoritmos',
+  'Simulações de cenários',
+  'Provas matemáticas',
+  'Elaborações de políticas públicas',
+  'Arquitetura de sistemas',
+]
+const models_maximum_complexity = [
+  { emoji: '🔴', name: 'Grok 4', cost: '3.0 / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
+  { emoji: '🔴', name: 'o3', cost: '2.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
+  { emoji: '🔴', name: 'Gemini 2.5 Pro', cost: '2.0 / 12.5', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
+  { emoji: '🔴', name: 'Claude Sonnet 4', cost: '3.0 / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
+  { emoji: '🔴', name: 'DeepSeek R1', cost: '3.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
+]
+
+const models_ultra_velocity_items = [
+  'Respostas instantâneas',
+  'Chat-bots em tempo real',
+  'Autocompletar',
+  'Geração de texto curto',
+  'Brainstorming rápido',
+  'Sem execução de código nem busca na web',
+]
+const models_ultra_velocity = [
+  { emoji: '⚪', name: 'Llama 4 Maverick', cost: '0.2 / 0.6', speed: '⚡⚡⚡⚡', capacity: '🧩🧩' },
+  { emoji: '⚪', name: 'Llama 4 Scout', cost: '0.1 / 0.3', speed: '⚡⚡⚡⚡⚡', capacity: '🧩' },
+]
+
+
 
 export default function PrecoTokenizacaoLimitacoesPage() {
   return (
     <div className="mx-auto">
-
-      <Section id="custo-token" title="Custos por Token">
+      <section className="mt-12" id="custo-token" title="Custos por Token">
+        <h2 className="text-2xl font-semibold text-white mb-4">Custos por Token</h2>
         <p className="text-gray-200 leading-relaxed">
           Cada modelo de IA possui um preço calculado por{' '}
           <span className="font-semibold text-green-300">tokens</span>, tanto na entrada (prompt) quanto na saída
           (resposta). Entender esses valores é chave para manter o orçamento sob controle.
         </p>
-      </Section>
+      </section>
 
-      <Section id="impacto-custo" title="Como os Tokens Impactam no Custo">
+      <section className='mt-12' id="impacto-custo" title="Como os Tokens Impactam no Custo">
+        <h2 className="text-2xl font-semibold text-white mb-4">Como os Tokens Impactam no Custo</h2>
         <p className="text-gray-200 leading-relaxed mb-4">
           O valor total de uma chamada API é a soma dos tokens de entrada e saída multiplicados pelo preço
           unitário de cada modelo. Prompts mais longos e respostas detalhadas consomem mais tokens, elevando
           o custo.
         </p>
         <CostExample />
-      </Section>
+      </section>
 
-      <Section id="tabela-precos" title="Tabela de Preços por Modelo ($USD/1M tokens)">
+      <section className='mt-12' id="tabela-precos" title="Tabela de Preços por Modelo ($USD/1M tokens)">
+        <h2 className="text-2xl font-semibold text-white mb-4">Tabela de Preços por Modelo ($USD/1M tokens)</h2>
         <PriceTable />
-      </Section>
+      </section>
 
-      <Section id="dicas-otimizacao" title="Dicas para Otimizar Custos">
-        <TipsList />
-      </Section>
 
-      <Section id="perfis-uso" title="Recomendações por Perfil de Uso">
-        <ProfileRecommendations />
-      </Section>
+      <section className='mt-12' id="perfis-uso" title="Recomendações por Perfil de Uso">
+        <h2 className="text-2xl font-semibold text-white mb-4">Recomendações por Perfil de Uso</h2>
+        <SectionRecommendations title="Tarefas Comuns do Dia a Dia" items={models_task_day_to_day_items} models={models_task_day_to_day} />
+        <SectionRecommendations title="Pesquisa na Web" items={models_web_search_items} models={models_web_search} />
+        <SectionRecommendations title="Código & Engenharia de Software" items={models_code_and_software_engineering_items} models={models_code_and_software_engineering} />
+        <SectionRecommendations title="Máxima Complexidade" items={models_maximum_complexity_items} models={models_maximum_complexity} />
+        <SectionRecommendations title="Ultra-Velocidade" items={models_ultra_velocity_items} models={models_ultra_velocity} />
+
+        <div className="mt-12 text-gray-200">
+          <p>💡 <span className="font-semibold">Dicas Extras de Economia</span></p>
+          <div className="pl-4 pb-4">
+            <li>Prompt enxuto = menos tokens de entrada (💵)</li>
+            <li>Crie sempre novos chats após 2-3 interações.</li>
+            <li>Agrupe perguntas em lotes sempre que possível (“batching”)</li>
+            <li>Combine modelos: use um Llama 4 Scout para rascunhar e depois refine com Claude Sonnet 4.</li>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

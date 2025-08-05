@@ -188,3 +188,44 @@ Qual a média de vendas do produto?`}
         )
     }
   ];
+
+
+
+
+
+
+
+  export const pastas_step_by_step = [
+    {
+      title: 'Passo 1: Acesse a seção de Pastas',
+      description: 'No menu lateral da plataforma, clique em "Favoritos" para abrir a lista de pastas existentes.',
+      image: '/assets/documentation/folderStepByStep/passo1.png',
+    },
+    {
+      title: 'Passo 2: Dê seu título e Descrição',
+      description: 'Ex: "Projeto 1" ou "Cliente 1"',
+      image: '/assets/documentation/folderStepByStep/passo2.png',
+    },
+    {
+      title: 'Passo 3: Abra o seu grupo de pastas por aqui',
+      image: '/assets/documentation/folderStepByStep/passo3.png',
+      description: 'Aqui ficará todas as pastas que você criar. Clicando ',
+      children: (
+        <p className="text-gray-200 border-l-4 border-blue-500 pl-4">
+          <strong>Limpar tudo:</strong> Sai dos favoritos e volta para a lista padrão de chats.<br/>
+          <strong>Testando:</strong> A pasta que foi criada no tutorial com um chat exemplo. Ao clicar teremos a lista de chats dela.
+        </p>
+      ),
+    },
+    {
+      title: 'Passo 4: Conseguimos verificar todas pastas criadas',
+      image: '/assets/documentation/folderStepByStep/passo4.png',
+      description: 'Ao excluir uma pasta, os chats que estavam nela NÃO serão excluídos.',
+    },
+      {
+      title: 'Passo 5: Exemplo prático de pastas',
+      image: '/assets/documentation/folderStepByStep/passo5.png',
+      
+    },
+    
+  ];
