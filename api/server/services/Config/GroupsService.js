@@ -3,7 +3,7 @@ const { logger } = require('~/config');
 // Import dinâmico para evitar problemas de conexão
 let GroupsConfigs = null;
 try {
-  GroupsConfigs = require('../../models/GroupsConfigs');
+  GroupsConfigs = require('~/models/GroupsConfigs');
 } catch (error) {
   logger.warn('[GroupsService] Could not load GroupsConfigs model:', error.message);
 }
@@ -14,10 +14,12 @@ try {
  */
 async function loadGroupsConfig() {
   try {
+    logger.info('[GroupsService] Loading groups configuration from MongoDB collection');
     // Carregar da collection do MongoDB
     if (GroupsConfigs) {
+      logger.info('[GroupsService] GroupsConfigs model loaded');
       const dbConfig = await GroupsConfigs.findOne({}).lean();
-      
+
       if (dbConfig) {
         logger.info('[GroupsService] Groups configuration loaded from MongoDB collection');
         return dbConfig;
@@ -25,7 +27,9 @@ async function loadGroupsConfig() {
     }
 
     // Se não houver dados no MongoDB, usar configuração padrão
-    logger.warn('[GroupsService] No groups configuration found in MongoDB, using default configuration');
+    logger.warn(
+      '[GroupsService] No groups configuration found in MongoDB, using default configuration',
+    );
     return getDefaultGroupsConfig();
   } catch (error) {
     logger.error('[GroupsService] Error loading groups configuration:', error);
@@ -55,7 +59,7 @@ function getDefaultGroupsConfig() {
             anthropic: ['*'],
             deepseek: ['*'],
             NVIDIA: ['*'],
-            Groq: ['*']
+            Groq: ['*'],
           },
           assistants: false,
           plugins: [],

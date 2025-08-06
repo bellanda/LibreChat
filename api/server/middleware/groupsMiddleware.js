@@ -53,9 +53,7 @@ function initializeFileWatcher() {
  * Get cached groups configuration or load it if not cached
  */
 async function getCachedGroupsConfig() {
-  if (!groupsConfigCache) {
-    groupsConfigCache = await loadGroupsConfig();
-  }
+  groupsConfigCache = await loadGroupsConfig();
   return groupsConfigCache;
 }
 
