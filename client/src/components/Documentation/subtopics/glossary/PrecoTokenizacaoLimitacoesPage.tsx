@@ -1,6 +1,5 @@
 // src/pages/PrecoTokenizacaoLimitacoesPage.jsx
-import models_descriptions from '../../../../../public/models-descriptions.json';
-
+import { useModelDescriptions } from '../../../../hooks/useModelDescriptions';
 import SectionRecommendations from '../../components/SectionRecommendations';
 
 
@@ -32,29 +31,49 @@ const CostExample = () => (
   </div>
 );
 
-const PriceTable = () => (
-  <div className="overflow-x-auto rounded-lg shadow-lg">
-    <table className="min-w-full bg-gray-800">
-      <thead>
-        <tr className="border-b border-gray-700">
-          <th className="px-4 py-2 text-left text-white">Modelo</th>
-          <th className="px-4 py-2 text-left text-white">Descrição</th>
-          <th className="px-4 py-2 text-left text-white">Preço Entrada</th>
-          <th className="px-4 py-2 text-left text-white">Preço Saída</th>
-        </tr>
-      </thead>
+const PriceTable = () => {
+  const { descriptions, loading } = useModelDescriptions();
 
-      {Object.keys(models_descriptions).map((model) => (
-        <tr key={model} className="hover:bg-gray-700 transition-colors">
-          <td className="px-4 py-2 text-gray-300 font-semibold text-green-300">{models_descriptions[model].name}</td>
-          <td className="px-4 py-2 text-gray-300">{models_descriptions[model].shortUseCase}</td>
-          <td className="px-4 py-2 text-gray-200">{models_descriptions[model].prompt.toFixed(1)}</td>
-          <td className="px-4 py-2 text-gray-200">{models_descriptions[model].completion.toFixed(1)}</td>
-        </tr>
-      ))}
-    </table>
-  </div>
-);
+  if (loading) {
+    return (
+      <div className="overflow-x-auto rounded-lg shadow-lg">
+        <div className="min-w-full bg-gray-800 p-8 text-center">
+          <div className="text-gray-300">Carregando descrições dos modelos...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg shadow-lg">
+      <table className="min-w-full bg-gray-800">
+        <thead>
+          <tr className="border-b border-gray-700">
+            <th className="px-4 py-2 text-left text-white">Modelo</th>
+            <th className="px-4 py-2 text-left text-white">Descrição</th>
+            <th className="px-4 py-2 text-left text-white">Preço Entrada</th>
+            <th className="px-4 py-2 text-left text-white">Preço Saída</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.keys(descriptions).map((model) => {
+            if (descriptions[model].shortUseCase !== undefined) {
+              return (
+                <tr key={model} className="hover:bg-gray-700 transition-colors">
+                  <td className="px-4 py-2 text-gray-300 font-semibold text-green-300">{descriptions[model].name}</td>
+                  <td className="px-4 py-2 text-gray-300">{descriptions[model].shortUseCase}</td>
+                  <td className="px-4 py-2 text-gray-200">{descriptions[model].prompt?.toFixed(1) || 'N/A'}</td>
+                  <td className="px-4 py-2 text-gray-200">{descriptions[model].completion?.toFixed(1) || 'N/A'}</td>
+                </tr>
+              );
+            }
+            return null;
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 const models_task_day_to_day_items = [
   'Escrever e-mails formais',

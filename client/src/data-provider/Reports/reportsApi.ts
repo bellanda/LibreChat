@@ -275,7 +275,7 @@ const fetchTopModelsData = async (filters: any) => {
 
     let descriptions = {};
 
-    let response2 = await fetch(`${REPORT_CONFIG.ENDPOINTS.MODELS_DESCRIPTIONS}?t=${timestamp}`, {
+    let response2 = await fetch(`/api/models-descriptions`, {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache',

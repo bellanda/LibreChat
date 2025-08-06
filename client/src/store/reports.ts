@@ -83,7 +83,6 @@ export const REPORT_CONFIG = {
         KPIS: 'reports/kpis',
         USER_EFFICIENCY: 'reports/user-efficiency',
         AVAILABLE_MODELS: 'reports/available-models',
-        MODELS_DESCRIPTIONS: '/models-descriptions.json',
         TOP_COST_CENTERS_VOLUME: 'reports/top-cost-centers-volume',
         TOP_COST_CENTERS_COST: 'reports/top-cost-centers-cost',
     },

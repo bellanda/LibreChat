@@ -29,10 +29,8 @@ export const useModelDescriptions = () => {
   useEffect(() => {
     const loadDescriptions = async () => {
       try {
-        console.log('🔍 Loading model descriptions from /models-descriptions.json');
-        // Fetch the JSON file from the public directory or API with cache busting
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/models-descriptions.json?t=${timestamp}`, {
+        // Fetch from API instead of static JSON file
+        const response = await fetch('/api/models-descriptions', {
           cache: 'no-cache',
           headers: {
             'Cache-Control': 'no-cache',
@@ -50,9 +48,9 @@ export const useModelDescriptions = () => {
           );
           setDescriptions(data);
         } else {
-          console.warn('❌ Could not load models-descriptions.json, status:', response.status);
+          console.warn('❌ Could not load models descriptions from API, status:', response.status);
           console.warn('Response headers:', [...response.headers.entries()]);
-          // Fallback to local descriptions if JSON file is not available
+          // Fallback to empty descriptions if API is not available
           setDescriptions({});
         }
       } catch (error) {

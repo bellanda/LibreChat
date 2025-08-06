@@ -22,6 +22,9 @@ const AppService = require('./services/AppService');
 const staticCache = require('./utils/staticCache');
 const noIndex = require('./middleware/noIndex');
 const routes = require('./routes');
+const modelsDescriptions = require('./routes/modelsDescriptions');
+const groupsConfigs = require('./routes/groupsConfigs');
+// const groups = require('./routes/groups');
 
 const { PORT, HOST, ALLOW_SOCIAL_LOGIN, DISABLE_COMPRESSION, TRUST_PROXY } = process.env ?? {};
 
@@ -118,7 +121,9 @@ const startServer = async () => {
   app.use('/api/banner', routes.banner);
   app.use('/api/bedrock', routes.bedrock);
   app.use('/api/python-tools', routes.pythonTools);
-
+  app.use('/api/models-descriptions', modelsDescriptions);
+  app.use('/api/groups-configs', groupsConfigs);
+  // app.use('/api/groups', groups); // Comentado - usando groups-configs em vez disso
   app.use('/api/tags', routes.tags);
 
   app.use((req, res) => {

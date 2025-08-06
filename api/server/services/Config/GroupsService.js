@@ -1,24 +1,32 @@
-const fs = require('fs');
-const path = require('path');
 const { logger } = require('~/config');
 
+// Import dinâmico para evitar problemas de conexão
+let GroupsConfigs = null;
+try {
+  GroupsConfigs = require('../../models/GroupsConfigs');
+} catch (error) {
+  logger.warn('[GroupsService] Could not load GroupsConfigs model:', error.message);
+}
+
 /**
- * Load the groups configuration from the groups-config.json file
+ * Load the groups configuration from the MongoDB collection
  * @returns {Promise<Object>} The groups configuration object
  */
 async function loadGroupsConfig() {
   try {
-    const configPath = path.resolve(process.cwd(), 'groups-config.json');
-
-    if (!fs.existsSync(configPath)) {
-      logger.warn('[GroupsService] groups-config.json not found, using default configuration');
-      return getDefaultGroupsConfig();
+    // Carregar da collection do MongoDB
+    if (GroupsConfigs) {
+      const dbConfig = await GroupsConfigs.findOne({}).lean();
+      
+      if (dbConfig) {
+        logger.info('[GroupsService] Groups configuration loaded from MongoDB collection');
+        return dbConfig;
+      }
     }
 
-    const configData = fs.readFileSync(configPath, 'utf8');
-    const groupsConfig = JSON.parse(configData);
-
-    return groupsConfig;
+    // Se não houver dados no MongoDB, usar configuração padrão
+    logger.warn('[GroupsService] No groups configuration found in MongoDB, using default configuration');
+    return getDefaultGroupsConfig();
   } catch (error) {
     logger.error('[GroupsService] Error loading groups configuration:', error);
     return getDefaultGroupsConfig();
@@ -39,9 +47,15 @@ function getDefaultGroupsConfig() {
         permissions: {
           endpoints: ['*'],
           models: {
-            openai: ['*'],
+            agents: ['*'],
+            HPEAgents: ['*'],
+            azureOpenAI: ['*'],
+            openAI: ['*'],
             google: ['*'],
             anthropic: ['*'],
+            deepseek: ['*'],
+            NVIDIA: ['*'],
+            Groq: ['*']
           },
           assistants: false,
           plugins: [],
