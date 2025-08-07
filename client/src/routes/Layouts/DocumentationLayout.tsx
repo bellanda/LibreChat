@@ -1,9 +1,12 @@
 import { Outlet } from 'react-router-dom';
+import { ModelDescriptionsProvider } from '~/Providers/ModelDescriptionsContext';
 
 export default function DocumentationLayouts() {
   return (
-    <div>
-      <Outlet />
-    </div>
+    <ModelDescriptionsProvider>
+      <div>
+        <Outlet />
+      </div>
+    </ModelDescriptionsProvider>
   );
 }
