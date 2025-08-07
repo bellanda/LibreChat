@@ -25,7 +25,8 @@ const CostExample = () => (
       </li>
       <li>
         <span className="font-semibold">Total:</span>{' '}
-        <span className="font-bold text-green-300">$0,09</span> (15.000 tokens)
+        <span className="font-bold text-green-300">$0,09</span> (15.000 tokens) - Cotação R$5.50 =
+        R$0,495
       </li>
     </ul>
   </div>
@@ -61,11 +62,22 @@ const PriceTable = () => {
             if (info.shortUseCase) {
               return (
                 <tr key={model} className="transition-colors hover:bg-gray-700">
-                  <td className="px-4 py-2 font-semibold text-green-300">{info.name}</td>
+                  <td className="mr-2 flex items-center px-4 py-2 font-semibold text-green-300">
+                    <img src={info.image} className="mr-2 h-[70px] w-[100px]" />
+                    <span>
+                      {info.name}
+                      <br></br>
+                      <span className="text-sm text-gray-400">
+                        Criador: {info.creator}
+                        <br></br>
+                        Provedor: {info.provider}
+                      </span>
+                    </span>
+                  </td>
                   <td className="px-4 py-2 text-gray-300">{info.shortUseCase}</td>
-                  <td className="px-4 py-2 text-gray-200">{info.prompt?.toFixed(1) ?? 'N/A'}</td>
+                  <td className="px-4 py-2 text-gray-200">${info.prompt?.toFixed(2) ?? 'N/A'}</td>
                   <td className="px-4 py-2 text-gray-200">
-                    {info.completion?.toFixed(1) ?? 'N/A'}
+                    ${info.completion?.toFixed(2) ?? 'N/A'}
                   </td>
                 </tr>
               );
@@ -302,6 +314,8 @@ const models_ultra_velocity = [
 ];
 
 export default function PrecoTokenizacaoLimitacoesPage() {
+  const { descriptions, loading } = useModelDescriptions();
+
   return (
     <div className="mx-auto">
       {/* ------------- Título e Introdução ------------- */}
@@ -329,8 +343,12 @@ export default function PrecoTokenizacaoLimitacoesPage() {
       {/* ----------------- Tabela de Preços ----------------- */}
       <section className="mt-12" id="tabela-precos">
         <h2 className="mb-4 text-2xl font-semibold text-white">
-          Tabela de Preços por Modelo ($USD/1M tokens)
+          Tabela de Preços por Modelo (Em dólar $ por 1 Milhão de tokens)
         </h2>
+        <p className="mb-4 leading-relaxed text-gray-200">
+          Total de modelos:{' '}
+          <span className="font-semibold text-green-300">{Object.keys(descriptions).length}</span>
+        </p>
         <PriceTable />
       </section>
 

@@ -1,9 +1,11 @@
 export interface ModelDescription {
   name: string;
+  provider: string;
   shortUseCase: string;
+  creator: string;
   title: string;
   description: string;
-  image?: string | null;
+  image?: string;
   useCases?: string[];
   prompt?: number;
   completion?: number;

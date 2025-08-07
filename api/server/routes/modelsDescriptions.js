@@ -1,8 +1,8 @@
 const express = require('express');
-const { 
-  getAllModelsDescriptions, 
-  getModelDescriptionById, 
-  replaceModelsDescriptions 
+const {
+  getAllModelsDescriptions,
+  getModelDescriptionById,
+  replaceModelsDescriptions,
 } = require('../services/ModelsDescriptionsService');
 
 const router = express.Router();

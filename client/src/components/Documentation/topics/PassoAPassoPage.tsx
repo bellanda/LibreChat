@@ -1,4 +1,4 @@
-import { platform_step_by_step } from "../utils";
+import { platform_step_by_step } from '../utils';
 
 export default function PassoAPassoPage() {
   return (
@@ -9,9 +9,21 @@ export default function PassoAPassoPage() {
             <h2 className="text-xl font-semibold">
               {icon} Passo {number}: {title}
             </h2>
-            <p className="text-gray-200">{description} {link && <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600">{link}</a>}</p>
-            {img && <img src={img} alt={title} className="w-full h-auto rounded" />}
-            <p className="text-gray-400 italic">{tip}</p>
+            <p className="text-gray-200">
+              {description}{' '}
+              {link && (
+                <a
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  {link}
+                </a>
+              )}
+            </p>
+            {img && <img src={img} alt={title} className="h-auto w-full rounded" />}
+            <p className="italic text-gray-400">{tip}</p>
           </div>
         ))}
       </main>
