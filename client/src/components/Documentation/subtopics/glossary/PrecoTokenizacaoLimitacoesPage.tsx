@@ -2,13 +2,10 @@
 import { useModelDescriptions } from '../../../../hooks/useModelDescriptions';
 import SectionRecommendations from '../../components/SectionRecommendations';
 
-
-
-
 const CostExample = () => (
-  <div className="bg-gray-800 p-6 ">
-    <h3 className="text-xl font-semibold text-white mb-2">Exemplo de Cálculo de Custo</h3>
-    <ul className="list-disc list-inside mt-2 text-gray-200 space-y-1">
+  <div className="bg-gray-800 p-6">
+    <h3 className="mb-2 text-xl font-semibold text-white">Exemplo de Cálculo de Custo</h3>
+    <ul className="mt-2 list-inside list-disc space-y-1 text-gray-200">
       <li>
         <span className="font-semibold">Prompt:</span> 5.000 tokens
       </li>
@@ -19,13 +16,16 @@ const CostExample = () => (
         <span className="font-semibold">Modelo:</span> GPT-4.1
       </li>
       <li>
-        <span className="font-semibold">Cálculo Entrada:</span> 5.000 / 1.000.000 × $2,00 = <span className="font-semibold">$0,01</span>
+        <span className="font-semibold">Cálculo Entrada:</span> 5.000 / 1.000.000 × $2,00 ={' '}
+        <span className="font-semibold">$0,01</span>
       </li>
       <li>
-        <span className="font-semibold">Cálculo Saída:</span> 10.000 / 1.000.000 × $8,00 = <span className="font-semibold">$0,08</span>
+        <span className="font-semibold">Cálculo Saída:</span> 10.000 / 1.000.000 × $8,00 ={' '}
+        <span className="font-semibold">$0,08</span>
       </li>
       <li>
-        <span className="font-semibold">Total:</span> <span className="text-green-300 font-bold">$0,09</span> (15.000 tokens)
+        <span className="font-semibold">Total:</span>{' '}
+        <span className="font-bold text-green-300">$0,09</span> (15.000 tokens)
       </li>
     </ul>
   </div>
@@ -38,7 +38,7 @@ const PriceTable = () => {
     return (
       <div className="overflow-x-auto rounded-lg shadow-lg">
         <div className="min-w-full bg-gray-800 p-8 text-center">
-          <div className="text-gray-300">Carregando descrições dos modelos...</div>
+          <p className="text-gray-300">Carregando descrições dos modelos…</p>
         </div>
       </div>
     );
@@ -52,18 +52,21 @@ const PriceTable = () => {
             <th className="px-4 py-2 text-left text-white">Modelo</th>
             <th className="px-4 py-2 text-left text-white">Descrição</th>
             <th className="px-4 py-2 text-left text-white">Preço Entrada</th>
-            <th className="px-4 py-2 text-left text-white">Preço Saída</th>
+            <th className="white px-4 py-2 text-left">Preço Saída</th>
           </tr>
         </thead>
         <tbody>
           {Object.keys(descriptions).map((model) => {
-            if (descriptions[model].shortUseCase !== undefined) {
+            const info = descriptions[model];
+            if (info.shortUseCase) {
               return (
-                <tr key={model} className="hover:bg-gray-700 transition-colors">
-                  <td className="px-4 py-2 text-gray-300 font-semibold text-green-300">{descriptions[model].name}</td>
-                  <td className="px-4 py-2 text-gray-300">{descriptions[model].shortUseCase}</td>
-                  <td className="px-4 py-2 text-gray-200">{descriptions[model].prompt?.toFixed(1) || 'N/A'}</td>
-                  <td className="px-4 py-2 text-gray-200">{descriptions[model].completion?.toFixed(1) || 'N/A'}</td>
+                <tr key={model} className="transition-colors hover:bg-gray-700">
+                  <td className="px-4 py-2 font-semibold text-green-300">{info.name}</td>
+                  <td className="px-4 py-2 text-gray-300">{info.shortUseCase}</td>
+                  <td className="px-4 py-2 text-gray-200">{info.prompt?.toFixed(1) ?? 'N/A'}</td>
+                  <td className="px-4 py-2 text-gray-200">
+                    {info.completion?.toFixed(1) ?? 'N/A'}
+                  </td>
                 </tr>
               );
             }
@@ -75,6 +78,9 @@ const PriceTable = () => {
   );
 };
 
+/* -------------------------------------------------------------------------
+   LISTAS DE ITENS (exemplos) – permanecem iguais ao que estava antes
+   ------------------------------------------------------------------------- */
 const models_task_day_to_day_items = [
   'Escrever e-mails formais',
   'Resumir textos longos',
@@ -83,16 +89,7 @@ const models_task_day_to_day_items = [
   'Gerar rascunhos de posts',
   'Reformular frases',
   'Traduzir trechos rápidos',
-]
-const models_task_day_to_day = [
-  { emoji: '🟢', name: 'Qwen3 235B Instruct', cost: '0.2 / 0.9', speed: '⚡⚡⚡', capacity: '🧩🧩🧩',},
-  { emoji: '🟢', name: 'DeepSeek V3.1', cost: '0.9 / 0.9', speed: '⚡⚡', capacity: '🧩🧩',},
-  { emoji: '🟢', name: 'Gemini 2.5 Flash', cost: '0.3 / 2.5', speed: '⚡⚡⚡', capacity: '🧩🧩',},
-  { emoji: '🟢', name: 'GPT-4.1 Mini', cost: '0.4 / 1.6', speed: '⚡⚡', capacity: '🧩🧩🧩', },
-  { emoji: '🟢', name: 'Llama 4 Maverick',cost: '0.2 / 0.6',speed: '⚡⚡⚡',capacity: '🧩🧩',
-  },
-]
-
+];
 const models_web_search_items = [
   'Checar notícias de última hora',
   'Comparar preços de produtos',
@@ -100,14 +97,7 @@ const models_web_search_items = [
   'Confirmar fatos históricos ou científicos',
   'Encontrar referências acadêmicas',
   'Descobrir tendências de mercado',
-]
-
-const models_web_search = [
-  { emoji: '🟡', name: 'GPT-4.1', cost: '2.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
-  { emoji: '🟡', name: 'o4-Mini', cost: '1.1 / 4.4', speed: '⚡⚡⚡', capacity: '🧩🧩🧩' },
-  { emoji: '🟡', name: 'Gemini 2.5 Flash', cost: '0.3 / 2.5', speed: '⚡⚡⚡', capacity: '🧩🧩' },
-]
-
+];
 const models_code_and_software_engineering_items = [
   'Gerar & rodar scripts Python',
   'Depurar código JavaScript',
@@ -118,16 +108,7 @@ const models_code_and_software_engineering_items = [
   'Analisar CSVs',
   'Produzir testes unitários',
   'Refatorar monólitos',
-]
-const models_code_and_software_engineering = [
-  { emoji: '🔵', name: 'Claude Sonnet 4', cost: '3.0 / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
-  { emoji: '🔵', name: 'Qwen3 Coder 480B', cost: '0.5 / 1.8', speed: '⚡⚡⚡', capacity: '🧩🧩🧩🧩' },
-  { emoji: '🔵', name: 'GPT-4.1', cost: '2.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
-  { emoji: '🔵', name: 'o3', cost: '2.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
-  { emoji: '🔵', name: 'Grok 4', cost: '3.0 / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
-  { emoji: '🔵', name: 'Gemini 2.5 Pro', cost: '2.0 / 12.5', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
-]
-
+];
 const models_maximum_complexity_items = [
   'Raciocínio multietapa',
   'Análises estratégicas',
@@ -135,17 +116,9 @@ const models_maximum_complexity_items = [
   'Design de algoritmos',
   'Simulações de cenários',
   'Provas matemáticas',
-  'Elaborações de políticas públicas',
+  'Elaboração de políticas públicas',
   'Arquitetura de sistemas',
-]
-const models_maximum_complexity = [
-  { emoji: '🔴', name: 'Grok 4', cost: '3.0 / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
-  { emoji: '🔴', name: 'o3', cost: '2.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
-  { emoji: '🔴', name: 'Gemini 2.5 Pro', cost: '2.0 / 12.5', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
-  { emoji: '🔴', name: 'Claude Sonnet 4', cost: '3.0 / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
-  { emoji: '🔴', name: 'DeepSeek R1', cost: '3.0 / 8.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
-]
-
+];
 const models_ultra_velocity_items = [
   'Respostas instantâneas',
   'Chat-bots em tempo real',
@@ -153,58 +126,265 @@ const models_ultra_velocity_items = [
   'Geração de texto curto',
   'Brainstorming rápido',
   'Sem execução de código nem busca na web',
-]
+];
+
+/* -------------------------------------------------------------------------
+   RECOMENDAÇÕES DE MODELOS POR TIPO DE TAREFA
+   ------------------------------------------------------------------------- */
+
+/* 1️⃣ Tarefas Comuns do Dia a Dia 📨 */
+const models_task_day_to_day = [
+  {
+    emoji: '🟢',
+    name: 'Groq/Fireworks → GPT-OSS 20B',
+    cost: '0.10 / 0.50',
+    speed: '⚡⚡⚡⚡⚡',
+    capacity: '🧩🧩',
+  },
+  {
+    emoji: '🟢',
+    name: 'Groq/Fireworks → GPT-OSS 120B',
+    cost: '0.15 / 0.75',
+    speed: '⚡⚡⚡⚡',
+    capacity: '🧩🧩🧩🧩🧩',
+  },
+  {
+    emoji: '🟢',
+    name: 'Google → Gemini 2.5 Flash',
+    cost: '0.3  / 2.5',
+    speed: '⚡⚡⚡',
+    capacity: '🧩🧩',
+  },
+  {
+    emoji: '🟢',
+    name: 'Groq → Llama 4 Maverick',
+    cost: '0.2  / 0.6',
+    speed: '⚡⚡⚡',
+    capacity: '🧩🧩',
+  },
+  {
+    emoji: '🟢',
+    name: 'Fireworks → Qwen3 235B Instruct',
+    cost: '0.2  / 0.9',
+    speed: '⚡⚡⚡',
+    capacity: '🧩🧩',
+  },
+];
+
+/* 2️⃣ Pesquisa na Web 🔍 */
+const models_web_search = [
+  {
+    emoji: '🟡',
+    name: 'Google → Gemini 2.5 Flash',
+    cost: '0.3  / 2.5',
+    speed: '⚡⚡⚡',
+    capacity: '🧩🧩',
+  },
+  {
+    emoji: '🟡',
+    name: 'Azure OpenAI → o4-Mini',
+    cost: '1.1  / 4.4',
+    speed: '⚡⚡⚡',
+    capacity: '🧩🧩🧩',
+  },
+  {
+    emoji: '🟡',
+    name: 'Azure OpenAI → GPT-4.1',
+    cost: '2.0  / 8.0',
+    speed: '⚡⚡',
+    capacity: '🧩🧩🧩🧩',
+  },
+];
+
+/* 3️⃣ Código & Eng. Software 💻 */
+const models_code_and_software_engineering = [
+  {
+    emoji: '🔵',
+    name: 'Anthropic → Claude Sonnet 4',
+    cost: '3.0  / 15.0',
+    speed: '⚡⚡',
+    capacity: '🧩🧩🧩🧩🧩',
+  },
+  {
+    emoji: '🔵',
+    name: 'Fireworks → Qwen3 Coder 480B',
+    cost: '0.5  / 1.8',
+    speed: '⚡⚡⚡',
+    capacity: '🧩🧩🧩🧩',
+  },
+  {
+    emoji: '🔵',
+    name: 'Groq/Fireworks → GPT-OSS 120B',
+    cost: '0.15 / 0.75',
+    speed: '⚡⚡⚡⚡',
+    capacity: '🧩🧩🧩🧩',
+  },
+  {
+    emoji: '🔵',
+    name: 'Azure OpenAI → o3',
+    cost: '2.0  / 8.0',
+    speed: '⚡⚡',
+    capacity: '🧩🧩🧩🧩',
+  },
+  {
+    emoji: '🔵',
+    name: 'Azure OpenAI → GPT-4.1',
+    cost: '2.0  / 8.0',
+    speed: '⚡⚡',
+    capacity: '🧩🧩🧩🧩',
+  },
+  { emoji: '🔵', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
+  {
+    emoji: '🔵',
+    name: 'Google → Gemini 2.5 Pro',
+    cost: '2.0  / 12.5',
+    speed: '⚡⚡⚡',
+    capacity: '🧩🧩🧩🧩',
+  },
+];
+
+/* 4️⃣ Máxima Complexidade 🧠 */
+const models_maximum_complexity = [
+  { emoji: '🔴', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
+  {
+    emoji: '🔴',
+    name: 'Azure OpenAI → o3',
+    cost: '2.0  / 8.0',
+    speed: '⚡⚡',
+    capacity: '🧩🧩🧩🧩🧩',
+  },
+  {
+    emoji: '🔴',
+    name: 'Google → Gemini 2.5 Pro',
+    cost: '2.0  / 12.5',
+    speed: '⚡⚡',
+    capacity: '🧩🧩🧩🧩🧩',
+  },
+  {
+    emoji: '🔴',
+    name: 'Fireworks → DeepSeek R1',
+    cost: '3.0  / 8.0',
+    speed: '⚡⚡',
+    capacity: '🧩🧩🧩🧩',
+  },
+];
+
+/* 5️⃣ Ultra‑Velocidade ⚡ */
 const models_ultra_velocity = [
-  { emoji: '⚪', name: 'Llama 4 Maverick', cost: '0.2 / 0.6', speed: '⚡⚡⚡⚡', capacity: '🧩🧩' },
-  { emoji: '⚪', name: 'Llama 4 Scout', cost: '0.1 / 0.3', speed: '⚡⚡⚡⚡⚡', capacity: '🧩' },
-]
-
-
+  {
+    emoji: '⚪',
+    name: 'Groq/Fireworks → GPT-OSS 20B',
+    cost: '0.10 / 0.50',
+    speed: '⚡⚡⚡⚡⚡',
+    capacity: '🧩🧩',
+  },
+  {
+    emoji: '⚪',
+    name: 'Groq/Fireworks → GPT-OSS 120B',
+    cost: '0.15 / 0.75',
+    speed: '⚡⚡⚡⚡',
+    capacity: '🧩🧩🧩🧩🧩',
+  },
+  {
+    emoji: '⚪',
+    name: 'Groq → Llama 4 Maverick',
+    cost: '0.2  / 0.6',
+    speed: '⚡⚡⚡⚡',
+    capacity: '🧩🧩',
+  },
+  {
+    emoji: '⚪',
+    name: 'Groq → Llama 4 Scout',
+    cost: '0.1  / 0.3',
+    speed: '⚡⚡⚡⚡⚡',
+    capacity: '🧩',
+  },
+];
 
 export default function PrecoTokenizacaoLimitacoesPage() {
   return (
     <div className="mx-auto">
-      <section className="mt-12" id="custo-token" title="Custos por Token">
-        <h2 className="text-2xl font-semibold text-white mb-4">Custos por Token</h2>
-        <p className="text-gray-200 leading-relaxed">
+      {/* ------------- Título e Introdução ------------- */}
+      <section className="mt-12" id="custo-token">
+        <h2 className="mb-4 text-2xl font-semibold text-white">Custos por Token</h2>
+        <p className="leading-relaxed text-gray-200">
           Cada modelo de IA possui um preço calculado por{' '}
-          <span className="font-semibold text-green-300">tokens</span>, tanto na entrada (prompt) quanto na saída
-          (resposta). Entender esses valores é chave para manter o orçamento sob controle.
+          <span className="font-semibold text-green-300">tokens</span>, tanto na entrada (prompt)
+          quanto na saída (resposta). Entender esses valores é essencial para manter o orçamento sob
+          controle.
         </p>
       </section>
 
-      <section className='mt-12' id="impacto-custo" title="Como os Tokens Impactam no Custo">
-        <h2 className="text-2xl font-semibold text-white mb-4">Como os Tokens Impactam no Custo</h2>
-        <p className="text-gray-200 leading-relaxed mb-4">
-          O valor total de uma chamada API é a soma dos tokens de entrada e saída multiplicados pelo preço
-          unitário de cada modelo. Prompts mais longos e respostas detalhadas consomem mais tokens, elevando
-          o custo.
+      {/* ------------- Como os Tokens Impactam ------------ */}
+      <section className="mt-12" id="impacto-custo">
+        <h2 className="mb-4 text-2xl font-semibold text-white">Como os Tokens Impactam no Custo</h2>
+        <p className="mb-4 leading-relaxed text-gray-200">
+          O valor total de uma chamada API é a soma dos tokens de entrada e saída multiplicados pelo
+          preço unitário de cada modelo. Prompts longos e respostas detalhadas consomem mais tokens,
+          aumentando o custo.
         </p>
         <CostExample />
       </section>
 
-      <section className='mt-12' id="tabela-precos" title="Tabela de Preços por Modelo ($USD/1M tokens)">
-        <h2 className="text-2xl font-semibold text-white mb-4">Tabela de Preços por Modelo ($USD/1M tokens)</h2>
+      {/* ----------------- Tabela de Preços ----------------- */}
+      <section className="mt-12" id="tabela-precos">
+        <h2 className="mb-4 text-2xl font-semibold text-white">
+          Tabela de Preços por Modelo ($USD/1M tokens)
+        </h2>
         <PriceTable />
       </section>
 
+      {/* -------------- Recomendações por Perfil -------------- */}
+      <section className="mt-12" id="perfis-uso">
+        <h2 className="mb-4 text-2xl font-semibold text-white">Recomendações por Perfil de Uso</h2>
 
-      <section className='mt-12' id="perfis-uso" title="Recomendações por Perfil de Uso">
-        <h2 className="text-2xl font-semibold text-white mb-4">Recomendações por Perfil de Uso</h2>
-        <SectionRecommendations title="Tarefas Comuns do Dia a Dia" items={models_task_day_to_day_items} models={models_task_day_to_day} />
-        <SectionRecommendations title="Pesquisa na Web" items={models_web_search_items} models={models_web_search} />
-        <SectionRecommendations title="Código & Engenharia de Software" items={models_code_and_software_engineering_items} models={models_code_and_software_engineering} />
-        <SectionRecommendations title="Máxima Complexidade" items={models_maximum_complexity_items} models={models_maximum_complexity} />
-        <SectionRecommendations title="Ultra-Velocidade" items={models_ultra_velocity_items} models={models_ultra_velocity} />
+        {/* 1️⃣ Tarefas do dia‑a‑dia */}
+        <SectionRecommendations
+          title="Tarefas Comuns do Dia a Dia"
+          items={models_task_day_to_day_items}
+          models={models_task_day_to_day}
+        />
 
+        {/* 2️⃣ Pesquisa na Web */}
+        <SectionRecommendations
+          title="Pesquisa na Web"
+          items={models_web_search_items}
+          models={models_web_search}
+        />
+
+        {/* 3️⃣ Código & Engenharia de Software */}
+        <SectionRecommendations
+          title="Código & Engenharia de Software"
+          items={models_code_and_software_engineering_items}
+          models={models_code_and_software_engineering}
+        />
+
+        {/* 4️⃣ Máxima Complexidade */}
+        <SectionRecommendations
+          title="Máxima Complexidade"
+          items={models_maximum_complexity_items}
+          models={models_maximum_complexity}
+        />
+
+        {/* 5️⃣ Ultra‑Velocidade */}
+        <SectionRecommendations
+          title="Ultra-Velocidade"
+          items={models_ultra_velocity_items}
+          models={models_ultra_velocity}
+        />
+
+        {/* Dicas Extras de Economia */}
         <div className="mt-12 text-gray-200">
-          <p>💡 <span className="font-semibold">Dicas Extras de Economia</span></p>
-          <div className="pl-4 pb-4">
-            <li>Prompt enxuto = menos tokens de entrada (💵)</li>
-            <li>Crie sempre novos chats após 2-3 interações.</li>
-            <li>Agrupe perguntas em lotes sempre que possível (“batching”)</li>
-            <li>Combine modelos: use um Llama 4 Scout para rascunhar e depois refine com Claude Sonnet 4.</li>
-          </div>
+          <p className="mb-2 font-semibold">💡 Dicas Extras de Economia</p>
+          <ul className="list-disc space-y-1 pl-6">
+            <li>Prompt curto = menos tokens (💵)</li>
+            <li>Abrir novo chat a cada 2‑3 interações para evitar histórico caro</li>
+            <li>Agrupar perguntas em lotes ("batching")</li>
+            <li>
+              Combinar modelos: use GPT‑OSS 20B/120B para rascunho e refina com Claude Sonnet 4 –
+              custo mínimo com alta qualidade 🚀
+            </li>
+          </ul>
         </div>
       </section>
     </div>
