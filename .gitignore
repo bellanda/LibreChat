@@ -1,6 +1,7 @@
 ### node etc ###
 groups-config.json
 models-descriptions.json
+full-models-descriptions.json
 *.local*
 create-admin-on-mongo.sh
 tnsnames.ora
