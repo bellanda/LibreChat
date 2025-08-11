@@ -1,3 +1,4 @@
+import { useToastContext } from '@librechat/client';
 import type * as t from 'librechat-data-provider';
 import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import debounce from 'lodash/debounce';
@@ -8,12 +9,7 @@ import { useGetEndpointsQuery } from '~/data-provider';
 import { useEndpoints, useKeyDialog, useSelectorEffects } from '~/hooks';
 import useSelectMention from '~/hooks/Input/useSelectMention';
 import { useModelDescriptions } from '~/hooks/useModelDescriptions';
-import {
-  useAgentsMapContext,
-  useAssistantsMapContext,
-  useChatContext,
-  useToastContext,
-} from '~/Providers';
+import { useAgentsMapContext, useAssistantsMapContext, useChatContext } from '~/Providers';
 import { filterItems } from './utils';
 
 type ModelSelectorContextType = {

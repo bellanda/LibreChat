@@ -1,4 +1,15 @@
 import {
+  Button,
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  useToastContext,
+} from '@librechat/client';
+import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -21,20 +32,9 @@ import {
 import { ArrowUpLeft } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { useSetRecoilState } from 'recoil';
-
-import {
-  Button,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '~/components/ui';
+import { useChatContext, useFileMapContext } from '~/Providers';
 import { useGetFileConfig } from '~/data-provider';
 import { useLocalize, useUpdateFiles } from '~/hooks';
-import { useChatContext, useFileMapContext, useToastContext } from '~/Providers';
 import store from '~/store';
 
 interface DataTableProps<TData, TValue> {
@@ -172,7 +172,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
 
   return (
     <div role="region" aria-label={localize('com_files_table')} className="mt-2 space-y-2">
-      <div className="flex items-center gap-4">
+      <div className="flex gap-4 items-center">
         <Input
           placeholder={localize('com_files_filter')}
           value={filenameFilter ?? ''}
@@ -181,7 +181,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
         />
       </div>
 
-      <div className="rounded-lg border border-border-light bg-transparent shadow-sm transition-colors">
+      <div className="bg-transparent rounded-lg border shadow-sm transition-colors border-border-light">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -191,7 +191,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                     <TableHead
                       key={header.id}
                       style={{ width: index === 0 ? '75%' : '25%' }}
-                      className="bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary"
+                      className="py-3 text-sm font-medium text-left bg-surface-secondary text-text-secondary"
                     >
                       <div className="px-4">
                         {header.isPlaceholder
@@ -265,7 +265,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center text-sm text-text-secondary"
+                    className="h-24 text-sm text-center text-text-secondary"
                   >
                     {localize('com_files_no_results')}
                   </TableCell>
@@ -276,18 +276,18 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowFiles(true)}
           aria-label={localize('com_sidepanel_manage_files')}
         >
-          <ArrowUpLeft className="h-4 w-4" aria-hidden="true" />
+          <ArrowUpLeft className="w-4 h-4" aria-hidden="true" />
           <span className="ml-2">{localize('com_sidepanel_manage_files')}</span>
         </Button>
 
-        <div className="flex items-center gap-2" role="navigation" aria-label="Pagination">
+        <div className="flex gap-2 items-center" role="navigation" aria-label="Pagination">
           <Button
             variant="outline"
             size="sm"

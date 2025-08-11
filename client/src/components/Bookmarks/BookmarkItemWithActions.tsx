@@ -1,15 +1,12 @@
 import { MenuItem } from '@headlessui/react';
+import { Label, OGDialog, OGDialogTemplate, Spinner, useToastContext } from '@librechat/client';
 import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import type { TConversationTag } from 'librechat-data-provider';
 import type { FC } from 'react';
 import { useCallback, useState } from 'react';
 import { BookmarkEditDialog } from '~/components/Bookmarks';
-import { Spinner } from '~/components/svg';
-import { Label, OGDialog } from '~/components/ui';
-import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
 import { useDeleteConversationTagMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
-import { useToastContext } from '~/Providers';
 
 type BookmarkItemWithActionsProps = {
   bookmark: TConversationTag;
@@ -109,8 +106,8 @@ const BookmarkItemWithActions: FC<BookmarkItemWithActionsProps> = ({
         {...rest}
         as="div"
       >
-        <div className="flex grow items-center justify-between gap-2">
-          <button className="flex min-w-0 grow items-center gap-2 text-left" onClick={clickHandler}>
+        <div className="flex gap-2 justify-between items-center grow">
+          <button className="flex gap-2 items-center min-w-0 text-left grow" onClick={clickHandler}>
             {renderIcon()}
             <div style={breakWordStyle} className="flex-1 truncate" title={tag as string}>
               {tag}
@@ -120,24 +117,24 @@ const BookmarkItemWithActions: FC<BookmarkItemWithActionsProps> = ({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity hover:bg-surface-hover group-hover:opacity-100"
+                  className="flex flex-shrink-0 justify-center items-center w-6 h-6 rounded-md opacity-0 transition-opacity hover:bg-surface-hover group-hover:opacity-100"
                   onClick={handleMenuClick}
                   aria-label={localize('com_ui_more_options')}
                 >
-                  <MoreHorizontal className="h-4 w-4" />
+                  <MoreHorizontal className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="z-50 w-48">
-                <DropdownMenuItem onClick={handleEditClick} className="flex items-center gap-2">
-                  <Edit className="h-4 w-4" />
+                <DropdownMenuItem onClick={handleEditClick} className="flex gap-2 items-center">
+                  <Edit className="w-4 h-4" />
                   {localize('com_ui_edit')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleDeleteClick}
-                  className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                  className="flex gap-2 items-center text-red-600 focus:text-red-600"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="w-4 h-4" />
                   {localize('com_ui_delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -159,7 +156,7 @@ const BookmarkItemWithActions: FC<BookmarkItemWithActionsProps> = ({
           title={localize('com_ui_bookmarks_delete')}
           className="w-11/12 max-w-lg"
           main={
-            <Label className="text-left text-sm font-medium">
+            <Label className="text-sm font-medium text-left">
               {localize('com_ui_bookmark_delete_confirm')} <strong>"{bookmark.tag}"</strong>?
             </Label>
           }

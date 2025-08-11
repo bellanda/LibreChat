@@ -1,4 +1,9 @@
-const { isAgentsEndpoint, Constants, EModelEndpoint } = require('librechat-data-provider');
+const {
+  isAgentsEndpoint,
+  removeNullishValues,
+  Constants,
+  EModelEndpoint,
+} = require('librechat-data-provider');
 const { getCustomEndpointConfig } = require('~/server/services/Config/getCustomConfig');
 const { loadAgent } = require('~/models/Agent');
 const { logger } = require('~/config');
@@ -61,7 +66,7 @@ const buildOptions = async (req, endpoint, parsedBody, endpointType) => {
     return undefined;
   });
 
-  const endpointOption = {
+  return removeNullishValues({
     spec,
     iconURL,
     endpoint,
@@ -69,12 +74,10 @@ const buildOptions = async (req, endpoint, parsedBody, endpointType) => {
     endpointType,
     instructions,
     maxContextTokens,
-    promptPrefix,
+    promptPrefix: finalPromptPrefix,
     model_parameters,
     agent: agentPromise,
-  };
-
-  return endpointOption;
+  });
 };
 
 module.exports = { buildOptions };

@@ -4,15 +4,11 @@ import {
   codeTypeMapping,
   fileConfig as defaultFileConfig,
   excelMimeTypes,
-  isLikelyTextFile,
   megabyte,
   QueryKeys,
 } from 'librechat-data-provider';
 import type { ExtendedFile } from '~/common';
-import CodePaths from '~/components/svg/Files/CodePaths';
-import FilePaths from '~/components/svg/Files/FilePaths';
-import SheetPaths from '~/components/svg/Files/SheetPaths';
-import TextPaths from '~/components/svg/Files/TextPaths';
+import { CodePaths, FilePaths, SheetPaths, TextPaths } from '~/components/svg';
 
 export const partialTypes = ['text/x-'];
 
@@ -201,6 +197,76 @@ export function formatBytes(bytes: number, decimals = 2) {
 }
 
 const { checkType } = defaultFileConfig;
+
+// Helper function to check if a file extension is likely a text file
+function isLikelyTextFile(extension: string): boolean {
+  const textExtensions = [
+    'txt',
+    'md',
+    'markdown',
+    'rst',
+    'log',
+    'ini',
+    'cfg',
+    'conf',
+    'config',
+    'json',
+    'xml',
+    'html',
+    'htm',
+    'css',
+    'scss',
+    'sass',
+    'less',
+    'yaml',
+    'yml',
+    'toml',
+    'csv',
+    'tsv',
+    'sql',
+    'sh',
+    'bash',
+    'zsh',
+    'fish',
+    'ps1',
+    'bat',
+    'cmd',
+    'py',
+    'js',
+    'ts',
+    'jsx',
+    'tsx',
+    'vue',
+    'svelte',
+    'php',
+    'rb',
+    'go',
+    'rs',
+    'java',
+    'kt',
+    'swift',
+    'c',
+    'cpp',
+    'cc',
+    'cxx',
+    'h',
+    'hpp',
+    'cs',
+    'fs',
+    'vb',
+    'pl',
+    'pm',
+    'r',
+    'm',
+    'mm',
+    'scala',
+    'clj',
+    'edn',
+    'hs',
+    'elm',
+  ];
+  return textExtensions.includes(extension.toLowerCase());
+}
 
 export const validateFiles = ({
   files,

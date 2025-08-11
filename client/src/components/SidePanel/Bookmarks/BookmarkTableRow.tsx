@@ -1,12 +1,11 @@
+import { TableCell, TableRow, useToastContext } from '@librechat/client';
 import type { TConversationTag } from 'librechat-data-provider';
 import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { NotificationSeverity } from '~/common';
 import { DeleteBookmarkButton, EditBookmarkButton } from '~/components/Bookmarks';
-import { TableCell, TableRow } from '~/components/ui';
 import { useConversationTagMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
-import { useToastContext } from '~/Providers';
 
 interface BookmarkTableRowProps {
   row: TConversationTag;
@@ -30,6 +29,12 @@ const BookmarkTableRow: React.FC<BookmarkTableRowProps> = ({ row, moveRow, posit
     mutation.mutate(
       { ...row, position: item.index },
       {
+        onSuccess: () => {
+          showToast({
+            message: localize('com_ui_bookmarks_update_success'),
+            severity: NotificationSeverity.SUCCESS,
+          });
+        },
         onError: () => {
           showToast({
             message: localize('com_ui_bookmarks_update_error'),
@@ -69,7 +74,7 @@ const BookmarkTableRow: React.FC<BookmarkTableRowProps> = ({ row, moveRow, posit
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       <TableCell className="w-[50%] px-4 py-4">
-        <div className="overflow-hidden text-ellipsis whitespace-nowrap" title={row.tag}>
+        <div className="overflow-hidden whitespace-nowrap text-ellipsis" title={row.tag}>
           {row.tag}
         </div>
       </TableCell>

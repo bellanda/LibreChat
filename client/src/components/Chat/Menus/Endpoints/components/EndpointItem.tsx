@@ -1,8 +1,8 @@
+import { Spinner, TooltipAnchor } from '@librechat/client';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import { SettingsIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import type { Endpoint } from '~/common';
-import { Spinner, TooltipAnchor } from '~/components';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';

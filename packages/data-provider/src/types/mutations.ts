@@ -6,14 +6,13 @@ import {
   Assistant,
   AssistantCreateParams,
   AssistantUpdateParams,
-  ActionMetadata,
   FunctionTool,
   AssistantDocument,
-  Action,
   Agent,
   AgentCreateParams,
   AgentUpdateParams,
 } from './assistants';
+import { Action, ActionMetadata } from './agents';
 
 export type MutationOptions<
   Response,
@@ -137,12 +136,7 @@ export type DuplicateVersionError = Error & {
   };
 };
 
-export type UpdateAgentMutationOptions = MutationOptions<
-  Agent,
-  UpdateAgentVariables,
-  unknown,
-  DuplicateVersionError
->;
+export type UpdateAgentMutationOptions = MutationOptions<Agent, UpdateAgentVariables>;
 
 export type DuplicateAgentBody = {
   agent_id: string;
@@ -278,7 +272,7 @@ export type UpdatePermVars<T> = {
 };
 
 export type UpdatePromptPermVars = UpdatePermVars<p.TPromptPermissions>;
-
+export type UpdateMemoryPermVars = UpdatePermVars<p.TMemoryPermissions>;
 export type UpdateAgentPermVars = UpdatePermVars<p.TAgentPermissions>;
 
 export type UpdatePermResponse = r.TRole;
@@ -286,6 +280,13 @@ export type UpdatePermResponse = r.TRole;
 export type UpdatePromptPermOptions = MutationOptions<
   UpdatePermResponse,
   UpdatePromptPermVars,
+  unknown,
+  types.TError | null | undefined
+>;
+
+export type UpdateMemoryPermOptions = MutationOptions<
+  UpdatePermResponse,
+  UpdateMemoryPermVars,
   unknown,
   types.TError | null | undefined
 >;
@@ -362,3 +363,13 @@ export type TLogoutResponse = {
 };
 
 export type LogoutOptions = MutationOptions<TLogoutResponse, undefined>;
+
+export interface AssistantInitialize {
+  message: string;
+  error?: string;
+}
+
+export interface CancelMCPOAuthResponse {
+  success: boolean;
+  message: string;
+}

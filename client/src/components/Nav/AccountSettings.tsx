@@ -1,10 +1,9 @@
 import * as Select from '@ariakit/react/select';
+import { DropdownMenuSeparator, GearIcon, LinkIcon, UserIcon } from '@librechat/client';
 import { FileText, LogOut } from 'lucide-react';
 import { memo, useState } from 'react';
 import { useRecoilState } from 'recoil';
-import { DropdownMenuSeparator, GearIcon, LinkIcon } from '~/components';
 import FilesView from '~/components/Chat/Input/Files/FilesView';
-import { UserIcon } from '~/components/svg';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import { useAuthContext } from '~/hooks/AuthContext';

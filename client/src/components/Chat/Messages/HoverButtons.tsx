@@ -1,8 +1,8 @@
+import { CheckMark, Clipboard, ContinueIcon, EditIcon, RegenerateIcon } from '@librechat/client';
 import type { TConversation, TFeedback, TMessage } from 'librechat-data-provider';
 import { Upload } from 'lucide-react';
 import React, { memo, useMemo, useState } from 'react';
 import { useRecoilState } from 'recoil';
-import { CheckMark, Clipboard, ContinueIcon, EditIcon, RegenerateIcon } from '~/components';
 import { Fork } from '~/components/Conversations';
 import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
 import { useGenerationsByLatest, useLocalize } from '~/hooks';
@@ -27,6 +27,7 @@ type THoverButtons = {
 };
 
 type HoverButtonProps = {
+  id?: string;
   onClick: (e?: React.MouseEvent<HTMLButtonElement>) => void;
   title: string;
   icon: React.ReactNode;
@@ -69,6 +70,7 @@ const extractMessageContent = (message: TMessage): string => {
 
 const HoverButton = memo(
   ({
+    id,
     onClick,
     title,
     icon,
@@ -79,26 +81,19 @@ const HoverButton = memo(
     className = '',
   }: HoverButtonProps) => {
     const buttonStyle = cn(
-      'hover-button rounded-lg p-1.5',
-
-      'hover:bg-gray-100 hover:text-gray-500',
-
-      'dark:text-gray-400/70 dark:hover:bg-gray-700 dark:hover:text-gray-200',
-      'disabled:dark:hover:text-gray-400',
-
+      'hover-button rounded-lg p-1.5 text-text-secondary-alt transition-colors duration-200',
+      'hover:text-text-primary hover:bg-surface-hover',
       'md:group-hover:visible md:group-focus-within:visible md:group-[.final-completion]:visible',
       !isLast && 'md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100',
       !isVisible && 'opacity-0',
-
       'focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white focus-visible:outline-none',
-
-      isActive && isVisible && 'active text-gray-700 dark:text-gray-200 bg-gray-100 bg-gray-700',
-
+      isActive && isVisible && 'active text-text-primary bg-surface-hover',
       className,
     );
 
     return (
       <button
+        id={id}
         className={buttonStyle}
         onClick={onClick}
         type="button"
@@ -186,10 +181,8 @@ const HoverButtons = ({
     enterEdit();
   };
 
-  
   const [showExportModal, setShowExportModal] = useState(false);
   const openExportModal = () => setShowExportModal(true);
-  
 
   const handleCopy = () => copyToClipboard(setIsCopied);
 
@@ -228,6 +221,7 @@ const HoverButtons = ({
       {/* Edit Button */}
       {isEditableEndpoint && (
         <HoverButton
+          id={`edit-${message.messageId}`}
           onClick={onEdit}
           title={localize('com_ui_edit')}
           icon={<EditIcon size="19" />}
@@ -275,20 +269,19 @@ const HoverButtons = ({
         />
       )}
 
-
       {/* Export button */}
       <HoverButton
         onClick={openExportModal}
         title={localize('com_ui_export_convo_modal')}
-        icon={<Upload size="19" />}            // agora usa Upload
+        icon={<Upload size="19" />} // agora usa Upload
         isLast={isLast}
         className="active"
       />
-        <ExportModal
-          open={showExportModal}
-          onOpenChange={setShowExportModal}
-          conversation={conversation}
-        />
+      <ExportModal
+        open={showExportModal}
+        onOpenChange={setShowExportModal}
+        conversation={conversation}
+      />
 
       {/*---------------------------------------------*/}
     </div>

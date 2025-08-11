@@ -1,10 +1,10 @@
 import { Menu, MenuButton, MenuItems } from '@headlessui/react';
+import { TooltipAnchor } from '@librechat/client';
 import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { BookmarkContext } from '~/Providers/BookmarkContext';
-import { TooltipAnchor } from '~/components/ui';
 import { useGetConversationTags } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
@@ -27,7 +27,7 @@ const BookmarkNav: FC<BookmarkNavProps> = ({ tags, setTags, isSmallScreen }: Boo
   );
 
   return (
-    <Menu as="div" className="group relative">
+    <Menu as="div" className="relative group">
       {({ open }) => (
         <>
           <TooltipAnchor
@@ -37,9 +37,9 @@ const BookmarkNav: FC<BookmarkNavProps> = ({ tags, setTags, isSmallScreen }: Boo
                 id="bookmark-menu-button"
                 aria-label={localize('com_ui_bookmarks')}
                 className={cn(
-                  'flex items-center justify-center',
-                  'size-10 border-none text-text-primary hover:bg-accent hover:text-accent-foreground',
-                  'rounded-full border-none p-2 hover:bg-surface-hover md:rounded-xl',
+                  'flex justify-center items-center',
+                  'border-none size-10 text-text-primary hover:bg-accent hover:text-accent-foreground',
+                  'p-2 rounded-full border-none hover:bg-surface-hover md:rounded-xl',
                   open ? 'bg-surface-hover' : '',
                 )}
                 data-testid="bookmark-menu"

@@ -1,3 +1,4 @@
+import { Button, InputCombobox, TextareaAutosize } from '@librechat/client';
 import type { TPromptGroup } from 'librechat-data-provider';
 import { replaceSpecialVars } from 'librechat-data-provider';
 import { useMemo } from 'react';
@@ -8,8 +9,7 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
-import { codeNoExecution } from '~/components/Chat/Messages/Content/Markdown';
-import { Button, InputCombobox, TextareaAutosize } from '~/components/ui';
+import { codeNoExecution } from '~/components/Chat/Messages/Content/MarkdownComponents';
 import { useAuthContext, useLocalize, useSubmitMessage } from '~/hooks';
 import { cn, defaultTextProps, extractVariableInfo, wrapVariable } from '~/utils';
 import { PromptVariableGfm } from '../Markdown';
@@ -138,12 +138,12 @@ export default function VariableForm({
   };
 
   return (
-    <div className="mx-auto p-1 md:container overflow-auto">
+    <div className="overflow-auto p-1 mx-auto md:container">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="mb-6 max-h-screen max-w-[90vw] overflow-auto rounded-md bg-surface-tertiary p-4 text-text-secondary dark:bg-surface-primary sm:max-w-full md:max-h-96">
           <ReactMarkdown
             /** @ts-ignore */
-            remarkPlugins={[supersub, remarkGfm, [remarkMath, { singleDollarTextMath: true }]]}
+            remarkPlugins={[supersub, remarkGfm, [remarkMath, { singleDollarTextMath: false }]]}
             rehypePlugins={[
               /** @ts-ignore */
               [rehypeKatex],
@@ -171,7 +171,7 @@ export default function VariableForm({
                         placeholder={field.config.variable}
                         className={cn(
                           defaultTextProps,
-                          'rounded px-3 py-2 focus:bg-surface-tertiary',
+                          'px-3 py-2 rounded focus:bg-surface-tertiary',
                         )}
                         value={value}
                         onChange={onChange}
@@ -189,7 +189,7 @@ export default function VariableForm({
                       id={`fields.${index}.value`}
                       className={cn(
                         defaultTextProps,
-                        'rounded px-3 py-2 focus:bg-surface-tertiary',
+                        'px-3 py-2 rounded focus:bg-surface-tertiary',
                       )}
                       placeholder={field.config.variable}
                       maxRows={8}

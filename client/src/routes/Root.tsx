@@ -16,9 +16,9 @@ import {
   AgentsMapContext,
   AssistantsMapContext,
   FileMapContext,
+  ModelDescriptionsProvider,
   SetConvoProvider,
 } from '~/Providers';
-import { ModelDescriptionsProvider } from '~/Providers/ModelDescriptionsContext';
 
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
@@ -71,9 +71,9 @@ export default function Root() {
             <AgentsMapContext.Provider value={agentsMap}>
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
-                <div className="relative z-0 flex h-full w-full overflow-hidden">
+                <div className="flex overflow-hidden relative z-0 w-full h-full">
                   <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
-                  <div className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden">
+                  <div className="flex overflow-hidden relative flex-col flex-1 max-w-full h-full">
                     <MobileNav setNavVisible={setNavVisible} />
                     <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
                   </div>

@@ -1,11 +1,18 @@
+import {
+  Button,
+  Label,
+  OGDialog,
+  OGDialogTemplate,
+  OGDialogTrigger,
+  TooltipAnchor,
+  TrashIcon,
+  useToastContext,
+} from '@librechat/client';
 import type { FC } from 'react';
 import { useCallback, useState } from 'react';
-import { TrashIcon } from '~/components/svg';
-import { Label, OGDialog, OGDialogTrigger, TooltipAnchor } from '~/components/ui';
-import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
+import { NotificationSeverity } from '~/common';
 import { useDeleteConversationTagMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
-import { useToastContext } from '~/Providers';
 
 const DeleteBookmarkButton: FC<{
   bookmark: string;
@@ -25,7 +32,8 @@ const DeleteBookmarkButton: FC<{
     },
     onError: () => {
       showToast({
-        message: localize('com_ui_bookmarks_delete_success'),
+        message: localize('com_ui_bookmarks_delete_error'),
+        severity: NotificationSeverity.ERROR,
       });
     },
   });
@@ -34,31 +42,26 @@ const DeleteBookmarkButton: FC<{
     await deleteBookmarkMutation.mutateAsync(bookmark);
   }, [bookmark, deleteBookmarkMutation]);
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      event.stopPropagation();
-      setOpen(!open);
-    }
-  };
-
   return (
     <>
       <OGDialog open={open} onOpenChange={setOpen}>
         <OGDialogTrigger asChild>
           <TooltipAnchor
-            role="button"
-            aria-label={localize('com_ui_bookmarks_delete')}
             description={localize('com_ui_delete')}
-            className="flex size-7 items-center justify-center rounded-lg transition-colors duration-200 hover:bg-surface-hover"
-            tabIndex={tabIndex}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            onClick={() => setOpen(!open)}
-            onKeyDown={handleKeyDown}
-          >
-            <TrashIcon className="size-4" />
-          </TooltipAnchor>
+            render={
+              <Button
+                variant="ghost"
+                aria-label={localize('com_ui_bookmarks_delete')}
+                tabIndex={tabIndex}
+                onFocus={onFocus}
+                onBlur={onBlur}
+                onClick={() => setOpen(!open)}
+                className="h-8 w-8 p-0"
+              >
+                <TrashIcon />
+              </Button>
+            }
+          />
         </OGDialogTrigger>
         <OGDialogTemplate
           showCloseButton={false}

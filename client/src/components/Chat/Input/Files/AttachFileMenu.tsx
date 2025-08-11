@@ -1,45 +1,41 @@
 import * as Ariakit from '@ariakit/react';
-import { EModelEndpoint, EToolResources } from 'librechat-data-provider';
+import { AttachmentIcon, DropdownPopup, FileUpload, TooltipAnchor } from '@librechat/client';
+import type { EndpointFileConfig } from 'librechat-data-provider';
+import { EModelEndpoint, EToolResources, defaultAgentCapabilities } from 'librechat-data-provider';
 import { FileSearch, FileType2Icon, ImageUpIcon, TerminalSquareIcon } from 'lucide-react';
 import React, { useMemo, useRef, useState } from 'react';
+import { useSetRecoilState } from 'recoil';
 import type { MenuItemProps } from '~/common';
-import { AttachmentIcon, DropdownPopup, FileUpload, TooltipAnchor } from '~/components';
-import { useGetEndpointsQuery } from '~/data-provider';
-import { useFileHandling, useLocalize } from '~/hooks';
-import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import { useAgentCapabilities, useFileHandling, useGetAgentsConfig, useLocalize } from '~/hooks';
 import { useChatContext } from '~/Providers';
+import { ephemeralAgentByConvoId } from '~/store';
 import { cn } from '~/utils';
 
-interface AttachFileProps {
+interface AttachFileMenuProps {
+  conversationId: string;
   disabled?: boolean | null;
+  endpointFileConfig?: EndpointFileConfig;
 }
 
-const AttachFile = ({ disabled }: AttachFileProps) => {
+const AttachFileMenu = ({ disabled, conversationId, endpointFileConfig }: AttachFileMenuProps) => {
   const localize = useLocalize();
   const { conversation } = useChatContext();
-  const { getModelDescription } = useModelDescriptions();
   const isUploadDisabled = disabled ?? false;
   const inputRef = useRef<HTMLInputElement>(null);
   const [isPopoverActive, setIsPopoverActive] = useState(false);
+  const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(conversationId));
   const [toolResource, setToolResource] = useState<EToolResources | undefined>();
-  const { data: endpointsConfig } = useGetEndpointsQuery();
   const { handleFileChange } = useFileHandling({
     overrideEndpoint: EModelEndpoint.agents,
+    overrideEndpointFileConfig: endpointFileConfig,
   });
 
+  const { agentsConfig } = useGetAgentsConfig();
   /** TODO: Ephemeral Agent Capabilities
    * Allow defining agent capabilities on a per-endpoint basis
    * Use definition for agents endpoint for ephemeral agents
    * */
-  const capabilities = useMemo(
-    () => endpointsConfig?.[EModelEndpoint.agents]?.capabilities ?? [],
-    [endpointsConfig],
-  );
-
-  // Check if current model supports image attachments
-  const currentModel = conversation?.model ?? null;
-  const modelDescription = getModelDescription(currentModel);
-  const supportsImageAttachment = modelDescription?.supportsImageAttachment ?? true;
+  const capabilities = useAgentCapabilities(agentsConfig?.capabilities ?? defaultAgentCapabilities);
 
   const handleUploadClick = (isImage?: boolean) => {
     if (!inputRef.current) {
@@ -54,30 +50,17 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
   const dropdownItems = useMemo(() => {
     const items: MenuItemProps[] = [];
 
-    // Only show image upload option if model supports it
-    if (supportsImageAttachment) {
-      items.push({
-        label: localize('com_ui_upload_image_input'),
-        onClick: () => {
-          setToolResource(undefined);
-          handleUploadClick(true);
-        },
-        icon: <ImageUpIcon className="icon-md" />,
-      });
-    }
-
-    // Always show basic file upload for RAG/file search, even if not explicitly in capabilities
-    // This ensures file upload works independently of web search being active
+    // Image upload option
     items.push({
-      label: localize('com_ui_upload_file_search'),
+      label: localize('com_ui_upload_image_input'),
       onClick: () => {
-        setToolResource(EToolResources.file_search);
-        handleUploadClick();
+        setToolResource(undefined);
+        handleUploadClick(true);
       },
-      icon: <FileSearch className="icon-md" />,
+      icon: <ImageUpIcon className="icon-md" />,
     });
 
-    if (capabilities.includes(EToolResources.ocr)) {
+    if (capabilities.ocrEnabled) {
       items.push({
         label: localize('com_ui_upload_ocr_text'),
         onClick: () => {
@@ -88,11 +71,27 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
       });
     }
 
-    if (capabilities.includes(EToolResources.execute_code)) {
+    if (capabilities.fileSearchEnabled) {
+      items.push({
+        label: localize('com_ui_upload_file_search'),
+        onClick: () => {
+          setToolResource(EToolResources.file_search);
+          /** File search is not automatically enabled to simulate legacy behavior */
+          handleUploadClick();
+        },
+        icon: <FileSearch className="icon-md" />,
+      });
+    }
+
+    if (capabilities.codeEnabled) {
       items.push({
         label: localize('com_ui_upload_code_files'),
         onClick: () => {
           setToolResource(EToolResources.execute_code);
+          setEphemeralAgent((prev) => ({
+            ...prev,
+            [EToolResources.execute_code]: true,
+          }));
           handleUploadClick();
         },
         icon: <TerminalSquareIcon className="icon-md" />,
@@ -100,7 +99,7 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
     }
 
     return items;
-  }, [capabilities, localize, setToolResource, supportsImageAttachment]);
+  }, [capabilities, localize, setToolResource, setEphemeralAgent]);
 
   const menuTrigger = (
     <TooltipAnchor
@@ -145,4 +144,4 @@ const AttachFile = ({ disabled }: AttachFileProps) => {
   );
 };
 
-export default React.memo(AttachFile);
+export default React.memo(AttachFileMenu);

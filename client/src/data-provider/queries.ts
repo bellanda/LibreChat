@@ -28,6 +28,7 @@ import {
   dataService,
   defaultAssistantsVersion,
   defaultOrderQuery,
+  isAgentsEndpoint,
 } from 'librechat-data-provider';
 import { findConversationInInfinite } from '~/utils';
 import type { ConversationCursorData } from '~/utils/convos';
@@ -204,7 +205,7 @@ export const useAvailableToolsQuery = <TData = t.TPlugin[]>(
   const keyExpiry = queryClient.getQueryData<TCheckUserKeyResponse>([QueryKeys.name, endpoint]);
   const userProvidesKey = !!endpointsConfig?.[endpoint]?.userProvide;
   const keyProvided = userProvidesKey ? !!keyExpiry?.expiresAt : true;
-  const enabled = !!endpointsConfig?.[endpoint] && keyProvided;
+  const enabled = isAgentsEndpoint(endpoint) ? true : !!endpointsConfig?.[endpoint] && keyProvided;
   const version: string | number | undefined =
     endpointsConfig?.[endpoint]?.version ?? defaultAssistantsVersion[endpoint];
   return useQuery<t.TPlugin[], unknown, TData>(

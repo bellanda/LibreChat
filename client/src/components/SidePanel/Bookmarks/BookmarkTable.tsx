@@ -1,7 +1,3 @@
-import type { ConversationTagsResponse, TConversationTag } from 'librechat-data-provider';
-import { BookmarkPlusIcon } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import { BookmarkEditDialog } from '~/components/Bookmarks';
 import {
   Button,
   Input,
@@ -12,9 +8,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '~/components/ui';
-import { useLocalize } from '~/hooks';
+} from '@librechat/client';
+import type { ConversationTagsResponse, TConversationTag } from 'librechat-data-provider';
+import { BookmarkPlusIcon } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { BookmarkContext, useBookmarkContext } from '~/Providers/BookmarkContext';
+import { BookmarkEditDialog } from '~/components/Bookmarks';
+import { useLocalize } from '~/hooks';
 import BookmarkTableRow from './BookmarkTableRow';
 
 const removeDuplicates = (bookmarks: TConversationTag[]) => {
@@ -66,7 +66,7 @@ const BookmarkTable = () => {
   return (
     <BookmarkContext.Provider value={{ bookmarks }}>
       <div role="region" aria-label={localize('com_ui_bookmarks')} className="mt-2 space-y-2">
-        <div className="flex items-center gap-4">
+        <div className="flex gap-4 items-center">
           <Input
             placeholder={localize('com_ui_bookmarks_filter')}
             value={searchQuery}
@@ -75,18 +75,18 @@ const BookmarkTable = () => {
           />
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-border-light bg-transparent shadow-sm transition-colors">
+        <div className="overflow-hidden bg-transparent rounded-lg border shadow-sm transition-colors border-border-light">
           <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow className="border-b border-border-light">
-                <TableHead className="w-[50%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
-                  <div className="px-4">{localize('com_ui_bookmarks_title')}</div>
-                </TableHead>
-                <TableHead className="w-[20%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
-                  <div className="px-4">{localize('com_ui_bookmarks_count')}</div>
+                <TableHead className="w-[70%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
+                  <div>{localize('com_ui_bookmarks_title')}</div>
                 </TableHead>
                 <TableHead className="w-[30%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
-                  <div className="px-4">{localize('com_assistants_actions')}</div>
+                  <div>{localize('com_ui_bookmarks_count')}</div>
+                </TableHead>
+                <TableHead className="w-[40%] bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary">
+                  <div>{localize('com_assistants_actions')}</div>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -95,7 +95,7 @@ const BookmarkTable = () => {
                 currentRows.map(renderRow)
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center text-sm text-text-secondary">
+                  <TableCell colSpan={3} className="h-24 text-sm text-center text-text-secondary">
                     {localize('com_ui_no_bookmarks')}
                   </TableCell>
                 </TableRow>
@@ -104,14 +104,14 @@ const BookmarkTable = () => {
           </Table>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex justify-between gap-2">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2 justify-between">
             <BookmarkEditDialog context="BookmarkPanel" open={open} setOpen={setOpen}>
               <OGDialogTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full gap-2 text-sm"
+                  className="gap-2 w-full text-sm"
                   onClick={() => setOpen(!open)}
                 >
                   <BookmarkPlusIcon className="size-4" />
@@ -120,7 +120,7 @@ const BookmarkTable = () => {
               </OGDialogTrigger>
             </BookmarkEditDialog>
           </div>
-          <div className="flex items-center gap-2" role="navigation" aria-label="Pagination">
+          <div className="flex gap-2 items-center" role="navigation" aria-label="Pagination">
             <Button
               variant="outline"
               size="sm"

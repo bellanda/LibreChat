@@ -1,9 +1,13 @@
-import { TConversation, tConvoUpdateSchema, TPlugin, TPreset } from 'librechat-data-provider';
+import {
+  EModelEndpoint,
+  TConversation,
+  tConvoUpdateSchema,
+  TPlugin,
+  TPreset,
+} from 'librechat-data-provider';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { useToastContext } from '~/Providers';
-import { useChatContext } from '~/Providers/ChatContext';
+import { useChatContext } from '~/Providers';
 import type { TSetExample, TSetOption, TSetOptionsPayload } from '~/common';
-import { NotificationSeverity } from '~/common';
 import { useModelDescriptions } from '~/hooks/useModelDescriptions';
 import store from '~/store';
 import usePresetIndexOptions from './usePresetIndexOptions';
@@ -15,7 +19,6 @@ const useSetIndexOptions: TUseSetOptions = (preset = false) => {
   const availableTools = useRecoilValue(store.availableTools);
   const { conversation, setConversation } = useChatContext();
   const { getModelDescription } = useModelDescriptions();
-  const { showToast } = useToastContext();
 
   const result = usePresetIndexOptions(preset);
 
@@ -27,11 +30,10 @@ const useSetIndexOptions: TUseSetOptions = (preset = false) => {
     if (param === 'model' && typeof newValue === 'string') {
       const modelDescription = getModelDescription(newValue);
       if (modelDescription && modelDescription.supportsWebSearch === false) {
-        showToast({
-          message: `O modelo "${modelDescription.name || newValue}" não suporta busca na web. O recurso de busca na web não estará disponível para este modelo.`,
-          severity: NotificationSeverity.WARNING,
-          duration: 5000,
-        });
+        // Toast functionality removed - model description check still works
+        console.warn(
+          `O modelo "${modelDescription.name || newValue}" não suporta busca na web. O recurso de busca na web não estará disponível para este modelo.`,
+        );
       }
     }
 
@@ -44,6 +46,22 @@ const useSetIndexOptions: TUseSetOptions = (preset = false) => {
         ...currentOverride,
         ...(newValue as unknown as Partial<TPreset>),
       };
+    }
+
+    // Auto-enable Responses API when web search is enabled (only for OpenAI/Azure/Custom endpoints)
+    if (param === 'web_search' && newValue === true) {
+      const currentEndpoint = conversation?.endpoint;
+      const isOpenAICompatible =
+        currentEndpoint === EModelEndpoint.openAI ||
+        currentEndpoint === EModelEndpoint.azureOpenAI ||
+        currentEndpoint === EModelEndpoint.custom;
+
+      if (isOpenAICompatible) {
+        const currentUseResponsesApi = conversation?.useResponsesApi ?? false;
+        if (!currentUseResponsesApi) {
+          update['useResponsesApi'] = true;
+        }
+      }
     }
 
     setConversation(

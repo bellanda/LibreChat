@@ -1,8 +1,8 @@
 import { MenuItem } from '@headlessui/react';
+import { Spinner } from '@librechat/client';
 import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { Spinner } from '~/components/svg';
 
 type MenuItemProps = {
   tag: string | React.ReactNode;

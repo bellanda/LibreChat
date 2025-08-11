@@ -11,6 +11,7 @@ const {
   removeAgentIdsFromProject,
   removeAgentFromAllProjects,
 } = require('./Project');
+const { getCachedTools } = require('~/server/services/Config');
 const getLogStores = require('~/cache/getLogStores');
 const { getActions } = require('./Action');
 const { Agent } = require('~/db/models');
@@ -55,12 +56,12 @@ const getAgent = async (searchParameter) => await Agent.findOne(searchParameter)
  * @param {string} params.agent_id
  * @param {string} params.endpoint
  * @param {import('@librechat/agents').ClientOptions} [params.model_parameters]
- * @returns {Agent|null} The agent document as a plain object, or null if not found.
+ * @returns {Promise<Agent|null>} The agent document as a plain object, or null if not found.
  */
-const loadEphemeralAgent = ({ req, agent_id, endpoint, model_parameters: _m }) => {
+const loadEphemeralAgent = async ({ req, agent_id, endpoint, model_parameters: _m }) => {
   const { model, ...model_parameters } = _m;
   /** @type {Record<string, FunctionTool>} */
-  const availableTools = req.app.locals.availableTools;
+  const availableTools = await getCachedTools({ userId: req.user.id, includeGlobal: true });
   /** @type {TEphemeralAgent | null} */
   const ephemeralAgent = req.body.ephemeralAgent;
   const mcpServers = new Set(ephemeralAgent?.mcp);
@@ -73,6 +74,9 @@ const loadEphemeralAgent = ({ req, agent_id, endpoint, model_parameters: _m }) =
 
   if (ephemeralAgent?.execute_code === true) {
     tools.push(Tools.execute_code);
+  }
+  if (ephemeralAgent?.file_search === true) {
+    tools.push(Tools.file_search);
   }
   if (ephemeralAgent?.web_search === true) {
     tools.push(Tools.web_search);
@@ -91,7 +95,7 @@ const loadEphemeralAgent = ({ req, agent_id, endpoint, model_parameters: _m }) =
   }
 
   const instructions = req.body.promptPrefix;
-  return {
+  const result = {
     id: agent_id,
     instructions,
     provider: endpoint,
@@ -99,6 +103,11 @@ const loadEphemeralAgent = ({ req, agent_id, endpoint, model_parameters: _m }) =
     model,
     tools,
   };
+
+  if (ephemeralAgent?.artifacts != null && ephemeralAgent.artifacts) {
+    result.artifacts = ephemeralAgent.artifacts;
+  }
+  return result;
 };
 
 /**
@@ -116,7 +125,7 @@ const loadAgent = async ({ req, agent_id, endpoint, model_parameters }) => {
     return null;
   }
   if (agent_id === EPHEMERAL_AGENT_ID) {
-    return loadEphemeralAgent({ req, agent_id, endpoint, model_parameters });
+    return await loadEphemeralAgent({ req, agent_id, endpoint, model_parameters });
   }
   const agent = await getAgent({
     id: agent_id,
@@ -175,7 +184,6 @@ const isDuplicateVersion = (updateData, currentData, versions, actionsHash = nul
     'created_at',
     'updated_at',
     '__v',
-    'agent_ids',
     'versions',
     'actionsHash', // Exclude actionsHash from direct comparison
   ];
@@ -265,11 +273,12 @@ const isDuplicateVersion = (updateData, currentData, versions, actionsHash = nul
  * @param {Object} [options] - Optional configuration object.
  * @param {string} [options.updatingUserId] - The ID of the user performing the update (used for tracking non-author updates).
  * @param {boolean} [options.forceVersion] - Force creation of a new version even if no fields changed.
+ * @param {boolean} [options.skipVersioning] - Skip version creation entirely (useful for isolated operations like sharing).
  * @returns {Promise<Agent>} The updated or newly created agent document as a plain object.
  * @throws {Error} If the update would create a duplicate version
  */
 const updateAgent = async (searchParameter, updateData, options = {}) => {
-  const { updatingUserId = null, forceVersion = false } = options;
+  const { updatingUserId = null, forceVersion = false, skipVersioning = false } = options;
   const mongoOptions = { new: true, upsert: false };
 
   const currentAgent = await Agent.findOne(searchParameter);
@@ -306,25 +315,16 @@ const updateAgent = async (searchParameter, updateData, options = {}) => {
     }
 
     const shouldCreateVersion =
-      forceVersion ||
-      (versions &&
-        versions.length > 0 &&
-        (Object.keys(directUpdates).length > 0 || $push || $pull || $addToSet));
+      !skipVersioning &&
+      (forceVersion || Object.keys(directUpdates).length > 0 || $push || $pull || $addToSet);
 
     if (shouldCreateVersion) {
       const duplicateVersion = isDuplicateVersion(updateData, versionData, versions, actionsHash);
       if (duplicateVersion && !forceVersion) {
-        const error = new Error(
-          'Duplicate version: This would create a version identical to an existing one',
-        );
-        error.statusCode = 409;
-        error.details = {
-          duplicateVersion,
-          versionIndex: versions.findIndex(
-            (v) => JSON.stringify(duplicateVersion) === JSON.stringify(v),
-          ),
-        };
-        throw error;
+        // No changes detected, return the current agent without creating a new version
+        const agentObj = currentAgent.toObject();
+        agentObj.version = versions.length;
+        return agentObj;
       }
     }
 
@@ -344,7 +344,7 @@ const updateAgent = async (searchParameter, updateData, options = {}) => {
       versionEntry.updatedBy = new mongoose.Types.ObjectId(updatingUserId);
     }
 
-    if (shouldCreateVersion || forceVersion) {
+    if (shouldCreateVersion) {
       updateData.$push = {
         ...($push || {}),
         versions: versionEntry,
@@ -555,7 +555,10 @@ const updateAgentProjects = async ({ user, agentId, projectIds, removeProjectIds
     delete updateQuery.author;
   }
 
-  const updatedAgent = await updateAgent(updateQuery, updateOps, { updatingUserId: user.id });
+  const updatedAgent = await updateAgent(updateQuery, updateOps, {
+    updatingUserId: user.id,
+    skipVersioning: true,
+  });
   if (updatedAgent) {
     return updatedAgent;
   }

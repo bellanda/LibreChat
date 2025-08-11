@@ -1,10 +1,10 @@
+import { isDark, ThemeContext, useMediaQuery } from '@librechat/client';
 import { getConfigDefaults, Permissions, PermissionTypes } from 'librechat-data-provider';
 import { useContext, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import type { ContextType } from '~/common';
 import { useGetStartupConfig } from '~/data-provider';
-import { useHasAccess, useMediaQuery } from '~/hooks';
-import { isDark, ThemeContext } from '~/hooks/ThemeContext';
+import { useHasAccess } from '~/hooks';
 import AddMultiConvo from './AddMultiConvo';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import { HeaderNewChat, OpenSidebar, PresetsMenu } from './Menus';

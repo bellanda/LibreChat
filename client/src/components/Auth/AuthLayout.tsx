@@ -1,9 +1,7 @@
+import { ThemeSelector } from '@librechat/client';
 import { TStartupConfig } from 'librechat-data-provider';
-import { useContext } from 'react';
-import { ThemeSelector } from '~/components';
 import { ErrorMessage } from '~/components/Auth/ErrorMessage';
 import { TranslationKeys, useLocalize } from '~/hooks';
-import { ThemeContext, isDark } from '~/hooks/ThemeContext';
 import { Banner } from '../Banners';
 import { BlinkAnimation } from './BlinkAnimation';
 import Footer from './Footer';
@@ -27,8 +25,6 @@ function AuthLayout({
   error: TranslationKeys | null;
 }) {
   const localize = useLocalize();
-  const { theme } = useContext(ThemeContext);
-  const isThemeDark = isDark(theme);
 
   const hasStartupConfigError = startupConfigError !== null && startupConfigError !== undefined;
   const DisplayError = () => {
@@ -61,13 +57,13 @@ function AuthLayout({
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
+    <div className="flex relative flex-col min-h-screen bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 flex h-[100px] w-full items-center justify-center bg-cover">
+        <div className="mt-6 w-full h-10 bg-cover">
           <img
-            src={isThemeDark ? '/assets/hpe-ia-neural-dark-mode.png' : '/assets/hpe-ia-neural.png'}
-            className="h-full rounded-[10px] object-contain"
+            src="/assets/hpe-ia-neural.png"
+            className="object-contain w-full h-full"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
           />
         </div>
@@ -77,11 +73,11 @@ function AuthLayout({
         <ThemeSelector />
       </div>
 
-      <div className="flex flex-grow items-center justify-center">
-        <div className="w-authPageWidth overflow-hidden bg-white px-6 py-4 dark:bg-gray-900 sm:max-w-md sm:rounded-lg">
+      <div className="flex flex-grow justify-center items-center">
+        <div className="overflow-hidden px-6 py-4 bg-white w-authPageWidth dark:bg-gray-900 sm:max-w-md sm:rounded-lg">
           {!hasStartupConfigError && !isFetching && (
             <h1
-              className="mb-4 text-center text-3xl font-semibold text-black dark:text-white"
+              className="mb-4 text-3xl font-semibold text-center text-black dark:text-white"
               style={{ userSelect: 'none' }}
             >
               {header}

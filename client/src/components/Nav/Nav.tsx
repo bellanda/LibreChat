@@ -1,3 +1,4 @@
+import { useMediaQuery } from '@librechat/client';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
 import type { ConversationListResponse } from 'librechat-data-provider';
 import { Permissions, PermissionTypes } from 'librechat-data-provider';
@@ -10,7 +11,6 @@ import {
   useHasAccess,
   useLocalize,
   useLocalStorage,
-  useMediaQuery,
   useNavScrolling,
 } from '~/hooks';
 import store from '~/store';
@@ -30,7 +30,7 @@ const NavMask = memo(
       id="mobile-nav-mask-toggle"
       role="button"
       tabIndex={0}
-      className={`nav-mask transition-opacity duration-200 ease-in-out ${navVisible ? 'active opacity-100' : 'opacity-0'}`}
+      className={`nav-mask transition-opacity duration-200 ease-in-out ${navVisible ? 'opacity-100 active' : 'opacity-0'}`}
       onClick={toggleNavVisible}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -187,7 +187,7 @@ const Nav = memo(
         <div
           data-testid="nav"
           className={cn(
-            'nav active max-w-[320px] flex-shrink-0 transform overflow-x-hidden bg-surface-primary-alt transition-all duration-200 ease-in-out',
+            'overflow-x-hidden flex-shrink-0 transition-all duration-200 ease-in-out transform nav active max-w-[320px] bg-surface-primary-alt',
             'md:max-w-[260px]',
           )}
           style={{
@@ -196,17 +196,17 @@ const Nav = memo(
           }}
         >
           <div className="h-full w-[320px] md:w-[260px]">
-            <div className="flex h-full flex-col">
+            <div className="flex flex-col h-full">
               <div
                 className={`flex h-full flex-col transition-opacity duration-200 ease-in-out ${navVisible ? 'opacity-100' : 'opacity-0'}`}
               >
-                <div className="flex h-full flex-col">
+                <div className="flex flex-col h-full">
                   <nav
                     id="chat-history-nav"
                     aria-label={localize('com_ui_chat_history')}
                     className="flex h-full flex-col px-2 pb-3.5 md:px-3"
                   >
-                    <div className="flex flex-1 flex-col" ref={outerContainerRef}>
+                    <div className="flex flex-col flex-1" ref={outerContainerRef}>
                       <MemoNewChat
                         subHeaders={subHeaders}
                         toggleNav={toggleNavVisible}

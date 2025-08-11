@@ -8,6 +8,7 @@ import {
   TwoFactorScreen,
   VerifyEmail,
 } from '~/components/Auth';
+import { OAuthError, OAuthSuccess } from '~/components/OAuth';
 import { AuthContextProvider } from '~/hooks/AuthContext';
 import ChatRoute from './ChatRoute';
 import dashboardRoutes from './Dashboard';
@@ -36,6 +37,20 @@ export const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
+    path: 'oauth',
+    errorElement: <RouteErrorBoundary />,
+    children: [
+      {
+        path: 'success',
+        element: <OAuthSuccess />,
+      },
+      {
+        path: 'error',
+        element: <OAuthError />,
+      },
+    ],
+  },
+  {
     path: '/',
     element: <StartupLayout />,
     errorElement: <RouteErrorBoundary />,
@@ -51,7 +66,7 @@ export const router = createBrowserRouter([
       {
         path: 'reset-password',
         element: <ResetPassword />,
-      }
+      },
     ],
   },
   {
@@ -74,7 +89,7 @@ export const router = createBrowserRouter([
           {
             path: 'login/2fa',
             element: <TwoFactorScreen />,
-          }
+          },
         ],
       },
       dashboardRoutes,
@@ -85,8 +100,8 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <Reports />,
-          }
-        ]
+          },
+        ],
       },
       {
         path: 'documentation',
@@ -95,8 +110,8 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <Documentation />,
-          }
-        ]
+          },
+        ],
       },
       {
         path: '/',
@@ -113,10 +128,9 @@ export const router = createBrowserRouter([
           {
             path: 'search',
             element: <Search />,
-          }
+          },
         ],
       },
     ],
   },
-
 ]);

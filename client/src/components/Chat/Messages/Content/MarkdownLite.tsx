@@ -8,7 +8,8 @@ import supersub from 'remark-supersub';
 import type { PluggableList } from 'unified';
 import { ArtifactProvider, CodeBlockProvider } from '~/Providers';
 import { hasBrazilianCurrency, langSubset } from '~/utils';
-import { a, code, codeNoExecution, p } from './Markdown';
+import { a, code, codeNoExecution, p } from './MarkdownComponents';
+import MarkdownErrorBoundary from './MarkdownErrorBoundary';
 
 const MarkdownLite = memo(
   ({ content = '', codeExecution = true }: { content?: string; codeExecution?: boolean }) => {
@@ -25,35 +26,38 @@ const MarkdownLite = memo(
     ];
 
     // Conditionally disable singleDollarTextMath if Brazilian currency is detected
+    // This preserves the important Brazilian currency handling from HEAD
     const shouldDisableSingleDollar = hasBrazilianCurrency(content);
 
     return (
-      <ArtifactProvider>
-        <CodeBlockProvider>
-          <ReactMarkdown
-            remarkPlugins={[
+      <MarkdownErrorBoundary content={content} codeExecution={codeExecution}>
+        <ArtifactProvider>
+          <CodeBlockProvider>
+            <ReactMarkdown
+              remarkPlugins={[
+                /** @ts-ignore */
+                supersub,
+                remarkGfm,
+                [remarkMath, { singleDollarTextMath: !shouldDisableSingleDollar }],
+              ]}
               /** @ts-ignore */
-              supersub,
-              remarkGfm,
-              [remarkMath, { singleDollarTextMath: !shouldDisableSingleDollar }],
-            ]}
-            /** @ts-ignore */
-            rehypePlugins={rehypePlugins}
-            // linkTarget="_new"
-            components={
-              {
-                code: codeExecution ? code : codeNoExecution,
-                a,
-                p,
-              } as {
-                [nodeType: string]: React.ElementType;
+              rehypePlugins={rehypePlugins}
+              // linkTarget="_new"
+              components={
+                {
+                  code: codeExecution ? code : codeNoExecution,
+                  a,
+                  p,
+                } as {
+                  [nodeType: string]: React.ElementType;
+                }
               }
-            }
-          >
-            {content}
-          </ReactMarkdown>
-        </CodeBlockProvider>
-      </ArtifactProvider>
+            >
+              {content}
+            </ReactMarkdown>
+          </CodeBlockProvider>
+        </ArtifactProvider>
+      </MarkdownErrorBoundary>
     );
   },
 );

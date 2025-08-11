@@ -46,8 +46,8 @@ export default defineConfig(({ command }) => ({
           'assets/maskable-icon.png',
           'manifest.webmanifest',
         ],
-        globIgnores: ['images/**/*', '**/*.map'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        globIgnores: ['images/**/*', '**/*.map', 'index.html'],
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/oauth/, /^\/api/],
       },
       includeAssets: [],
@@ -169,6 +169,9 @@ export default defineConfig(({ command }) => ({
             if (id.includes('react-select') || id.includes('downshift')) {
               return 'advanced-inputs';
             }
+            if (id.includes('heic-to')) {
+              return 'heic-converter';
+            }
 
             // Existing chunks
             if (id.includes('@radix-ui')) {
@@ -229,6 +232,7 @@ export default defineConfig(({ command }) => ({
     alias: {
       '~': path.join(__dirname, 'src/'),
       $fonts: path.resolve(__dirname, 'public/fonts'),
+      'micromark-extension-math': 'micromark-extension-llm-math',
     },
   },
 }));

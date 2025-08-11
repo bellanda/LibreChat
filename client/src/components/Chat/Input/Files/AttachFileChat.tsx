@@ -1,58 +1,44 @@
+import type { EndpointFileConfig } from 'librechat-data-provider';
 import {
   Constants,
-  EndpointFileConfig,
   fileConfig as defaultFileConfig,
   isAgentsEndpoint,
-  isEphemeralAgent,
+  isAssistantsEndpoint,
   mergeFileConfig,
   supportsFiles,
 } from 'librechat-data-provider';
 import { memo, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { useChatContext } from '~/Providers';
 import { useGetFileConfig } from '~/data-provider';
-import { useModelDescriptions } from '~/hooks/useModelDescriptions';
-import { ephemeralAgentByConvoId } from '~/store';
+import { useChatContext } from '~/Providers';
 import AttachFile from './AttachFile';
 import AttachFileMenu from './AttachFileMenu';
 
 function AttachFileChat({ disableInputs }: { disableInputs: boolean }) {
   const { conversation } = useChatContext();
-  const { getModelDescription } = useModelDescriptions();
-
-  const { endpoint: _endpoint, endpointType } = conversation ?? { endpoint: null };
-
-  const key = conversation?.conversationId ?? Constants.NEW_CONVO;
-  const ephemeralAgent = useRecoilValue(ephemeralAgentByConvoId(key));
-  const isAgents = useMemo(
-    () => isAgentsEndpoint(_endpoint) || isEphemeralAgent(_endpoint, ephemeralAgent),
-    [_endpoint, ephemeralAgent],
-  );
+  const conversationId = conversation?.conversationId ?? Constants.NEW_CONVO;
+  const { endpoint, endpointType } = conversation ?? { endpoint: null };
+  const isAgents = useMemo(() => isAgentsEndpoint(endpoint), [endpoint]);
+  const isAssistants = useMemo(() => isAssistantsEndpoint(endpoint), [endpoint]);
 
   const { data: fileConfig = defaultFileConfig } = useGetFileConfig({
     select: (data) => mergeFileConfig(data),
   });
 
-  const endpointFileConfig = fileConfig.endpoints[_endpoint ?? ''] as
-    | EndpointFileConfig
-    | undefined;
-
-  const endpointSupportsFiles: boolean = supportsFiles[endpointType ?? _endpoint ?? ''] ?? false;
-
-  // Check if current model supports image attachments
-  const currentModel = conversation?.model ?? null;
-  const modelDescription = getModelDescription(currentModel);
-  const supportsImageAttachment = modelDescription?.supportsImageAttachment ?? true;
-
+  const endpointFileConfig = fileConfig.endpoints[endpoint ?? ''] as EndpointFileConfig | undefined;
+  const endpointSupportsFiles: boolean = supportsFiles[endpointType ?? endpoint ?? ''] ?? false;
   const isUploadDisabled = (disableInputs || endpointFileConfig?.disabled) ?? false;
 
-  if (isAgents) {
-    return <AttachFileMenu disabled={disableInputs} />;
+  if (isAssistants && endpointSupportsFiles && !isUploadDisabled) {
+    return <AttachFile disabled={disableInputs} />;
+  } else if (isAgents || (endpointSupportsFiles && !isUploadDisabled)) {
+    return (
+      <AttachFileMenu
+        disabled={disableInputs}
+        conversationId={conversationId}
+        endpointFileConfig={endpointFileConfig}
+      />
+    );
   }
-  if (endpointSupportsFiles && !isUploadDisabled) {
-    return <AttachFile disabled={isUploadDisabled} />;
-  }
-
   return null;
 }
 

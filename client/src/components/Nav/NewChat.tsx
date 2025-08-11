@@ -1,10 +1,9 @@
+import { Button, MobileSidebar, NewChatIcon, Sidebar, TooltipAnchor } from '@librechat/client';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TMessage } from 'librechat-data-provider';
 import { Constants, QueryKeys } from 'librechat-data-provider';
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MobileSidebar, NewChatIcon, Sidebar } from '~/components/svg';
-import { Button, TooltipAnchor } from '~/components/ui';
 import { useLocalize, useNewConvo } from '~/hooks';
 import store from '~/store';
 
@@ -59,11 +58,11 @@ export default function NewChat({
               variant="outline"
               data-testid="close-sidebar-button"
               aria-label={localize('com_nav_close_sidebar')}
-              className="rounded-full border-none bg-transparent p-2 hover:bg-surface-hover md:rounded-xl"
+              className="p-2 bg-transparent rounded-full border-none hover:bg-surface-hover md:rounded-xl"
               onClick={toggleNav}
             >
               <Sidebar className="max-md:hidden" />
-              <MobileSidebar className="m-1 inline-flex size-10 items-center justify-center md:hidden" />
+              <MobileSidebar className="inline-flex justify-center items-center m-1 size-10 md:hidden" />
             </Button>
           }
         />
@@ -78,7 +77,7 @@ export default function NewChat({
                 variant="outline"
                 data-testid="nav-new-chat-button"
                 aria-label={localize('com_ui_new_chat')}
-                className="w-full rounded-full border-none bg-transparent p-2 hover:bg-surface-hover md:rounded-xl"
+                className="p-2 w-full bg-transparent rounded-full border-none hover:bg-surface-hover md:rounded-xl"
                 onClick={clickHandler}
               >
                 + New Chat

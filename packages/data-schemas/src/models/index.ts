@@ -8,6 +8,7 @@ import { createConversationTagModel } from './conversationTag';
 import { createConversationModel } from './convo';
 import { createFileModel } from './file';
 import { createKeyModel } from './key';
+import { createMemoryModel } from './memory';
 import { createMessageModel } from './message';
 import { createPluginAuthModel } from './pluginAuth';
 import { createPresetModel } from './preset';
@@ -50,5 +51,6 @@ export function createModels(mongoose: typeof import('mongoose')) {
     ConversationTag: createConversationTagModel(mongoose),
     SharedLink: createSharedLinkModel(mongoose),
     ToolCall: createToolCallModel(mongoose),
+    MemoryEntry: createMemoryModel(mongoose),
   };
 }

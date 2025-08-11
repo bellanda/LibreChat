@@ -1,8 +1,15 @@
+import {
+  Button,
+  Checkbox,
+  Dropdown,
+  Input,
+  Label,
+  OGDialog,
+  OGDialogTemplate,
+} from '@librechat/client';
 import filenamify from 'filenamify';
 import type { TConversation } from 'librechat-data-provider';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, Dropdown, Input, Label, OGDialog } from '~/components/ui';
-import OGDialogTemplate from '~/components/ui/OGDialogTemplate';
 import { useExportConversation, useLocalize } from '~/hooks';
 
 const TYPE_OPTIONS = [
@@ -54,7 +61,8 @@ export default function ExportModal({
   }, [conversation?.title, open]);
 
   const handleTypeChange = useCallback((newType: string) => {
-    const branches = newType === 'json' || newType === 'csv' || newType === 'webpage' || newType === 'pdf';
+    const branches =
+      newType === 'json' || newType === 'csv' || newType === 'webpage' || newType === 'pdf';
     const options = newType !== 'csv' && newType !== 'screenshot';
     setExportBranches(branches);
     setIncludeOptions(options);
@@ -72,12 +80,12 @@ export default function ExportModal({
   const lastMessageOnlySupport = useMemo(() => type === 'webpage' || type === 'pdf', [type]);
   const { exportConversation } = useExportConversation({
     conversation,
-    filename,
+    filename: filenamify(filename),
     type,
     includeOptions,
     exportBranches,
     recursive,
-    lastMessageOnly
+    lastMessageOnly,
   });
 
   return (
@@ -87,21 +95,21 @@ export default function ExportModal({
         title={localize('com_nav_export_conversation')}
         className="max-w-full sm:max-w-2xl"
         main={
-          <div className="flex w-full flex-col items-center gap-6">
-            <div className="grid w-full gap-6 sm:grid-cols-2">
-              <div className="col-span-1 flex flex-col items-start justify-start gap-2">
-                <Label htmlFor="filename" className="text-left text-sm font-medium">
+          <div className="flex flex-col gap-6 items-center w-full">
+            <div className="grid gap-6 w-full sm:grid-cols-2">
+              <div className="flex flex-col col-span-1 gap-2 justify-start items-start">
+                <Label htmlFor="filename" className="text-sm font-medium text-left">
                   {localize('com_nav_export_filename')}
                 </Label>
                 <Input
                   id="filename"
                   value={filename}
-                  onChange={(e) => setFileName(filenamify(e.target.value || ''))}
+                  onChange={(e) => setFileName(e.target.value || '')}
                   placeholder={localize('com_nav_export_filename_placeholder')}
                 />
               </div>
-              <div className="col-span-1 flex w-full flex-col items-start justify-start gap-2">
-                <Label htmlFor="type" className="text-left text-sm font-medium">
+              <div className="flex flex-col col-span-1 gap-2 justify-start items-start w-full">
+                <Label htmlFor="type" className="text-sm font-medium text-left">
                   {localize('com_nav_export_type')}
                 </Label>
                 <Dropdown
@@ -113,10 +121,10 @@ export default function ExportModal({
                 />
               </div>
             </div>
-            <div className="grid w-full gap-6 sm:grid-cols-2">
-              <div className="col-span-1 flex flex-col items-start justify-start gap-2">
-                <div className="grid w-full items-center gap-2">
-                  <Label htmlFor="includeOptions" className="text-left text-sm font-medium">
+            <div className="grid gap-6 w-full sm:grid-cols-2">
+              <div className="flex flex-col col-span-1 gap-2 justify-start items-start">
+                <div className="grid gap-2 items-center w-full">
+                  <Label htmlFor="includeOptions" className="text-sm font-medium text-left">
                     {localize('com_nav_export_include_endpoint_options')}
                   </Label>
                   <div className="flex h-[40px] w-full items-center space-x-3">
@@ -137,8 +145,8 @@ export default function ExportModal({
                   </div>
                 </div>
               </div>
-              <div className="grid w-full items-center gap-2">
-                <Label htmlFor="exportBranches" className="text-left text-sm font-medium">
+              <div className="grid gap-2 items-center w-full">
+                <Label htmlFor="exportBranches" className="text-sm font-medium text-left">
                   {localize('com_nav_export_all_message_branches')}
                 </Label>
                 <div className="flex h-[40px] w-full items-center space-x-3">
@@ -159,8 +167,8 @@ export default function ExportModal({
                 </div>
               </div>
               {type === 'json' ? (
-                <div className="grid w-full items-center gap-2">
-                  <Label htmlFor="recursive" className="text-left text-sm font-medium">
+                <div className="grid gap-2 items-center w-full">
+                  <Label htmlFor="recursive" className="text-sm font-medium text-left">
                     {localize('com_nav_export_recursive_or_sequential')}
                   </Label>
                   <div className="flex h-[40px] w-full items-center space-x-3">
@@ -175,8 +183,8 @@ export default function ExportModal({
                 </div>
               ) : null}
               {lastMessageOnlySupport ? (
-                <div className="grid w-full items-center gap-2">
-                  <Label htmlFor="lastMessageOnly" className="text-left text-sm font-medium">
+                <div className="grid gap-2 items-center w-full">
+                  <Label htmlFor="lastMessageOnly" className="text-sm font-medium text-left">
                     Última mensagem
                   </Label>
                   <div className="flex h-[40px] w-full items-center space-x-3">

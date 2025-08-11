@@ -39,24 +39,28 @@ function createOnSearchResults(res) {
     context.searchResultData = data;
 
     // Map sources to links
-    for (let i = 0; i < data.organic.length; i++) {
-      const source = data.organic[i];
-      if (source.link) {
-        context.sourceMap.set(source.link, {
-          type: 'organic',
-          index: i,
-          turn,
-        });
+    if (data.organic && Array.isArray(data.organic)) {
+      for (let i = 0; i < data.organic.length; i++) {
+        const source = data.organic[i];
+        if (source.link) {
+          context.sourceMap.set(source.link, {
+            type: 'organic',
+            index: i,
+            turn,
+          });
+        }
       }
     }
-    for (let i = 0; i < data.topStories.length; i++) {
-      const source = data.topStories[i];
-      if (source.link) {
-        context.sourceMap.set(source.link, {
-          type: 'topStories',
-          index: i,
-          turn,
-        });
+    if (data.topStories && Array.isArray(data.topStories)) {
+      for (let i = 0; i < data.topStories.length; i++) {
+        const source = data.topStories[i];
+        if (source.link) {
+          context.sourceMap.set(source.link, {
+            type: 'topStories',
+            index: i,
+            turn,
+          });
+        }
       }
     }
 
@@ -87,7 +91,7 @@ function createOnSearchResults(res) {
     if (!data) {
       return;
     }
-    if (data[type][index] != null) {
+    if (data[type] && Array.isArray(data[type]) && data[type][index] != null) {
       data[type][index].processed = true;
     }
 
