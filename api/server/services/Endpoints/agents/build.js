@@ -26,6 +26,14 @@ const buildOptions = async (req, endpoint, parsedBody, endpointType) => {
   // Preserve user's promptPrefix and combine with endpoint configuration when web search is active
   let finalPromptPrefix = promptPrefix;
 
+  // Aplicar promptPrefix global se não houver um específico do usuário
+  if (!finalPromptPrefix) {
+    const allConfig = req.app.locals.all;
+    if (allConfig && allConfig.promptPrefix) {
+      finalPromptPrefix = allConfig.promptPrefix;
+    }
+  }
+
   if (isWebSearchActive) {
     // Check for endpoint-specific configuration in app.locals
     let endpointConfig = req.app.locals[endpoint];

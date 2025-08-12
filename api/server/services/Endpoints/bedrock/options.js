@@ -62,6 +62,12 @@ const getOptions = async ({ req, overrideModel, endpointOption }) => {
     streamRate = allConfig.streamRate;
   }
 
+  // Aplicar promptPrefix global se não houver um específico do endpoint
+  let promptPrefix = endpointOption?.promptPrefix;
+  if (allConfig && allConfig.promptPrefix && !promptPrefix) {
+    promptPrefix = allConfig.promptPrefix;
+  }
+
   /** @type {BedrockClientOptions} */
   const requestOptions = {
     model: overrideModel ?? endpointOption?.model,

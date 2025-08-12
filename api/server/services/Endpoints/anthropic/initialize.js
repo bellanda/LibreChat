@@ -35,6 +35,10 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
   const allConfig = req.app.locals.all;
   if (allConfig) {
     clientOptions.streamRate = allConfig.streamRate;
+    // Aplicar promptPrefix global se não houver um específico do endpoint
+    if (allConfig.promptPrefix && !clientOptions.promptPrefix) {
+      clientOptions.promptPrefix = allConfig.promptPrefix;
+    }
   }
 
   if (optionsOnly) {

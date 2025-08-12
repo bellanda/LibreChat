@@ -125,6 +125,14 @@ const initializeClient = async ({ req, res, version, endpointOption, initAppClie
       clientOptions.promptPrefix = azureConfig.promptPrefix;
       clientOptions.titleMethod = azureConfig.titleMethod ?? 'completion';
 
+      // Aplicar promptPrefix global se não houver um específico do endpoint
+      if (!clientOptions.promptPrefix) {
+        const allConfig = req.app.locals.all;
+        if (allConfig && allConfig.promptPrefix) {
+          clientOptions.promptPrefix = allConfig.promptPrefix;
+        }
+      }
+
       const groupName = modelGroupMap[modelName].group;
       clientOptions.addParams = azureConfig.groupMap[groupName].addParams;
       clientOptions.dropParams = azureConfig.groupMap[groupName].dropParams;
