@@ -1,4 +1,5 @@
 const { logger } = require('@librechat/data-schemas');
+const { validateAgentModel } = require('@librechat/api');
 const { createContentAggregator } = require('@librechat/agents');
 const { Providers } = require('@librechat/agents');
 const {
@@ -21,6 +22,7 @@ const {
   getDefaultHandlers,
 } = require('~/server/controllers/agents/callbacks');
 const { initializeAgent } = require('~/server/services/Endpoints/agents/agent');
+const { getModelsConfig } = require('~/server/controllers/ModelController');
 const { getCustomEndpointConfig } = require('~/server/services/Config');
 const { loadAgentTools } = require('~/server/services/ToolService');
 const AgentClient = require('~/server/controllers/agents/client');
@@ -31,6 +33,7 @@ const { processFiles } = require('~/server/services/Files/process');
 const { getFiles, getToolFilesByIds } = require('~/models/File');
 const { getConvoFiles } = require('~/models/Conversation');
 const { getModelMaxTokens } = require('~/utils');
+const { logViolation } = require('~/cache');
 
 function createToolLoader() {
   /**
@@ -88,6 +91,19 @@ const initializeClient = async ({ req, res, endpointOption }) => {
     throw new Error('Agent not found');
   }
 
+  const modelsConfig = await getModelsConfig(req);
+  const validationResult = await validateAgentModel({
+    req,
+    res,
+    modelsConfig,
+    logViolation,
+    agent: primaryAgent,
+  });
+
+  if (!validationResult.isValid) {
+    throw new Error(validationResult.error?.message);
+  }
+
   const agentConfigs = new Map();
   /** @type {Set<string>} */
   const allowedProviders = new Set(req?.app?.locals?.[EModelEndpoint.agents]?.allowedProviders);
@@ -117,6 +133,19 @@ const initializeClient = async ({ req, res, endpointOption }) => {
       if (!agent) {
         throw new Error(`Agent ${agentId} not found`);
       }
+
+      const validationResult = await validateAgentModel({
+        req,
+        res,
+        agent,
+        modelsConfig,
+        logViolation,
+      });
+
+      if (!validationResult.isValid) {
+        throw new Error(validationResult.error?.message);
+      }
+
       const config = await initializeAgent({
         req,
         res,
