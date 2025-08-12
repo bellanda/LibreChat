@@ -1,12 +1,13 @@
+import type { TPlugin, TStartupConfig, TUser } from 'librechat-data-provider';
+import { LocalStorageKeys } from 'librechat-data-provider';
+import { useAvailablePluginsQuery } from 'librechat-data-provider/react-query';
 import { useEffect } from 'react';
 import TagManager from 'react-gtm-module';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { LocalStorageKeys } from 'librechat-data-provider';
-import { useAvailablePluginsQuery } from 'librechat-data-provider/react-query';
-import type { TStartupConfig, TPlugin, TUser } from 'librechat-data-provider';
-import { mapPlugins, selectPlugins, processPlugins } from '~/utils';
-import useSpeechSettingsInit from './useSpeechSettingsInit';
 import store from '~/store';
+import { mapPlugins, processPlugins, selectPlugins } from '~/utils';
+import useFontSizeInit from './useFontSizeInit';
+import useSpeechSettingsInit from './useSpeechSettingsInit';
 
 const pluginStore: TPlugin = {
   name: 'Plugin store',
@@ -33,6 +34,7 @@ export default function useAppStartup({
   });
 
   useSpeechSettingsInit(!!user);
+  useFontSizeInit();
 
   /** Set the app title */
   useEffect(() => {
