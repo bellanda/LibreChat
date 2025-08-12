@@ -3,9 +3,9 @@ import { useModelDescriptions } from '../../../../hooks/useModelDescriptions';
 import SectionRecommendations from '../../components/SectionRecommendations';
 
 const CostExample = () => (
-  <div className="bg-gray-800 p-6">
+  <div className="p-6 bg-gray-800">
     <h3 className="mb-2 text-xl font-semibold text-white">Exemplo de Cálculo de Custo</h3>
-    <ul className="mt-2 list-inside list-disc space-y-1 text-gray-200">
+    <ul className="mt-2 space-y-1 list-disc list-inside text-gray-200">
       <li>
         <span className="font-semibold">Prompt:</span> 5.000 tokens
       </li>
@@ -38,7 +38,7 @@ const PriceTable = () => {
   if (loading) {
     return (
       <div className="overflow-x-auto rounded-lg shadow-lg">
-        <div className="min-w-full bg-gray-800 p-8 text-center">
+        <div className="p-8 min-w-full text-center bg-gray-800">
           <p className="text-gray-300">Carregando descrições dos modelos…</p>
         </div>
       </div>
@@ -53,7 +53,7 @@ const PriceTable = () => {
             <th className="px-4 py-2 text-left text-white">Modelo</th>
             <th className="px-4 py-2 text-left text-white">Descrição</th>
             <th className="px-4 py-2 text-left text-white">Preço Entrada</th>
-            <th className="white px-4 py-2 text-left">Preço Saída</th>
+            <th className="px-4 py-2 text-left white">Preço Saída</th>
           </tr>
         </thead>
         <tbody>
@@ -62,7 +62,7 @@ const PriceTable = () => {
             if (info.shortUseCase) {
               return (
                 <tr key={model} className="transition-colors hover:bg-gray-700">
-                  <td className="mr-2 flex items-center px-4 py-2 font-semibold text-green-300">
+                  <td className="flex items-center px-4 py-2 mr-2 font-semibold text-green-300">
                     <img src={info.image} className="mr-2 h-[70px] w-[100px]" />
                     <span>
                       {info.name}
@@ -151,35 +151,35 @@ const models_task_day_to_day = [
     name: 'Groq/Fireworks → GPT-OSS 20B',
     cost: '0.10 / 0.50',
     speed: '⚡⚡⚡⚡⚡',
-    capacity: '🧩🧩',
+    capacity: '49',
   },
   {
     emoji: '🟢',
     name: 'Groq/Fireworks → GPT-OSS 120B',
     cost: '0.15 / 0.75',
     speed: '⚡⚡⚡⚡',
-    capacity: '🧩🧩🧩🧩🧩',
+    capacity: '61',
   },
   {
     emoji: '🟢',
     name: 'Google → Gemini 2.5 Flash',
     cost: '0.3  / 2.5',
-    speed: '⚡⚡⚡',
-    capacity: '🧩🧩',
+    speed: '⚡⚡⚡⚡',
+    capacity: '58',
   },
   {
     emoji: '🟢',
     name: 'Groq → Llama 4 Maverick',
     cost: '0.2  / 0.6',
-    speed: '⚡⚡⚡',
-    capacity: '🧩🧩',
+    speed: '⚡⚡⚡⚡',
+    capacity: '42',
   },
   {
     emoji: '🟢',
     name: 'Fireworks → Qwen3 235B Instruct',
     cost: '0.2  / 0.9',
-    speed: '⚡⚡⚡',
-    capacity: '🧩🧩',
+    speed: '⚡⚡⚡⚡',
+    capacity: '51',
   },
 ];
 
@@ -189,22 +189,22 @@ const models_web_search = [
     emoji: '🟡',
     name: 'Google → Gemini 2.5 Flash',
     cost: '0.3  / 2.5',
-    speed: '⚡⚡⚡',
-    capacity: '🧩🧩',
+    speed: '⚡⚡⚡⚡',
+    capacity: '58',
   },
   {
     emoji: '🟡',
-    name: 'Azure OpenAI → o4-Mini',
-    cost: '1.1  / 4.4',
+    name: 'Azure OpenAI → GPT‑5',
+    cost: '1.25  / 10.0',
     speed: '⚡⚡⚡',
-    capacity: '🧩🧩🧩',
+    capacity: '63',
   },
   {
-    emoji: '🟡',
-    name: 'Azure OpenAI → GPT-4.1',
-    cost: '2.0  / 8.0',
-    speed: '⚡⚡',
-    capacity: '🧩🧩🧩🧩',
+    emoji: '🟢',
+    name: 'Groq/Fireworks → GPT-OSS 120B',
+    cost: '0.15 / 0.75',
+    speed: '⚡⚡⚡⚡',
+    capacity: '61',
   },
 ];
 
@@ -214,102 +214,95 @@ const models_code_and_software_engineering = [
     emoji: '🔵',
     name: 'Anthropic → Claude Sonnet 4',
     cost: '3.0  / 15.0',
-    speed: '⚡⚡',
-    capacity: '🧩🧩🧩🧩🧩',
+    speed: '⚡⚡⚡',
+    capacity: '59',
   },
   {
     emoji: '🔵',
     name: 'Fireworks → Qwen3 Coder 480B',
     cost: '0.5  / 1.8',
-    speed: '⚡⚡⚡',
-    capacity: '🧩🧩🧩🧩',
+    speed: '⚡⚡⚡⚡',
+    capacity: '45',
   },
   {
     emoji: '🔵',
     name: 'Groq/Fireworks → GPT-OSS 120B',
     cost: '0.15 / 0.75',
     speed: '⚡⚡⚡⚡',
-    capacity: '🧩🧩🧩🧩',
+    capacity: '61',
   },
   {
     emoji: '🔵',
-    name: 'Azure OpenAI → o3',
-    cost: '2.0  / 8.0',
+    name: 'Azure OpenAI → GPT‑5 Raciocínio Alto',
+    cost: '1.25  / 10.0',
     speed: '⚡⚡',
-    capacity: '🧩🧩🧩🧩',
+    capacity: '69',
   },
-  {
-    emoji: '🔵',
-    name: 'Azure OpenAI → GPT-4.1',
-    cost: '2.0  / 8.0',
-    speed: '⚡⚡',
-    capacity: '🧩🧩🧩🧩',
-  },
-  { emoji: '🔵', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩' },
+  { emoji: '🔵', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '68' },
   {
     emoji: '🔵',
     name: 'Google → Gemini 2.5 Pro',
     cost: '2.0  / 12.5',
     speed: '⚡⚡⚡',
-    capacity: '🧩🧩🧩🧩',
+    capacity: '65',
   },
 ];
 
 /* 4️⃣ Máxima Complexidade 🧠 */
 const models_maximum_complexity = [
-  { emoji: '🔴', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '🧩🧩🧩🧩🧩' },
   {
-    emoji: '🔴',
-    name: 'Azure OpenAI → o3',
-    cost: '2.0  / 8.0',
+    emoji: '🔵',
+    name: 'Azure OpenAI → GPT‑5 Raciocínio Alto',
+    cost: '1.25  / 10.0',
     speed: '⚡⚡',
-    capacity: '🧩🧩🧩🧩🧩',
+    capacity: '69',
   },
+  { emoji: '🔵', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '68' },
   {
-    emoji: '🔴',
+    emoji: '🔵',
     name: 'Google → Gemini 2.5 Pro',
     cost: '2.0  / 12.5',
-    speed: '⚡⚡',
-    capacity: '🧩🧩🧩🧩🧩',
+    speed: '⚡⚡⚡',
+    capacity: '65',
   },
   {
     emoji: '🔴',
     name: 'Fireworks → DeepSeek R1',
     cost: '3.0  / 8.0',
-    speed: '⚡⚡',
-    capacity: '🧩🧩🧩🧩',
+    speed: '⚡⚡⚡',
+    capacity: '59',
   },
 ];
 
 /* 5️⃣ Ultra‑Velocidade ⚡ */
 const models_ultra_velocity = [
   {
-    emoji: '⚪',
+    emoji: '🟢',
     name: 'Groq/Fireworks → GPT-OSS 20B',
     cost: '0.10 / 0.50',
     speed: '⚡⚡⚡⚡⚡',
-    capacity: '🧩🧩',
+    capacity: '49',
   },
   {
-    emoji: '⚪',
+    emoji: '🟢',
     name: 'Groq/Fireworks → GPT-OSS 120B',
     cost: '0.15 / 0.75',
     speed: '⚡⚡⚡⚡',
-    capacity: '🧩🧩🧩🧩🧩',
+    capacity: '61',
+  },
+  {
+    emoji: '⚪',
+    name: 'Groq → Llama 4 Scout',
+    cost: '0.11  / 0.34',
+    speed: '⚡⚡⚡⚡⚡',
+    capacity: '42',
   },
   {
     emoji: '⚪',
     name: 'Groq → Llama 4 Maverick',
     cost: '0.2  / 0.6',
     speed: '⚡⚡⚡⚡',
-    capacity: '🧩🧩',
-  },
-  {
-    emoji: '⚪',
-    name: 'Groq → Llama 4 Scout',
-    cost: '0.1  / 0.3',
-    speed: '⚡⚡⚡⚡⚡',
-    capacity: '🧩',
+    capacity: '33',
   },
 ];
 
@@ -318,6 +311,18 @@ export default function PrecoTokenizacaoLimitacoesPage() {
 
   return (
     <div className="mx-auto">
+      {/* ------------- Artificial Analysis - Intelligence Index Chart ----------------- */}
+      <section className="mt-12" id="custo-token">
+        <h2 className="mb-4 text-2xl font-semibold text-white">Gráfico de Nível de Inteligência</h2>
+        <p className="leading-relaxed text-gray-200">
+          O gráfico abaixo mostra o nível de inteligência de cada modelo de IA, com base em sua
+          capacidade de resolver problemas complexos e gerar respostas precisas. Ele é uma média de
+          todos os testes mais famosos de Inteligência Artificial.
+        </p>
+        <div className="mt-4">
+          <img src="/assets/artificial-analysis-chart.png" alt="Gráfico de Nível de Inteligência" />
+        </div>
+      </section>
       {/* ------------- Título e Introdução ------------- */}
       <section className="mt-12" id="custo-token">
         <h2 className="mb-4 text-2xl font-semibold text-white">Custos por Token</h2>
@@ -394,7 +399,7 @@ export default function PrecoTokenizacaoLimitacoesPage() {
         {/* Dicas Extras de Economia */}
         <div className="mt-12 text-gray-200">
           <p className="mb-2 font-semibold">💡 Dicas Extras de Economia</p>
-          <ul className="list-disc space-y-1 pl-6">
+          <ul className="pl-6 space-y-1 list-disc">
             <li>Prompt curto = menos tokens (💵)</li>
             <li>Abrir novo chat a cada 2‑3 interações para evitar histórico caro</li>
             <li>Agrupar perguntas em lotes ("batching")</li>
