@@ -1,3 +1,4 @@
+import * as Ariakit from '@ariakit/react';
 import { DropdownPopup, Spinner, TooltipAnchor, useToastContext } from '@librechat/client';
 import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -42,7 +43,6 @@ const BookmarkMenu: FC = () => {
     onSuccess: (newTags: string[], vars) => {
       updateConvoTags(newTags);
       const tagElement = document.getElementById(vars.tag);
-      console.log('tagElement', tagElement);
       if (tagElement) {
         setTimeout(() => tagElement.focus(), 2);
       }
@@ -55,7 +55,6 @@ const BookmarkMenu: FC = () => {
     },
     onMutate: (vars) => {
       const tagElement = document.getElementById(vars.tag);
-      console.log('tagElement', tagElement);
       if (tagElement) {
         setTimeout(() => tagElement.focus(), 2);
       }
@@ -169,12 +168,12 @@ const BookmarkMenu: FC = () => {
       ),
       actions: [
         {
-          icon: <Edit className="h-4 w-4" />,
+          icon: <Edit className="w-4 h-4" />,
           label: localize('com_ui_edit'),
           onClick: () => handleEditBookmark(tag),
         },
         {
-          icon: <Trash2 className="h-4 w-4" />,
+          icon: <Trash2 className="w-4 h-4" />,
           label: localize('com_ui_delete'),
           onClick: () => handleDeleteBookmark(tag),
           className: 'text-red-600 focus:text-red-600',
@@ -187,6 +186,7 @@ const BookmarkMenu: FC = () => {
     <BookmarkContext.Provider value={{ bookmarks: data || [] }}>
       <DropdownPopup
         portal={true}
+        mountByState={true}
         menuId={menuId}
         focusLoop={true}
         isOpen={isMenuOpen}
@@ -194,18 +194,20 @@ const BookmarkMenu: FC = () => {
         setIsOpen={setIsMenuOpen}
         keyPrefix={`${conversationId}-bookmark-`}
         items={dropdownItems}
+        className="z-50"
         trigger={
           <TooltipAnchor
-            id="bookmark-button"
-            aria-label={localize('com_ui_bookmarks_add')}
             description={localize('com_ui_bookmarks_add')}
-            tabIndex={0}
-            role="button"
-            data-testid="bookmark-button"
-            className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light bg-transparent text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
-          >
-            {renderButtonContent()}
-          </TooltipAnchor>
+            render={
+              <Ariakit.MenuButton
+                id="bookmark-button"
+                aria-label={localize('com_ui_bookmarks_add')}
+                className="inline-flex flex-shrink-0 justify-center items-center bg-transparent rounded-xl border transition-all ease-in-out size-10 border-border-light text-text-primary hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
+              >
+                {renderButtonContent()}
+              </Ariakit.MenuButton>
+            }
+          />
         }
       />
 
