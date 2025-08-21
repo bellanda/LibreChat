@@ -4,6 +4,7 @@ import { useLocalize } from '~/hooks';
 import { useModelDescriptions } from '~/hooks/useModelDescriptions';
 import { CustomMenu as Menu } from './CustomMenu';
 import DialogManager from './DialogManager';
+import { ModelSelectorChatProvider } from './ModelSelectorChatContext';
 import { ModelSelectorProvider, useModelSelectorContext } from './ModelSelectorContext';
 import { renderEndpoints, renderModelSpecs, renderSearchResults } from './components';
 import { getDisplayValue, getSelectedIcon } from './utils';
@@ -13,6 +14,7 @@ function ModelSelectorContent() {
 
   const {
     // LibreChat
+    agentsMap,
     modelSpecs,
     mappedEndpoints,
     endpointsConfig,
@@ -44,11 +46,12 @@ function ModelSelectorContent() {
     () =>
       getDisplayValue({
         localize,
+        agentsMap,
         modelSpecs,
         selectedValues,
         mappedEndpoints,
       }),
-    [localize, modelSpecs, selectedValues, mappedEndpoints],
+    [localize, agentsMap, modelSpecs, selectedValues, mappedEndpoints],
   );
 
   const { getModelDescription } = useModelDescriptions();
@@ -106,8 +109,10 @@ function ModelSelectorContent() {
 
 export default function ModelSelector({ startupConfig }: ModelSelectorProps) {
   return (
-    <ModelSelectorProvider startupConfig={startupConfig}>
-      <ModelSelectorContent />
-    </ModelSelectorProvider>
+    <ModelSelectorChatProvider>
+      <ModelSelectorProvider startupConfig={startupConfig}>
+        <ModelSelectorContent />
+      </ModelSelectorProvider>
+    </ModelSelectorChatProvider>
   );
 }

@@ -144,3 +144,4 @@ helm/**/.values.yaml
 /.openai/
 /.tabnine/
 /.codeium
+*.local.md

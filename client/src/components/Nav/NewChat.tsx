@@ -67,8 +67,9 @@ export default function NewChat({
           }
         />
 
-        <div className="flex">
+        <div className="flex gap-0.5">
           {headerButtons}
+
           <TooltipAnchor
             description={localize('com_ui_new_chat')}
             render={
@@ -80,8 +81,8 @@ export default function NewChat({
                 className="p-2 w-full bg-transparent rounded-full border-none hover:bg-surface-hover md:rounded-xl"
                 onClick={clickHandler}
               >
-                + New Chat
-                <NewChatIcon className="icon-md md:h-6 md:w-6" />
+                + Novo Chat
+                <NewChatIcon className="icon-lg text-text-primary" />
               </Button>
             }
           />

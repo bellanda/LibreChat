@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import AgentMarketplace from '~/components/Agents/Marketplace';
 import {
   ApiErrorWatcher,
   Login,
@@ -128,6 +129,14 @@ export const router = createBrowserRouter([
           {
             path: 'search',
             element: <Search />,
+          },
+          {
+            path: 'agents',
+            element: <AgentMarketplace />,
+          },
+          {
+            path: 'agents/:category',
+            element: <AgentMarketplace />,
           },
         ],
       },

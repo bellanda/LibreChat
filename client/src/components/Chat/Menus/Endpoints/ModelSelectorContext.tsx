@@ -5,11 +5,17 @@ import debounce from 'lodash/debounce';
 import React, { createContext, useContext, useMemo, useState } from 'react';
 import type { Endpoint, SelectedValues } from '~/common';
 import { NotificationSeverity } from '~/common';
-import { useGetEndpointsQuery } from '~/data-provider';
-import { useEndpoints, useKeyDialog, useSelectorEffects } from '~/hooks';
+import { useGetEndpointsQuery, useListAgentsQuery } from '~/data-provider';
+import {
+  useAgentDefaultPermissionLevel,
+  useEndpoints,
+  useKeyDialog,
+  useSelectorEffects,
+} from '~/hooks';
 import useSelectMention from '~/hooks/Input/useSelectMention';
 import { useModelDescriptions } from '~/hooks/useModelDescriptions';
-import { useAgentsMapContext, useAssistantsMapContext, useChatContext } from '~/Providers';
+import { useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
+import { useModelSelectorChatContext } from './ModelSelectorChatContext';
 import { filterItems } from './utils';
 
 type ModelSelectorContextType = {
@@ -54,16 +60,26 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   const agentsMap = useAgentsMapContext();
   const assistantsMap = useAssistantsMapContext();
   const { data: endpointsConfig } = useGetEndpointsQuery();
-  const { conversation, newConversation } = useChatContext();
+  const { endpoint, model, spec, agent_id, assistant_id, newConversation } =
+    useModelSelectorChatContext();
   const { getModelDescription } = useModelDescriptions();
   const { showToast } = useToastContext();
   const modelSpecs = useMemo(() => startupConfig?.modelSpecs?.list ?? [], [startupConfig]);
+  const permissionLevel = useAgentDefaultPermissionLevel();
+  const { data: agents = null } = useListAgentsQuery(
+    { requiredPermission: permissionLevel },
+    {
+      select: (data) => data?.data,
+    },
+  );
+
   const { mappedEndpoints, endpointRequiresUserKey } = useEndpoints({
-    agentsMap,
+    agents,
     assistantsMap,
     startupConfig,
     endpointsConfig,
   });
+
   const { onSelectEndpoint, onSelectSpec } = useSelectMention({
     // presets,
     modelSpecs,
@@ -75,13 +91,21 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
 
   // State
   const [selectedValues, setSelectedValues] = useState<SelectedValues>({
-    endpoint: conversation?.endpoint || '',
-    model: conversation?.model || '',
-    modelSpec: conversation?.spec || '',
+    endpoint: endpoint || '',
+    model: model || '',
+    modelSpec: spec || '',
   });
   useSelectorEffects({
     agentsMap,
-    conversation,
+    conversation: endpoint
+      ? ({
+          endpoint: endpoint ?? null,
+          model: model ?? null,
+          spec: spec ?? null,
+          agent_id: agent_id ?? null,
+          assistant_id: assistant_id ?? null,
+        } as any)
+      : null,
     assistantsMap,
     setSelectedValues,
   });
@@ -91,7 +115,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
 
   const keyProps = useKeyDialog();
 
-  // Memoized search results
+  /** Memoized search results */
   const searchResults = useMemo(() => {
     if (!searchValue) {
       return null;
@@ -100,7 +124,6 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     return filterItems(allItems, searchValue, agentsMap, assistantsMap || {});
   }, [searchValue, modelSpecs, mappedEndpoints, agentsMap, assistantsMap]);
 
-  // Functions
   const setDebouncedSearchValue = useMemo(
     () =>
       debounce((value: string) => {

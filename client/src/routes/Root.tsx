@@ -17,6 +17,7 @@ import {
   AssistantsMapContext,
   FileMapContext,
   ModelDescriptionsProvider,
+  PromptGroupsProvider,
   SetConvoProvider,
 } from '~/Providers';
 
@@ -69,27 +70,29 @@ export default function Root() {
         <FileMapContext.Provider value={fileMap}>
           <AssistantsMapContext.Provider value={assistantsMap}>
             <AgentsMapContext.Provider value={agentsMap}>
-              <Banner onHeightChange={setBannerHeight} />
-              <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
-                <div className="flex overflow-hidden relative z-0 w-full h-full">
-                  <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
-                  <div className="flex overflow-hidden relative flex-col flex-1 max-w-full h-full">
-                    <MobileNav setNavVisible={setNavVisible} />
-                    <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
+              <PromptGroupsProvider>
+                <Banner onHeightChange={setBannerHeight} />
+                <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
+                  <div className="relative z-0 flex h-full w-full overflow-hidden">
+                    <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
+                    <div className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden">
+                      <MobileNav setNavVisible={setNavVisible} />
+                      <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
+                    </div>
                   </div>
                 </div>
-              </div>
+                {config?.interface?.termsOfService?.modalAcceptance === true && (
+                  <TermsAndConditionsModal
+                    open={showTerms}
+                    onOpenChange={setShowTerms}
+                    onAccept={handleAcceptTerms}
+                    onDecline={handleDeclineTerms}
+                    title={config.interface.termsOfService.modalTitle}
+                    modalContent={config.interface.termsOfService.modalContent}
+                  />
+                )}
+              </PromptGroupsProvider>
             </AgentsMapContext.Provider>
-            {config?.interface?.termsOfService?.modalAcceptance === true && (
-              <TermsAndConditionsModal
-                open={showTerms}
-                onOpenChange={setShowTerms}
-                onAccept={handleAcceptTerms}
-                onDecline={handleDeclineTerms}
-                title={config.interface.termsOfService.modalTitle}
-                modalContent={config.interface.termsOfService.modalContent}
-              />
-            )}
           </AssistantsMapContext.Provider>
         </FileMapContext.Provider>
       </ModelDescriptionsProvider>

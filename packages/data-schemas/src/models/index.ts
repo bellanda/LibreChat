@@ -1,5 +1,8 @@
+import { createAccessRoleModel } from './accessRole';
+import { createAclEntryModel } from './aclEntry';
 import { createActionModel } from './action';
 import { createAgentModel } from './agent';
+import { createAgentCategoryModel } from './agentCategory';
 import { createAssistantModel } from './assistant';
 import { createBalanceModel } from './balance';
 import { createBannerModel } from './banner';
@@ -7,6 +10,7 @@ import { createConversationHistoryModel } from './conversationHistory';
 import { createConversationTagModel } from './conversationTag';
 import { createConversationModel } from './convo';
 import { createFileModel } from './file';
+import { createGroupModel } from './group';
 import { createKeyModel } from './key';
 import { createMemoryModel } from './memory';
 import { createMessageModel } from './message';
@@ -36,6 +40,7 @@ export function createModels(mongoose: typeof import('mongoose')) {
     ConversationHistory: createConversationHistoryModel(mongoose),
     Message: createMessageModel(mongoose),
     Agent: createAgentModel(mongoose),
+    AgentCategory: createAgentCategoryModel(mongoose),
     Role: createRoleModel(mongoose),
     Action: createActionModel(mongoose),
     Assistant: createAssistantModel(mongoose),
@@ -52,5 +57,8 @@ export function createModels(mongoose: typeof import('mongoose')) {
     SharedLink: createSharedLinkModel(mongoose),
     ToolCall: createToolCallModel(mongoose),
     MemoryEntry: createMemoryModel(mongoose),
+    AccessRole: createAccessRoleModel(mongoose),
+    AclEntry: createAclEntryModel(mongoose),
+    Group: createGroupModel(mongoose),
   };
 }

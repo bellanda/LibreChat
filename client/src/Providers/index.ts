@@ -21,6 +21,7 @@ export * from './EditorContext';
 export * from './FileMapContext';
 export * from './MessageContext';
 export * from './ModelDescriptionsContext';
+export * from './PromptGroupsContext';
 export * from './SearchContext';
 export * from './SetConvoContext';
 export * from './ShareContext';

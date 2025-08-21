@@ -14,6 +14,7 @@ const { isEnabled, ErrorController } = require('@librechat/api');
 const { connectDb, indexSync } = require('~/db');
 const validateImageRequest = require('./middleware/validateImageRequest');
 const { jwtLogin, ldapLogin, passportLogin } = require('~/strategies');
+const { checkMigrations } = require('./services/start/migration');
 const initializeMCPs = require('./services/initializeMCPs');
 const configureSocialLogins = require('./socialLogins');
 const AppService = require('./services/AppService');
@@ -123,6 +124,8 @@ const startServer = async () => {
   app.use('/api/groups-configs', groupsConfigs);
   // app.use('/api/groups', groups); // Comentado - usando groups-configs em vez disso
   app.use('/api/memories', routes.memories);
+  app.use('/api/permissions', routes.accessPermissions);
+
   app.use('/api/tags', routes.tags);
   app.use('/api/mcp', routes.mcp);
 
@@ -151,7 +154,7 @@ const startServer = async () => {
       logger.info(`Server listening at http://${host == '0.0.0.0' ? 'localhost' : host}:${port}`);
     }
 
-    initializeMCPs(app);
+    initializeMCPs(app).then(() => checkMigrations());
   });
 };
 

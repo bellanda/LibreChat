@@ -1,3 +1,4 @@
+const accessPermissions = require('./accessPermissions');
 const assistants = require('./assistants');
 const categories = require('./categories');
 const tokenizer = require('./tokenizer');
@@ -31,6 +32,7 @@ const pythonTools = require('./pythonTools');
 const mcp = require('./mcp');
 
 module.exports = {
+  mcp,
   edit,
   auth,
   keys,
@@ -61,4 +63,5 @@ module.exports = {
   staticRoute,
   pythonTools,
   mcp,
+  accessPermissions,
 };

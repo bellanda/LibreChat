@@ -1,3 +1,4 @@
+import { CodePaths, FilePaths, SheetPaths, TextPaths } from '@librechat/client';
 import type { QueryClient } from '@tanstack/react-query';
 import type { EndpointFileConfig, TFile } from 'librechat-data-provider';
 import {
@@ -8,7 +9,6 @@ import {
   QueryKeys,
 } from 'librechat-data-provider';
 import type { ExtendedFile } from '~/common';
-import { CodePaths, FilePaths, SheetPaths, TextPaths } from '~/components/svg';
 
 export const partialTypes = ['text/x-'];
 

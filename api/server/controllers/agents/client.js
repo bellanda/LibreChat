@@ -891,6 +891,11 @@ class AgentClient extends BaseClient {
           last_agent_index: this.agentConfigs?.size ?? 0,
           user_id: this.user ?? this.options.req.user?.id,
           hide_sequential_outputs: this.options.agent.hide_sequential_outputs,
+          requestBody: {
+            messageId: this.responseMessageId,
+            conversationId: this.conversationId,
+            parentMessageId: this.parentMessageId,
+          },
           user: this.options.req.user,
         },
         recursionLimit: agentsEConfig?.recursionLimit ?? 25,
@@ -961,7 +966,7 @@ class AgentClient extends BaseClient {
 
         if (noSystemMessages === true && systemContent?.length) {
           const latestMessageContent = _messages.pop().content;
-          if (typeof latestMessage !== 'string') {
+          if (typeof latestMessageContent !== 'string') {
             latestMessageContent[0].text = [systemContent, latestMessageContent[0].text].join('\n');
             _messages.push(new HumanMessage({ content: latestMessageContent }));
           } else {
@@ -1157,6 +1162,7 @@ class AgentClient extends BaseClient {
         if (attachments && attachments.length > 0) {
           this.artifactPromises.push(...attachments);
         }
+
         await this.recordCollectedUsage({ context: 'message' });
         logger.debug(`[chatCompletion] Finished calling recordCollectedUsage`);
       } catch (err) {
@@ -1203,7 +1209,6 @@ class AgentClient extends BaseClient {
 
     /** @type {import('@librechat/agents').ClientOptions} */
     let clientOptions = {
-      maxTokens: 75,
       model: agent.model || agent.model_parameters.model,
     };
 
@@ -1270,15 +1275,13 @@ class AgentClient extends BaseClient {
       clientOptions.configuration = options.configOptions;
     }
 
-    const shouldRemoveMaxTokens = /\b(o\d|gpt-[5-9])\b/i.test(clientOptions.model);
-    if (shouldRemoveMaxTokens && clientOptions.maxTokens != null) {
+    if (clientOptions.maxTokens != null) {
       delete clientOptions.maxTokens;
-    } else if (!shouldRemoveMaxTokens && !clientOptions.maxTokens) {
-      clientOptions.maxTokens = 75;
     }
-    if (shouldRemoveMaxTokens && clientOptions?.modelKwargs?.max_completion_tokens != null) {
+    if (clientOptions?.modelKwargs?.max_completion_tokens != null) {
       delete clientOptions.modelKwargs.max_completion_tokens;
-    } else if (shouldRemoveMaxTokens && clientOptions?.modelKwargs?.max_output_tokens != null) {
+    }
+    if (clientOptions?.modelKwargs?.max_output_tokens != null) {
       delete clientOptions.modelKwargs.max_output_tokens;
     }
 
