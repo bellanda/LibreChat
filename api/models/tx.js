@@ -152,8 +152,24 @@ const tokenValues = Object.assign(
     'ministral-8b': { prompt: 0.1, completion: 0.1 },
     'ministral-3b': { prompt: 0.04, completion: 0.04 },
     // GPT-OSS models
-    'gpt-oss-20b': { prompt: 0.05, completion: 0.2 },
-    'gpt-oss-120b': { prompt: 0.15, completion: 0.6 },
+    'gpt-oss-20b': { prompt: 0.1, completion: 0.5 },
+    'gpt-oss-120b': { prompt: 0.15, completion: 0.75 },
+
+    // GROQ Models
+    'meta-llama/llama-4-maverick-17b-128e-instruct': { prompt: 0.2, completion: 0.6 },
+    'meta-llama/llama-4-scout-17b-16e-instruct': { prompt: 0.11, completion: 0.34 },
+
+    // FIREWORKS Models
+    'accounts/fireworks/models/deepseek-v3-0324': { prompt: 0.9, completion: 0.9 },
+    'accounts/fireworks/models/deepseek-r1-0528': { prompt: 3.0, completion: 8.0 },
+    'accounts/fireworks/models/qwen3-235b-a22b-instruct-2507': { prompt: 0.22, completion: 0.88 },
+    'accounts/fireworks/models/qwen3-235b-a22b-thinking-2507': { prompt: 0.22, completion: 0.88 },
+    'accounts/fireworks/models/qwen3-coder-480b-a35b-instruct': { prompt: 0.45, completion: 1.8 },
+    'accounts/fireworks/models/kimi-k2-instruct': { prompt: 0.6, completion: 2.5 },
+
+    // XAI Models
+    'grok-4': { prompt: 3.0, completion: 15.0 },
+    'grok-3-mini': { prompt: 0.3, completion: 0.5 },
   },
   bedrockValues,
 );
