@@ -8,7 +8,9 @@ import {
   ShieldCheck,
   ThumbsUp,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Breadcrumb from '../components/Documentation/components/Breadcrumb';
 import PrecoTokenizacaoLimitacoesPage from '../components/Documentation/subtopics/glossary/PrecoTokenizacaoLimitacoesPage';
 import AgentePage from '../components/Documentation/subtopics/step-by-step/AgentePage';
 import PastasPage from '../components/Documentation/subtopics/step-by-step/PastasPage';
@@ -23,8 +25,8 @@ import VisaoGeralPage from '../components/Documentation/topics/VisaoGeralPage';
 /**
  * Documentation
  * -----------------------------------------------------------------------------
- * Sistema de documentação com páginas separadas para cada seção.
- * Cada tópico tem sua própria página com navegação entre elas.
+ * Sistema de documentação com rotas para cada seção.
+ * Cada tópico tem sua própria URL com navegação via React Router.
  * -----------------------------------------------------------------------------
  */
 
@@ -53,8 +55,8 @@ const SECTIONS = [
     title: 'Passo a Passo',
     icon: CheckCircle,
     subtopics: [
-      { id: 'pap-agentes', title: 'Agentes', component: 'AgentePage' },
-      { id: 'pap-pastas', title: 'Pastas', component: 'PastasPage' },
+      { id: 'agentes', title: 'Agentes', component: 'AgentePage' },
+      { id: 'pastas', title: 'Pastas', component: 'PastasPage' },
     ],
   },
   {
@@ -64,39 +66,26 @@ const SECTIONS = [
     subtopics: [],
   },
   {
-    id: 'boas-praticas',
+    id: 'boas-praticas-rapidas',
     title: 'Boas Práticas Rápidas',
     icon: ThumbsUp,
     subtopics: [],
   },
-  // ,
-  // {
-  //   id: "faq",
-  //   title: "Perguntas Frequentes (FAQ)",
-  //   icon: HelpCircle,
-  //   subtopics: []
-  // }
   {
-    id: 'politica-uso',
-    title: 'Política de Uso',
+    id: 'politica-de-uso-de-ia',
+    title: 'Política de Uso de IA',
     icon: ShieldCheck,
     subtopics: [],
   },
-  // {
-  //   id: 'atualizacoes',
-  //   title: 'Atualizações (Changelog)',
-  //   icon: History,
-  //   subtopics: [],
-  // },
 ] as const;
 
 export default function Documentation() {
-  const [currentPage, setCurrentPage] = useState<string>(SECTIONS[0].id);
-  const [currentSubtopic, setCurrentSubtopic] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { sectionId = 'visao-geral', subtopicId } = useParams();
 
   // Navegação entre páginas
-  const currentIndex = SECTIONS.findIndex((section) => section.id === currentPage);
-  const currentSection = SECTIONS[currentIndex];
+  const currentIndex = SECTIONS.findIndex((section) => section.id === sectionId);
+  const currentSection = SECTIONS[currentIndex] || SECTIONS[0];
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < SECTIONS.length - 1;
 
@@ -104,18 +93,16 @@ export default function Documentation() {
   const hasSubtopics = currentSection.subtopics && currentSection.subtopics.length > 0;
 
   const goToPrevious = () => {
-    if (currentSubtopic && hasSubtopics) {
-      const currentSubtopicIndex = currentSection.subtopics.findIndex(
-        (s) => s.id === currentSubtopic,
-      );
+    if (subtopicId && hasSubtopics) {
+      const currentSubtopicIndex = currentSection.subtopics.findIndex((s) => s.id === subtopicId);
       if (currentSubtopicIndex > 0) {
         const previousSubtopic = currentSection.subtopics[currentSubtopicIndex - 1];
         if (previousSubtopic) {
-          setCurrentSubtopic(previousSubtopic.id);
+          navigate(`/documentation/${sectionId}/${previousSubtopic.id}`);
         }
         return;
       } else {
-        setCurrentSubtopic(null);
+        navigate(`/documentation/${sectionId}`);
         return;
       }
     }
@@ -125,32 +112,27 @@ export default function Documentation() {
       if (previousSection.subtopics && previousSection.subtopics.length > 0) {
         const lastSubtopic = previousSection.subtopics[previousSection.subtopics.length - 1];
         if (lastSubtopic) {
-          setCurrentPage(previousSection.id);
-          setCurrentSubtopic(lastSubtopic.id);
+          navigate(`/documentation/${previousSection.id}/${lastSubtopic.id}`);
         }
       } else {
-        setCurrentPage(previousSection.id);
-        setCurrentSubtopic(null);
+        navigate(`/documentation/${previousSection.id}`);
       }
     }
   };
 
   const goToNext = () => {
-    if (currentSubtopic && hasSubtopics) {
-      const currentSubtopicIndex = currentSection.subtopics.findIndex(
-        (s) => s.id === currentSubtopic,
-      );
+    if (subtopicId && hasSubtopics) {
+      const currentSubtopicIndex = currentSection.subtopics.findIndex((s) => s.id === subtopicId);
       if (currentSubtopicIndex < currentSection.subtopics.length - 1) {
         const nextSubtopic = currentSection.subtopics[currentSubtopicIndex + 1];
         if (nextSubtopic) {
-          setCurrentSubtopic(nextSubtopic.id);
+          navigate(`/documentation/${sectionId}/${nextSubtopic.id}`);
         }
         return;
       } else {
         if (hasNext) {
           const nextSection = SECTIONS[currentIndex + 1];
-          setCurrentPage(nextSection.id);
-          setCurrentSubtopic(null);
+          navigate(`/documentation/${nextSection.id}`);
         }
         return;
       }
@@ -159,29 +141,27 @@ export default function Documentation() {
     if (hasSubtopics) {
       const firstSubtopic = currentSection.subtopics[0];
       if (firstSubtopic) {
-        setCurrentSubtopic(firstSubtopic.id);
+        navigate(`/documentation/${sectionId}/${firstSubtopic.id}`);
       }
     } else if (hasNext) {
       const nextSection = SECTIONS[currentIndex + 1];
-      setCurrentPage(nextSection.id);
-      setCurrentSubtopic(null);
+      navigate(`/documentation/${nextSection.id}`);
     }
   };
 
   const goToSection = (sectionId: string) => {
-    setCurrentPage(sectionId);
-    setCurrentSubtopic(null); // Reset subtópico ao mudar de seção
+    navigate(`/documentation/${sectionId}`);
   };
 
   const goToSubtopic = (subtopicId: string) => {
-    setCurrentSubtopic(subtopicId);
+    navigate(`/documentation/${sectionId}/${subtopicId}`);
   };
 
   // Renderiza o conteúdo da página atual
   const renderPageContent = () => {
     // Se há subtópicos e um subtópico está selecionado, renderizar o subtópico
-    if (hasSubtopics && currentSubtopic) {
-      const subtopic = currentSection.subtopics.find((s) => s.id === currentSubtopic);
+    if (hasSubtopics && subtopicId) {
+      const subtopic = currentSection.subtopics.find((s) => s.id === subtopicId);
       if (subtopic) {
         switch (subtopic.component) {
           case 'AgentePage':
@@ -197,7 +177,7 @@ export default function Documentation() {
     }
 
     // Renderizar página principal da seção
-    switch (currentPage) {
+    switch (sectionId) {
       case 'visao-geral':
         return <VisaoGeralPage />;
       case 'glossario':
@@ -208,9 +188,7 @@ export default function Documentation() {
         return <EngenhariaDePromptsPage />;
       case 'boas-praticas':
         return <BoasPraticasPage />;
-      // case "faq":
-      //   return <FAQPage />;
-      case 'politica-uso':
+      case 'politica-de-uso-de-ia':
         return <PoliticaUsoPage />;
       case 'atualizacoes':
         return <AtualizacoesPage />;
@@ -221,17 +199,17 @@ export default function Documentation() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [currentPage, currentSubtopic]);
+  }, [sectionId, subtopicId]);
 
   return (
-    <div className="flex min-h-screen bg-gray-800 font-sans text-white">
+    <div className="flex min-h-screen font-sans text-white bg-gray-800">
       {/* SIDEBAR */}
-      <aside className="fixed left-0 top-0 hidden h-full w-64 border-r border-gray-700 bg-surface-primary-alt p-6 lg:block">
-        <div className="flex items-center justify-center gap-3">
+      <aside className="hidden fixed top-0 left-0 p-6 w-64 h-full border-r border-gray-700 bg-surface-primary-alt lg:block">
+        <div className="flex gap-3 justify-center items-center">
           <img
             src="/assets/hpe-ia-neural-dark-mode.png"
             alt="HPE IA Neural Logo"
-            className="h-16 w-auto rounded-lg bg-white p-2"
+            className="p-2 w-auto h-16 bg-white rounded-lg"
           />
         </div>
 
@@ -242,7 +220,7 @@ export default function Documentation() {
                 <button
                   onClick={() => goToSection(id)}
                   className={`flex w-full items-center gap-3 rounded-md px-4 py-2 text-left text-gray-300 transition-colors duration-200 hover:bg-gray-700 ${
-                    currentPage === id ? 'bg-indigo-600 font-semibold text-white' : ''
+                    sectionId === id ? 'bg-indigo-600 font-semibold text-white' : ''
                   }`}
                 >
                   <Icon size={20} />
@@ -250,14 +228,14 @@ export default function Documentation() {
                 </button>
 
                 {/* Subtópicos */}
-                {currentPage === id && subtopics && subtopics.length > 0 && (
-                  <ul className="ml-6 mt-2 space-y-1">
+                {sectionId === id && subtopics && subtopics.length > 0 && (
+                  <ul className="mt-2 ml-6 space-y-1">
                     {subtopics.map((subtopic) => (
                       <li key={subtopic.id}>
                         <button
                           onClick={() => goToSubtopic(subtopic.id)}
                           className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm text-gray-400 transition-colors duration-200 hover:bg-gray-700 hover:text-gray-200 ${
-                            currentSubtopic === subtopic.id ? 'bg-indigo-500 text-white' : ''
+                            subtopicId === subtopic.id ? 'bg-indigo-500 text-white' : ''
                           }`}
                         >
                           <div className="h-1.5 w-1.5 rounded-full bg-gray-500"></div>
@@ -279,33 +257,30 @@ export default function Documentation() {
           {/* Header da página */}
           <header className="mb-4">
             {/* Breadcrumbs */}
-            <div className="mb-3 flex items-center text-sm text-gray-400">
-              <span className="font-medium text-indigo-400">Documentação</span>
-              <ChevronRight size={16} className="mx-2" />
-              <span className="text-white">{currentSection.title}</span>
-              {currentSubtopic && (
-                <>
-                  <ChevronRight size={16} className="mx-2" />
-                  <span className="text-indigo-300">
-                    {currentSection.subtopics.find((s) => s.id === currentSubtopic)?.title}
-                  </span>
-                </>
-              )}
-            </div>
+            <Breadcrumb
+              sectionTitle={currentSection.title}
+              subtopicTitle={
+                subtopicId
+                  ? currentSection.subtopics.find((s) => s.id === subtopicId)?.title
+                  : undefined
+              }
+              sectionId={sectionId}
+              subtopicId={subtopicId}
+            />
 
-            <div className="mb-4 flex items-center gap-3">
+            <div className="flex gap-3 items-center mb-4">
               <currentSection.icon className="text-indigo-400" size={32} />
               <div>
                 <h1 className="text-3xl font-bold text-white">
-                  {currentSubtopic
-                    ? currentSection.subtopics.find((s) => s.id === currentSubtopic)?.title
+                  {subtopicId
+                    ? currentSection.subtopics.find((s) => s.id === subtopicId)?.title
                     : currentSection.title}
                 </h1>
               </div>
             </div>
             <div className="text-sm text-gray-400">
-              {currentSubtopic
-                ? `Subtópico ${currentSection.subtopics.findIndex((s) => s.id === currentSubtopic) + 1} de ${currentSection.subtopics.length}`
+              {subtopicId
+                ? `Subtópico ${currentSection.subtopics.findIndex((s) => s.id === subtopicId) + 1} de ${currentSection.subtopics.length}`
                 : `Página ${currentIndex + 1} de ${SECTIONS.length}`}
             </div>
           </header>
@@ -314,14 +289,14 @@ export default function Documentation() {
           <div className="mb-8">{renderPageContent()}</div>
 
           {/* Navegação entre páginas */}
-          <div className="flex items-center justify-between border-t border-gray-700 pt-8">
+          <div className="flex justify-between items-center pt-8 border-t border-gray-700">
             <button
               onClick={goToPrevious}
               disabled={!hasPrevious}
               className={`flex items-center gap-2 rounded-md px-4 py-2 transition-colors ${
                 hasPrevious
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'cursor-not-allowed bg-gray-700 text-gray-400'
+                  ? 'text-white bg-indigo-600 hover:bg-indigo-700'
+                  : 'text-gray-400 bg-gray-700 cursor-not-allowed'
               }`}
             >
               <ChevronLeft size={20} />
@@ -334,7 +309,7 @@ export default function Documentation() {
                   key={section.id}
                   onClick={() => goToSection(section.id)}
                   className={`h-3 w-3 rounded-full transition-colors ${
-                    currentPage === section.id ? 'bg-indigo-600' : 'bg-gray-600 hover:bg-gray-500'
+                    sectionId === section.id ? 'bg-indigo-600' : 'bg-gray-600 hover:bg-gray-500'
                   }`}
                   title={section.title}
                 />
@@ -346,8 +321,8 @@ export default function Documentation() {
               disabled={!hasNext}
               className={`flex items-center gap-2 rounded-md px-4 py-2 transition-colors ${
                 hasNext
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'cursor-not-allowed bg-gray-700 text-gray-400'
+                  ? 'text-white bg-indigo-600 hover:bg-indigo-700'
+                  : 'text-gray-400 bg-gray-700 cursor-not-allowed'
               }`}
             >
               Próximo

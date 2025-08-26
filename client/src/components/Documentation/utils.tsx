@@ -1,5 +1,18 @@
 import CodeBlock from './components/CodeBlock';
 
+// Constantes para as rotas da documentação
+export const DOCUMENTATION_ROUTES = {
+  VISAO_GERAL: '/documentation/visao-geral',
+  GLOSSARIO: '/documentation/glossario',
+  GLOSSARIO_PRECO_TOKENIZACAO: '/documentation/glossario/gb-preco-tokenizacao-limitacoes',
+  PASSO_A_PASSO: '/documentation/passo-a-passo',
+  PASSO_A_PASSO_AGENTES: '/documentation/passo-a-passo/pap-agentes',
+  PASSO_A_PASSO_PASTAS: '/documentation/passo-a-passo/pap-pastas',
+  ENGENHARIA_PROMPTS: '/documentation/engenharia-de-prompts',
+  BOAS_PRATICAS: '/documentation/boas-praticas',
+  POLITICA_USO: '/documentation/politica-de-uso-de-ia',
+} as const;
+
 export interface Step {
   number: number;
   icon: string;

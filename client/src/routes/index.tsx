@@ -112,6 +112,14 @@ export const router = createBrowserRouter([
             index: true,
             element: <Documentation />,
           },
+          {
+            path: ':sectionId',
+            element: <Documentation />,
+          },
+          {
+            path: ':sectionId/:subtopicId',
+            element: <Documentation />,
+          },
         ],
       },
       {
