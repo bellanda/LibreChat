@@ -1,13 +1,12 @@
 import * as Select from '@ariakit/react/select';
-import { DropdownMenuSeparator, GearIcon, LinkIcon, UserIcon } from '@librechat/client';
-import { FileText, LogOut } from 'lucide-react';
+import { Avatar, DropdownMenuSeparator, GearIcon } from '@librechat/client';
+import { BarChart2, BookOpen, FileText, LogOut, Shield } from 'lucide-react';
 import { memo, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import FilesView from '~/components/Chat/Input/Files/FilesView';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import { useAuthContext } from '~/hooks/AuthContext';
-import useAvatar from '~/hooks/Messages/useAvatar';
 import store from '~/store';
 import Settings from './Settings';
 
@@ -21,42 +20,20 @@ function AccountSettings() {
   const [showSettings, setShowSettings] = useState(false);
   const [showFiles, setShowFiles] = useRecoilState(store.showFiles);
 
-  const avatarSrc = useAvatar(user);
-  const avatarSeed = user?.avatar || user?.name || user?.username || '';
-
   return (
     <Select.SelectProvider>
       <Select.Select
         aria-label={localize('com_nav_account_settings')}
         data-testid="nav-user"
-        className="mt-text-sm flex h-auto w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-hover"
+        className="flex gap-2 items-center p-2 w-full h-auto text-sm rounded-xl transition-all duration-200 ease-in-out mt-text-sm hover:bg-surface-hover"
       >
         <div className="-ml-0.9 -mt-0.8 h-8 w-8 flex-shrink-0">
-          <div className="relative flex">
-            {avatarSeed.length === 0 ? (
-              <div
-                style={{
-                  backgroundColor: 'rgb(121, 137, 255)',
-                  width: '32px',
-                  height: '32px',
-                  boxShadow: 'rgba(240, 246, 252, 0.1) 0px 0px 0px 1px',
-                }}
-                className="relative flex items-center justify-center rounded-full p-1 text-text-primary"
-                aria-hidden="true"
-              >
-                <UserIcon />
-              </div>
-            ) : (
-              <img
-                className="rounded-full"
-                src={(user?.avatar ?? '') || avatarSrc}
-                alt={`${user?.name || user?.username || user?.email || ''}'s avatar`}
-              />
-            )}
+          <div className="flex relative">
+            <Avatar user={user} size={32} />
           </div>
         </div>
         <div
-          className="mt-2 grow overflow-hidden text-ellipsis whitespace-nowrap text-left text-text-primary"
+          className="overflow-hidden mt-2 text-left whitespace-nowrap grow text-ellipsis text-text-primary"
           style={{ marginTop: '0', marginLeft: '0' }}
         >
           {user?.name ?? user?.username ?? localize('com_nav_user')}
@@ -70,12 +47,12 @@ function AccountSettings() {
           translate: '0px',
         }}
       >
-        <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
+        <div className="py-2 mr-2 ml-3 text-sm text-token-text-secondary" role="note">
           {user?.name}
         </div>
         {/* Break line if text is too long */}
         <div
-          className="text-token-text-secondary ml-3 mr-2 text-wrap break-all py-2 text-sm"
+          className="py-2 mr-2 ml-3 text-sm break-all text-token-text-secondary text-wrap"
           role="note"
         >
           {user?.email ?? localize('com_nav_user')}
@@ -84,7 +61,7 @@ function AccountSettings() {
         <DropdownMenuSeparator />
         {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (
           <>
-            <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
+            <div className="py-2 mr-2 ml-3 text-sm text-token-text-secondary" role="note">
               {localize('com_nav_balance')}:{' '}
               {new Intl.NumberFormat().format(Math.round(balanceQuery.data.tokenCredits))}
             </div>
@@ -94,41 +71,51 @@ function AccountSettings() {
         <Select.SelectItem
           value=""
           onClick={() => window.open('/reports', '_blank')}
-          className="select-item text-sm"
+          className="text-sm select-item"
         >
-          <LinkIcon aria-hidden="true" />
+          <BarChart2 aria-hidden="true" size={18} />
           Dashboard
         </Select.SelectItem>
         <Select.SelectItem
           value=""
           onClick={() => window.open('/documentation', '_blank')}
-          className="select-item text-sm"
+          className="text-sm select-item"
         >
-          <LinkIcon aria-hidden="true" />
+          <BookOpen aria-hidden="true" size={18} />
           Documentação
         </Select.SelectItem>
         <Select.SelectItem
           value=""
           onClick={() => setShowFiles(true)}
-          className="select-item text-sm"
+          className="text-sm select-item"
         >
           <FileText className="icon-md" aria-hidden="true" />
           {localize('com_nav_my_files')}
         </Select.SelectItem>
-        {startupConfig?.helpAndFaqURL !== '/' && (
+
+        <Select.SelectItem
+          value=""
+          onClick={() => window.open('/documentation/politica-de-uso-de-ia', '_blank')}
+          className="text-sm select-item"
+        >
+          <Shield aria-hidden="true" size={18} />
+          Política de Uso de IA
+        </Select.SelectItem>
+
+        {/* {startupConfig?.helpAndFaqURL !== '/' && (
           <Select.SelectItem
             value=""
             onClick={() => window.open(startupConfig?.helpAndFaqURL, '_blank')}
-            className="select-item text-sm"
+            className="text-sm select-item"
           >
-            <LinkIcon aria-hidden="true" />
+            <Shield aria-hidden="true" size={18} />
             {localize('com_nav_help_faq')}
           </Select.SelectItem>
-        )}
+        )} */}
         <Select.SelectItem
           value=""
           onClick={() => setShowSettings(true)}
-          className="select-item text-sm"
+          className="text-sm select-item"
         >
           <GearIcon className="icon-md" aria-hidden="true" />
           {localize('com_nav_settings')}
@@ -138,7 +125,7 @@ function AccountSettings() {
           aria-selected={true}
           onClick={() => logout()}
           value="logout"
-          className="select-item text-sm"
+          className="text-sm select-item"
         >
           <LogOut className="icon-md" />
           {localize('com_nav_log_out')}

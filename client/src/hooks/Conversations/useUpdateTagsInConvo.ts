@@ -76,6 +76,7 @@ const useUpdateTagsInConvo = () => {
         return conversation;
       });
     }
+
     queryClient.setQueryData<InfiniteData<ConversationListResponse>>(
       [QueryKeys.allConversations],
       newData,
