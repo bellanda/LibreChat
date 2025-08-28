@@ -630,6 +630,11 @@ class AgentClient extends BaseClient {
     context = 'message',
     collectedUsage = this.collectedUsage,
   }) {
+    logger.debug('[AgentClient] recordCollectedUsage called with balance:', {
+      balance,
+      context,
+      collectedUsageLength: collectedUsage?.length,
+    });
     if (!collectedUsage || !collectedUsage.length) {
       return;
     }
@@ -793,6 +798,7 @@ class AgentClient extends BaseClient {
 
     const txMetadata = {
       context,
+      balance,
       conversationId: this.conversationId,
       user: this.user ?? this.options.req.user?.id,
       endpointTokenConfig: this.options.endpointTokenConfig,
@@ -1169,10 +1175,9 @@ class AgentClient extends BaseClient {
           this.artifactPromises.push(...attachments);
         }
 
-        await this.recordCollectedUsage({ context: 'message' });
-        logger.debug(`[chatCompletion] Finished calling recordCollectedUsage`);
         const balanceConfig = getBalanceConfig(appConfig);
         await this.recordCollectedUsage({ context: 'message', balance: balanceConfig });
+        logger.debug(`[chatCompletion] Finished calling recordCollectedUsage`);
       } catch (err) {
         logger.error(
           '[api/server/controllers/agents/client.js #chatCompletion] Error recording collected usage',
