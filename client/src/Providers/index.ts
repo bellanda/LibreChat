@@ -19,6 +19,7 @@ export * from './CodeBlockContext';
 export * from './DashboardContext';
 export * from './EditorContext';
 export * from './FileMapContext';
+export * from './MCPPanelContext';
 export * from './MessageContext';
 export * from './ModelDescriptionsContext';
 export * from './PromptGroupsContext';

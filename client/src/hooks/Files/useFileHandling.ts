@@ -142,10 +142,14 @@ const useFileHandling = (params?: UseFileHandling) => {
         const file_id = body.get('file_id');
         clearUploadTimer(file_id as string);
         deleteFileById(file_id as string);
-        const errorMessage =
-          error?.code === 'ERR_CANCELED'
-            ? 'com_error_files_upload_canceled'
-            : (error?.response?.data?.message ?? 'com_error_files_upload');
+
+        let errorMessage = 'com_error_files_upload';
+
+        if (error?.code === 'ERR_CANCELED') {
+          errorMessage = 'com_error_files_upload_canceled';
+        } else if (error?.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
         setError(errorMessage);
       },
     },
@@ -263,11 +267,6 @@ const useFileHandling = (params?: UseFileHandling) => {
       }
     }
 
-    // Determine if this is a file_search upload (RAG API)
-    const isFileSearchUpload =
-      _toolResource === 'file_search' ||
-      params?.additionalMetadata?.tool_resource === 'file_search';
-
     /* Validate files */
     let filesAreValid: boolean;
     try {
@@ -281,7 +280,8 @@ const useFileHandling = (params?: UseFileHandling) => {
           fileConfig?.endpoints?.default ??
           defaultFileConfig.endpoints[endpoint] ??
           defaultFileConfig.endpoints.default,
-        isFileSearchUpload,
+        toolResource: _toolResource,
+        fileConfig: fileConfig,
       });
     } catch (error) {
       console.error('file validation error', error);

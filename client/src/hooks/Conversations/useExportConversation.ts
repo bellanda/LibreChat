@@ -8,18 +8,18 @@ import type {
   TPreset,
 } from 'librechat-data-provider';
 import {
+  buildTree,
   ContentTypes,
-  QueryKeys,
-  ToolCallTypes,
   imageGenTools,
   isImageVisionTool,
+  QueryKeys,
+  ToolCallTypes,
 } from 'librechat-data-provider';
 import { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-
 import useBuildMessageTree from '~/hooks/Messages/useBuildMessageTree';
 import { useScreenshot } from '~/hooks/ScreenshotContext';
-import { buildTree, cleanupPreset } from '~/utils';
+import { cleanupPreset } from '~/utils';
 
 type ExportValues = {
   fieldName: string;
@@ -58,7 +58,7 @@ export default function useExportConversation({
     return dataTree?.length === 0 ? null : (dataTree ?? null);
   }, [paramId, conversation?.conversationId, queryClient]);
 
-  const getMessageText = (message: TMessage | undefined, format = 'text') => {
+  const getMessageText = (message: Partial<TMessage> | undefined, format = 'text') => {
     if (!message) {
       return '';
     }
@@ -71,7 +71,7 @@ export default function useExportConversation({
     };
 
     if (!message.content) {
-      return formatText(message.sender || '', message.text);
+      return formatText(message.sender || '', message.text || '');
     }
 
     return message.content
@@ -199,9 +199,12 @@ export default function useExportConversation({
 
     if (content.type === ContentTypes.ERROR) {
       // ERROR
-      const textPart = content[ContentTypes.TEXT];
-      const text = typeof textPart === 'string' ? textPart : (textPart?.value ?? '');
-      return [sender, text];
+      return [
+        sender,
+        typeof content[ContentTypes.TEXT] === 'object'
+          ? (content[ContentTypes.TEXT].value ?? '')
+          : (content[ContentTypes.TEXT] ?? ''),
+      ];
     }
 
     if (content.type === ContentTypes.TEXT) {
@@ -267,7 +270,7 @@ export default function useExportConversation({
   };
 
   const exportCSV = async () => {
-    const data: TMessage[] = [];
+    const data: Partial<TMessage>[] = [];
 
     const messages = await buildMessageTree({
       messageId: conversation?.conversationId,
@@ -279,9 +282,10 @@ export default function useExportConversation({
 
     if (Array.isArray(messages)) {
       for (const message of messages) {
-        if (message && message.messageId) {
-          data.push(message as TMessage);
+        if (!message) {
+          continue;
         }
+        data.push(message);
       }
     } else {
       if (messages && messages.messageId) {
@@ -357,28 +361,13 @@ export default function useExportConversation({
     });
 
     data += '\n## History\n';
-
-    if (exportBranches === true) {
-      // Exportar todas as mensagens quando branches estiver habilitado
-      if (Array.isArray(messages)) {
-        for (const message of messages) {
-          if (message && message.messageId) {
-            data += `${getMessageText(message as TMessage, 'md')}\n`;
-            if (message.error) {
-              data += '*(This is an error message)*\n';
-            }
-            if (message.unfinished === true) {
-              data += '*(This is an unfinished message)*\n';
-            }
-            data += '\n\n';
-          }
-        }
-      } else if (messages && typeof messages === 'object' && 'messageId' in messages) {
-        data += `${getMessageText(messages as TMessage, 'md')}\n`;
-        if ((messages as TMessage).error) {
+    if (Array.isArray(messages)) {
+      for (const message of messages) {
+        data += `${getMessageText(message, 'md')}\n`;
+        if (message?.error) {
           data += '*(This is an error message)*\n';
         }
-        if ((messages as TMessage).unfinished === true) {
+        if (message?.unfinished === true) {
           data += '*(This is an unfinished message)*\n';
         }
         data += '\n\n';
@@ -475,16 +464,14 @@ export default function useExportConversation({
     data += '\nHistory\n########################\n';
     if (Array.isArray(messages)) {
       for (const message of messages) {
-        if (message && message.messageId) {
-          data += `${getMessageText(message as TMessage)}\n`;
-          if (message.error) {
-            data += '(This is an error message)\n';
-          }
-          if (message.unfinished === true) {
-            data += '(This is an unfinished message)\n';
-          }
-          data += '\n\n';
+        data += `${getMessageText(message)}\n`;
+        if (message?.error) {
+          data += '(This is an error message)\n';
         }
+        if (message?.unfinished === true) {
+          data += '(This is an unfinished message)\n';
+        }
+        data += '\n\n';
       }
     } else if (messages && typeof messages === 'object' && 'messageId' in messages) {
       data += `${getMessageText(messages as TMessage)}\n`;

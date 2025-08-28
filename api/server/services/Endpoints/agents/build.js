@@ -5,7 +5,7 @@ const {
   Constants,
   EModelEndpoint,
 } = require('librechat-data-provider');
-const { getCustomEndpointConfig } = require('~/server/services/Config/getCustomConfig');
+const { getCustomEndpointConfig } = require('@librechat/api');
 const { loadAgent } = require('~/models/Agent');
 
 const buildOptions = async (req, endpoint, parsedBody, endpointType) => {

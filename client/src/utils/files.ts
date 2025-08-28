@@ -4,6 +4,7 @@ import type { EndpointFileConfig, TFile } from 'librechat-data-provider';
 import {
   codeTypeMapping,
   fileConfig as defaultFileConfig,
+  EToolResources,
   excelMimeTypes,
   megabyte,
   QueryKeys,
@@ -273,13 +274,15 @@ export const validateFiles = ({
   fileList,
   setError,
   endpointFileConfig,
-  isFileSearchUpload = false,
+  toolResource,
+  fileConfig,
 }: {
   fileList: File[];
   files: Map<string, ExtendedFile>;
   setError: (error: string) => void;
   endpointFileConfig: EndpointFileConfig;
-  isFileSearchUpload?: boolean;
+  toolResource?: string;
+  fileConfig: FileConfig | null;
 }) => {
   const { fileLimit, fileSizeLimit, totalSizeLimit, supportedMimeTypes } = endpointFileConfig;
   const existingFiles = Array.from(files.values());
@@ -327,7 +330,7 @@ export const validateFiles = ({
         );
       } else {
         // For file_search uploads, default to text/plain if we can't determine the type
-        if (isFileSearchUpload) {
+        if (toolResource === 'file_search') {
           fileType = 'text/plain';
           console.log(
             `🔍 File ${originalFile.name} has unknown type, defaulting to text/plain for file_search upload`,
@@ -349,8 +352,16 @@ export const validateFiles = ({
       fileList[i] = newFile;
     }
 
-    // Skip MIME type check for file_search uploads (RAG API) as we can convert unsupported files to .txt
-    if (!isFileSearchUpload && !checkType(originalFile.type, supportedMimeTypes)) {
+    let mimeTypesToCheck = supportedMimeTypes;
+    if (toolResource === EToolResources.ocr) {
+      mimeTypesToCheck = [
+        ...(fileConfig?.text?.supportedMimeTypes || []),
+        ...(fileConfig?.ocr?.supportedMimeTypes || []),
+        ...(fileConfig?.stt?.supportedMimeTypes || []),
+      ];
+    }
+
+    if (!checkType(originalFile.type, mimeTypesToCheck)) {
       console.log(originalFile);
       setError('Currently, unsupported file type: ' + originalFile.type);
       return false;
