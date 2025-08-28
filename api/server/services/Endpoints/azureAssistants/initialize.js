@@ -128,7 +128,7 @@ const initializeClient = async ({ req, res, version, endpointOption, initAppClie
 
       // Aplicar promptPrefix global se não houver um específico do endpoint
       if (!clientOptions.promptPrefix) {
-        const allConfig = req.app.locals.all;
+        const allConfig = req.config?.endpoints?.all;
         if (allConfig && allConfig.promptPrefix) {
           clientOptions.promptPrefix = allConfig.promptPrefix;
         }
