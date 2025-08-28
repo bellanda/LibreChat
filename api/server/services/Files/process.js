@@ -181,7 +181,8 @@ function filterFile({ req, image, isAvatar, skipMimeTypeCheck = false }) {
     throw new Error('No endpoint provided');
   }
 
-  const fileConfig = mergeFileConfig(req.app.locals.fileConfig);
+  const appConfig = req.config;
+  const fileConfig = mergeFileConfig(appConfig.fileConfig);
 
   const { fileSizeLimit: sizeLimit, supportedMimeTypes } =
     fileConfig.endpoints[endpoint] ?? fileConfig.endpoints.default;

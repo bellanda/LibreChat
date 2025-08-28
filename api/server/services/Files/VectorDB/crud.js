@@ -3,15 +3,16 @@ const path = require('path');
 const axios = require('axios');
 const FormData = require('form-data');
 const { logger } = require('@librechat/data-schemas');
-const { FileSources } = require('librechat-data-provider');
+const { FileSources, mergeFileConfig } = require('librechat-data-provider');
 const { logAxiosError, generateShortLivedToken } = require('@librechat/api');
 
 /**
  * Checks if a file type is supported by the RAG API
  * @param {string} mimetype - The MIME type to check
+ * @param {Object} fileConfig - The file configuration object
  * @returns {boolean} - Whether the file type is supported
  */
-function isFileTypeSupported(mimetype) {
+function isFileTypeSupported(mimetype, fileConfig) {
   return fileConfig.checkType(mimetype);
 }
 
@@ -134,11 +135,15 @@ async function uploadVectors({ req, file, file_id, entity_id, storageMetadata })
   try {
     logger.debug(`Processing file: ${file.originalname}, MIME type: ${file.mimetype}`);
 
+    // Get file configuration from request
+    const appConfig = req.config;
+    const fileConfig = mergeFileConfig(appConfig.fileConfig);
+
     // Check if the file type is supported by RAG API specifically
     // Some MIME types cause issues with RAG APIs even though they're technically supported
     const problematicTypes = ['text/plain', 'application/xml'];
     const isRAGCompatible =
-      isFileTypeSupported(file.mimetype) && !problematicTypes.includes(file.mimetype);
+      isFileTypeSupported(file.mimetype, fileConfig) && !problematicTypes.includes(file.mimetype);
 
     if (!isRAGCompatible) {
       logger.info(
