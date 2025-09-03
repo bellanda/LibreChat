@@ -1,4 +1,4 @@
-import type { EndpointFileConfig } from 'librechat-data-provider';
+import type { EndpointFileConfig, TConversation } from 'librechat-data-provider';
 import {
   Constants,
   fileConfig as defaultFileConfig,
@@ -9,12 +9,16 @@ import {
 } from 'librechat-data-provider';
 import { memo, useMemo } from 'react';
 import { useGetFileConfig } from '~/data-provider';
-import { useChatContext } from '~/Providers';
 import AttachFile from './AttachFile';
 import AttachFileMenu from './AttachFileMenu';
 
-function AttachFileChat({ disableInputs }: { disableInputs: boolean }) {
-  const { conversation } = useChatContext();
+function AttachFileChat({
+  disableInputs,
+  conversation,
+}: {
+  disableInputs: boolean;
+  conversation: TConversation | null;
+}) {
   const conversationId = conversation?.conversationId ?? Constants.NEW_CONVO;
   const { endpoint, endpointType } = conversation ?? { endpoint: null };
   const isAgents = useMemo(() => isAgentsEndpoint(endpoint), [endpoint]);

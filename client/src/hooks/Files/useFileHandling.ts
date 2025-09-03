@@ -2,22 +2,26 @@ import { useToastContext } from '@librechat/client';
 import { useQueryClient } from '@tanstack/react-query';
 import type { EndpointFileConfig, TEndpointsConfig, TError } from 'librechat-data-provider';
 import {
+  Constants,
+  EModelEndpoint,
+  EToolResources,
+  QueryKeys,
   defaultAssistantsVersion,
   fileConfig as defaultFileConfig,
-  EModelEndpoint,
   isAgentsEndpoint,
   isAssistantsEndpoint,
   mergeFileConfig,
-  QueryKeys,
 } from 'librechat-data-provider';
 import debounce from 'lodash/debounce';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSetRecoilState } from 'recoil';
 import { v4 } from 'uuid';
 import { useChatContext } from '~/Providers/ChatContext';
 import type { ExtendedFile, FileSetter } from '~/common';
 import { useGetFileConfig, useUploadFileMutation } from '~/data-provider';
 import useLocalize, { TranslationKeys } from '~/hooks/useLocalize';
 import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import { ephemeralAgentByConvoId } from '~/store';
 import { logger, validateFiles } from '~/utils';
 import { processFileForUpload } from '~/utils/heicConverter';
 import useClientResize from './useClientResize';
@@ -41,6 +45,9 @@ const useFileHandling = (params?: UseFileHandling) => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const { startUploadTimer, clearUploadTimer } = useDelayedUploadToast();
   const { files, setFiles, setFilesLoading, conversation } = useChatContext();
+  const setEphemeralAgent = useSetRecoilState(
+    ephemeralAgentByConvoId(conversation?.conversationId ?? Constants.NEW_CONVO),
+  );
   const setError = (error: string) => setErrors((prevErrors) => [...prevErrors, error]);
   const { addFile, replaceFile, updateFileById, deleteFileById } = useUpdateFiles(
     params?.fileSetter ?? setFiles,
@@ -140,6 +147,13 @@ const useFileHandling = (params?: UseFileHandling) => {
         const error = _error as TError | undefined;
         console.log('upload error', error);
         const file_id = body.get('file_id');
+        const tool_resource = body.get('tool_resource');
+        if (tool_resource === EToolResources.execute_code) {
+          setEphemeralAgent((prev) => ({
+            ...prev,
+            [EToolResources.execute_code]: false,
+          }));
+        }
         clearUploadTimer(file_id as string);
         deleteFileById(file_id as string);
 

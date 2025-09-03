@@ -12,7 +12,6 @@ import {
 } from 'librechat-data-provider';
 import * as path from 'path';
 import type {
-  AppConfig,
   MistralFileUploadResponse,
   MistralOCRError,
   MistralOCRUploadResult,
@@ -43,10 +42,7 @@ interface GoogleServiceAccount {
 
 /** Helper type for OCR request context */
 interface OCRContext {
-  req: Pick<ServerRequest, 'user'> & {
-    user?: { id: string };
-  };
-  appConfig: AppConfig;
+  req: ServerRequest;
   file: Express.Multer.File;
   loadAuthValues: (params: {
     userId: string;
@@ -238,7 +234,8 @@ async function resolveConfigValue(
  * Loads authentication configuration from OCR config
  */
 async function loadAuthConfig(context: OCRContext): Promise<AuthConfig> {
-  const ocrConfig = context.appConfig?.ocr;
+  const appConfig = context.req.config;
+  const ocrConfig = appConfig?.ocr;
   const apiKeyConfig = ocrConfig?.apiKey || '';
   const baseURLConfig = ocrConfig?.baseURL || '';
 
@@ -354,7 +351,6 @@ function createOCRError(error: unknown, baseMessage: string): Error {
  * @param params - The params object.
  * @param params.req - The request object from Express. It should have a `user` property with an `id`
  *                       representing the user
- * @param params.appConfig - Application configuration object
  * @param params.file - The file object, which is part of the request. The file object should
  *                                     have a `mimetype` property that tells us the file type
  * @param params.loadAuthValues - Function to load authentication values
@@ -370,7 +366,7 @@ export const uploadMistralOCR = async (context: OCRContext): Promise<MistralOCRU
     const authConfig = await loadAuthConfig(context);
     apiKey = authConfig.apiKey;
     baseURL = authConfig.baseURL;
-    const model = getModelConfig(context.appConfig?.ocr);
+    const model = getModelConfig(context.req.config?.ocr);
 
     const mistralFile = await uploadDocumentToMistral({
       filePath: context.file.path,
@@ -440,7 +436,7 @@ export const uploadAzureMistralOCR = async (
 ): Promise<MistralOCRUploadResult> => {
   try {
     const { apiKey, baseURL } = await loadAuthConfig(context);
-    const model = getModelConfig(context.appConfig?.ocr);
+    const model = getModelConfig(context.req.config?.ocr);
 
     const buffer = fs.readFileSync(context.file.path);
     const base64 = buffer.toString('base64');
@@ -655,7 +651,7 @@ export const uploadGoogleVertexMistralOCR = async (
 ): Promise<MistralOCRUploadResult> => {
   try {
     const { serviceAccount, accessToken } = await loadGoogleAuthConfig();
-    const model = getModelConfig(context.appConfig?.ocr);
+    const model = getModelConfig(context.req.config?.ocr);
 
     const buffer = fs.readFileSync(context.file.path);
     const base64 = buffer.toString('base64');
