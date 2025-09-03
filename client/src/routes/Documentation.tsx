@@ -66,7 +66,7 @@ const SECTIONS = [
     subtopics: [],
   },
   {
-    id: 'boas-praticas-rapidas',
+    id: 'boas-praticas',
     title: 'Boas Práticas Rápidas',
     icon: ThumbsUp,
     subtopics: [],
@@ -204,7 +204,7 @@ export default function Documentation() {
   return (
     <div className="flex min-h-screen font-sans text-white bg-gray-800">
       {/* SIDEBAR */}
-      <aside className="hidden fixed top-0 left-0 p-6 w-64 h-full border-r border-gray-700 bg-surface-primary-alt lg:block">
+      <aside className="hidden fixed top-0 left-0 p-6 w-64 h-full bg-gray-900 border-r border-gray-700 dark:bg-gray-900 lg:block">
         <div className="flex gap-3 justify-center items-center">
           <img
             src="/assets/hpe-ia-neural-dark-mode.png"
@@ -219,8 +219,10 @@ export default function Documentation() {
               <li key={id}>
                 <button
                   onClick={() => goToSection(id)}
-                  className={`flex w-full items-center gap-3 rounded-md px-4 py-2 text-left text-gray-300 transition-colors duration-200 hover:bg-gray-700 ${
-                    sectionId === id ? 'bg-indigo-600 font-semibold text-white' : ''
+                  className={`flex w-full items-center gap-3 rounded-md px-4 py-2 text-left text-gray-300 transition-colors duration-200 hover:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 ${
+                    sectionId === id
+                      ? 'bg-indigo-600 font-semibold text-white dark:bg-indigo-600 dark:text-white'
+                      : ''
                   }`}
                 >
                   <Icon size={20} />
@@ -234,8 +236,10 @@ export default function Documentation() {
                       <li key={subtopic.id}>
                         <button
                           onClick={() => goToSubtopic(subtopic.id)}
-                          className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm text-gray-400 transition-colors duration-200 hover:bg-gray-700 hover:text-gray-200 ${
-                            subtopicId === subtopic.id ? 'bg-indigo-500 text-white' : ''
+                          className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm text-gray-400 transition-colors duration-200 hover:bg-gray-700 hover:text-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 ${
+                            subtopicId === subtopic.id
+                              ? 'bg-indigo-500 text-white dark:bg-indigo-500 dark:text-white'
+                              : ''
                           }`}
                         >
                           <div className="h-1.5 w-1.5 rounded-full bg-gray-500"></div>

@@ -13,20 +13,20 @@ const CostExample = () => (
         <span className="font-semibold">Resposta:</span> 10.000 tokens
       </li>
       <li>
-        <span className="font-semibold">Modelo:</span> GPT-4.1
+        <span className="font-semibold">Modelo:</span> GPT-5
       </li>
       <li>
-        <span className="font-semibold">Cálculo Entrada:</span> 5.000 / 1.000.000 × $2,00 ={' '}
-        <span className="font-semibold">$0,01</span>
+        <span className="font-semibold">Cálculo Entrada:</span> 5.000 / 1.000.000 × $1,25 ={' '}
+        <span className="font-semibold">$0,00625</span>
       </li>
       <li>
-        <span className="font-semibold">Cálculo Saída:</span> 10.000 / 1.000.000 × $8,00 ={' '}
-        <span className="font-semibold">$0,08</span>
+        <span className="font-semibold">Cálculo Saída:</span> 10.000 / 1.000.000 × $10,00 ={' '}
+        <span className="font-semibold">$0,1</span>
       </li>
       <li>
         <span className="font-semibold">Total:</span>{' '}
-        <span className="font-bold text-green-300">$0,09</span> (15.000 tokens) - Cotação R$5.50 =
-        R$0,495
+        <span className="font-bold text-green-300">$0,1</span> (15.000 tokens) - Cotação R$5.50 =
+        R$0,55
       </li>
     </ul>
   </div>
@@ -148,38 +148,31 @@ const models_ultra_velocity_items = [
 const models_task_day_to_day = [
   {
     emoji: '🟢',
-    name: 'Groq/Fireworks → GPT-OSS 20B',
+    name: 'Groq → GPT-OSS 20B',
     cost: '0.10 / 0.50',
     speed: '⚡⚡⚡⚡⚡',
-    capacity: '49',
+    capacity: '45',
   },
   {
     emoji: '🟢',
-    name: 'Groq/Fireworks → GPT-OSS 120B',
+    name: 'Groq → GPT-OSS 120B',
     cost: '0.15 / 0.75',
     speed: '⚡⚡⚡⚡',
-    capacity: '61',
+    capacity: '58',
   },
   {
     emoji: '🟢',
     name: 'Google → Gemini 2.5 Flash',
     cost: '0.3  / 2.5',
     speed: '⚡⚡⚡⚡',
-    capacity: '58',
+    capacity: '51',
   },
   {
     emoji: '🟢',
     name: 'Groq → Llama 4 Maverick',
     cost: '0.2  / 0.6',
     speed: '⚡⚡⚡⚡',
-    capacity: '42',
-  },
-  {
-    emoji: '🟢',
-    name: 'Fireworks → Qwen3 235B Instruct',
-    cost: '0.2  / 0.9',
-    speed: '⚡⚡⚡⚡',
-    capacity: '51',
+    capacity: '36',
   },
 ];
 
@@ -190,21 +183,21 @@ const models_web_search = [
     name: 'Google → Gemini 2.5 Flash',
     cost: '0.3  / 2.5',
     speed: '⚡⚡⚡⚡',
-    capacity: '58',
+    capacity: '51',
   },
   {
     emoji: '🟡',
     name: 'Azure OpenAI → GPT‑5',
     cost: '1.25  / 10.0',
     speed: '⚡⚡⚡',
-    capacity: '63',
+    capacity: '62',
   },
   {
     emoji: '🟢',
-    name: 'Groq/Fireworks → GPT-OSS 120B',
+    name: 'Groq → GPT-OSS 120B',
     cost: '0.15 / 0.75',
     speed: '⚡⚡⚡⚡',
-    capacity: '61',
+    capacity: '58',
   },
 ];
 
@@ -215,7 +208,7 @@ const models_code_and_software_engineering = [
     name: 'Anthropic → Claude Sonnet 4',
     cost: '3.0  / 15.0',
     speed: '⚡⚡⚡',
-    capacity: '59',
+    capacity: '57',
   },
   {
     emoji: '🔵',
@@ -226,25 +219,25 @@ const models_code_and_software_engineering = [
   },
   {
     emoji: '🔵',
-    name: 'Groq/Fireworks → GPT-OSS 120B',
+    name: 'Groq → GPT-OSS 120B',
     cost: '0.15 / 0.75',
     speed: '⚡⚡⚡⚡',
-    capacity: '61',
+    capacity: '58',
   },
   {
     emoji: '🔵',
     name: 'Azure OpenAI → GPT‑5 Raciocínio Alto',
     cost: '1.25  / 10.0',
     speed: '⚡⚡',
-    capacity: '69',
+    capacity: '67',
   },
-  { emoji: '🔵', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '68' },
+  { emoji: '🔵', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '65' },
   {
     emoji: '🔵',
     name: 'Google → Gemini 2.5 Pro',
     cost: '2.0  / 12.5',
     speed: '⚡⚡⚡',
-    capacity: '65',
+    capacity: '60',
   },
 ];
 
@@ -255,22 +248,22 @@ const models_maximum_complexity = [
     name: 'Azure OpenAI → GPT‑5 Raciocínio Alto',
     cost: '1.25  / 10.0',
     speed: '⚡⚡',
-    capacity: '69',
+    capacity: '67',
   },
-  { emoji: '🔵', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '68' },
+  { emoji: '🔵', name: 'XAI → Grok 4', cost: '3.0  / 15.0', speed: '⚡⚡', capacity: '65' },
   {
     emoji: '🔵',
     name: 'Google → Gemini 2.5 Pro',
     cost: '2.0  / 12.5',
     speed: '⚡⚡⚡',
-    capacity: '65',
+    capacity: '60',
   },
   {
     emoji: '🔴',
     name: 'Fireworks → DeepSeek R1',
     cost: '3.0  / 8.0',
     speed: '⚡⚡⚡',
-    capacity: '59',
+    capacity: '52',
   },
 ];
 
@@ -278,31 +271,31 @@ const models_maximum_complexity = [
 const models_ultra_velocity = [
   {
     emoji: '🟢',
-    name: 'Groq/Fireworks → GPT-OSS 20B',
+    name: 'Groq → GPT-OSS 20B',
     cost: '0.10 / 0.50',
     speed: '⚡⚡⚡⚡⚡',
-    capacity: '49',
+    capacity: '45',
   },
   {
     emoji: '🟢',
-    name: 'Groq/Fireworks → GPT-OSS 120B',
+    name: 'Groq → GPT-OSS 120B',
     cost: '0.15 / 0.75',
     speed: '⚡⚡⚡⚡',
-    capacity: '61',
+    capacity: '58',
   },
   {
     emoji: '⚪',
     name: 'Groq → Llama 4 Scout',
     cost: '0.11  / 0.34',
     speed: '⚡⚡⚡⚡⚡',
-    capacity: '42',
+    capacity: '28',
   },
   {
     emoji: '⚪',
     name: 'Groq → Llama 4 Maverick',
     cost: '0.2  / 0.6',
     speed: '⚡⚡⚡⚡',
-    capacity: '33',
+    capacity: '36',
   },
 ];
 

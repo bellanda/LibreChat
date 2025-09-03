@@ -106,7 +106,7 @@ export const agent_step_by_step = [
   {
     title: 'Passo 3: Preencha o Nome e a Descrição',
     children: (
-      <p className="border-l-4 border-yellow-500 pl-4 text-gray-200">
+      <p className="pl-4 text-gray-200 border-l-4 border-yellow-500">
         <strong>Nome:</strong> deixe um rótulo curto para identificar seu agente.
         <br />
         <strong>Descrição:</strong> explique em uma frase qual é a função principal dele.
@@ -117,7 +117,7 @@ export const agent_step_by_step = [
     title: 'Passo 4: Defina as Instruções (Prompts do sistema)',
     children: (
       <>
-        <p className="border-l-4 border-red-500 pl-4 text-gray-200">
+        <p className="pl-4 text-gray-200 border-l-4 border-red-500">
           No campo “Instruções” você coloca as regras de comportamento do agente: tom de voz,
           limites de atuação, variáveis etc.
         </p>
@@ -138,24 +138,23 @@ Seja breve e direto.`}
     image: '/assets/documentation/agenteStepByStep/passo5.png',
     children: (
       <>
-        <p className="border-l-4 border-red-500 pl-4 text-gray-200">
+        <p className="pl-4 text-gray-200 border-l-4 border-red-500">
           No dropdown “Modelo”, selecione a versão de GPT (ou outro modelo) que seu agente deverá
           usar.
         </p>
-        <p className="border-l-4 border-yellow-500 pl-4 text-gray-200">
+        <p className="pl-4 text-gray-200 border-l-4 border-yellow-500">
           Outras informações como temperatura, top_p, etc. podem ser úteis, mas por padrão podemos
           deixar como está.
         </p>
-        <div className="mt-4 flex flex-col items-center">
-          <p className="font-semibold">
-            Após escolher o modelo, clique em "Salvar" e depois "Voltar".
-          </p>
-          <img
-            src="/assets/documentation/agenteStepByStep/passo5.1.png"
-            alt="Salvar e voltar"
-            className="mt-2 h-auto w-64 rounded"
-          />
-        </div>
+        <h1 className="text-xl font-semibold">
+          Após escolher o modelo, clique em "Salvar" e depois "Voltar".
+        </h1>
+        <div className="flex flex-col items-center mt-4"></div>
+        <img
+          src="/assets/documentation/agenteStepByStep/passo5.1.png"
+          alt="Salvar e voltar"
+          className="mt-2 w-full h-auto rounded"
+        />
       </>
     ),
   },
@@ -164,15 +163,15 @@ Seja breve e direto.`}
     image: '/assets/documentation/agenteStepByStep/passo6.png',
     children: (
       <>
-        <p className="border-l-4 border-yellow-500 pl-4 text-gray-200">
+        <p className="pl-4 text-gray-200 border-l-4 border-yellow-500">
           Api do Interpretador de Código: Para o modelo executar código, Python, Javascript, etc.
           por trás dos panos e ser capaz de responder com base nisso, para gerar planilhas, PDFs,
           realizar cálculos, etc
         </p>
-        <p className="border-l-4 border-yellow-500 pl-4 text-gray-200">
+        <p className="pl-4 text-gray-200 border-l-4 border-yellow-500">
           Habilite "Web Search" para buscar informações na internet.
         </p>
-        <p className="border-l-4 border-yellow-500 pl-4 text-gray-200">
+        <p className="pl-4 text-gray-200 border-l-4 border-yellow-500">
           Suba arquivos (PDF, DOCX, etc.) para que o agente possa responder com base no conteúdo
           completo de todos os documentos. Não se preocupe em subir muitos, ele consegue encontrar
           somente as informações relevantes dentre todos os documentos e responder com base nisso.
@@ -181,10 +180,21 @@ Seja breve e direto.`}
     ),
   },
   {
-    title: 'Passo 7: Salvar e usar',
-    image: '/assets/documentation/agenteStepByStep/passo7.png',
+    title: 'Passo 7: Compartilhar',
     description:
-      'Clique em "Salvar" para gravar as configurações. Depois, vamos buscar o agente na lista.',
+      'Você pode compartlhar o agente com todos os usuários da plataforma, pode compartilhar com usuários específicos (em breve com Grupos específicos) e também pode decidir de eles podem apenas usar o agente, editar ou são Owners (que podem fazer tudo)',
+    children: (
+      <>
+        <img
+          src="/assets/documentation/agenteStepByStep/agent-share-1.png"
+          className="mt-2 w-full h-auto rounded"
+        />
+        <img
+          src="/assets/documentation/agenteStepByStep/agent-share-2.png"
+          className="mt-2 w-full h-auto rounded"
+        />
+      </>
+    ),
   },
   {
     title: 'Passo 8: Uso do agente',
@@ -221,7 +231,7 @@ export const pastas_step_by_step = [
     image: '/assets/documentation/folderStepByStep/passo3.png',
     description: 'Aqui ficará todas as pastas que você criar. Clicando ',
     children: (
-      <p className="border-l-4 border-blue-500 pl-4 text-gray-200">
+      <p className="pl-4 text-gray-200 border-l-4 border-blue-500">
         <strong>Limpar tudo:</strong> Sai dos favoritos e volta para a lista padrão de chats.
         <br />
         <strong>Testando:</strong> A pasta que foi criada no tutorial com um chat exemplo. Ao clicar
