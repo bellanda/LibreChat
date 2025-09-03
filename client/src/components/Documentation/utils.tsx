@@ -193,6 +193,10 @@ Seja breve e direto.`}
           src="/assets/documentation/agenteStepByStep/agent-share-2.png"
           className="mt-2 w-full h-auto rounded"
         />
+        <img
+          src="/assets/documentation/agenteStepByStep/agent-share-3.png"
+          className="mt-2 w-full h-auto rounded"
+        />
       </>
     ),
   },
