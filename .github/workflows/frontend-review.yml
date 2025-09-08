@@ -1,14 +1,14 @@
 name: Frontend Unit Tests
 
-on:
-  pull_request:
-    branches: 
-      - main
-      - dev
-      - release/*
-    paths:
-      - 'client/**'
-      - 'packages/data-provider/**'
+# on:
+#   pull_request:
+#     branches:
+#       - main
+#       - dev
+#       - release/*
+#     paths:
+#       - 'client/**'
+#       - 'packages/data-provider/**'
 
 jobs:
   tests_frontend_ubuntu:

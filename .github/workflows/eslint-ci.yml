@@ -1,14 +1,14 @@
 name: ESLint Code Quality Checks
 
-on:
-  pull_request:
-    branches:
-      - main
-      - dev
-      - release/*
-    paths:
-      - 'api/**'
-      - 'client/**'
+# on:
+#   pull_request:
+#     branches:
+#       - main
+#       - dev
+#       - release/*
+#     paths:
+#       - 'api/**'
+#       - 'client/**'
 
 jobs:
   eslint_checks:

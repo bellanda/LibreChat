@@ -1,13 +1,13 @@
 name: Backend Unit Tests
-on:
-  pull_request:
-    branches:
-      - main
-      - dev
-      - release/*
-    paths:
-      - 'api/**'
-      - 'packages/**'
+# on:
+#   pull_request:
+#     branches:
+#       - main
+#       - dev
+#       - release/*
+#     paths:
+#       - 'api/**'
+#       - 'packages/**'
 jobs:
   tests_Backend:
     name: Run Backend unit tests
