@@ -112,8 +112,7 @@ const tokenValues = Object.assign(
     'claude-': { prompt: 0.8, completion: 2.4 },
     'command-r-plus': { prompt: 3, completion: 15 },
     'command-r': { prompt: 0.5, completion: 1.5 },
-    'deepseek-reasoner': { prompt: 0.55, completion: 2.19 },
-    deepseek: { prompt: 0.14, completion: 0.28 },
+
     /* cohere doesn't have rates for the older command models,
   so this was from https://artificialanalysis.ai/models/command-light/providers */
     command: { prompt: 0.38, completion: 0.38 },
@@ -125,7 +124,7 @@ const tokenValues = Object.assign(
     'gemini-2.0-flash': { prompt: 0.1, completion: 0.4 },
     'gemini-2.0': { prompt: 0, completion: 0 }, // https://ai.google.dev/pricing
     'gemini-2.5-pro': { prompt: 1.25, completion: 10 },
-    'gemini-2.5-flash': { prompt: 0.15, completion: 3.5 },
+    'gemini-2.5-flash': { prompt: 0.3, completion: 2.5 },
     'gemini-2.5': { prompt: 0, completion: 0 }, // Free for a period of time
     'gemini-1.5-flash-8b': { prompt: 0.075, completion: 0.3 },
     'gemini-1.5-flash': { prompt: 0.15, completion: 0.6 },
@@ -151,25 +150,10 @@ const tokenValues = Object.assign(
     codestral: { prompt: 0.3, completion: 0.9 },
     'ministral-8b': { prompt: 0.1, completion: 0.1 },
     'ministral-3b': { prompt: 0.04, completion: 0.04 },
+
     // GPT-OSS models
     'gpt-oss-20b': { prompt: 0.1, completion: 0.5 },
     'gpt-oss-120b': { prompt: 0.15, completion: 0.75 },
-
-    // GROQ Models
-    'meta-llama/llama-4-maverick-17b-128e-instruct': { prompt: 0.2, completion: 0.6 },
-    'meta-llama/llama-4-scout-17b-16e-instruct': { prompt: 0.11, completion: 0.34 },
-
-    // FIREWORKS Models
-    'accounts/fireworks/models/deepseek-v3-0324': { prompt: 0.9, completion: 0.9 },
-    'accounts/fireworks/models/deepseek-r1-0528': { prompt: 3.0, completion: 8.0 },
-    'accounts/fireworks/models/qwen3-235b-a22b-instruct-2507': { prompt: 0.22, completion: 0.88 },
-    'accounts/fireworks/models/qwen3-235b-a22b-thinking-2507': { prompt: 0.22, completion: 0.88 },
-    'accounts/fireworks/models/qwen3-coder-480b-a35b-instruct': { prompt: 0.45, completion: 1.8 },
-    'accounts/fireworks/models/kimi-k2-instruct': { prompt: 0.6, completion: 2.5 },
-
-    // XAI Models
-    'grok-4': { prompt: 3.0, completion: 15.0 },
-    'grok-3-mini': { prompt: 0.3, completion: 0.5 },
   },
   bedrockValues,
 );
@@ -279,25 +263,54 @@ const getValueKey = (model, endpoint) => {
  * @returns {number} The multiplier for the given parameters, or a default value if not found.
  */
 const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConfig }) => {
+  console.log(`[DEBUG] getMultiplier called with:`, {
+    valueKey,
+    tokenType,
+    model,
+    endpoint,
+    hasEndpointTokenConfig: !!endpointTokenConfig,
+    endpointTokenConfig,
+  });
+
   if (endpointTokenConfig) {
-    return endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
+    const multiplier = endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
+    console.log(`[DEBUG] Using endpointTokenConfig for ${model}[${tokenType}]:`, {
+      found: endpointTokenConfig?.[model]?.[tokenType] !== undefined,
+      multiplier,
+      defaultRate,
+    });
+    return multiplier;
   }
 
   if (valueKey && tokenType) {
-    return tokenValues[valueKey][tokenType] ?? defaultRate;
+    const multiplier = tokenValues[valueKey][tokenType] ?? defaultRate;
+    console.log(`[DEBUG] Using tokenValues for ${valueKey}[${tokenType}]:`, {
+      found: tokenValues[valueKey]?.[tokenType] !== undefined,
+      multiplier,
+      defaultRate,
+    });
+    return multiplier;
   }
 
   if (!tokenType || !model) {
+    console.log(`[DEBUG] Missing tokenType or model, returning 1`);
     return 1;
   }
 
   valueKey = getValueKey(model, endpoint);
   if (!valueKey) {
+    console.log(`[DEBUG] No valueKey found for ${model}, returning defaultRate:`, defaultRate);
     return defaultRate;
   }
 
   // If we got this far, and values[tokenType] is undefined somehow, return a rough average of default multipliers
-  return tokenValues[valueKey]?.[tokenType] ?? defaultRate;
+  const multiplier = tokenValues[valueKey]?.[tokenType] ?? defaultRate;
+  console.log(`[DEBUG] Using tokenValues fallback for ${valueKey}[${tokenType}]:`, {
+    found: tokenValues[valueKey]?.[tokenType] !== undefined,
+    multiplier,
+    defaultRate,
+  });
+  return multiplier;
 };
 
 /**

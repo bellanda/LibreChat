@@ -1,11 +1,11 @@
 import * as Ariakit from '@ariakit/react';
-import { matchSorter } from 'match-sorter';
-import { Search, ChevronDown } from 'lucide-react';
-import { useMemo, useState, useRef, memo, useEffect } from 'react';
 import { SelectRenderer } from '@ariakit/react-core/select/select-renderer';
+import { ChevronDown, Search } from 'lucide-react';
+import { matchSorter } from 'match-sorter';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { OptionWithIcon } from '~/common';
-import './AnimatePopover.css';
 import { cn } from '~/utils';
+import './AnimatePopover.css';
 
 interface ControlComboboxProps {
   selectedValue: string;
@@ -95,7 +95,7 @@ function ControlCombobox({
   );
 
   return (
-    <div className={cn('flex w-full items-center justify-center px-1', containerClassName)}>
+    <div className={cn('flex justify-center items-center px-1 w-full', containerClassName)}>
       <Ariakit.SelectLabel store={select} className="sr-only">
         {ariaLabel}
       </Ariakit.SelectLabel>
@@ -105,10 +105,10 @@ function ControlCombobox({
         id={selectId}
         disabled={disabled}
         className={cn(
-          'flex items-center justify-center gap-2 rounded-full bg-surface-secondary',
+          'flex gap-2 justify-center items-center rounded-full bg-surface-secondary',
           'text-text-primary hover:bg-surface-tertiary',
           'border border-border-light',
-          isCollapsed ? 'h-10 w-10' : 'h-10 w-full rounded-xl px-3 py-2 text-sm',
+          isCollapsed ? 'w-10 h-10' : 'px-3 py-2 w-full h-10 text-sm rounded-xl',
           className,
         )}
       >
@@ -117,15 +117,15 @@ function ControlCombobox({
         )}
         {!isCollapsed && (
           <>
-            <span className="flex-grow truncate text-left">
+            <span className="flex-grow text-left truncate">
               {displayValue != null
                 ? displayValue || selectPlaceholder
                 : selectedValue || selectPlaceholder}
             </span>
             {SelectIcon != null && iconSide === 'right' && (
-              <div className={selectIconClassName}>{SelectIcon}</div>
+              <div className={selectIconClassName}>TESTE{SelectIcon}</div>
             )}
-            {showCarat && <ChevronDown className="h-4 w-4 text-text-secondary" />}
+            {showCarat && <ChevronDown className="w-4 h-4 text-text-secondary" />}
           </>
         )}
       </Ariakit.Select>
@@ -134,18 +134,18 @@ function ControlCombobox({
         gutter={4}
         portal
         className={cn(
-          'animate-popover z-50 overflow-hidden rounded-xl border border-border-light bg-surface-secondary shadow-lg',
+          'overflow-hidden z-50 rounded-xl border shadow-lg animate-popover border-border-light bg-surface-secondary',
         )}
         style={{ width: isCollapsed ? '300px' : (buttonWidth ?? '300px') }}
       >
         <div className="py-1.5">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-primary" />
+            <Search className="absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-text-primary" />
             <Ariakit.Combobox
               store={combobox}
               autoSelect
               placeholder={searchPlaceholder}
-              className="w-full rounded-md bg-surface-secondary py-2 pl-9 pr-3 text-sm text-text-primary focus:outline-none"
+              className="py-2 pr-3 pl-9 w-full text-sm rounded-md bg-surface-secondary text-text-primary focus:outline-none"
             />
           </div>
         </div>
@@ -157,7 +157,7 @@ function ControlCombobox({
                   key={item.id}
                   {...item}
                   className={cn(
-                    'flex w-full cursor-pointer items-center px-3 text-sm',
+                    'flex items-center px-3 w-full text-sm cursor-pointer',
                     'text-text-primary hover:bg-surface-tertiary',
                     'data-[active-item]:bg-surface-tertiary',
                   )}
@@ -166,7 +166,7 @@ function ControlCombobox({
                   {icon != null && iconSide === 'left' && (
                     <div className={optionIconClassName}>{icon}</div>
                   )}
-                  <span className="flex-grow truncate text-left">{label}</span>
+                  <span className="flex-grow text-left truncate">{label}</span>
                   {icon != null && iconSide === 'right' && (
                     <div className={optionIconClassName}>{icon}</div>
                   )}

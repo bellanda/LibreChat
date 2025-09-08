@@ -40,4 +40,5 @@ dependencies = [
     "markdown-html-pdf>=0.4.0",
     "pymupdf>=1.26.3",
     "msoffcrypto-tool>=5.4.2",
+    "ipykernel>=6.30.1",
 ]

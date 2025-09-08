@@ -1,35 +1,36 @@
-import React, { useState, useMemo, useCallback } from 'react';
 import { useToastContext } from '@librechat/client';
 import { EModelEndpoint } from 'librechat-data-provider';
-import { Controller, useWatch, useFormContext } from 'react-hook-form';
+import { useCallback, useMemo, useState } from 'react';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import type { AgentForm, AgentPanelProps, IconComponentTypes } from '~/common';
-import {
-  removeFocusOutlines,
-  processAgentOption,
-  getEndpointField,
-  defaultTextProps,
-  validateEmail,
-  getIconKey,
-  cn,
-} from '~/utils';
-import { ToolSelectDialog, MCPToolSelectDialog } from '~/components/Tools';
-import useAgentCapabilities from '~/hooks/Agents/useAgentCapabilities';
-import { useFileMapContext, useAgentPanelContext } from '~/Providers';
-import AgentCategorySelector from './AgentCategorySelector';
-import Action from '~/components/SidePanel/Builder/Action';
-import { useLocalize, useVisibleTools } from '~/hooks';
-import { useGetAgentFiles } from '~/data-provider';
-import { icons } from '~/hooks/Endpoint/Icons';
-import Instructions from './Instructions';
-import AgentAvatar from './AgentAvatar';
-import FileContext from './FileContext';
-import SearchForm from './Search/Form';
-import FileSearch from './FileSearch';
-import Artifacts from './Artifacts';
-import AgentTool from './AgentTool';
-import CodeForm from './Code/Form';
-import MCPTools from './MCPTools';
 import { Panel } from '~/common';
+import Action from '~/components/SidePanel/Builder/Action';
+import { MCPToolSelectDialog, ToolSelectDialog } from '~/components/Tools';
+import { useGetAgentFiles } from '~/data-provider';
+import { useLocalize, useVisibleTools } from '~/hooks';
+import useAgentCapabilities from '~/hooks/Agents/useAgentCapabilities';
+import { icons } from '~/hooks/Endpoint/Icons';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import { useAgentPanelContext, useFileMapContext } from '~/Providers';
+import {
+  cn,
+  defaultTextProps,
+  getEndpointField,
+  getIconKey,
+  processAgentOption,
+  removeFocusOutlines,
+  validateEmail,
+} from '~/utils';
+import AgentAvatar from './AgentAvatar';
+import AgentCategorySelector from './AgentCategorySelector';
+import AgentTool from './AgentTool';
+import Artifacts from './Artifacts';
+import CodeForm from './Code/Form';
+import FileContext from './FileContext';
+import FileSearch from './FileSearch';
+import Instructions from './Instructions';
+import MCPTools from './MCPTools';
+import SearchForm from './Search/Form';
 
 const labelClass = 'mb-2 text-token-text-primary block font-medium';
 const inputClass = cn(
@@ -66,6 +67,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
   const agent_id = useWatch({ control, name: 'id' });
 
   const { data: agentFiles = [] } = useGetAgentFiles(agent_id);
+  const { getModelDescription } = useModelDescriptions();
 
   const mergedFileMap = useMemo(() => {
     const newFileMap = { ...fileMap };
@@ -283,7 +285,11 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
                   />
                 </div>
               )}
-              <span>{model != null && model ? model : localize('com_ui_select_model')}</span>
+              <span>
+                {model != null && model
+                  ? getModelDescription(model)?.name || model
+                  : localize('com_ui_select_model')}
+              </span>
             </div>
           </button>
         </div>

@@ -14,6 +14,16 @@ const { createTransaction, createStructuredTransaction } = require('./Transactio
  */
 const spendTokens = async (txData, tokenUsage) => {
   const { promptTokens, completionTokens } = tokenUsage;
+
+  console.log(`[DEBUG] spendTokens called with:`, {
+    model: txData.model,
+    hasEndpointTokenConfig: !!txData.endpointTokenConfig,
+    endpointTokenConfig: txData.endpointTokenConfig,
+    promptTokens,
+    completionTokens,
+    context: txData.context,
+  });
+
   logger.debug(
     `[spendTokens] conversationId: ${txData.conversationId}${
       txData?.context ? ` | Context: ${txData?.context}` : ''
@@ -27,6 +37,10 @@ const spendTokens = async (txData, tokenUsage) => {
   let prompt, completion;
   try {
     if (promptTokens !== undefined) {
+      console.log(
+        `[DEBUG] Creating prompt transaction with endpointTokenConfig:`,
+        txData.endpointTokenConfig,
+      );
       prompt = await createTransaction({
         ...txData,
         tokenType: 'prompt',
@@ -35,6 +49,10 @@ const spendTokens = async (txData, tokenUsage) => {
     }
 
     if (completionTokens !== undefined) {
+      console.log(
+        `[DEBUG] Creating completion transaction with endpointTokenConfig:`,
+        txData.endpointTokenConfig,
+      );
       completion = await createTransaction({
         ...txData,
         tokenType: 'completion',

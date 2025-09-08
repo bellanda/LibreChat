@@ -130,7 +130,7 @@ class AgentClient extends BaseClient {
     /** @type {AgentClientOptions} */
     this.options = Object.assign({ endpoint: options.endpoint }, clientOptions);
     /** @type {string} */
-    this.model = this.options.agent.model_parameters.model;
+    this.model = this.options.agent.model;
     /** The key for the usage object's input tokens
      * @type {string} */
     this.inputTokensKey = 'input_tokens';
@@ -705,7 +705,7 @@ class AgentClient extends BaseClient {
         conversationId: this.conversationId,
         user: this.user ?? this.options.req.user?.id,
         endpointTokenConfig: this.options.endpointTokenConfig,
-        model: usage.model ?? model ?? this.model ?? this.options.agent.model_parameters.model,
+        model: this.model ?? this.options.agent.model,
       };
 
       // REAL TOKEN VALIDATION: Check if output tokens seem excessive compared to actual content
@@ -803,8 +803,16 @@ class AgentClient extends BaseClient {
       conversationId: this.conversationId,
       user: this.user ?? this.options.req.user?.id,
       endpointTokenConfig: this.options.endpointTokenConfig,
-      model: model ?? this.model ?? this.options.agent.model_parameters.model,
+      model: this.model ?? this.options.agent.model,
     };
+
+    console.log(`[DEBUG] recordCollectedUsage txMetadata:`, {
+      model: txMetadata.model,
+      hasEndpointTokenConfig: !!txMetadata.endpointTokenConfig,
+      endpointTokenConfig: txMetadata.endpointTokenConfig,
+      totalInputTokens,
+      totalOutputTokens,
+    });
 
     try {
       // Make a single transaction call with aggregated tokens
@@ -948,7 +956,7 @@ class AgentClient extends BaseClient {
         config.configurable.model = agent.model_parameters.model;
         const currentIndexCountMap = _currentIndexCountMap ?? indexTokenCountMap;
         if (i > 0) {
-          this.model = agent.model_parameters.model;
+          this.model = agent.model;
         }
         if (i > 0 && config.signal == null) {
           config.signal = abortController.signal;
@@ -1239,11 +1247,34 @@ class AgentClient extends BaseClient {
 
     let titleProviderConfig = getProviderConfig({ provider: endpoint, appConfig });
 
+    console.log(`[DEBUG] Title generation - titleProviderConfig:`, {
+      provider: endpoint,
+      hasCustomEndpointConfig: !!titleProviderConfig.customEndpointConfig,
+      customEndpointConfig: titleProviderConfig.customEndpointConfig,
+    });
+
     /** @type {TEndpoint | undefined} */
-    const endpointConfig =
-      appConfig.endpoints?.all ??
-      appConfig.endpoints?.[endpoint] ??
-      titleProviderConfig.customEndpointConfig;
+    let endpointConfig;
+
+    // For custom endpoints, use customEndpointConfig but merge with all config
+    if (titleProviderConfig.customEndpointConfig) {
+      endpointConfig = {
+        ...titleProviderConfig.customEndpointConfig,
+        // Only add promptPrefix from all config if it exists and customEndpointConfig doesn't have it
+        ...(appConfig.endpoints?.all?.promptPrefix &&
+          !titleProviderConfig.customEndpointConfig.promptPrefix && {
+            promptPrefix: appConfig.endpoints.all.promptPrefix,
+          }),
+      };
+      console.log(`[DEBUG] Using customEndpointConfig with merged all config:`, endpointConfig);
+    } else {
+      endpointConfig = appConfig.endpoints?.all ?? appConfig.endpoints?.[endpoint];
+      console.log(`[DEBUG] Title generation - initial endpointConfig:`, {
+        fromAll: appConfig.endpoints?.all,
+        fromEndpoint: appConfig.endpoints?.[endpoint],
+        endpointConfig,
+      });
+    }
     if (!endpointConfig) {
       logger.warn(
         '[api/server/controllers/agents/client.js #titleConvo] Error getting endpoint config',
@@ -1268,12 +1299,19 @@ class AgentClient extends BaseClient {
       }
     }
 
+    console.log(
+      `[DEBUG] Title generation - endpoint: ${endpoint}, titleModel: ${endpointConfig?.titleModel}, current model: ${clientOptions.model}`,
+    );
+
     if (
       endpointConfig &&
       endpointConfig.titleModel &&
       endpointConfig.titleModel !== Constants.CURRENT_MODEL
     ) {
       clientOptions.model = endpointConfig.titleModel;
+      console.log(
+        `[DEBUG] Using titleModel: ${endpointConfig.titleModel} instead of current model`,
+      );
     }
 
     const options = await titleProviderConfig.getOptions({

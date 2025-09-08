@@ -137,10 +137,10 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
           <HoverCardPortal>
             <HoverCardContent
               side="right"
-              align="start"
+              align="center"
               sideOffset={20}
-              alignOffset={-10}
-              className="p-3 w-80 z-49"
+              alignOffset={0}
+              className="z-49 max-h-[85vh] w-80 overflow-y-auto p-3"
             >
               <img
                 src={

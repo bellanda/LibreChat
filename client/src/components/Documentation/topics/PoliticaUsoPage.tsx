@@ -324,8 +324,8 @@ export default function PoliticaUsoPage() {
           <p className="mt-4">
             Nos itens acima, as plataformas que oferecem produtos ou serviços deverão ser validadas
             pelo Comitê de IA, que fará uma análise da utilização ou contratação pelo departamento,
-            que irá fazer um requerimento direcionado ao e-mail: xxxx@mail.com, para devida análise
-            e aprovação.
+            que irá fazer um requerimento direcionado ao e-mail: ia.comite@hpeautos.com.br, para
+            devida análise e aprovação.
           </p>
           <p className="mt-4">No requerimento, deverão constar de forma detalhada:</p>
           <ol className="space-y-2 list-decimal list-inside text-gray-300">

@@ -1,5 +1,5 @@
-import { EModelEndpoint, removeNullishValues } from 'librechat-data-provider';
 import type { TCustomConfig, TEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint, removeNullishValues } from 'librechat-data-provider';
 import type { AppConfig } from '~/types';
 import { isEnabled, normalizeEndpointName } from '~/utils';
 
@@ -32,9 +32,17 @@ export const getCustomEndpointConfig = ({
   }
 
   const customEndpoints = appConfig.endpoints?.[EModelEndpoint.custom] ?? [];
-  return customEndpoints.find(
+  const endpointConfig = customEndpoints.find(
     (endpointConfig) => normalizeEndpointName(endpointConfig.name) === endpoint,
   );
+
+  console.log(`[DEBUG] getCustomEndpointConfig for ${endpoint}:`, {
+    found: !!endpointConfig,
+    hasTokenConfig: !!endpointConfig?.tokenConfig,
+    tokenConfig: endpointConfig?.tokenConfig,
+  });
+
+  return endpointConfig;
 };
 
 export function hasCustomUserVars(appConfig?: AppConfig): boolean {

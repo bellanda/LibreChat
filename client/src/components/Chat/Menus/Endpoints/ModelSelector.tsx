@@ -42,20 +42,25 @@ function ModelSelectorContent() {
       }),
     [mappedEndpoints, selectedValues, modelSpecs, endpointsConfig],
   );
-  const selectedDisplayValue = useMemo(
-    () =>
-      getDisplayValue({
-        localize,
-        agentsMap,
-        modelSpecs,
-        selectedValues,
-        mappedEndpoints,
-      }),
-    [localize, agentsMap, modelSpecs, selectedValues, mappedEndpoints],
-  );
-
   const { getModelDescription } = useModelDescriptions();
   const modelDescription = getModelDescription(selectedValues.model);
+
+  const selectedDisplayValue = useMemo(() => {
+    const baseDisplayValue = getDisplayValue({
+      localize,
+      agentsMap,
+      modelSpecs,
+      selectedValues,
+      mappedEndpoints,
+    });
+
+    // Apply model description translation if available
+    if (modelDescription?.name) {
+      return modelDescription.name;
+    }
+
+    return baseDisplayValue;
+  }, [localize, agentsMap, modelSpecs, selectedValues, mappedEndpoints, modelDescription]);
 
   const trigger = (
     <button
@@ -63,18 +68,25 @@ function ModelSelectorContent() {
       aria-label={localize('com_ui_select_model')}
     >
       {selectedIcon && React.isValidElement(selectedIcon) && (
-        <div className="flex flex-shrink-0 items-center justify-center overflow-hidden">
+        <div className="flex overflow-hidden flex-shrink-0 justify-center items-center">
           {selectedIcon}
         </div>
       )}
-      <span className="flex-grow truncate text-left">
-        {modelDescription?.name || selectedDisplayValue}
-      </span>
+      <div className="flex-grow text-left truncate">
+        {modelDescription ? (
+          <div className="flex flex-col">
+            <span>{modelDescription.name}</span>
+            <span className="text-xs text-text-secondary">{modelDescription.shortUseCase}</span>
+          </div>
+        ) : (
+          <span>{selectedDisplayValue}</span>
+        )}
+      </div>
     </button>
   );
 
   return (
-    <div className="relative flex w-full max-w-md flex-col items-center gap-2">
+    <div className="flex relative flex-col gap-2 items-center w-full max-w-md">
       <Menu
         values={selectedValues}
         onValuesChange={(values: Record<string, any>) => {

@@ -345,7 +345,9 @@ export default function PrecoTokenizacaoLimitacoesPage() {
         </h2>
         <p className="mb-4 leading-relaxed text-gray-200">
           Total de modelos:{' '}
-          <span className="font-semibold text-green-300">{Object.keys(descriptions).length}</span>
+          <span className="font-semibold text-green-300">
+            {Object.keys(descriptions).length - 1}
+          </span>
         </p>
         <PriceTable />
       </section>
