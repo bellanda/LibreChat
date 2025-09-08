@@ -24,34 +24,35 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ content }) => {
       startOnLoad: false,
       theme: "base",
       themeVariables: {
-        background: "#282C34",
-        primaryColor: "#333842",
-        secondaryColor: "#333842",
-        tertiaryColor: "#333842",
-        primaryTextColor: "#ABB2BF",
-        secondaryTextColor: "#ABB2BF",
-        lineColor: "#636D83",
+        background: "#ffffff",
+        primaryColor: "#e5e7eb",
+        secondaryColor: "#f3f4f6",
+        tertiaryColor: "#f9fafb",
+        primaryTextColor: "#374151",
+        secondaryTextColor: "#6b7280",
+        lineColor: "#d1d5db",
         fontSize: "16px",
-        nodeBorder: "#636D83",
-        mainBkg: '#282C34',
-        altBackground: '#282C34',
-        textColor: '#ABB2BF',
-        edgeLabelBackground: '#282C34',
-        clusterBkg: '#282C34',
-        clusterBorder: "#636D83",
-        labelBoxBkgColor: "#333842",
-        labelBoxBorderColor: "#636D83",
-        labelTextColor: "#ABB2BF",
+        nodeBorder: "#d1d5db",
+        mainBkg: '#ffffff',
+        altBackground: '#f9fafb',
+        textColor: '#374151',
+        edgeLabelBackground: '#ffffff',
+        clusterBkg: '#f9fafb',
+        clusterBorder: "#d1d5db",
+        labelBoxBkgColor: "#f3f4f6",
+        labelBoxBorderColor: "#d1d5db",
+        labelTextColor: "#374151",
       },
       flowchart: {
         curve: "basis",
         nodeSpacing: 50,
         rankSpacing: 50,
-        diagramPadding: 8,
+        diagramPadding: 20,
         htmlLabels: true,
         useMaxWidth: true,
-        padding: 15,
+        padding: 20,
         wrappingWidth: 200,
+        nodeAlignment: "center",
       },
     });
 
@@ -75,7 +76,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ content }) => {
             rectElements.forEach((rect) => {
               const parent = rect.parentElement;
               if (parent && parent.classList.contains("node")) {
-                rect.style.stroke = "#636D83";
+                rect.style.stroke = "#d1d5db";
                 rect.style.strokeWidth = "1px";
               } else {
                 rect.style.stroke = "none";
@@ -146,7 +147,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ content }) => {
   };
 
   return (
-    <div className="relative h-screen w-screen cursor-move bg-[#282C34] p-5">
+    <div className="relative p-5 w-screen h-screen bg-white cursor-move">
       <TransformWrapper
         ref={transformRef}
         initialScale={1}
@@ -179,23 +180,23 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ content }) => {
                 }}
               />
             </TransformComponent>
-            <div className="absolute bottom-2 right-2 flex space-x-2">
+            <div className="flex absolute right-2 bottom-2 space-x-2">
               <Button onClick={() => zoomIn(0.1)} variant="outline" size="icon">
-                <ZoomIn className="h-4 w-4" />
+                <ZoomIn className="w-4 h-4" />
               </Button>
               <Button
                 onClick={() => zoomOut(0.1)}
                 variant="outline"
                 size="icon"
               >
-                <ZoomOut className="h-4 w-4" />
+                <ZoomOut className="w-4 h-4" />
               </Button>
               <Button
                 onClick={centerAndFitDiagram}
                 variant="outline"
                 size="icon"
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="w-4 h-4" />
               </Button>
             </div>
           </>
