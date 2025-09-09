@@ -214,7 +214,7 @@ async function createAutoRefillTransaction(txData) {
  * @param {txData} _txData - Transaction data.
  */
 async function createTransaction(_txData) {
-  const { balance, ...txData } = _txData;
+  const { balance, transactions, ...txData } = _txData;
 
   console.log(`[DEBUG] createTransaction called with:`, {
     model: txData.model,
@@ -226,6 +226,10 @@ async function createTransaction(_txData) {
 
   if (txData.rawAmount != null && isNaN(txData.rawAmount)) {
     console.log(`[DEBUG] Invalid rawAmount, returning early`);
+    return;
+  }
+
+  if (transactions?.enabled === false) {
     return;
   }
 
@@ -264,7 +268,11 @@ async function createTransaction(_txData) {
  * @param {txData} _txData - Transaction data.
  */
 async function createStructuredTransaction(_txData) {
-  const { balance, ...txData } = _txData;
+  const { balance, transactions, ...txData } = _txData;
+  if (transactions?.enabled === false) {
+    return;
+  }
+
   const transaction = new Transaction({
     ...txData,
     endpointTokenConfig: txData.endpointTokenConfig,

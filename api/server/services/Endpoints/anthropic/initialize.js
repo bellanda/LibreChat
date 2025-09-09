@@ -1,6 +1,6 @@
+const { getLLMConfig } = require('@librechat/api');
 const { EModelEndpoint } = require('librechat-data-provider');
 const { getUserKey, checkUserKeyExpiry } = require('~/server/services/UserService');
-const { getLLMConfig } = require('~/server/services/Endpoints/anthropic/llm');
 const AnthropicClient = require('~/app/clients/AnthropicClient');
 
 const initializeClient = async ({ req, res, endpointOption, overrideModel, optionsOnly }) => {
@@ -45,7 +45,6 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
     clientOptions = Object.assign(
       {
         proxy: PROXY ?? null,
-        userId: req.user.id,
         reverseProxyUrl: ANTHROPIC_REVERSE_PROXY ?? null,
         modelOptions: endpointOption?.model_parameters ?? {},
       },
@@ -54,6 +53,7 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
     if (overrideModel) {
       clientOptions.modelOptions.model = overrideModel;
     }
+    clientOptions.modelOptions.user = req.user.id;
     return getLLMConfig(anthropicApiKey, clientOptions);
   }
 

@@ -123,9 +123,11 @@ router.get('/', async function (req, res) {
       payload.minPasswordLength = minPasswordLength;
     }
 
-    payload.mcpServers = {};
     const getMCPServers = () => {
       try {
+        if (appConfig?.mcpConfig == null) {
+          return;
+        }
         const mcpManager = getMCPManager();
         if (!mcpManager) {
           return;
@@ -134,6 +136,9 @@ router.get('/', async function (req, res) {
         if (!mcpServers) return;
         const oauthServers = mcpManager.getOAuthServers();
         for (const serverName in mcpServers) {
+          if (!payload.mcpServers) {
+            payload.mcpServers = {};
+          }
           const serverConfig = mcpServers[serverName];
           payload.mcpServers[serverName] = removeNullishValues({
             startup: serverConfig?.startup,

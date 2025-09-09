@@ -7,10 +7,12 @@ const {
   createRun,
   Tokenizer,
   checkAccess,
+  logAxiosError,
   resolveHeaders,
   getBalanceConfig,
   memoryInstructions,
   formatContentStrings,
+  getTransactionsConfig,
   createMemoryProcessor,
 } = require('@librechat/api');
 const {
@@ -87,11 +89,10 @@ function createTokenCounter(encoding) {
 }
 
 function logToolError(graph, error, toolId) {
-  logger.error(
-    '[api/server/controllers/agents/client.js #chatCompletion] Tool Error',
+  logAxiosError({
     error,
-    toolId,
-  );
+    message: `[api/server/controllers/agents/client.js #chatCompletion] Tool Error "${toolId}"`,
+  });
 }
 
 class AgentClient extends BaseClient {
@@ -623,11 +624,13 @@ class AgentClient extends BaseClient {
    * @param {string} [params.model]
    * @param {string} [params.context='message']
    * @param {AppConfig['balance']} [params.balance]
+   * @param {AppConfig['transactions']} [params.transactions]
    * @param {UsageMetadata[]} [params.collectedUsage=this.collectedUsage]
    */
   async recordCollectedUsage({
     model,
     balance,
+    transactions,
     context = 'message',
     collectedUsage = this.collectedUsage,
   }) {
@@ -702,6 +705,7 @@ class AgentClient extends BaseClient {
       const txMetadata = {
         context,
         balance,
+        transactions,
         conversationId: this.conversationId,
         user: this.user ?? this.options.req.user?.id,
         endpointTokenConfig: this.options.endpointTokenConfig,
@@ -803,7 +807,7 @@ class AgentClient extends BaseClient {
       conversationId: this.conversationId,
       user: this.user ?? this.options.req.user?.id,
       endpointTokenConfig: this.options.endpointTokenConfig,
-      model: this.model ?? this.options.agent.model,
+      model: model ?? this.model ?? this.options.agent.model,
     };
 
     console.log(`[DEBUG] recordCollectedUsage txMetadata:`, {
@@ -1012,11 +1016,10 @@ class AgentClient extends BaseClient {
         if (agent.useLegacyContent === true) {
           messages = formatContentStrings(messages);
         }
-        if (
-          agent.model_parameters?.clientOptions?.defaultHeaders?.['anthropic-beta']?.includes(
-            'prompt-caching',
-          )
-        ) {
+        const defaultHeaders =
+          agent.model_parameters?.clientOptions?.defaultHeaders ??
+          agent.model_parameters?.configuration?.defaultHeaders;
+        if (defaultHeaders?.['anthropic-beta']?.includes('prompt-caching')) {
           messages = addCacheControl(messages);
         }
 
@@ -1195,7 +1198,12 @@ class AgentClient extends BaseClient {
         }
 
         const balanceConfig = getBalanceConfig(appConfig);
-        await this.recordCollectedUsage({ context: 'message', balance: balanceConfig });
+        const transactionsConfig = getTransactionsConfig(appConfig);
+        await this.recordCollectedUsage({
+          context: 'message',
+          balance: balanceConfig,
+          transactions: transactionsConfig,
+        });
         logger.debug(`[chatCompletion] Finished calling recordCollectedUsage`);
       } catch (err) {
         logger.error(
@@ -1339,6 +1347,15 @@ class AgentClient extends BaseClient {
 
     /** @type {import('@librechat/agents').ClientOptions} */
     clientOptions = { ...options.llmConfig };
+
+    // Preserve the title model if it was set
+    if (endpointConfig?.titleModel && endpointConfig.titleModel !== Constants.CURRENT_MODEL) {
+      clientOptions.model = endpointConfig.titleModel;
+      console.log(
+        `[DEBUG] Preserving titleModel: ${endpointConfig.titleModel} in final clientOptions`,
+      );
+    }
+
     if (options.configOptions) {
       clientOptions.configuration = options.configOptions;
     }
@@ -1420,11 +1437,13 @@ class AgentClient extends BaseClient {
       });
 
       const balanceConfig = getBalanceConfig(appConfig);
+      const transactionsConfig = getTransactionsConfig(appConfig);
       await this.recordCollectedUsage({
         collectedUsage,
         context: 'title',
         model: clientOptions.model,
         balance: balanceConfig,
+        transactions: transactionsConfig,
       }).catch((err) => {
         logger.error(
           '[api/server/controllers/agents/client.js #titleConvo] Error recording collected usage',
