@@ -165,6 +165,11 @@ const EditController = async (req, res, next, initializeClient) => {
       }
     });
 
+    // Log essencial para debug
+    logger.info(
+      `[EditController] Editando mensagem: "${text}" | Modelo: ${endpointOption?.model} | PromptPrefix: ${endpointOption?.promptPrefix || 'Nenhum'}`,
+    );
+
     let response = await client.sendMessage(text, {
       user: userId,
       generation,

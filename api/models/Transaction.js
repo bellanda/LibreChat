@@ -138,17 +138,7 @@ const updateBalance = async ({ user, incrementValue, setValues }) => {
 
 /** Method to calculate and set the tokenValue for a transaction */
 function calculateTokenValue(txn) {
-  console.log(`[DEBUG] calculateTokenValue called with:`, {
-    valueKey: txn.valueKey,
-    tokenType: txn.tokenType,
-    model: txn.model,
-    rawAmount: txn.rawAmount,
-    hasEndpointTokenConfig: !!txn.endpointTokenConfig,
-    endpointTokenConfig: txn.endpointTokenConfig,
-  });
-
   if (!txn.tokenType) {
-    console.log(`[DEBUG] Missing tokenType, setting tokenValue to rawAmount:`, txn.rawAmount);
     txn.tokenValue = txn.rawAmount;
     return;
   }
@@ -158,21 +148,9 @@ function calculateTokenValue(txn) {
   txn.rate = multiplier;
   txn.tokenValue = txn.rawAmount * multiplier;
 
-  console.log(`[DEBUG] Token calculation result:`, {
-    multiplier,
-    rate: txn.rate,
-    rawAmount: txn.rawAmount,
-    tokenValue: txn.tokenValue,
-  });
-
   if (txn.context && txn.tokenType === 'completion' && txn.context === 'incomplete') {
     txn.tokenValue = Math.ceil(txn.tokenValue * cancelRate);
     txn.rate *= cancelRate;
-    console.log(`[DEBUG] Applied cancel rate:`, {
-      cancelRate,
-      finalTokenValue: txn.tokenValue,
-      finalRate: txn.rate,
-    });
   }
 }
 
@@ -216,16 +194,7 @@ async function createAutoRefillTransaction(txData) {
 async function createTransaction(_txData) {
   const { balance, transactions, ...txData } = _txData;
 
-  console.log(`[DEBUG] createTransaction called with:`, {
-    model: txData.model,
-    tokenType: txData.tokenType,
-    rawAmount: txData.rawAmount,
-    hasEndpointTokenConfig: !!txData.endpointTokenConfig,
-    endpointTokenConfig: txData.endpointTokenConfig,
-  });
-
   if (txData.rawAmount != null && isNaN(txData.rawAmount)) {
-    console.log(`[DEBUG] Invalid rawAmount, returning early`);
     return;
   }
 
@@ -236,13 +205,6 @@ async function createTransaction(_txData) {
   const transaction = new Transaction(txData);
   transaction.endpointTokenConfig = txData.endpointTokenConfig;
   calculateTokenValue(transaction);
-
-  console.log(`[DEBUG] Transaction created with final values:`, {
-    rate: transaction.rate,
-    tokenValue: transaction.tokenValue,
-    rawAmount: transaction.rawAmount,
-    tokenType: transaction.tokenType,
-  });
 
   await transaction.save();
   if (!balance?.enabled) {

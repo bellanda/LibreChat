@@ -5,7 +5,7 @@ import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import HPEAgentsProcessor from '~/components/HPEAgents/HPEAgentsProcessor';
 import '~/components/HPEAgents/styles.css';
 import { useHPEAgentsProcessor } from '~/hooks/useHPEAgentsProcessor';
-import { useChatContext, useMessageContext } from '~/Providers';
+import { useMessageContext } from '~/Providers';
 import store from '~/store';
 import { cn } from '~/utils';
 
@@ -21,14 +21,9 @@ type ContentType =
   | ReactElement;
 
 const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => {
-  const { messageId } = useMessageContext();
-  const { isSubmitting, latestMessage } = useChatContext();
+  const { isSubmitting = false, isLatestMessage = false } = useMessageContext();
   const enableUserMsgMarkdown = useRecoilValue(store.enableUserMsgMarkdown);
   const showCursorState = useMemo(() => showCursor && isSubmitting, [showCursor, isSubmitting]);
-  const isLatestMessage = useMemo(
-    () => messageId === latestMessage?.messageId,
-    [messageId, latestMessage?.messageId],
-  );
 
   // Hook para processar marcações HPEAgents
   const { shouldUseProcessor } = useHPEAgentsProcessor(text);

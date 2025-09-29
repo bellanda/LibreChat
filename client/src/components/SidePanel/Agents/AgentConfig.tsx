@@ -3,7 +3,7 @@ import { EModelEndpoint } from 'librechat-data-provider';
 import { useCallback, useMemo, useState } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import type { AgentForm, AgentPanelProps, IconComponentTypes } from '~/common';
-import { Panel } from '~/common';
+import { Panel, isEphemeralAgent } from '~/common';
 import Action from '~/components/SidePanel/Builder/Action';
 import { MCPToolSelectDialog, ToolSelectDialog } from '~/components/Tools';
 import { useGetAgentFiles } from '~/data-provider';
@@ -49,12 +49,12 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
   const {
     actions,
     setAction,
+    regularTools,
     agentsConfig,
     startupConfig,
     mcpServersMap,
     setActivePanel,
     endpointsConfig,
-    groupedTools: allTools,
   } = useAgentPanelContext();
 
   const {
@@ -81,9 +81,9 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
   }, [fileMap, agentFiles]);
 
   const {
-    ocrEnabled,
     codeEnabled,
     toolsEnabled,
+    contextEnabled,
     actionsEnabled,
     artifactsEnabled,
     webSearchEnabled,
@@ -151,7 +151,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
   }, [agent, agent_id, mergedFileMap]);
 
   const handleAddActions = useCallback(() => {
-    if (!agent_id) {
+    if (isEphemeralAgent(agent_id)) {
       showToast({
         message: localize('com_assistants_actions_disabled'),
         status: 'warning',
@@ -179,11 +179,11 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
     Icon = icons[iconKey];
   }
 
-  const { toolIds, mcpServerNames } = useVisibleTools(tools, allTools, mcpServersMap);
+  const { toolIds, mcpServerNames } = useVisibleTools(tools, regularTools, mcpServersMap);
 
   return (
     <>
-      <div className="h-auto bg-white px-4 pt-3 dark:bg-transparent">
+      <div className="px-4 pt-3 h-auto bg-white dark:bg-transparent">
         {/* Avatar & Name */}
         <div className="mb-4">
           <AgentAvatar
@@ -271,15 +271,15 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
           <button
             type="button"
             onClick={() => setActivePanel(Panel.model)}
-            className="btn btn-neutral border-token-border-light relative h-10 w-full rounded-lg font-medium"
+            className="relative w-full h-10 font-medium rounded-lg btn btn-neutral border-token-border-light"
             aria-haspopup="true"
             aria-expanded="false"
           >
-            <div className="flex w-full items-center gap-2">
+            <div className="flex gap-2 items-center w-full">
               {Icon && (
-                <div className="shadow-stroke relative flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white text-black dark:bg-white">
+                <div className="flex relative flex-shrink-0 justify-center items-center w-6 h-6 text-black bg-white rounded-full shadow-stroke dark:bg-white">
                   <Icon
-                    className="h-2/3 w-2/3"
+                    className="w-2/3 h-2/3"
                     endpoint={providerValue as string}
                     endpointType={endpointType}
                     iconURL={endpointIconURL}
@@ -297,18 +297,18 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
         {(codeEnabled ||
           fileSearchEnabled ||
           artifactsEnabled ||
-          ocrEnabled ||
+          contextEnabled ||
           webSearchEnabled) && (
-          <div className="mb-4 flex w-full flex-col items-start gap-3">
-            <label className="text-token-text-primary block font-medium">
+          <div className="flex flex-col gap-3 items-start mb-4 w-full">
+            <label className="block font-medium text-token-text-primary">
               {localize('com_assistants_capabilities')}
             </label>
             {/* Code Execution */}
             {codeEnabled && <CodeForm agent_id={agent_id} files={code_files} />}
             {/* Web Search */}
             {webSearchEnabled && <SearchForm />}
-            {/* File Context (OCR) */}
-            {ocrEnabled && <FileContext agent_id={agent_id} files={context_files} />}
+            {/* File Context */}
+            {contextEnabled && <FileContext agent_id={agent_id} files={context_files} />}
             {/* Artifacts */}
             {artifactsEnabled && <Artifacts />}
             {/* File Search */}
@@ -332,16 +332,15 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
           </label>
           <div>
             <div className="mb-1">
-              {/* Render all visible IDs (including groups with subtools selected) */}
+              {/* Render all visible IDs */}
               {toolIds.map((toolId, i) => {
-                if (!allTools) return null;
-                const tool = allTools[toolId];
+                const tool = regularTools?.find((t) => t.pluginKey === toolId);
                 if (!tool) return null;
                 return (
                   <AgentTool
                     key={`${toolId}-${i}-${agent_id}`}
                     tool={toolId}
-                    allTools={allTools}
+                    regularTools={regularTools}
                     agent_id={agent_id}
                   />
                 );
@@ -361,15 +360,15 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
                   />
                 ))}
             </div>
-            <div className="mt-2 flex space-x-2">
+            <div className="flex mt-2 space-x-2">
               {(toolsEnabled ?? false) && (
                 <button
                   type="button"
                   onClick={() => setShowToolDialog(true)}
-                  className="btn btn-neutral border-token-border-light relative h-9 w-full rounded-lg font-medium"
+                  className="relative w-full h-9 font-medium rounded-lg btn btn-neutral border-token-border-light"
                   aria-haspopup="dialog"
                 >
-                  <div className="flex w-full items-center justify-center gap-2">
+                  <div className="flex gap-2 justify-center items-center w-full">
                     {localize('com_assistants_add_tools')}
                   </div>
                 </button>
@@ -377,12 +376,12 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
               {(actionsEnabled ?? false) && (
                 <button
                   type="button"
-                  disabled={!agent_id}
+                  disabled={isEphemeralAgent(agent_id)}
                   onClick={handleAddActions}
-                  className="btn btn-neutral border-token-border-light relative h-9 w-full rounded-lg font-medium"
+                  className="relative w-full h-9 font-medium rounded-lg btn btn-neutral border-token-border-light"
                   aria-haspopup="dialog"
                 >
-                  <div className="flex w-full items-center justify-center gap-2">
+                  <div className="flex gap-2 justify-center items-center w-full">
                     {localize('com_assistants_add_actions')}
                   </div>
                 </button>
@@ -394,7 +393,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
         <div className="mb-4">
           <div className="mb-1.5 flex items-center gap-2">
             <span>
-              <label className="text-token-text-primary block font-medium">
+              <label className="block font-medium text-token-text-primary">
                 {localize('com_ui_support_contact')}
               </label>
             </span>
@@ -403,7 +402,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
             {/* Support Contact Name */}
             <div className="flex flex-col">
               <label
-                className="mb-1 flex items-center justify-between"
+                className="flex justify-between items-center mb-1"
                 htmlFor="support-contact-name"
               >
                 <span className="text-sm">{localize('com_ui_support_contact_name')}</span>
@@ -440,7 +439,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
             {/* Support Contact Email */}
             <div className="flex flex-col">
               <label
-                className="mb-1 flex items-center justify-between"
+                className="flex justify-between items-center mb-1"
                 htmlFor="support-contact-email"
               >
                 <span className="text-sm">{localize('com_ui_support_contact_email')}</span>
@@ -480,13 +479,15 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
         setIsOpen={setShowToolDialog}
         endpoint={EModelEndpoint.agents}
       />
-      <MCPToolSelectDialog
-        agentId={agent_id}
-        isOpen={showMCPToolDialog}
-        mcpServerNames={mcpServerNames}
-        setIsOpen={setShowMCPToolDialog}
-        endpoint={EModelEndpoint.agents}
-      />
+      {startupConfig?.mcpServers != null && (
+        <MCPToolSelectDialog
+          agentId={agent_id}
+          isOpen={showMCPToolDialog}
+          mcpServerNames={mcpServerNames}
+          setIsOpen={setShowMCPToolDialog}
+          endpoint={EModelEndpoint.agents}
+        />
+      )}
     </>
   );
 }

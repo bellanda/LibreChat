@@ -810,14 +810,6 @@ class AgentClient extends BaseClient {
       model: model ?? this.model ?? this.options.agent.model,
     };
 
-    console.log(`[DEBUG] recordCollectedUsage txMetadata:`, {
-      model: txMetadata.model,
-      hasEndpointTokenConfig: !!txMetadata.endpointTokenConfig,
-      endpointTokenConfig: txMetadata.endpointTokenConfig,
-      totalInputTokens,
-      totalOutputTokens,
-    });
-
     try {
       // Make a single transaction call with aggregated tokens
       if (hasStructuredTokens) {
@@ -1255,12 +1247,6 @@ class AgentClient extends BaseClient {
 
     let titleProviderConfig = getProviderConfig({ provider: endpoint, appConfig });
 
-    console.log(`[DEBUG] Title generation - titleProviderConfig:`, {
-      provider: endpoint,
-      hasCustomEndpointConfig: !!titleProviderConfig.customEndpointConfig,
-      customEndpointConfig: titleProviderConfig.customEndpointConfig,
-    });
-
     /** @type {TEndpoint | undefined} */
     let endpointConfig;
 
@@ -1274,19 +1260,20 @@ class AgentClient extends BaseClient {
             promptPrefix: appConfig.endpoints.all.promptPrefix,
           }),
       };
-      console.log(`[DEBUG] Using customEndpointConfig with merged all config:`, endpointConfig);
     } else {
       endpointConfig = appConfig.endpoints?.all ?? appConfig.endpoints?.[endpoint];
-      console.log(`[DEBUG] Title generation - initial endpointConfig:`, {
-        fromAll: appConfig.endpoints?.all,
-        fromEndpoint: appConfig.endpoints?.[endpoint],
-        endpointConfig,
-      });
     }
     if (!endpointConfig) {
       logger.warn(
         '[api/server/controllers/agents/client.js #titleConvo] Error getting endpoint config',
       );
+    }
+
+    if (endpointConfig?.titleConvo === false) {
+      logger.debug(
+        `[api/server/controllers/agents/client.js #titleConvo] Title generation disabled for endpoint "${endpoint}"`,
+      );
+      return;
     }
 
     if (endpointConfig?.titleEndpoint && endpointConfig.titleEndpoint !== endpoint) {
@@ -1298,7 +1285,7 @@ class AgentClient extends BaseClient {
         endpoint = endpointConfig.titleEndpoint;
       } catch (error) {
         logger.warn(
-          `[api/server/controllers/agents/client.js #titleConvo] Error getting title endpoint config for ${endpointConfig.titleEndpoint}, falling back to default`,
+          `[api/server/controllers/agents/client.js #titleConvo] Error getting title endpoint config for "${endpointConfig.titleEndpoint}", falling back to default`,
           error,
         );
         // Fall back to original provider config
@@ -1307,19 +1294,12 @@ class AgentClient extends BaseClient {
       }
     }
 
-    console.log(
-      `[DEBUG] Title generation - endpoint: ${endpoint}, titleModel: ${endpointConfig?.titleModel}, current model: ${clientOptions.model}`,
-    );
-
     if (
       endpointConfig &&
       endpointConfig.titleModel &&
       endpointConfig.titleModel !== Constants.CURRENT_MODEL
     ) {
       clientOptions.model = endpointConfig.titleModel;
-      console.log(
-        `[DEBUG] Using titleModel: ${endpointConfig.titleModel} instead of current model`,
-      );
     }
 
     const options = await titleProviderConfig.getOptions({
@@ -1351,9 +1331,6 @@ class AgentClient extends BaseClient {
     // Preserve the title model if it was set
     if (endpointConfig?.titleModel && endpointConfig.titleModel !== Constants.CURRENT_MODEL) {
       clientOptions.model = endpointConfig.titleModel;
-      console.log(
-        `[DEBUG] Preserving titleModel: ${endpointConfig.titleModel} in final clientOptions`,
-      );
     }
 
     if (options.configOptions) {

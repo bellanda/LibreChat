@@ -207,6 +207,12 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       },
     };
 
+    logger.info(
+      `[AgentController] Enviando mensagem: "${text}" | Modelo: ${endpointOption?.model} | PromptPrefix: ${endpointOption?.promptPrefix || 'Nenhum'}`,
+    );
+
+    console.log(`PromptPrefix: ${endpointOption?.promptPrefix}`);
+
     let response = await client.sendMessage(text, messageOptions);
 
     // Extract what we need and immediately break reference

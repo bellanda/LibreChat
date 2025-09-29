@@ -63,12 +63,6 @@ export const getCustomEndpointConfig = ({
     (endpointConfig) => normalizeEndpointName(endpointConfig.name) === endpoint,
   );
 
-  console.log(`[DEBUG] getCustomEndpointConfig for ${endpoint}:`, {
-    found: !!endpointConfig,
-    hasTokenConfig: !!endpointConfig?.tokenConfig,
-    tokenConfig: endpointConfig?.tokenConfig,
-  });
-
   return endpointConfig;
 };
 

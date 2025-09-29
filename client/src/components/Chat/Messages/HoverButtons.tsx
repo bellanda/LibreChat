@@ -23,7 +23,7 @@ type THoverButtons = {
   latestMessage: TMessage | null;
   isLast: boolean;
   index: number;
-  handleFeedback: ({ feedback }: { feedback: TFeedback | undefined }) => void;
+  handleFeedback?: ({ feedback }: { feedback: TFeedback | undefined }) => void;
 };
 
 type HoverButtonProps = {
@@ -243,7 +243,7 @@ const HoverButtons = ({
       />
 
       {/* Feedback Buttons */}
-      {!isCreatedByUser && (
+      {!isCreatedByUser && handleFeedback != null && (
         <Feedback handleFeedback={handleFeedback} feedback={message.feedback} isLast={isLast} />
       )}
 

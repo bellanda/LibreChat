@@ -9,6 +9,7 @@ import { useArtifactsContext, useEditorContext } from '~/Providers';
 import { cn } from '~/utils';
 import { ArtifactCodeEditor } from './ArtifactCodeEditor';
 import { ArtifactPreview } from './ArtifactPreview';
+import { MermaidMarkdown } from './MermaidMarkdown';
 
 export default function ArtifactTabs({
   artifact,
@@ -42,22 +43,27 @@ export default function ArtifactTabs({
         ref={contentRef}
         value="code"
         id="artifacts-code"
-        className={cn('flex-grow overflow-auto')}
+        className={cn('overflow-auto flex-grow')}
       >
-        <ArtifactCodeEditor
-          files={files}
-          fileKey={fileKey}
-          template={template}
-          artifact={artifact}
-          editorRef={editorRef}
-          sharedProps={sharedProps}
-        />
+        {isMermaid ? (
+          <MermaidMarkdown content={content} isSubmitting={isSubmitting} />
+        ) : (
+          <ArtifactCodeEditor
+            files={files}
+            fileKey={fileKey}
+            template={template}
+            artifact={artifact}
+            editorRef={editorRef}
+            sharedProps={sharedProps}
+          />
+        )}
       </Tabs.Content>
-      <Tabs.Content value="preview" className={cn('flex-grow overflow-auto', 'bg-white')}>
+      <Tabs.Content value="preview" className={cn('overflow-auto flex-grow', 'bg-white')}>
         <ArtifactPreview
           files={files}
           fileKey={fileKey}
           template={template}
+          isMermaid={isMermaid}
           previewRef={previewRef}
           sharedProps={sharedProps}
           currentCode={currentCode}

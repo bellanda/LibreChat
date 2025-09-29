@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import AgentMarketplace from '~/components/Agents/Marketplace';
+import { MarketplaceProvider } from '~/components/Agents/MarketplaceContext';
 import {
   ApiErrorWatcher,
   Login,
@@ -144,11 +145,19 @@ export const router = createBrowserRouter(
             },
             {
               path: 'agents',
-              element: <AgentMarketplace />,
+              element: (
+                <MarketplaceProvider>
+                  <AgentMarketplace />
+                </MarketplaceProvider>
+              ),
             },
             {
               path: 'agents/:category',
-              element: <AgentMarketplace />,
+              element: (
+                <MarketplaceProvider>
+                  <AgentMarketplace />
+                </MarketplaceProvider>
+              ),
             },
           ],
         },

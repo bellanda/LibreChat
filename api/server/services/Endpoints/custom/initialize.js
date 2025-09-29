@@ -96,12 +96,6 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
 
   let endpointTokenConfig = endpointConfig.tokenConfig;
 
-  console.log(`[DEBUG] Custom initialize for ${endpoint}:`, {
-    hasTokenConfig: !!endpointConfig.tokenConfig,
-    tokenConfig: endpointConfig.tokenConfig,
-    tokenKey,
-  });
-
   if (!endpointTokenConfig) {
     endpointTokenConfig = FetchTokenConfig[endpoint.toLowerCase()] && (await cache.get(tokenKey));
 
@@ -115,11 +109,6 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
       endpointTokenConfig = await cache.get(tokenKey);
     }
   }
-
-  console.log(`[DEBUG] Final endpointTokenConfig for ${endpoint}:`, {
-    hasTokenConfig: !!endpointTokenConfig,
-    tokenConfig: endpointTokenConfig,
-  });
 
   const customOptions = {
     headers: resolvedHeaders,

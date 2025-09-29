@@ -263,53 +263,27 @@ const getValueKey = (model, endpoint) => {
  * @returns {number} The multiplier for the given parameters, or a default value if not found.
  */
 const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConfig }) => {
-  console.log(`[DEBUG] getMultiplier called with:`, {
-    valueKey,
-    tokenType,
-    model,
-    endpoint,
-    hasEndpointTokenConfig: !!endpointTokenConfig,
-    endpointTokenConfig,
-  });
-
   if (endpointTokenConfig) {
     const multiplier = endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
-    console.log(`[DEBUG] Using endpointTokenConfig for ${model}[${tokenType}]:`, {
-      found: endpointTokenConfig?.[model]?.[tokenType] !== undefined,
-      multiplier,
-      defaultRate,
-    });
     return multiplier;
   }
 
   if (valueKey && tokenType) {
     const multiplier = tokenValues[valueKey][tokenType] ?? defaultRate;
-    console.log(`[DEBUG] Using tokenValues for ${valueKey}[${tokenType}]:`, {
-      found: tokenValues[valueKey]?.[tokenType] !== undefined,
-      multiplier,
-      defaultRate,
-    });
     return multiplier;
   }
 
   if (!tokenType || !model) {
-    console.log(`[DEBUG] Missing tokenType or model, returning 1`);
     return 1;
   }
 
   valueKey = getValueKey(model, endpoint);
   if (!valueKey) {
-    console.log(`[DEBUG] No valueKey found for ${model}, returning defaultRate:`, defaultRate);
     return defaultRate;
   }
 
   // If we got this far, and values[tokenType] is undefined somehow, return a rough average of default multipliers
   const multiplier = tokenValues[valueKey]?.[tokenType] ?? defaultRate;
-  console.log(`[DEBUG] Using tokenValues fallback for ${valueKey}[${tokenType}]:`, {
-    found: tokenValues[valueKey]?.[tokenType] !== undefined,
-    multiplier,
-    defaultRate,
-  });
   return multiplier;
 };
 

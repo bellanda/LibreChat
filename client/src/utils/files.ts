@@ -353,7 +353,7 @@ export const validateFiles = ({
     }
 
     let mimeTypesToCheck = supportedMimeTypes;
-    if (toolResource === EToolResources.ocr) {
+    if (toolResource === EToolResources.context) {
       mimeTypesToCheck = [
         ...(fileConfig?.text?.supportedMimeTypes || []),
         ...(fileConfig?.ocr?.supportedMimeTypes || []),
