@@ -469,5 +469,31 @@ export function replaceSpecialVars({ text, user }: { text: string; user?: t.TUse
     result = result.replace(/{{current_user}}/gi, user.name);
   }
 
+  if (user) {
+    // Create a clean user object with only the relevant fields
+    const userInfo = {
+      _id: (user as any)._id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      emailVerified: (user as any).emailVerified,
+      role: user.role,
+      ldapId: (user as any).ldapId,
+      costCenterCode: (user as any).costCenterCode,
+      costCenterName: (user as any).costCenterName,
+      workPositionCode: (user as any).workPositionCode,
+      workPositionName: (user as any).workPositionName,
+    };
+
+    console.log('userInfo', userInfo);
+
+    // Remove undefined/null values
+    const cleanUserInfo = Object.fromEntries(
+      Object.entries(userInfo).filter(([_, value]) => value !== undefined && value !== null),
+    );
+
+    result = result.replace(/{{user_complete_info}}/gi, JSON.stringify(cleanUserInfo, null, 2));
+  }
+
   return result;
 }
