@@ -11,7 +11,7 @@ client = MongoClient(MONGO_URI)
 
 
 def main():
-    token_credits_threshold = int(1e6)
+    token_credits_threshold = int(5e6)
 
     balances_lower_than_token_credits_threshold = list(
         client.LibreChat.balances.find({"tokenCredits": {"$lt": token_credits_threshold}})
