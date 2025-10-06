@@ -109,9 +109,10 @@ const useFileHandling = (params?: UseFileHandling) => {
   const uploadFile = useUploadFileMutation(
     {
       onSuccess: (data) => {
+        console.log('✅ [uploadFile] Upload SUCCESS:', data);
         clearUploadTimer(data.temp_file_id);
-        console.log('upload success', data);
         if (agent_id) {
+          console.log('🔄 [uploadFile] Refetching agent queries for agent_id:', agent_id);
           queryClient.refetchQueries([QueryKeys.agent, agent_id]);
           return;
         }
@@ -145,10 +146,26 @@ const useFileHandling = (params?: UseFileHandling) => {
       },
       onError: (_error, body) => {
         const error = _error as TError | undefined;
-        console.log('upload error', error);
+        console.log('❌ [uploadFile] Upload ERROR:', error);
+        console.log('🔍 [uploadFile] Error details:', {
+          message: error?.message,
+          code: error?.code,
+          response: error?.response?.data,
+          status: error?.response?.status,
+          statusText: error?.response?.statusText,
+        });
+        const file = body.get('file') as File | null;
+        console.log('📝 [uploadFile] FormData body:', {
+          file_id: body.get('file_id'),
+          tool_resource: body.get('tool_resource'),
+          endpoint: body.get('endpoint'),
+          filename: file?.name,
+        });
+
         const file_id = body.get('file_id');
         const tool_resource = body.get('tool_resource');
         if (tool_resource === EToolResources.execute_code) {
+          console.log('🔧 [uploadFile] Disabling execute_code for ephemeral agent');
           setEphemeralAgent((prev) => ({
             ...prev,
             [EToolResources.execute_code]: false,
@@ -164,6 +181,7 @@ const useFileHandling = (params?: UseFileHandling) => {
         } else if (error?.response?.data?.message) {
           errorMessage = error.response.data.message;
         }
+        console.log('💬 [uploadFile] Setting error message:', errorMessage);
         setError(errorMessage);
       },
     },
@@ -172,6 +190,12 @@ const useFileHandling = (params?: UseFileHandling) => {
 
   const startUpload = async (extendedFile: ExtendedFile) => {
     const filename = extendedFile.file?.name ?? 'File';
+    console.log('🚀 [startUpload] Starting upload for file:', filename);
+    console.log('📊 [startUpload] File type:', extendedFile.file?.type);
+    console.log('📏 [startUpload] File size:', extendedFile.file?.size);
+    console.log('🎯 [startUpload] Endpoint:', endpoint);
+    console.log('🔧 [startUpload] Tool resource:', extendedFile.tool_resource);
+
     startUploadTimer(extendedFile.file_id, filename, extendedFile.size);
 
     const formData = new FormData();
@@ -182,6 +206,8 @@ const useFileHandling = (params?: UseFileHandling) => {
     );
     formData.append('file', extendedFile.file as File, encodeURIComponent(filename));
     formData.append('file_id', extendedFile.file_id);
+
+    console.log('📝 [startUpload] FormData created with file:', filename);
 
     const width = extendedFile.width ?? 0;
     const height = extendedFile.height ?? 0;
@@ -202,19 +228,24 @@ const useFileHandling = (params?: UseFileHandling) => {
     }
 
     if (isAgentsEndpoint(endpoint)) {
+      console.log('🤖 [startUpload] Processing agents endpoint');
       if (!agent_id) {
         formData.append('message_file', 'true');
+        console.log('📄 [startUpload] Added message_file=true');
       }
       const tool_resource = extendedFile.tool_resource;
       if (tool_resource != null) {
         formData.append('tool_resource', tool_resource);
+        console.log('🔧 [startUpload] Added tool_resource:', tool_resource);
       }
       if (conversation?.agent_id != null && formData.get('agent_id') == null) {
         formData.append('agent_id', conversation.agent_id);
+        console.log('🆔 [startUpload] Added agent_id:', conversation.agent_id);
       }
     }
 
     if (!isAssistantsEndpoint(endpoint)) {
+      console.log('📤 [startUpload] Calling uploadFile.mutate for non-assistants endpoint');
       uploadFile.mutate(formData);
       return;
     }

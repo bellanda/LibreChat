@@ -1,11 +1,11 @@
+import { logger } from '@librechat/data-schemas';
 import axios from 'axios';
+import type { Request as ServerRequest } from 'express';
 import FormData from 'form-data';
 import { createReadStream } from 'fs';
-import { logger } from '@librechat/data-schemas';
 import { FileSources } from 'librechat-data-provider';
-import type { Request as ServerRequest } from 'express';
-import { logAxiosError, readFileAsString } from '~/utils';
 import { generateShortLivedToken } from '~/crypto/jwt';
+import { logAxiosError, readFileAsString } from '~/utils';
 
 /**
  * Attempts to parse text using RAG API, falls back to native text parsing
@@ -39,7 +39,7 @@ export async function parseText({
 
   try {
     const healthResponse = await axios.get(`${process.env.RAG_API_URL}/health`, {
-      timeout: 10000,
+      timeout: 5000, // Reduced timeout for faster fallback
     });
     if (healthResponse?.statusText !== 'OK' && healthResponse?.status !== 200) {
       logger.debug('[parseText] RAG API health check failed, falling back to native parsing');
@@ -77,12 +77,31 @@ export async function parseText({
       throw new Error('RAG API did not return parsed text');
     }
 
+    // Log do conteúdo recebido do RAG API para debug
+    logger.info(`📄 [parseText] Conteúdo recebido do RAG API para arquivo ${file.originalname}:`);
+    logger.info(`📄 [parseText] Tamanho do conteúdo: ${responseData.text.length} caracteres`);
+    logger.info(`📄 [parseText] Primeiros 500 caracteres: ${responseData.text.substring(0, 500)}`);
+    logger.info(
+      `📄 [parseText] Últimos 500 caracteres: ${responseData.text.substring(responseData.text.length - 500)}`,
+    );
+    logger.info(`📄 [parseText] Conteúdo completo:\n${responseData.text}`);
+
     return {
       text: responseData.text,
       bytes: Buffer.byteLength(responseData.text, 'utf8'),
       source: FileSources.text,
     };
   } catch (error) {
+    // Se for erro de tamanho (413), não fazer fallback - propagar o erro
+    if (axios.isAxiosError(error) && error.response?.status === 413) {
+      logAxiosError({
+        message: '[parseText] RAG API returned file too large error',
+        error,
+      });
+      throw new Error(error.response?.data?.detail || 'File too large for text processing');
+    }
+
+    // Para outros erros, fazer fallback
     logAxiosError({
       message: '[parseText] RAG API text parsing failed, falling back to native parsing',
       error,

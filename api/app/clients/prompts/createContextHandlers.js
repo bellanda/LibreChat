@@ -23,7 +23,22 @@ function createContextHandlers(req, userMessageContent) {
 
   const query = async (file) => {
     if (useFullContext) {
+      logger.info(
+        `📄 [createContextHandlers] Usando full context para arquivo ${file.filename} (file_id: ${file.file_id})`,
+      );
       return axios.get(`${process.env.RAG_API_URL}/documents/${file.file_id}/context`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+    }
+
+    // Para "Upload as Text", usar o endpoint /text em vez de /query
+    if (file.source === 'text' || file.type === 'text/plain' || file.filename?.endsWith('.txt')) {
+      logger.info(
+        `📄 [createContextHandlers] Usando endpoint /text para arquivo de texto ${file.filename} (file_id: ${file.file_id})`,
+      );
+      return axios.get(`${process.env.RAG_API_URL}/text/${file.file_id}`, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
         },
@@ -92,6 +107,19 @@ function createContextHandlers(req, userMessageContent) {
 
       const resolvedQueries = await Promise.all(queryPromises);
 
+      // Log do conteúdo retornado para debug
+      logger.info(`📄 [createContextHandlers] Processando ${resolvedQueries.length} arquivos`);
+      resolvedQueries.forEach((queryResult, index) => {
+        const file = processedFiles[index];
+        logger.info(`📄 [createContextHandlers] Arquivo ${file.filename}:`);
+        logger.info(
+          `📄 [createContextHandlers] Tamanho dos dados: ${JSON.stringify(queryResult.data).length} caracteres`,
+        );
+        logger.info(
+          `📄 [createContextHandlers] Dados completos: ${JSON.stringify(queryResult.data)}`,
+        );
+      });
+
       const context =
         resolvedQueries.length === 0
           ? '\n\tThe semantic search did not return any results.'
@@ -131,6 +159,9 @@ function createContextHandlers(req, userMessageContent) {
           ${context}
           ${footer}`;
 
+        logger.info(`📄 [createContextHandlers] Contexto final criado:`);
+        logger.info(`📄 [createContextHandlers] Tamanho do contexto: ${prompt.length} caracteres`);
+        logger.info(`📄 [createContextHandlers] Contexto completo:\n${prompt}`);
         return prompt;
       }
 

@@ -8,6 +8,7 @@ from typing import Iterable, List
 
 import aiofiles
 import aiofiles.os
+import tiktoken
 from fastapi import (
     APIRouter,
     Body,
@@ -32,11 +33,115 @@ from app.models import (
     StoreDocument,
 )
 from app.services.vector_store.async_pg_vector import AsyncPgVector
-from app.utils.document_loader import clean_text, get_loader, process_documents
+from app.utils.document_loader import clean_text, cleanup_temp_encoding_file, get_loader, process_documents
 from app.utils.health import is_health_ok
-from app.utils.preprocess_file import preprocess_pdf
+from app.utils.preprocess_file import preprocess_excel, preprocess_pdf
 
 router = APIRouter()
+
+
+def get_user_id(request: Request, entity_id: str = None) -> str:
+    """Extract user ID from request or entity_id."""
+    if not hasattr(request.state, "user"):
+        return entity_id if entity_id else "public"
+    else:
+        return entity_id if entity_id else request.state.user.get("id")
+
+
+async def save_upload_file_async(file: UploadFile, temp_file_path: str) -> None:
+    """Save uploaded file asynchronously."""
+    try:
+        async with aiofiles.open(temp_file_path, "wb") as temp_file:
+            chunk_size = 64 * 1024  # 64 KB
+            while content := await file.read(chunk_size):
+                await temp_file.write(content)
+    except Exception as e:
+        logger.error(
+            "Failed to save uploaded file | Path: %s | Error: %s | Traceback: %s",
+            temp_file_path,
+            str(e),
+            traceback.format_exc(),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save the uploaded file. Error: {str(e)}",
+        )
+
+
+def save_upload_file_sync(file: UploadFile, temp_file_path: str) -> None:
+    """Save uploaded file synchronously."""
+    try:
+        with open(temp_file_path, "wb") as temp_file:
+            copyfileobj(file.file, temp_file)
+    except Exception as e:
+        logger.error(
+            "Failed to save uploaded file | Path: %s | Error: %s | Traceback: %s",
+            temp_file_path,
+            str(e),
+            traceback.format_exc(),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save the uploaded file. Error: {str(e)}",
+        )
+
+
+async def load_file_content(filename: str, content_type: str, file_path: str, executor) -> tuple:
+    """Load file content using appropriate loader."""
+    temp_file_created = False
+    temp_file_path = None
+
+    # Preprocess Excel files to Markdown for text extraction
+    if filename.lower().endswith((".xlsx", ".xls")):
+        new_filename, new_content_type, new_file_path = preprocess_excel(file_path)
+        loader, known_type, file_ext = get_loader(new_filename, new_content_type, new_file_path)
+        temp_file_created = True
+        temp_file_path = new_file_path
+    else:
+        loader, known_type, file_ext = get_loader(filename, content_type, file_path)
+
+    data = await run_in_executor(executor, loader.load)
+
+    # Clean up temporary UTF-8 file if it was created for encoding conversion
+    cleanup_temp_encoding_file(loader)
+
+    # Clean up temporary file if it was created by preprocessing
+    if temp_file_created and temp_file_path and os.path.exists(temp_file_path):
+        try:
+            os.remove(temp_file_path)
+        except Exception as e:
+            logger.warning(f"Failed to remove temporary preprocessed file {temp_file_path}: {e}")
+
+    return data, known_type, file_ext
+
+
+def extract_text_from_documents(documents: List[Document], file_ext: str) -> str:
+    """Extract text content from loaded documents."""
+    text_content = ""
+    if documents:
+        for doc in documents:
+            if hasattr(doc, "page_content"):
+                # Clean text if it's a PDF
+                if file_ext == "pdf":
+                    text_content += clean_text(doc.page_content) + "\n"
+                else:
+                    text_content += doc.page_content + "\n"
+
+    # Remove trailing newline
+    return text_content.rstrip("\n")
+
+
+async def cleanup_temp_file_async(file_path: str) -> None:
+    """Clean up temporary file asynchronously."""
+    try:
+        await aiofiles.os.remove(file_path)
+    except Exception as e:
+        logger.error(
+            "Failed to remove temporary file | Path: %s | Error: %s | Traceback: %s",
+            file_path,
+            str(e),
+            traceback.format_exc(),
+        )
 
 
 @router.get("/ids")
@@ -373,7 +478,7 @@ async def embed_file(
         )
 
     try:
-        # Preprocess file if it is a PDF and has more than 50 pages
+        # Preprocess file based on type
         if file.filename.endswith(".pdf"):
             import fitz  # PyMuPDF for PDF processing
 
@@ -387,6 +492,9 @@ async def embed_file(
                 new_file_name = file.filename
                 new_content_type = file.content_type
                 # Skip preprocessing for PDFs with ≤50 pages
+        elif file.filename.lower().endswith((".xlsx", ".xls")):
+            # Preprocess Excel files to Markdown
+            new_file_name, new_content_type, temp_file_path = preprocess_excel(temp_file_path)
         else:
             new_file_name = file.filename
             new_content_type = file.content_type
@@ -477,6 +585,53 @@ async def load_document_context(id: str):
     except HTTPException as http_exc:
         logger.error(
             "HTTP Exception in load_document_context | Status: %d | Detail: %s",
+            http_exc.status_code,
+            http_exc.detail,
+        )
+        raise http_exc
+    except Exception as e:
+        logger.error(
+            "Error in load_document_context | Error: %s | Traceback: %s",
+            str(e),
+            traceback.format_exc(),
+        )
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/text/{file_id}")
+async def get_text_content(file_id: str, request: Request):
+    """
+    Get the full text content of a processed file for "Upload as Text" functionality.
+    """
+    ids = [file_id]
+
+    try:
+        if isinstance(vector_store, AsyncPgVector):
+            existing_ids = await vector_store.get_filtered_ids(ids)
+            documents = await vector_store.get_documents_by_ids(ids)
+        else:
+            existing_ids = vector_store.get_filtered_ids(ids)
+            documents = vector_store.get_documents_by_ids(ids)
+
+        # Ensure the requested id exists
+        if not all(id in existing_ids for id in ids):
+            raise HTTPException(status_code=404, detail="The specified file_id was not found")
+
+        # Ensure documents list is not empty
+        if not documents:
+            raise HTTPException(status_code=404, detail="No document found for the given ID")
+
+        # Extract text content from documents
+        text_content = extract_text_from_documents(documents, "txt")
+
+        logger.info(f"📄 [get_text_content] Retornando conteúdo completo para file_id {file_id}")
+        logger.info(f"📄 [get_text_content] Tamanho do conteúdo: {len(text_content)} caracteres")
+
+        return {"text": text_content}
+
+    except HTTPException as http_exc:
+        logger.error(
+            "HTTP Exception in get_text_content | Status: %d | Detail: %s",
             http_exc.status_code,
             http_exc.detail,
         )
@@ -599,3 +754,93 @@ async def query_embeddings_by_file_ids(body: QueryMultipleBody):
             traceback.format_exc(),
         )
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/text")
+async def extract_text_from_file(
+    request: Request,
+    file_id: str = Form(...),
+    file: UploadFile = File(...),
+    entity_id: str = Form(None),
+):
+    """
+    Extract text content from an uploaded file without creating embeddings.
+    Returns the raw text content for text parsing purposes.
+    """
+    user_id = get_user_id(request, entity_id)
+    temp_base_path = os.path.join(RAG_UPLOAD_DIR, user_id)
+    os.makedirs(temp_base_path, exist_ok=True)
+    temp_file_path = os.path.join(RAG_UPLOAD_DIR, user_id, file.filename)
+
+    await save_upload_file_async(file, temp_file_path)
+
+    try:
+        data, known_type, file_ext = await load_file_content(
+            file.filename,
+            file.content_type,
+            temp_file_path,
+            request.app.state.thread_pool,
+        )
+
+        # Extract text content from loaded documents
+        text_content = extract_text_from_documents(data, file_ext)
+
+        # Log do conteúdo extraído para debug
+        logger.info(f"📄 [Upload as Text] Conteúdo extraído do arquivo {file.filename}:")
+        logger.info(f"📄 [Upload as Text] Tamanho do conteúdo: {len(text_content)} caracteres")
+        logger.info(f"📄 [Upload as Text] Primeiros 500 caracteres: {text_content[:500]}")
+        logger.info(f"📄 [Upload as Text] Últimos 500 caracteres: {text_content[-500:]}")
+        logger.info(f"📄 [Upload as Text] Conteúdo completo:\n{text_content}")
+
+        # Validação de tokens para "Upload as Text" - limite de 30k tokens
+        try:
+            # Usar encoding para GPT-4/GPT-3.5-turbo
+            encoding = tiktoken.get_encoding("cl100k_base")
+            tokens = encoding.encode(text_content)
+            token_count = len(tokens)
+        except ImportError:
+            # Fallback para estimativa se tiktoken não estiver disponível
+            token_count = len(text_content) // 4
+            logger.warning("tiktoken not available, using character-based estimation")
+
+        if token_count > 30000:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"Arquivo muito grande para 'Upload as Text' ({token_count:,} tokens). Limite máximo: 30.000 tokens. Para arquivos maiores, use 'File Search' para documentos extensos ou 'Code Interpreter' para dados estruturados.",
+            )
+
+        return {
+            "text": text_content,
+            "file_id": file_id,
+            "filename": file.filename,
+            "known_type": known_type,
+        }
+
+    except HTTPException as http_exc:
+        logger.error(
+            "HTTP Exception in extract_text_from_file | Status: %d | Detail: %s",
+            http_exc.status_code,
+            http_exc.detail,
+        )
+        raise http_exc
+    except Exception as e:
+        logger.error(
+            "Error during text extraction | File: %s | Error: %s | Traceback: %s",
+            file.filename,
+            str(e),
+            traceback.format_exc(),
+        )
+        if "No pandoc was found" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.PANDOC_NOT_INSTALLED,
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Error during text extraction: {str(e)}",
+            )
+    finally:
+        # Only clean up the original file if it still exists (wasn't preprocessed)
+        if os.path.exists(temp_file_path):
+            await cleanup_temp_file_async(temp_file_path)

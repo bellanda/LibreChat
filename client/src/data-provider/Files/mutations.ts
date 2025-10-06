@@ -1,15 +1,15 @@
 import { useToastContext } from '@librechat/client';
-import { EToolResources } from 'librechat-data-provider';
+import type { UseMutationResult } from '@tanstack/react-query';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type * as t from 'librechat-data-provider';
 import {
+  EToolResources,
+  MutationKeys,
   QueryKeys,
   dataService,
-  MutationKeys,
   defaultOrderQuery,
   isAssistantsEndpoint,
 } from 'librechat-data-provider';
-import type * as t from 'librechat-data-provider';
-import type { UseMutationResult } from '@tanstack/react-query';
 import { useLocalize } from '~/hooks';
 
 export const useUploadFileMutation = (
@@ -29,14 +29,29 @@ export const useUploadFileMutation = (
       const height = body.get('height') ?? '';
       const version = body.get('version') ?? '';
       const endpoint = (body.get('endpoint') ?? '') as string;
+      const file = body.get('file') as File | null;
+      const filename = file?.name || 'unknown';
+
+      console.log('🔄 [mutationFn] Processing file upload:', {
+        filename,
+        endpoint,
+        width,
+        height,
+        version,
+        fileType: file?.type,
+      });
+
       if (isAssistantsEndpoint(endpoint) && version === '2') {
+        console.log('📤 [mutationFn] Using dataService.uploadFile for assistants v2');
         return dataService.uploadFile(body, signal);
       }
 
       if (width !== '' && height !== '') {
+        console.log('🖼️ [mutationFn] Using dataService.uploadImage for image file');
         return dataService.uploadImage(body, signal);
       }
 
+      console.log('📤 [mutationFn] Using dataService.uploadFile for regular file');
       return dataService.uploadFile(body, signal);
     },
     ...options,

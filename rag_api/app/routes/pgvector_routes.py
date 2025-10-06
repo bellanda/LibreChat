@@ -1,5 +1,6 @@
 # app/routes/pgvector_routes.py
 from fastapi import APIRouter, HTTPException
+
 from app.services.database import PSQLDatabase
 
 router = APIRouter()
@@ -20,7 +21,7 @@ async def check_index_exists(table_name: str, column_name: str) -> bool:
             table_name,
             column_name,
         )
-    return result[0]['exists']
+    return result[0]["exists"]
 
 
 @router.get("/test/check_index")
@@ -44,7 +45,7 @@ async def get_table_names(schema: str = "public"):
             schema,
         )
     # Extract table names from records
-    tables = [record['table_name'] for record in table_names]
+    tables = [record["table_name"] for record in table_names]
     return {"schema": schema, "tables": tables}
 
 
@@ -59,9 +60,10 @@ async def get_table_columns(table_name: str, schema: str = "public"):
             WHERE table_schema = $1 AND table_name = $2
             ORDER BY ordinal_position;
             """,
-            schema, table_name,
+            schema,
+            table_name,
         )
-    column_names = [col['column_name'] for col in columns]
+    column_names = [col["column_name"] for col in columns]
     return {"table_name": table_name, "columns": column_names}
 
 

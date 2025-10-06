@@ -1,8 +1,9 @@
 # app/models.py
 import hashlib
 from enum import Enum
+from typing import List, Optional
+
 from pydantic import BaseModel
-from typing import Optional, List
 
 
 class DocumentResponse(BaseModel):

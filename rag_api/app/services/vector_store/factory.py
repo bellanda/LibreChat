@@ -1,6 +1,7 @@
 from typing import Optional
-from pymongo import MongoClient
+
 from langchain_core.embeddings import Embeddings
+from pymongo import MongoClient
 
 from .async_pg_vector import AsyncPgVector
 from .atlas_mongo_vector import AtlasMongoVector
@@ -12,7 +13,7 @@ def get_vector_store(
     embeddings: Embeddings,
     collection_name: str,
     mode: str = "sync",
-    search_index: Optional[str] = None
+    search_index: Optional[str] = None,
 ):
     if mode == "sync":
         return ExtendedPgVector(
@@ -29,8 +30,6 @@ def get_vector_store(
     elif mode == "atlas-mongo":
         mongo_db = MongoClient(connection_string).get_database()
         mong_collection = mongo_db[collection_name]
-        return AtlasMongoVector(
-            collection=mong_collection, embedding=embeddings, index_name=search_index
-        )
+        return AtlasMongoVector(collection=mong_collection, embedding=embeddings, index_name=search_index)
     else:
         raise ValueError("Invalid mode specified. Choose 'sync', 'async', or 'atlas-mongo'.")

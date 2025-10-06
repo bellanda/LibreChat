@@ -125,11 +125,19 @@ export const imageMimeTypes = /^image\/(jpeg|gif|png|webp|heic|heif)$/;
 export const audioMimeTypes =
   /^audio\/(mp3|mpeg|mpeg3|wav|wave|x-wav|ogg|vorbis|mp4|x-m4a|flac|x-flac|webm)$/;
 
+// Tipos de arquivo que devem ser excluídos do OCR e usar processamento normal
+export const excludedFromOCRMimeTypes = [
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // Excel XLSX
+  'application/vnd.ms-excel', // Excel XLS
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.template', // Excel XLTX
+  'application/vnd.ms-excel.template', // Excel XLT
+];
+
 export const defaultOCRMimeTypes = [
   imageMimeTypes,
   /^application\/pdf$/,
-  /^application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation|spreadsheetml\.sheet)$/,
-  /^application\/vnd\.ms-(word|powerpoint|excel)$/,
+  /^application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation)$/,
+  /^application\/vnd\.ms-(word|powerpoint)$/,
   /^application\/epub\+zip$/,
 ];
 

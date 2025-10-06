@@ -674,9 +674,26 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
 
     const fileConfig = mergeFileConfig(appConfig.fileConfig);
 
+    // Verificar se o arquivo deve ser excluído do OCR
+    const { excludedFromOCRMimeTypes } = require('librechat-data-provider');
+    const shouldExcludeFromOCR =
+      excludedFromOCRMimeTypes.includes(file.mimetype) ||
+      file.originalname?.toLowerCase().endsWith('.xlsx') ||
+      file.originalname?.toLowerCase().endsWith('.xls');
+
     const shouldUseOCR =
       appConfig?.ocr != null &&
+      !shouldExcludeFromOCR && // Excluir tipos específicos do OCR
       fileConfig.checkType(file.mimetype, fileConfig.ocr?.supportedMimeTypes || []);
+
+    // Log para debug
+    console.log(`🔍 File processing debug:`, {
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      shouldExcludeFromOCR,
+      shouldUseOCR,
+      ocrEnabled: appConfig?.ocr != null,
+    });
 
     if (shouldUseOCR && !(await checkCapability(req, AgentCapabilities.ocr))) {
       throw new Error('OCR capability is not enabled for Agents');

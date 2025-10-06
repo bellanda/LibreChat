@@ -30,4 +30,4 @@ ENV SCARF_NO_ANALYTICS=true
 
 COPY . .
 
-CMD ["uv", "run", "main.py"]
+CMD ["uv", "run", "--no-sync", "main.py"]

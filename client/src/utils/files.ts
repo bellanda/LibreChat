@@ -358,6 +358,7 @@ export const validateFiles = ({
         ...(fileConfig?.text?.supportedMimeTypes || []),
         ...(fileConfig?.ocr?.supportedMimeTypes || []),
         ...(fileConfig?.stt?.supportedMimeTypes || []),
+        excelMimeTypes, // Add Excel support for context tool resource
       ];
     }
 
