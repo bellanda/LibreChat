@@ -94,7 +94,12 @@ async def load_file_content(filename: str, content_type: str, file_path: str, ex
     # Preprocess Excel files to Markdown for text extraction
     if filename.lower().endswith((".xlsx", ".xls")):
         new_filename, new_content_type, new_file_path = preprocess_excel(file_path)
-        loader, known_type, file_ext = get_loader(new_filename, new_content_type, new_file_path)
+        # Use TextLoader to preserve markdown table formatting
+        from langchain_community.document_loaders import TextLoader
+
+        loader = TextLoader(new_file_path, autodetect_encoding=True)
+        known_type = True
+        file_ext = "md"
         temp_file_created = True
         temp_file_path = new_file_path
     else:
@@ -495,12 +500,17 @@ async def embed_file(
         elif file.filename.lower().endswith((".xlsx", ".xls")):
             # Preprocess Excel files to Markdown
             new_file_name, new_content_type, temp_file_path = preprocess_excel(temp_file_path)
+            # Use TextLoader to preserve markdown table formatting
+            from langchain_community.document_loaders import TextLoader
+
+            loader = TextLoader(temp_file_path, autodetect_encoding=True)
+            known_type = True
+            file_ext = "md"
         else:
             new_file_name = file.filename
             new_content_type = file.content_type
-
-        # Continue default flow
-        loader, known_type, file_ext = get_loader(new_file_name, new_content_type, temp_file_path)
+            # Continue default flow
+            loader, known_type, file_ext = get_loader(new_file_name, new_content_type, temp_file_path)
         data = loader.load()
         result = await store_data_in_vector_db(data=data, file_id=file_id, user_id=user_id, clean_content=file_ext == "pdf")
 

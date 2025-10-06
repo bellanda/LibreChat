@@ -21,7 +21,7 @@ from app.config import (
     debug_mode,
     logger,
 )
-from app.middleware import security_middleware
+from app.middleware import security_middleware, timeout_middleware
 from app.routes import document_routes, pgvector_routes
 from app.services.database import PSQLDatabase, ensure_vector_indexes
 
@@ -58,6 +58,7 @@ app.add_middleware(
 
 app.add_middleware(LogMiddleware)
 
+app.middleware("http")(timeout_middleware)
 app.middleware("http")(security_middleware)
 
 # Set state variables for use in routes
@@ -88,4 +89,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=RAG_HOST, port=RAG_PORT, log_config=None)
+    uvicorn.run(
+        app,
+        host=RAG_HOST,
+        port=RAG_PORT,
+        log_config=None,
+        timeout_keep_alive=300,  # 5 minutes
+        timeout_graceful_shutdown=30,  # 30 seconds
+        limit_max_requests=1000,  # Restart worker after 1000 requests
+        limit_concurrency=100,  # Max concurrent connections
+    )

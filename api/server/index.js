@@ -77,6 +77,13 @@ const startServer = async () => {
   app.use(noIndex);
   app.use(express.json({ limit: '3mb' }));
   app.use(express.urlencoded({ extended: true, limit: '3mb' }));
+
+  // Set timeout for file uploads
+  app.use('/api/files', (req, res, next) => {
+    req.setTimeout(300000); // 5 minutes timeout for file uploads
+    res.setTimeout(300000);
+    next();
+  });
   app.use(mongoSanitize());
   app.use(cors());
   app.use(cookieParser());

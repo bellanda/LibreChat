@@ -14,6 +14,11 @@ class ExtendedPgVector(PGVector):
     _query_logging_setup = False
 
     def __init__(self, *args, **kwargs):
+        # Suppress the JSONB deprecation warning
+        import warnings
+
+        warnings.filterwarnings("ignore", message="Please use JSONB instead of JSON for metadata")
+
         super().__init__(*args, **kwargs)
         self.setup_query_logging()
 

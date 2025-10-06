@@ -43,6 +43,10 @@ def get_env_variable(var_name: str, default_value: str = None, required: bool = 
 RAG_HOST = os.getenv("RAG_HOST", "0.0.0.0")
 RAG_PORT = int(os.getenv("RAG_PORT", 8000))
 
+# Timeout configurations
+RAG_UPLOAD_TIMEOUT = int(get_env_variable("RAG_UPLOAD_TIMEOUT", "300"))  # 5 minutes default
+RAG_PROCESSING_TIMEOUT = int(get_env_variable("RAG_PROCESSING_TIMEOUT", "600"))  # 10 minutes default
+
 RAG_UPLOAD_DIR = get_env_variable("RAG_UPLOAD_DIR", "./uploads/")
 if not os.path.exists(RAG_UPLOAD_DIR):
     os.makedirs(RAG_UPLOAD_DIR, exist_ok=True)

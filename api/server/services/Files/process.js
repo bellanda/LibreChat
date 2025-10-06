@@ -721,6 +721,15 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
       fileConfig.text?.supportedMimeTypes || [],
     );
 
+    // Debug log para verificar configuração de texto
+    console.log(`🔍 Text processing debug:`, {
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      shouldUseText,
+      textSupportedMimeTypes: fileConfig.text?.supportedMimeTypes,
+      textSupportedMimeTypesLength: fileConfig.text?.supportedMimeTypes?.length || 0,
+    });
+
     if (!shouldUseText) {
       throw new Error(`File type ${file.mimetype} is not supported for text parsing.`);
     }
