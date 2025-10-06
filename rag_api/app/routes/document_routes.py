@@ -496,7 +496,10 @@ async def embed_file(
             else:
                 new_file_name = file.filename
                 new_content_type = file.content_type
-                # Skip preprocessing for PDFs with ≤50 pages
+                # Skip preprocessing for PDFs with ≥50 pages
+
+            # Initialize loader for PDF files
+            loader, known_type, file_ext = get_loader(new_file_name, new_content_type, temp_file_path)
         elif file.filename.lower().endswith((".xlsx", ".xls")):
             # Preprocess Excel files to Markdown
             new_file_name, new_content_type, temp_file_path = preprocess_excel(temp_file_path)
