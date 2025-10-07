@@ -1,6 +1,8 @@
+const crypto = require('crypto');
 const { sendEvent } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
 const { Constants } = require('librechat-data-provider');
+const AgentLogger = require('~/server/services/AgentLogger');
 const {
   handleAbortError,
   createAbortController,
@@ -11,9 +13,7 @@ const { saveMessage } = require('~/models');
 
 function createCloseHandler(abortController) {
   return function (manual) {
-    if (!manual) {
-      logger.debug('[AgentController] Request closed');
-    }
+    // Request closed silently
     if (!abortController) {
       return;
     } else if (abortController.signal.aborted) {
@@ -23,7 +23,7 @@ function createCloseHandler(abortController) {
     }
 
     abortController.abort();
-    logger.debug('[AgentController] Request aborted on close');
+    // Request aborted on close
   };
 }
 
@@ -54,6 +54,11 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
   const newConvo = !conversationId;
   const userId = req.user.id;
 
+  // Generate conversationId if it's a new conversation
+  if (newConvo) {
+    conversationId = crypto.randomUUID();
+  }
+
   // Create handler to avoid capturing the entire parent scope
   let getReqData = (data = {}) => {
     for (let key in data) {
@@ -78,7 +83,6 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
 
   // Create a function to handle final cleanup
   const performCleanup = () => {
-    logger.debug('[AgentController] Performing cleanup');
     if (Array.isArray(cleanupHandlers)) {
       for (const handler of cleanupHandlers) {
         try {
@@ -93,7 +97,6 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
 
     // Clean up abort controller
     if (abortKey) {
-      logger.debug('[AgentController] Cleaning up abort controller');
       cleanupAbortController(abortKey);
     }
 
@@ -116,7 +119,6 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     if (requestDataMap.has(req)) {
       requestDataMap.delete(req);
     }
-    logger.debug('[AgentController] Cleanup completed');
   };
 
   try {
@@ -138,6 +140,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       res,
       endpointOption,
       signal: prelimAbortController.signal,
+      conversationId,
     });
     if (prelimAbortController.signal?.aborted) {
       prelimAbortController = null;
@@ -207,11 +210,9 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       },
     };
 
-    logger.info(
-      `[AgentController] Enviando mensagem: "${text}" | Modelo: ${endpointOption?.model} | PromptPrefix: ${endpointOption?.promptPrefix || 'Nenhum'}`,
-    );
-
-    console.log(`PromptPrefix: ${endpointOption?.promptPrefix}`);
+    // Log agent message processing
+    const promptPreview = AgentLogger.createTextPreview(text);
+    AgentLogger.logAgentMessage(conversationId, endpointOption?.model, null, promptPreview);
 
     let response = await client.sendMessage(text, messageOptions);
 
@@ -301,13 +302,12 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         client,
       })
         .then(() => {
-          logger.debug('[AgentController] Title generation started');
+          // Title generation started
         })
         .catch((err) => {
           logger.error('[AgentController] Error in title generation', err);
         })
         .finally(() => {
-          logger.debug('[AgentController] Title generation completed');
           performCleanup();
         });
     } else {

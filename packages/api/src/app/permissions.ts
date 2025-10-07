@@ -1,14 +1,13 @@
-import { logger } from '@librechat/data-schemas';
-import {
-  SystemRoles,
-  Permissions,
-  roleDefaults,
-  PermissionTypes,
-  getConfigDefaults,
-} from 'librechat-data-provider';
 import type { IRole } from '@librechat/data-schemas';
-import type { AppConfig } from '~/types/config';
+import {
+  PermissionTypes,
+  Permissions,
+  SystemRoles,
+  getConfigDefaults,
+  roleDefaults,
+} from 'librechat-data-provider';
 import { isMemoryEnabled } from '~/memory/config';
+import type { AppConfig } from '~/types/config';
 
 /**
  * Checks if a permission type has explicit configuration
@@ -124,19 +123,9 @@ export async function updateInterfacePermissions({
       // Only update if: doesn't exist OR explicitly configured OR memory state change
       if (!permTypeExists || isExplicitlyConfigured || isMemoryDisabled || isMemoryReenabling) {
         permissionsToUpdate[permType] = permissions;
-        if (!permTypeExists) {
-          logger.debug(`Role '${roleName}': Setting up default permissions for '${permType}'`);
-        } else if (isExplicitlyConfigured) {
-          logger.debug(`Role '${roleName}': Applying explicit config for '${permType}'`);
-        } else if (isMemoryDisabled) {
-          logger.debug(`Role '${roleName}': Disabling memories as memory.disabled is true`);
-        } else if (isMemoryReenabling) {
-          logger.debug(
-            `Role '${roleName}': Re-enabling memories due to valid memory configuration`,
-          );
-        }
+        // Role permissions configured silently
       } else {
-        logger.debug(`Role '${roleName}': Preserving existing permissions for '${permType}'`);
+        // Preserving existing permissions
       }
     };
 

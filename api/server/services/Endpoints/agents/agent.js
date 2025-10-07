@@ -1,4 +1,6 @@
 const { Providers } = require('@librechat/agents');
+const { logger } = require('@librechat/data-schemas');
+const AgentLogger = require('~/server/services/AgentLogger');
 const {
   primeResources,
   getModelMaxTokens,
@@ -99,6 +101,8 @@ const initializeAgent = async ({
   });
 
   const provider = agent.provider;
+  AgentLogger.logAgentInit(agent.id, conversationId, agent.model);
+
   const {
     tools: structuredTools,
     toolContextMap,
@@ -111,7 +115,10 @@ const initializeAgent = async ({
     tools: agent.tools,
     model: agent.model,
     tool_resources,
+    conversationId,
   })) ?? {};
+
+  // Tool context loaded
 
   agent.endpoint = provider;
   const { getOptions, overrideProvider } = getProviderConfig({ provider, appConfig });
@@ -186,6 +193,19 @@ const initializeAgent = async ({
       text: agent.instructions,
       user: req.user,
     });
+  }
+
+  // Inject conversation ID into agent context
+  if (conversationId) {
+    const conversationContext = `\n\nID da Conversa: ${conversationId}\n\n`;
+
+    if (agent.instructions) {
+      agent.instructions += conversationContext;
+    } else {
+      agent.instructions = conversationContext;
+    }
+
+    AgentLogger.logContextInjection(conversationId, 'conversationId', conversationId);
   }
 
   if (typeof agent.artifacts === 'string' && agent.artifacts !== '') {

@@ -1,4 +1,5 @@
 const { logger } = require('@librechat/data-schemas');
+const AgentLogger = require('~/server/services/AgentLogger');
 const { createContentAggregator } = require('@librechat/agents');
 const { validateAgentModel, getCustomEndpointConfig } = require('@librechat/api');
 const {
@@ -47,7 +48,18 @@ function createToolLoader(signal) {
    * userMCPAuthMap?: Record<string, Record<string, string>>
    * } | undefined>}
    */
-  return async function loadTools({ req, res, agentId, tools, provider, model, tool_resources }) {
+  return async function loadTools({
+    req,
+    res,
+    agentId,
+    tools,
+    provider,
+    model,
+    tool_resources,
+    conversationId,
+  }) {
+    // Tool loader initialized
+
     const agent = { id: agentId, tools, provider, model };
     try {
       return await loadAgentTools({
@@ -56,6 +68,7 @@ function createToolLoader(signal) {
         agent,
         signal,
         tool_resources,
+        conversationId,
       });
     } catch (error) {
       logger.error('Error loading tools for agent ' + agentId, error);
@@ -63,7 +76,7 @@ function createToolLoader(signal) {
   };
 }
 
-const initializeClient = async ({ req, res, signal, endpointOption }) => {
+const initializeClient = async ({ req, res, signal, endpointOption, conversationId }) => {
   if (!endpointOption) {
     throw new Error('Endpoint option not provided');
   }
@@ -112,8 +125,6 @@ const initializeClient = async ({ req, res, signal, endpointOption }) => {
   const loadTools = createToolLoader(signal);
   /** @type {Array<MongoFile>} */
   const requestFiles = req.body.files ?? [];
-  /** @type {string} */
-  const conversationId = req.body.conversationId;
 
   const primaryConfig = await initializeAgent({
     req,

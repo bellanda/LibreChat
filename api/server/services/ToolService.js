@@ -1,5 +1,6 @@
 const { sleep } = require('@librechat/agents');
 const { logger } = require('@librechat/data-schemas');
+const AgentLogger = require('~/server/services/AgentLogger');
 const { tool: toolFn, DynamicStructuredTool } = require('@langchain/core/tools');
 const {
   getToolkitKey,
@@ -354,7 +355,15 @@ async function processRequiredActions(client, requiredActions) {
  * @param {string | undefined} [params.openAIApiKey] - The OpenAI API key.
  * @returns {Promise<{ tools?: StructuredTool[]; userMCPAuthMap?: Record<string, Record<string, string>> }>} The agent tools.
  */
-async function loadAgentTools({ req, res, agent, signal, tool_resources, openAIApiKey }) {
+async function loadAgentTools({
+  req,
+  res,
+  agent,
+  signal,
+  tool_resources,
+  openAIApiKey,
+  conversationId,
+}) {
   if (!agent.tools || agent.tools.length === 0) {
     return {};
   } else if (
@@ -441,6 +450,16 @@ async function loadAgentTools({ req, res, agent, signal, tool_resources, openAIA
     fileStrategy: appConfig.fileStrategy,
     imageOutputType: appConfig.imageOutputType,
   });
+
+  // Inject conversation ID into tool context if available
+  if (conversationId && toolContextMap) {
+    toolContextMap.conversation_id = `Conversation ID: ${conversationId}`;
+    AgentLogger.logContextInjection(conversationId, 'toolContext', 'injected');
+  } else {
+    logger.warn(
+      `[loadAgentTools] conversationId or toolContextMap not available - conversationId: ${conversationId}, toolContextMap: ${!!toolContextMap}`,
+    );
+  }
 
   const agentTools = [];
   for (let i = 0; i < loadedTools.length; i++) {

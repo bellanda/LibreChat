@@ -162,13 +162,7 @@ function checkWebSearchConfig(webSearchConfig) {
       if (varName) {
         // This is a proper environment variable reference
         const actualValue = process.env[varName];
-        if (actualValue) {
-          logger.debug(`Web search ${key}: Using environment variable ${varName} with value set`);
-        } else {
-          logger.debug(
-            `Web search ${key}: Using environment variable ${varName} (not set in environment, user provided value)`,
-          );
-        }
+        // Web search config loaded silently
       } else {
         // This is not an environment variable reference - warn user
         logger.warn(

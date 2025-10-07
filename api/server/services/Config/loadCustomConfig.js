@@ -109,16 +109,13 @@ https://www.librechat.ai/docs/configuration/stt_tts`);
     return null;
   } else {
     if (printConfig) {
-      logger.info('Custom config file loaded:');
-      logger.info(JSON.stringify(customConfig, null, 2));
-      logger.debug('Custom config:', customConfig);
+      logger.info('Custom config file loaded successfully');
     }
   }
 
   (customConfig.endpoints?.custom ?? [])
     .filter((endpoint) => endpoint.customParams)
     .forEach((endpoint) => parseCustomParams(endpoint.name, endpoint.customParams));
-
 
   if (result.data.modelSpecs) {
     customConfig.modelSpecs = result.data.modelSpecs;
