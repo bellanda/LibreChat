@@ -145,3 +145,6 @@ helm/**/.values.yaml
 /.tabnine/
 /.codeium
 *.local.md
+
+# Sandpack Bundler
+/codesandbox-client/
