@@ -1,11 +1,13 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import { CheckMark } from '@librechat/client';
 import copy from 'copy-to-clipboard';
-import rehypeKatex from 'rehype-katex';
+import { Clipboard } from 'lucide-react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
-import { Clipboard, CheckMark } from '@librechat/client';
-import { handleDoubleClick, langSubset } from '~/utils';
+import rehypeKatex from 'rehype-katex';
 import { useLocalize } from '~/hooks';
+import { handleDoubleClick, langSubset } from '~/utils';
+import { cleanHtmlForRendering } from '~/utils/cleanHtml';
 
 type TCodeProps = {
   inline: boolean;
@@ -79,7 +81,7 @@ export const CodeMarkdown = memo(
     }, [content, isSubmitting, userScrolled]);
 
     return (
-      <div ref={scrollRef} className="max-h-full overflow-y-auto">
+      <div ref={scrollRef} className="overflow-y-auto max-h-full">
         <ReactMarkdown
           /* @ts-ignore */
           rehypePlugins={rehypePlugins}
@@ -96,12 +98,22 @@ export const CodeMarkdown = memo(
   },
 );
 
-export const CopyCodeButton: React.FC<{ content: string }> = ({ content }) => {
+export const CopyCodeButton: React.FC<{
+  content?: string;
+  artifact?: { content?: string; type?: string; language?: string };
+}> = ({ content, artifact }) => {
   const localize = useLocalize();
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopy = () => {
-    copy(content, { format: 'text/plain' });
+    let textToCopy = content ?? artifact?.content ?? '';
+
+    // Clean HTML files to remove problematic integrity/crossorigin attributes
+    if (artifact?.type === 'text/html' || artifact?.language === 'html') {
+      textToCopy = cleanHtmlForRendering(textToCopy);
+    }
+
+    copy(textToCopy, { format: 'text/plain' });
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 3000);
   };

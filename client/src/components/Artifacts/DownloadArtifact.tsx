@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Download } from 'lucide-react';
-import type { Artifact } from '~/common';
 import { CheckMark } from '@librechat/client';
+import { Download } from 'lucide-react';
+import { useState } from 'react';
+import type { Artifact } from '~/common';
+import { useLocalize } from '~/hooks';
 import useArtifactProps from '~/hooks/Artifacts/useArtifactProps';
 import { useEditorContext } from '~/Providers';
-import { useLocalize } from '~/hooks';
+import { cleanHtmlForRendering } from '~/utils/cleanHtml';
 
 const DownloadArtifact = ({
   artifact,
@@ -20,10 +21,16 @@ const DownloadArtifact = ({
 
   const handleDownload = () => {
     try {
-      const content = currentCode ?? artifact.content ?? '';
+      let content = currentCode ?? artifact.content ?? '';
       if (!content) {
         return;
       }
+
+      // Clean HTML files to remove problematic integrity/crossorigin attributes
+      if (fileName.endsWith('.html')) {
+        content = cleanHtmlForRendering(content);
+      }
+
       const blob = new Blob([content], { type: 'text/plain' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -46,7 +53,7 @@ const DownloadArtifact = ({
       onClick={handleDownload}
       aria-label={localize('com_ui_download_artifact')}
     >
-      {isDownloaded ? <CheckMark className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+      {isDownloaded ? <CheckMark className="w-4 h-4" /> : <Download className="w-4 h-4" />}
     </button>
   );
 };

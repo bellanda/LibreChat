@@ -1,16 +1,16 @@
-import { useRef, useState, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
+import type { CodeEditorRef, SandpackPreviewRef } from '@codesandbox/sandpack-react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, X } from 'lucide-react';
-import type { SandpackPreviewRef, CodeEditorRef } from '@codesandbox/sandpack-react';
+import { useEffect, useRef, useState } from 'react';
+import { useSetRecoilState } from 'recoil';
+import { useLocalize } from '~/hooks';
 import useArtifacts from '~/hooks/Artifacts/useArtifacts';
-import DownloadArtifact from './DownloadArtifact';
 import { useEditorContext } from '~/Providers';
+import store from '~/store';
+import { cn } from '~/utils';
 import ArtifactTabs from './ArtifactTabs';
 import { CopyCodeButton } from './Code';
-import { useLocalize } from '~/hooks';
-import { cn } from '~/utils';
-import store from '~/store';
+import DownloadArtifact from './DownloadArtifact';
 
 export default function Artifacts() {
   const localize = useLocalize();
@@ -56,28 +56,28 @@ export default function Artifacts() {
   return (
     <Tabs.Root value={activeTab} onValueChange={setActiveTab} asChild>
       {/* Main Parent */}
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="flex justify-center items-center w-full h-full">
         {/* Main Container */}
         <div
           className={cn(
-            `flex h-full w-full flex-col overflow-hidden border border-border-medium bg-surface-primary text-xl text-text-primary shadow-xl transition-all duration-500 ease-in-out`,
-            isVisible ? 'scale-100 opacity-100 blur-0' : 'scale-105 opacity-0 blur-sm',
+            `flex overflow-hidden flex-col w-full h-full text-xl border shadow-xl transition-all duration-500 ease-in-out border-border-medium bg-surface-primary text-text-primary`,
+            isVisible ? 'opacity-100 scale-100 blur-0' : 'opacity-0 blur-sm scale-105',
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border-medium bg-surface-primary-alt p-2">
+          <div className="flex justify-between items-center p-2 border-b border-border-medium bg-surface-primary-alt">
             <div className="flex items-center">
               <button className="mr-2 text-text-secondary" onClick={closeArtifacts}>
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="w-4 h-4" />
               </button>
-              <h3 className="truncate text-sm text-text-primary">{currentArtifact.title}</h3>
+              <h3 className="text-sm truncate text-text-primary">{currentArtifact.title}</h3>
             </div>
             <div className="flex items-center">
               {/* Refresh button */}
               {activeTab === 'preview' && (
                 <button
                   className={cn(
-                    'mr-2 text-text-secondary transition-transform duration-500 ease-in-out',
+                    'mr-2 transition-transform duration-500 ease-in-out text-text-secondary',
                     isRefreshing ? 'rotate-180' : '',
                   )}
                   onClick={handleRefresh}
@@ -94,7 +94,7 @@ export default function Artifacts() {
                 <RefreshCw size={16} className="mr-2 animate-spin text-text-secondary" />
               )}
               {/* Tabs */}
-              <Tabs.List className="mr-2 inline-flex h-7 rounded-full border border-border-medium bg-surface-tertiary">
+              <Tabs.List className="inline-flex mr-2 h-7 rounded-full border border-border-medium bg-surface-tertiary">
                 <Tabs.Trigger
                   value="preview"
                   disabled={isMutating}
@@ -110,7 +110,7 @@ export default function Artifacts() {
                 </Tabs.Trigger>
               </Tabs.List>
               <button className="text-text-secondary" onClick={closeArtifacts}>
-                <X className="h-4 w-4" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -122,20 +122,20 @@ export default function Artifacts() {
             previewRef={previewRef as React.MutableRefObject<SandpackPreviewRef>}
           />
           {/* Footer */}
-          <div className="flex items-center justify-between border-t border-border-medium bg-surface-primary-alt p-2 text-sm text-text-secondary">
+          <div className="flex justify-between items-center p-2 text-sm border-t border-border-medium bg-surface-primary-alt text-text-secondary">
             <div className="flex items-center">
               <button onClick={() => cycleArtifact('prev')} className="mr-2 text-text-secondary">
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
               <span className="text-xs">{`${currentIndex + 1} / ${
                 orderedArtifactIds.length
               }`}</span>
               <button onClick={() => cycleArtifact('next')} className="ml-2 text-text-secondary">
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex items-center gap-2">
-              <CopyCodeButton content={currentArtifact.content ?? ''} />
+            <div className="flex gap-2 items-center">
+              <CopyCodeButton artifact={currentArtifact} />
               {/* Download Button */}
               <DownloadArtifact artifact={currentArtifact} />
               {/* Publish button */}

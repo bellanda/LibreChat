@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef } from 'react';
+import { cleanHtmlForRendering } from '~/utils/cleanHtml';
 
 /**
  * Simple static HTML preview using a sandboxed iframe
@@ -23,10 +24,8 @@ export const StaticHtmlPreview = memo(function StaticHtmlPreview({
     const fileContent = files[fileKey];
     let htmlContent = typeof fileContent === 'string' ? fileContent : fileContent?.code || '';
 
-    // Remove integrity attributes from script/link tags to prevent SRI validation errors
-    // LLMs sometimes generate incorrect/outdated integrity hashes that block external resources
-    htmlContent = htmlContent.replace(/\s+integrity=["'][^"']*["']/gi, '');
-    htmlContent = htmlContent.replace(/\s+crossorigin=["'][^"']*["']/gi, '');
+    // Clean HTML to prevent SRI validation errors and CORS issues
+    htmlContent = cleanHtmlForRendering(htmlContent);
 
     // Create a blob URL for the HTML content
     const blob = new Blob([htmlContent], { type: 'text/html' });
