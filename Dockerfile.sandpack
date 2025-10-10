@@ -8,43 +8,43 @@ FROM node:16-bullseye as builder
 
 WORKDIR /build
 
-# Instala dependências do sistema necessárias para o build
+# Install system dependencies needed for build
 RUN apt-get update && apt-get install -y \
     zstd \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia todos os arquivos necessários para o build
+# Copy all files needed for build
 COPY package.json yarn.lock lerna.json ./
 COPY packages ./packages
 COPY standalone-packages ./standalone-packages
 
-# Habilita Corepack (para yarn moderno)
+# Enable Corepack (for modern yarn)
 RUN corepack enable
 
-# Instala dependências (sem frozen-lockfile para evitar conflitos)
+# Install dependencies (without frozen-lockfile to avoid conflicts)
 RUN yarn install
 
-# Build das dependências internas (lerna packages)
+# Build internal dependencies (lerna packages)
 RUN yarn build:deps
 
-# Cria arquivos vazios necessários para o build
+# Create empty files needed for build
 RUN touch .env && touch env.sh
 
-# Build do Sandpack bundler (gera a pasta www/)
+# Build Sandpack bundler (generates www/ folder)
 RUN yarn build:sandpack
 
-# Verifica se a pasta www foi gerada
-RUN ls -la www/ && echo "✅ Sandpack bundler gerado com sucesso!"
+# Verify if www folder was generated
+RUN ls -la www/ && echo "Sandpack bundler built successfully!"
 
 # ============================================
-# Stage 2: Servidor Nginx
+# Stage 2: Nginx Server
 # ============================================
 FROM nginx:1.25.3-alpine
 
-# Copia os arquivos buildados do stage anterior
+# Copy built files from previous stage
 COPY --from=builder /build/www /var/www/codesandbox
 
-# Configuração do Nginx
+# Nginx configuration
 RUN cat > /etc/nginx/conf.d/default.conf <<'EOF'
 server {
     listen 80;
