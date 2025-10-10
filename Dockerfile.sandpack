@@ -8,43 +8,43 @@ FROM node:16-bullseye as builder
 
 WORKDIR /build
 
-# Install system dependencies needed for build
+# Instala dependências do sistema necessárias para o build
 RUN apt-get update && apt-get install -y \
     zstd \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy all files needed for build
+# Copia todos os arquivos necessários para o build
 COPY package.json yarn.lock lerna.json ./
 COPY packages ./packages
 COPY standalone-packages ./standalone-packages
 
-# Enable Corepack (for modern yarn)
+# Habilita Corepack (para yarn moderno)
 RUN corepack enable
 
-# Install dependencies (without frozen-lockfile to avoid conflicts)
+# Instala dependências (sem frozen-lockfile para evitar conflitos)
 RUN yarn install
 
-# Build internal dependencies (lerna packages)
+# Build das dependências internas (lerna packages)
 RUN yarn build:deps
 
-# Create empty files needed for build
+# Cria arquivos vazios necessários para o build
 RUN touch .env && touch env.sh
 
-# Build Sandpack bundler (generates www/ folder)
+# Build do Sandpack bundler (gera a pasta www/)
 RUN yarn build:sandpack
 
-# Verify if www folder was generated
-RUN ls -la www/ && echo "Sandpack bundler built successfully!"
+# Verifica se a pasta www foi gerada
+RUN ls -la www/ && echo "✅ Sandpack bundler gerado com sucesso!"
 
 # ============================================
-# Stage 2: Nginx Server
+# Stage 2: Servidor Nginx
 # ============================================
 FROM nginx:1.25.3-alpine
 
-# Copy built files from previous stage
+# Copia os arquivos buildados do stage anterior
 COPY --from=builder /build/www /var/www/codesandbox
 
-# Nginx configuration
+# Configuração do Nginx
 RUN cat > /etc/nginx/conf.d/default.conf <<'EOF'
 server {
     listen 80;
@@ -53,35 +53,28 @@ server {
     root /var/www/codesandbox;
     index index.html;
 
-    # CORS - Permitir acesso do domínio principal LibreChat
-    # Nota: Em produção, o nginx externo controlará CORS com mais precisão
-    add_header Access-Control-Allow-Origin "*" always;
-    add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
-    add_header Access-Control-Allow-Headers "Content-Type, Authorization, Range" always;
+    # CORS é gerenciado pelo nginx reverse proxy externo
+    # Não adicionar headers CORS aqui para evitar duplicação
 
     # Cache para assets estáticos (Web Workers, Transpilers)
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
-        add_header Access-Control-Allow-Origin "*" always;
     }
 
     # Service Worker (desabilitado em builds SANDPACK=true)
     location /service-worker.js {
         add_header Cache-Control "no-cache";
-        add_header Access-Control-Allow-Origin "*" always;
     }
 
     # Web Workers - Importante para transpiladores
     location ~* \.worker\.js$ {
         add_header Cache-Control "no-cache";
-        add_header Access-Control-Allow-Origin "*" always;
     }
 
     # Fallback para SPA
     location / {
         try_files $uri $uri/ /index.html;
-        add_header Access-Control-Allow-Origin "*" always;
     }
 
     # Health check
