@@ -21,7 +21,12 @@ export const StaticHtmlPreview = memo(function StaticHtmlPreview({
 
     // Get the HTML content from the artifact files
     const fileContent = files[fileKey];
-    const htmlContent = typeof fileContent === 'string' ? fileContent : fileContent?.code || '';
+    let htmlContent = typeof fileContent === 'string' ? fileContent : fileContent?.code || '';
+
+    // Remove integrity attributes from script/link tags to prevent SRI validation errors
+    // LLMs sometimes generate incorrect/outdated integrity hashes that block external resources
+    htmlContent = htmlContent.replace(/\s+integrity=["'][^"']*["']/gi, '');
+    htmlContent = htmlContent.replace(/\s+crossorigin=["'][^"']*["']/gi, '');
 
     // Create a blob URL for the HTML content
     const blob = new Blob([htmlContent], { type: 'text/html' });
