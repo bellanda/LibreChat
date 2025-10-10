@@ -43,7 +43,7 @@ export const StaticHtmlPreview = memo(function StaticHtmlPreview({
   return (
     <iframe
       ref={iframeRef}
-      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-presentation"
+      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-storage-access-by-user-activation allow-downloads allow-top-navigation-by-user-activation"
       style={{
         width: '100%',
         height: '100%',
