@@ -7,7 +7,7 @@ COPY . .
 
 RUN uv sync
 
-# Instalar dependências do sistema para o markdown-html-pdf (wkhtmltopdf, fontes, etc)
+# Install system dependencies for markdown-html-pdf (wkhtmltopdf, fonts, etc)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     wkhtmltopdf \
@@ -18,7 +18,7 @@ RUN apt-get update && \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Playwright e seus navegadores durante o build
+# Install Playwright and its browsers during build
 RUN uv run playwright install chromium
 RUN uv run playwright install-deps chromium
 RUN uv run install-emoji-fonts
@@ -27,5 +27,5 @@ EXPOSE 15784
 
 COPY app/ app/
 
-# Comando direto para iniciar a aplicação
+# Direct command to start the application
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "15784"]
