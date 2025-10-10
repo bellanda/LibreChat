@@ -1,13 +1,14 @@
-import React, { memo, useMemo } from 'react';
+import type { PreviewProps, SandpackPreviewRef } from '@codesandbox/sandpack-react/unstyled';
 import {
   SandpackPreview,
   SandpackProvider,
   SandpackProviderProps,
 } from '@codesandbox/sandpack-react/unstyled';
-import type { SandpackPreviewRef, PreviewProps } from '@codesandbox/sandpack-react/unstyled';
 import type { TStartupConfig } from 'librechat-data-provider';
+import React, { memo, useMemo } from 'react';
 import type { ArtifactFiles } from '~/common';
 import { sharedFiles, sharedOptions } from '~/utils/artifacts';
+import { StaticHtmlPreview } from './StaticHtmlPreview';
 
 export const ArtifactPreview = memo(function ({
   files,
@@ -69,6 +70,12 @@ export const ArtifactPreview = memo(function ({
     return null;
   }
 
+  // Use simple iframe for static HTML (no external bundler needed)
+  if (template === 'static') {
+    return <StaticHtmlPreview files={artifactFiles} fileKey={fileKey} />;
+  }
+
+  // Use Sandpack for React/TypeScript and other dynamic content
   return (
     <SandpackProvider
       files={{
