@@ -1,8 +1,6 @@
 # Dockerfile Multistage para Sandpack Bundler
 # Faz build completo e serve automaticamente - Sem necessidade de build local
 
-# Clone from https://github.com/codesandbox/codesandbox-client
-
 # ============================================
 # Stage 1: Build do Sandpack
 # ============================================
@@ -55,20 +53,27 @@ server {
     root /var/www/codesandbox;
     index index.html;
 
-    # CORS para permitir acesso do LibreChat
+    # CORS - Permitir acesso do domínio principal LibreChat
+    # Nota: Em produção, o nginx externo controlará CORS com mais precisão
     add_header Access-Control-Allow-Origin "*" always;
     add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
     add_header Access-Control-Allow-Headers "Content-Type, Authorization, Range" always;
 
-    # Cache para assets estáticos
+    # Cache para assets estáticos (Web Workers, Transpilers)
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
         add_header Access-Control-Allow-Origin "*" always;
     }
 
-    # Service Worker
+    # Service Worker (desabilitado em builds SANDPACK=true)
     location /service-worker.js {
+        add_header Cache-Control "no-cache";
+        add_header Access-Control-Allow-Origin "*" always;
+    }
+
+    # Web Workers - Importante para transpiladores
+    location ~* \.worker\.js$ {
         add_header Cache-Control "no-cache";
         add_header Access-Control-Allow-Origin "*" always;
     }
@@ -95,7 +100,6 @@ EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
-  CMD wget --quiet --tries=1 --spider http://localhost/health || exit 1
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1/health || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
-
