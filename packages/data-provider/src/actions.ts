@@ -1,12 +1,12 @@
-import { z } from 'zod';
 import _axios from 'axios';
-import { URL } from 'url';
 import crypto from 'crypto';
 import { load } from 'js-yaml';
-import type { ActionMetadata, ActionMetadataRuntime } from './types/agents';
-import type { FunctionTool, Schema, Reference } from './types/assistants';
-import { AuthTypeEnum, AuthorizationTypeEnum } from './types/agents';
 import type { OpenAPIV3 } from 'openapi-types';
+import { URL } from 'url';
+import { z } from 'zod';
+import type { ActionMetadata, ActionMetadataRuntime } from './types/agents';
+import { AuthTypeEnum, AuthorizationTypeEnum } from './types/agents';
+import type { FunctionTool, Reference, Schema } from './types/assistants';
 import { Tools } from './types/assistants';
 
 export type ParametersSchema = {
@@ -239,12 +239,8 @@ class RequestExecutor {
       oauth_client_secret != null &&
       oauth_client_secret &&
       type === AuthTypeEnum.OAuth &&
-      authorization_url != null &&
-      authorization_url &&
       client_url != null &&
       client_url &&
-      scope != null &&
-      scope &&
       token_exchange_method
     );
 
@@ -279,6 +275,14 @@ class RequestExecutor {
       // If valid, use it
       this.authToken = oauth_access_token;
       this.authHeaders['Authorization'] = `Bearer ${this.authToken}`;
+
+      // Debug log for OAuth token usage
+      console.log('OAuth token set for request:', {
+        token_preview: this.authToken ? `${this.authToken.substring(0, 20)}...` : 'No token',
+        header: this.authHeaders['Authorization']
+          ? `${this.authHeaders['Authorization'].substring(0, 30)}...`
+          : 'No header',
+      });
     }
     return this;
   }
@@ -291,6 +295,30 @@ class RequestExecutor {
     };
     const method = this.config.method.toLowerCase();
     const axios = _axios.create();
+
+    // Add request interceptor to log the actual request being sent
+    axios.interceptors.request.use(
+      (config) => {
+        console.log('Axios request interceptor - Actual request being sent:', {
+          method: config.method?.toUpperCase(),
+          url: config.url,
+          headers: {
+            ...config.headers,
+            // Mask sensitive headers for security
+            Authorization: config.headers?.Authorization
+              ? `${String(config.headers.Authorization).substring(0, 30)}...`
+              : 'No Authorization header',
+          },
+          data: config.data,
+          params: config.params,
+        });
+        return config;
+      },
+      (error) => {
+        console.error('Axios request interceptor error:', error);
+        return Promise.reject(error);
+      },
+    );
 
     // Initialize separate containers for query and body parameters.
     const queryParams: Record<string, unknown> = {};
@@ -315,6 +343,23 @@ class RequestExecutor {
       Object.assign(queryParams, this.params);
       Object.assign(bodyParams, this.params);
     }
+
+    // Debug log to show the actual request being made
+    console.log('Making API request:', {
+      method: method.toUpperCase(),
+      url: url.toString(),
+      headers: {
+        ...headers,
+        // Mask sensitive headers for security
+        Authorization: headers.Authorization
+          ? `${headers.Authorization.substring(0, 30)}...`
+          : 'No Authorization header',
+      },
+      hasAuthToken: !!this.authToken,
+      authTokenPreview: this.authToken ? `${this.authToken.substring(0, 20)}...` : 'No auth token',
+      queryParams,
+      bodyParams,
+    });
 
     if (method === 'get') {
       return axios.get(url, { headers, params: queryParams });

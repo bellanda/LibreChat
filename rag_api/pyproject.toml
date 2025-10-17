@@ -58,14 +58,15 @@ dependencies = [
     "pydantic>=2.10.0",
     "markdown-html-pdf",
     # ---------- Dependências extras para processamento de arquivos ----------
-    "msoffcrypto-tool",  # Para arquivos Excel protegidos por senha
-    "python-docx",       # Para arquivos DOCX (alternativa ao docx2txt)
-    "beautifulsoup4",    # Para parsing HTML
-    "lxml",              # Parser XML/HTML
-    "pillow",            # Processamento de imagens
-    "pdfplumber",        # Extração avançada de PDF
-    "odfpy",             # Para arquivos OpenDocument (ODT, ODS, ODP)
+    "msoffcrypto-tool", # Para arquivos Excel protegidos por senha
+    "python-docx", # Para arquivos DOCX (alternativa ao docx2txt)
+    "beautifulsoup4", # Para parsing HTML
+    "lxml", # Parser XML/HTML
+    "pillow", # Processamento de imagens
+    "pdfplumber", # Extração avançada de PDF
+    "odfpy", # Para arquivos OpenDocument (ODT, ODS, ODP)
     "tabulate>=0.9.0",
     "tabula-py>=2.10.0",
-    "tiktoken>=0.5.0",   # Para contagem precisa de tokens
+    "tiktoken>=0.5.0", # Para contagem precisa de tokens
+    "ipykernel>=6.30.1",
 ]

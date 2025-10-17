@@ -31,6 +31,48 @@ const toolNameRegex = /^[a-zA-Z0-9_-]+$/;
 const replaceSeparatorRegex = new RegExp(actionDomainSeparator, 'g');
 
 /**
+ * Gets access token using OAuth2 Client Credentials Flow
+ * @param {object} params - The parameters for the function.
+ * @param {string} params.client_id - OAuth client ID
+ * @param {string} params.client_secret - OAuth client secret
+ * @param {string} params.token_url - OAuth token endpoint URL
+ * @param {string} params.scope - OAuth scope (optional)
+ * @returns {Promise<object>} Token response with access_token and expires_in
+ */
+async function getClientCredentialsToken({ client_id, client_secret, token_url, scope }) {
+  const axios = require('axios');
+
+  const params = new URLSearchParams({
+    grant_type: 'client_credentials',
+  });
+
+  if (scope) {
+    params.append('scope', scope);
+  }
+
+  const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    Authorization: `Basic ${Buffer.from(`${client_id}:${client_secret}`).toString('base64')}`,
+    Accept: 'application/json',
+  };
+
+  try {
+    logger.debug('Requesting client credentials token', { token_url, scope });
+    const response = await axios.post(token_url, params.toString(), { headers });
+    logger.debug('Client credentials token received successfully');
+    return response.data;
+  } catch (error) {
+    const message = 'Error getting client credentials token';
+    throw new Error(
+      logAxiosError({
+        message,
+        error,
+      }),
+    );
+  }
+}
+
+/**
  * Validates tool name against regex pattern and updates if necessary.
  * @param {object} params - The parameters for the function.
  * @param {object} params.req - Express Request.
@@ -155,149 +197,327 @@ async function createActionTool({
 
       if (metadata.auth && metadata.auth.type !== AuthTypeEnum.None) {
         try {
-          if (metadata.auth.type === AuthTypeEnum.OAuth && metadata.auth.authorization_url) {
-            const action_id = action.action_id;
-            const identifier = `${userId}:${action.action_id}`;
-            const requestLogin = async () => {
-              const { args: _args, stepId, ...toolCall } = config.toolCall ?? {};
-              if (!stepId) {
-                throw new Error('Tool call is missing stepId');
-              }
-              const statePayload = {
-                nonce: nanoid(),
-                user: userId,
-                action_id,
-              };
+          if (metadata.auth.type === AuthTypeEnum.OAuth) {
+            // Check if this is Client Credentials Flow (no authorization_url) or Authorization Code Flow
+            const isClientCredentialsFlow =
+              !metadata.auth.authorization_url &&
+              metadata.auth.client_url &&
+              metadata.oauth_client_id &&
+              metadata.oauth_client_secret;
 
-              const stateToken = jwt.sign(statePayload, JWT_SECRET, { expiresIn: '10m' });
-              try {
-                const redirectUri = `${process.env.DOMAIN_CLIENT}/api/actions/${action_id}/oauth/callback`;
-                const params = new URLSearchParams({
-                  client_id: metadata.oauth_client_id,
-                  scope: metadata.auth.scope,
-                  redirect_uri: redirectUri,
-                  access_type: 'offline',
-                  response_type: 'code',
-                  state: stateToken,
+            if (isClientCredentialsFlow) {
+              // Client Credentials Flow - check for existing token first, then get new one if needed
+              const action_id = action.action_id;
+              const identifier = `${userId}:${action.action_id}`;
+
+              logger.debug('Using OAuth2 Client Credentials Flow', { action_id: action.action_id });
+
+              // Check for existing tokens
+              const tokenPromises = [];
+              tokenPromises.push(findToken({ userId, type: 'oauth', identifier }));
+              tokenPromises.push(
+                findToken({
+                  userId,
+                  type: 'oauth_refresh',
+                  identifier: `${identifier}:refresh`,
+                }),
+              );
+              const [tokenData, refreshTokenData] = await Promise.all(tokenPromises);
+
+              if (tokenData) {
+                // Valid token exists, add it to metadata for setAuth
+                metadata.oauth_access_token = await decryptV2(tokenData.token);
+                if (refreshTokenData) {
+                  metadata.oauth_refresh_token = await decryptV2(refreshTokenData.token);
+                }
+                metadata.oauth_token_expires_at = tokenData.expiresAt.toISOString();
+                logger.debug('Using existing client credentials token', {
+                  action_id,
+                  expires_at: tokenData.expiresAt,
                 });
+              } else if (!refreshTokenData) {
+                // No tokens exist, get new token
+                logger.debug('No existing tokens, getting new client credentials token', {
+                  action_id,
+                });
+                try {
+                  const tokenResponse = await getClientCredentialsToken({
+                    client_id: metadata.oauth_client_id,
+                    client_secret: metadata.oauth_client_secret,
+                    token_url: metadata.auth.client_url,
+                    scope: metadata.auth.scope,
+                  });
 
-                const authURL = `${metadata.auth.authorization_url}?${params.toString()}`;
-                /** @type {{ id: string; delta: AgentToolCallDelta }} */
-                const data = {
-                  id: stepId,
-                  delta: {
-                    type: StepTypes.TOOL_CALLS,
-                    tool_calls: [{ ...toolCall, args: '' }],
-                    auth: authURL,
-                    expires_at: Date.now() + Time.TWO_MINUTES,
-                  },
-                };
-                const flowsCache = getLogStores(CacheKeys.FLOWS);
-                const flowManager = getFlowStateManager(flowsCache);
-                await flowManager.createFlowWithHandler(
-                  `${identifier}:oauth_login:${config.metadata.thread_id}:${config.metadata.run_id}`,
-                  'oauth_login',
-                  async () => {
-                    sendEvent(res, { event: GraphEvents.ON_RUN_STEP_DELTA, data });
-                    logger.debug('Sent OAuth login request to client', { action_id, identifier });
-                    return true;
-                  },
-                  config?.signal,
-                );
-                logger.debug('Waiting for OAuth Authorization response', { action_id, identifier });
-                const result = await flowManager.createFlow(
-                  identifier,
-                  'oauth',
-                  {
-                    state: stateToken,
-                    userId: userId,
-                    client_url: metadata.auth.client_url,
-                    redirect_uri: `${process.env.DOMAIN_SERVER}/api/actions/${action_id}/oauth/callback`,
-                    token_exchange_method: metadata.auth.token_exchange_method,
-                    /** Encrypted values */
-                    encrypted_oauth_client_id: encrypted.oauth_client_id,
-                    encrypted_oauth_client_secret: encrypted.oauth_client_secret,
-                  },
-                  config?.signal,
-                );
-                logger.debug('Received OAuth Authorization response', { action_id, identifier });
-                data.delta.auth = undefined;
-                data.delta.expires_at = undefined;
-                sendEvent(res, { event: GraphEvents.ON_RUN_STEP_DELTA, data });
-                await sleep(3000);
-                metadata.oauth_access_token = result.access_token;
-                metadata.oauth_refresh_token = result.refresh_token;
-                const expiresAt = new Date(Date.now() + result.expires_in * 1000);
-                metadata.oauth_token_expires_at = expiresAt.toISOString();
-              } catch (error) {
-                const errorMessage = 'Failed to authenticate OAuth tool';
-                logger.error(errorMessage, error);
-                throw new Error(errorMessage);
-              }
-            };
+                  metadata.oauth_access_token = tokenResponse.access_token;
+                  metadata.oauth_token_expires_at = new Date(
+                    Date.now() + tokenResponse.expires_in * 1000,
+                  ).toISOString();
 
-            const tokenPromises = [];
-            tokenPromises.push(findToken({ userId, type: 'oauth', identifier }));
-            tokenPromises.push(
-              findToken({
-                userId,
-                type: 'oauth_refresh',
-                identifier: `${identifier}:refresh`,
-              }),
-            );
-            const [tokenData, refreshTokenData] = await Promise.all(tokenPromises);
+                  // Store token for future use
+                  logger.debug('Creating token with expiration', {
+                    action_id,
+                    expires_in: tokenResponse.expires_in,
+                    expires_in_seconds: tokenResponse.expires_in,
+                  });
 
-            if (tokenData) {
-              // Valid token exists, add it to metadata for setAuth
-              metadata.oauth_access_token = await decryptV2(tokenData.token);
-              if (refreshTokenData) {
-                metadata.oauth_refresh_token = await decryptV2(refreshTokenData.token);
-              }
-              metadata.oauth_token_expires_at = tokenData.expiresAt.toISOString();
-            } else if (!refreshTokenData) {
-              // No tokens exist, need to authenticate
-              await requestLogin();
-            } else if (refreshTokenData) {
-              // Refresh token is still valid, use it to get new access token
-              try {
-                const refresh_token = await decryptV2(refreshTokenData.token);
-                const refreshTokens = async () =>
-                  await refreshAccessToken(
-                    {
+                  await createToken({
+                    userId,
+                    type: 'oauth',
+                    identifier,
+                    token: await encryptV2(tokenResponse.access_token),
+                    expiresIn: tokenResponse.expires_in, // Pass expires_in in seconds, not expiresAt
+                  });
+
+                  logger.debug('Client credentials token obtained and stored successfully', {
+                    action_id: action.action_id,
+                    expires_in: tokenResponse.expires_in,
+                    token_preview: tokenResponse.access_token
+                      ? `${tokenResponse.access_token.substring(0, 20)}...`
+                      : 'No token',
+                  });
+                } catch (error) {
+                  logger.error('Failed to get client credentials token:', error);
+                  throw new Error(`Client credentials authentication failed: ${error.message}`);
+                }
+              } else if (refreshTokenData) {
+                // Refresh token exists, use it to get new access token
+                logger.debug('Using refresh token to get new access token', { action_id });
+                try {
+                  const refresh_token = await decryptV2(refreshTokenData.token);
+                  const refreshTokens = async () =>
+                    await refreshAccessToken(
+                      {
+                        userId,
+                        identifier,
+                        refresh_token,
+                        client_url: metadata.auth.client_url,
+                        encrypted_oauth_client_id: encrypted.oauth_client_id,
+                        token_exchange_method: metadata.auth.token_exchange_method,
+                        encrypted_oauth_client_secret: encrypted.oauth_client_secret,
+                      },
+                      {
+                        findToken,
+                        updateToken,
+                        createToken,
+                      },
+                    );
+                  const flowsCache = getLogStores(CacheKeys.FLOWS);
+                  const flowManager = getFlowStateManager(flowsCache);
+                  const refreshData = await flowManager.createFlowWithHandler(
+                    `${identifier}:refresh`,
+                    'oauth_refresh',
+                    refreshTokens,
+                    config?.signal,
+                  );
+                  metadata.oauth_access_token = refreshData.access_token;
+                  if (refreshData.refresh_token) {
+                    metadata.oauth_refresh_token = refreshData.refresh_token;
+                  }
+                  const expiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
+                  metadata.oauth_token_expires_at = expiresAt.toISOString();
+
+                  logger.debug('Client credentials token refreshed successfully', {
+                    action_id,
+                    expires_in: refreshData.expires_in,
+                  });
+                } catch (error) {
+                  logger.error(
+                    'Failed to refresh client credentials token, getting new one:',
+                    error,
+                  );
+                  // Fallback to getting new token
+                  try {
+                    const tokenResponse = await getClientCredentialsToken({
+                      client_id: metadata.oauth_client_id,
+                      client_secret: metadata.oauth_client_secret,
+                      token_url: metadata.auth.client_url,
+                      scope: metadata.auth.scope,
+                    });
+
+                    metadata.oauth_access_token = tokenResponse.access_token;
+                    metadata.oauth_token_expires_at = new Date(
+                      Date.now() + tokenResponse.expires_in * 1000,
+                    ).toISOString();
+
+                    // Store new token
+                    logger.debug('Creating fallback token with expiration', {
+                      action_id,
+                      expires_in: tokenResponse.expires_in,
+                      expires_in_seconds: tokenResponse.expires_in,
+                    });
+
+                    await createToken({
                       userId,
+                      type: 'oauth',
                       identifier,
-                      refresh_token,
+                      token: await encryptV2(tokenResponse.access_token),
+                      expiresIn: tokenResponse.expires_in, // Pass expires_in in seconds, not expiresAt
+                    });
+
+                    logger.debug('New client credentials token obtained after refresh failure', {
+                      action_id,
+                      expires_in: tokenResponse.expires_in,
+                    });
+                  } catch (newTokenError) {
+                    logger.error('Failed to get new client credentials token:', newTokenError);
+                    throw new Error(
+                      `Client credentials authentication failed: ${newTokenError.message}`,
+                    );
+                  }
+                }
+              }
+            } else if (metadata.auth.authorization_url) {
+              const action_id = action.action_id;
+              const identifier = `${userId}:${action.action_id}`;
+              const requestLogin = async () => {
+                const { args: _args, stepId, ...toolCall } = config.toolCall ?? {};
+                if (!stepId) {
+                  throw new Error('Tool call is missing stepId');
+                }
+                const statePayload = {
+                  nonce: nanoid(),
+                  user: userId,
+                  action_id,
+                };
+
+                const stateToken = jwt.sign(statePayload, JWT_SECRET, { expiresIn: '10m' });
+                try {
+                  const redirectUri = `${process.env.DOMAIN_CLIENT}/api/actions/${action_id}/oauth/callback`;
+                  const params = new URLSearchParams({
+                    client_id: metadata.oauth_client_id,
+                    scope: metadata.auth.scope,
+                    redirect_uri: redirectUri,
+                    access_type: 'offline',
+                    response_type: 'code',
+                    state: stateToken,
+                  });
+
+                  const authURL = `${metadata.auth.authorization_url}?${params.toString()}`;
+                  /** @type {{ id: string; delta: AgentToolCallDelta }} */
+                  const data = {
+                    id: stepId,
+                    delta: {
+                      type: StepTypes.TOOL_CALLS,
+                      tool_calls: [{ ...toolCall, args: '' }],
+                      auth: authURL,
+                      expires_at: Date.now() + Time.TWO_MINUTES,
+                    },
+                  };
+                  const flowsCache = getLogStores(CacheKeys.FLOWS);
+                  const flowManager = getFlowStateManager(flowsCache);
+                  await flowManager.createFlowWithHandler(
+                    `${identifier}:oauth_login:${config.metadata.thread_id}:${config.metadata.run_id}`,
+                    'oauth_login',
+                    async () => {
+                      sendEvent(res, { event: GraphEvents.ON_RUN_STEP_DELTA, data });
+                      logger.debug('Sent OAuth login request to client', { action_id, identifier });
+                      return true;
+                    },
+                    config?.signal,
+                  );
+                  logger.debug('Waiting for OAuth Authorization response', {
+                    action_id,
+                    identifier,
+                  });
+                  const result = await flowManager.createFlow(
+                    identifier,
+                    'oauth',
+                    {
+                      state: stateToken,
+                      userId: userId,
                       client_url: metadata.auth.client_url,
-                      encrypted_oauth_client_id: encrypted.oauth_client_id,
+                      redirect_uri: `${process.env.DOMAIN_SERVER}/api/actions/${action_id}/oauth/callback`,
                       token_exchange_method: metadata.auth.token_exchange_method,
+                      /** Encrypted values */
+                      encrypted_oauth_client_id: encrypted.oauth_client_id,
                       encrypted_oauth_client_secret: encrypted.oauth_client_secret,
                     },
-                    {
-                      findToken,
-                      updateToken,
-                      createToken,
-                    },
+                    config?.signal,
                   );
-                const flowsCache = getLogStores(CacheKeys.FLOWS);
-                const flowManager = getFlowStateManager(flowsCache);
-                const refreshData = await flowManager.createFlowWithHandler(
-                  `${identifier}:refresh`,
-                  'oauth_refresh',
-                  refreshTokens,
-                  config?.signal,
-                );
-                metadata.oauth_access_token = refreshData.access_token;
-                if (refreshData.refresh_token) {
-                  metadata.oauth_refresh_token = refreshData.refresh_token;
+                  logger.debug('Received OAuth Authorization response', { action_id, identifier });
+                  data.delta.auth = undefined;
+                  data.delta.expires_at = undefined;
+                  sendEvent(res, { event: GraphEvents.ON_RUN_STEP_DELTA, data });
+                  await sleep(3000);
+                  metadata.oauth_access_token = result.access_token;
+                  metadata.oauth_refresh_token = result.refresh_token;
+                  const expiresAt = new Date(Date.now() + result.expires_in * 1000);
+                  metadata.oauth_token_expires_at = expiresAt.toISOString();
+                } catch (error) {
+                  const errorMessage = 'Failed to authenticate OAuth tool';
+                  logger.error(errorMessage, error);
+                  throw new Error(errorMessage);
                 }
-                const expiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
-                metadata.oauth_token_expires_at = expiresAt.toISOString();
-              } catch (error) {
-                logger.error('Failed to refresh token, requesting new login:', error);
+              };
+
+              const tokenPromises = [];
+              tokenPromises.push(findToken({ userId, type: 'oauth', identifier }));
+              tokenPromises.push(
+                findToken({
+                  userId,
+                  type: 'oauth_refresh',
+                  identifier: `${identifier}:refresh`,
+                }),
+              );
+              const [tokenData, refreshTokenData] = await Promise.all(tokenPromises);
+
+              if (tokenData) {
+                // Valid token exists, add it to metadata for setAuth
+                metadata.oauth_access_token = await decryptV2(tokenData.token);
+                if (refreshTokenData) {
+                  metadata.oauth_refresh_token = await decryptV2(refreshTokenData.token);
+                }
+                metadata.oauth_token_expires_at = tokenData.expiresAt.toISOString();
+              } else if (!refreshTokenData) {
+                // No tokens exist, need to authenticate
+                await requestLogin();
+              } else if (refreshTokenData) {
+                // Refresh token is still valid, use it to get new access token
+                try {
+                  const refresh_token = await decryptV2(refreshTokenData.token);
+                  const refreshTokens = async () =>
+                    await refreshAccessToken(
+                      {
+                        userId,
+                        identifier,
+                        refresh_token,
+                        client_url: metadata.auth.client_url,
+                        encrypted_oauth_client_id: encrypted.oauth_client_id,
+                        token_exchange_method: metadata.auth.token_exchange_method,
+                        encrypted_oauth_client_secret: encrypted.oauth_client_secret,
+                      },
+                      {
+                        findToken,
+                        updateToken,
+                        createToken,
+                      },
+                    );
+                  const flowsCache = getLogStores(CacheKeys.FLOWS);
+                  const flowManager = getFlowStateManager(flowsCache);
+                  const refreshData = await flowManager.createFlowWithHandler(
+                    `${identifier}:refresh`,
+                    'oauth_refresh',
+                    refreshTokens,
+                    config?.signal,
+                  );
+                  metadata.oauth_access_token = refreshData.access_token;
+                  if (refreshData.refresh_token) {
+                    metadata.oauth_refresh_token = refreshData.refresh_token;
+                  }
+                  const expiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
+                  metadata.oauth_token_expires_at = expiresAt.toISOString();
+                } catch (error) {
+                  logger.error('Failed to refresh token, requesting new login:', error);
+                  await requestLogin();
+                }
+              } else {
                 await requestLogin();
               }
             } else {
-              await requestLogin();
+              // Invalid OAuth configuration - missing required fields
+              throw new Error(
+                'Invalid OAuth configuration: missing authorization_url for Authorization Code Flow or missing client_url/client_id/client_secret for Client Credentials Flow',
+              );
             }
           }
 

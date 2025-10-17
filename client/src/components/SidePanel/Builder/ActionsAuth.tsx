@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import {
+  OGDialog,
+  OGDialogClose,
+  OGDialogContent,
+  OGDialogHeader,
+  OGDialogTitle,
+  OGDialogTrigger,
+} from '@librechat/client';
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import {
   AuthTypeEnum,
   AuthorizationTypeEnum,
   TokenExchangeMethodEnum,
 } from 'librechat-data-provider';
-import {
-  OGDialog,
-  OGDialogClose,
-  OGDialogTitle,
-  OGDialogHeader,
-  OGDialogContent,
-  OGDialogTrigger,
-} from '@librechat/client';
+import { useState } from 'react';
+import { useFormContext } from 'react-hook-form';
 import { TranslationKeys, useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -33,9 +33,7 @@ export default function ActionsAuth({ disableOAuth }: { disableOAuth?: boolean }
             </label>
           </div>
           <div className="border-token-border-medium flex rounded-lg border text-sm hover:cursor-pointer">
-            <div className="h-9 grow px-3 py-2">
-              {localize(getAuthLocalizationKey(type))}
-            </div>
+            <div className="h-9 grow px-3 py-2">{localize(getAuthLocalizationKey(type))}</div>
             <div className="bg-token-border-medium w-px"></div>
             <button type="button" color="neutral" className="flex items-center gap-2 px-3">
               <svg
@@ -314,7 +312,10 @@ const OAuth = () => {
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_auth_url')}</label>
       <input
         className={inputClasses}
-        {...register('authorization_url', { required: type === AuthTypeEnum.OAuth })}
+        placeholder="Optional for Client Credentials Flow"
+        {...register('authorization_url', {
+          required: type === AuthTypeEnum.OAuth && watch('client_url') && !watch('oauth_client_id'),
+        })}
       />
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_token_url')}</label>
       <input
@@ -324,7 +325,10 @@ const OAuth = () => {
       <label className="mb-1 block text-sm font-medium">{localize('com_ui_scope')}</label>
       <input
         className={inputClasses}
-        {...register('scope', { required: type === AuthTypeEnum.OAuth })}
+        placeholder="Optional for Client Credentials Flow"
+        {...register('scope', {
+          required: type === AuthTypeEnum.OAuth && watch('authorization_url'),
+        })}
       />
       <label className="mb-1 block text-sm font-medium">
         {localize('com_ui_token_exchange_method')}

@@ -14,9 +14,9 @@ export interface IAction extends Document {
       custom_auth_header?: string;
       type: 'service_http' | 'oauth' | 'none';
       authorization_content_type?: string;
-      authorization_url?: string;
+      authorization_url?: string; // Optional for Client Credentials Flow
       client_url?: string;
-      scope?: string;
+      scope?: string; // Optional for Client Credentials Flow
       token_exchange_method: 'default_post' | 'basic_auth_header' | null;
     };
     domain: string;

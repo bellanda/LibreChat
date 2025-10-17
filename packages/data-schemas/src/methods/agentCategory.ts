@@ -153,50 +153,52 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
   async function ensureDefaultCategories(): Promise<boolean> {
     const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
 
-    const defaultCategories = [
-      {
-        value: 'general',
-        label: 'com_agents_category_general',
-        description: 'com_agents_category_general_description',
-        order: 0,
-      },
-      {
-        value: 'hr',
-        label: 'com_agents_category_hr',
-        description: 'com_agents_category_hr_description',
-        order: 1,
-      },
-      {
-        value: 'rd',
-        label: 'com_agents_category_rd',
-        description: 'com_agents_category_rd_description',
-        order: 2,
-      },
-      {
-        value: 'finance',
-        label: 'com_agents_category_finance',
-        description: 'com_agents_category_finance_description',
-        order: 3,
-      },
-      {
-        value: 'it',
-        label: 'com_agents_category_it',
-        description: 'com_agents_category_it_description',
-        order: 4,
-      },
-      {
-        value: 'sales',
-        label: 'com_agents_category_sales',
-        description: 'com_agents_category_sales_description',
-        order: 5,
-      },
-      {
-        value: 'aftersales',
-        label: 'com_agents_category_aftersales',
-        description: 'com_agents_category_aftersales_description',
-        order: 6,
-      },
-    ];
+    const defaultCategories: any = [];
+
+    // const defaultCategories = [
+    //   {
+    //     value: 'general',
+    //     label: 'com_agents_category_general',
+    //     description: 'com_agents_category_general_description',
+    //     order: 0,
+    //   },
+    //   {
+    //     value: 'hr',
+    //     label: 'com_agents_category_hr',
+    //     description: 'com_agents_category_hr_description',
+    //     order: 1,
+    //   },
+    //   {
+    //     value: 'rd',
+    //     label: 'com_agents_category_rd',
+    //     description: 'com_agents_category_rd_description',
+    //     order: 2,
+    //   },
+    //   {
+    //     value: 'finance',
+    //     label: 'com_agents_category_finance',
+    //     description: 'com_agents_category_finance_description',
+    //     order: 3,
+    //   },
+    //   {
+    //     value: 'it',
+    //     label: 'com_agents_category_it',
+    //     description: 'com_agents_category_it_description',
+    //     order: 4,
+    //   },
+    //   {
+    //     value: 'sales',
+    //     label: 'com_agents_category_sales',
+    //     description: 'com_agents_category_sales_description',
+    //     order: 5,
+    //   },
+    //   {
+    //     value: 'aftersales',
+    //     label: 'com_agents_category_aftersales',
+    //     description: 'com_agents_category_aftersales_description',
+    //     order: 6,
+    //   },
+    // ];
 
     const existingCategories = await getAllCategories();
     const existingCategoryMap = new Map(existingCategories.map((cat) => [cat.value, cat]));

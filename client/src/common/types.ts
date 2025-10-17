@@ -1,11 +1,11 @@
-import { RefObject } from 'react';
-import { Constants, FileSources, EModelEndpoint } from 'librechat-data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
-import type * as InputNumberPrimitive from 'rc-input-number';
-import type { SetterOrUpdater, RecoilState } from 'recoil';
 import type { ColumnDef } from '@tanstack/react-table';
 import type * as t from 'librechat-data-provider';
+import { Constants, EModelEndpoint, FileSources } from 'librechat-data-provider';
 import type { LucideIcon } from 'lucide-react';
+import type * as InputNumberPrimitive from 'rc-input-number';
+import { RefObject } from 'react';
+import type { RecoilState, SetterOrUpdater } from 'recoil';
 import type { TranslationKeys } from '~/hooks';
 
 export function isEphemeralAgent(agentId: string | null | undefined): boolean {
@@ -170,9 +170,9 @@ export type ActionAuthForm = {
   /* OAuth */
   oauth_client_id: string; // not nested
   oauth_client_secret: string; // not nested
-  authorization_url: string;
+  authorization_url?: string; // Optional for Client Credentials Flow
   client_url: string;
-  scope: string;
+  scope?: string; // Optional for Client Credentials Flow
   token_exchange_method: t.TokenExchangeMethodEnum;
 };
 
