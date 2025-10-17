@@ -173,6 +173,11 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       model = spec.preset.agent_id ?? '';
     } else if (isAssistantsEndpoint(spec.preset.endpoint)) {
       model = spec.preset.assistant_id ?? '';
+    } else {
+      // For non-agent endpoints, ensure agent_id is cleared
+      if (spec.preset.agent_id !== undefined) {
+        spec.preset.agent_id = undefined;
+      }
     }
     setSelectedValues({
       endpoint: spec.preset.endpoint,
@@ -216,7 +221,11 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
         model: assistantsMap?.[endpoint.value]?.[model]?.model ?? '',
       });
     } else if (endpoint.value) {
-      onSelectEndpoint?.(endpoint.value, { model });
+      // For non-agent endpoints, explicitly clear agent_id to prevent cache issues
+      onSelectEndpoint?.(endpoint.value, {
+        model,
+        agent_id: undefined, // Explicitly clear agent_id for non-agent endpoints
+      });
     }
     setSelectedValues({
       endpoint: endpoint.value,

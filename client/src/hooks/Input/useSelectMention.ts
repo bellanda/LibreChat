@@ -1,18 +1,18 @@
+import type {
+  TAssistantsMap,
+  TConversation,
+  TEndpointsConfig,
+  TModelSpec,
+  TPreset,
+} from 'librechat-data-provider';
+import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import { useCallback } from 'react';
 import { useRecoilValue } from 'recoil';
-import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
-import type {
-  TPreset,
-  TModelSpec,
-  TConversation,
-  TAssistantsMap,
-  TEndpointsConfig,
-} from 'librechat-data-provider';
-import type { MentionOption, ConvoGenerator } from '~/common';
-import { getConvoSwitchLogic, getModelSpecIconURL, removeUnavailableTools, logger } from '~/utils';
 import { useChatContext } from '~/Providers';
+import type { ConvoGenerator, MentionOption } from '~/common';
 import { useDefaultConvo } from '~/hooks';
 import store from '~/store';
+import { getConvoSwitchLogic, getModelSpecIconURL, logger, removeUnavailableTools } from '~/utils';
 
 export default function useSelectMention({
   presets,
@@ -153,6 +153,9 @@ export default function useSelectMention({
       const agent_id = kwargs.agent_id ?? '';
       if (agent_id) {
         template.agent_id = agent_id;
+      } else if (!isAgentsEndpoint(newEndpoint)) {
+        // Explicitly clear agent_id for non-agent endpoints
+        template.agent_id = undefined;
       }
 
       template.spec = null;
@@ -189,9 +192,22 @@ export default function useSelectMention({
       }
 
       logger.info('conversation', 'Switching conversation to new endpoint/model', template);
+
+      // Ensure agent_id is cleared for non-agent endpoints
+      const preset = {
+        ...kwargs,
+        spec: null,
+        iconURL: null,
+        modelLabel: null,
+        endpoint: newEndpoint,
+      };
+      if (!isAgentsEndpoint(newEndpoint)) {
+        preset.agent_id = undefined;
+      }
+
       newConversation({
         template: { ...(template as Partial<TConversation>) },
-        preset: { ...kwargs, spec: null, iconURL: null, modelLabel: null, endpoint: newEndpoint },
+        preset,
         keepAddedConvos: isNewModular,
       });
     },
