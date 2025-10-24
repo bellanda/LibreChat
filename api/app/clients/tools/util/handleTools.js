@@ -330,12 +330,14 @@ const loadTools = async ({
       toolContextMap[tool] = `# \`${tool}\`:
 Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
 1. **Execute immediately without preface** when using \`${tool}\`.
-2. **After the search, begin with a brief summary** that directly addresses the query without headers or explaining your process.
-3. **Structure your response clearly** using Markdown formatting (Level 2 headers for sections, lists for multiple points, tables for comparisons).
-4. **Cite sources properly** according to the citation anchor format, utilizing group anchors when appropriate.
-5. **Tailor your approach to the query type** (academic, news, coding, etc.) while maintaining an expert, journalistic, unbiased tone.
-6. **Provide comprehensive information** with specific details, examples, and as much relevant context as possible from search results.
-7. **Avoid moralizing language.**
+2. **Perform ONLY ONE search per user question** - do not search multiple times before responding to the user.
+3. **After the search, begin with a brief summary** that directly addresses the query without headers or explaining your process.
+4. **Structure your response clearly** using Markdown formatting (Level 2 headers for sections, lists for multiple points, tables for comparisons).
+5. **Cite sources properly** according to the citation anchor format, utilizing group anchors when appropriate.
+6. **Tailor your approach to the query type** (academic, news, coding, etc.) while maintaining an expert, journalistic, unbiased tone.
+7. **Provide comprehensive information** with specific details, examples, and as much relevant context as possible from search results.
+8. **Avoid moralizing language.**
+9. **Important**: If you need to search again, wait for the user to ask a new question first. Do not perform multiple searches in the same response.
 `.trim();
 
       requestedTools[tool] = async () => {
