@@ -13,7 +13,7 @@ export default function PoliticaUsoPage() {
           </div>
           <div>
             <strong className="text-white">Revisão:</strong>
-            <p>00</p>
+            <p>01</p>
           </div>
           <div>
             <strong className="text-white">Categoria:</strong>
@@ -26,139 +26,184 @@ export default function PoliticaUsoPage() {
       <section className="rounded-lg border border-gray-700 bg-[#1c1c1c] p-6">
         <h2 className="mb-4 text-2xl font-semibold text-white">Sumário</h2>
         <div className="space-y-2 text-gray-300">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#objetivo"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               1. OBJETIVO
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">2</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#abrangencia"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               2. ABRANGÊNCIA
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">2</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#definicoes"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               3. DEFINIÇÕES
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">2</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#inteligencia-artificial"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               4. INTELIGÊNCIA ARTIFICIAL
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">3</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#principios-orientadores"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               5. PRINCÍPIOS ORIENTADORES DO USO ÉTICO DE FERRAMENTAS DE IA
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">3</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#comite-ia"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               6. COMITÊ DE IA
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">4</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#plataformas-ia"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               7. PLATAFORMAS DE IA AUTORIZADAS PARA USO
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">4</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group ml-4">
+            <a
+              href="/documentation/politica-de-uso-de-ia#hpe-ia"
+              className="transition-colors hover:text-white"
+            >
+              7.1 HPE-IA
+            </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
+            <span className="text-right">4</span>
+          </div>
+          <div className="flex items-center group ml-4">
+            <a
+              href="/documentation/politica-de-uso-de-ia#outras-plataformas"
+              className="transition-colors hover:text-white"
+            >
+              7.2 OUTRAS PLATAFORMAS HOMOLOGADAS
+            </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
+            <span className="text-right">4</span>
+          </div>
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#diretrizes-uso"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               8. DIRETRIZES DE USO
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">5</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group ml-4">
+            <a
+              href="/documentation/politica-de-uso-de-ia#responsabilidade-usuarios"
+              className="transition-colors hover:text-white"
+            >
+              8.1 RESPONSABILIDADE DOS USUÁRIOS
+            </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
+            <span className="text-right">6</span>
+          </div>
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#seguranca-informacao"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               9. SEGURANÇA DA INFORMAÇÃO
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">6</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#armazenamento-retencao"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               10. ARMAZENAMENTO E RETENÇÃO DE DADOS
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">6</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#monitoramento-auditoria"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               11. MONITORAMENTO, AUDITORIA E PENALIDADES
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">7</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#referencias"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               12. REFERÊNCIAS
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">7</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#atualizacoes"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               13. ATUALIZAÇÕES
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">7</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#controle-documento"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               14. CONTROLE DO DOCUMENTO
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">7</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center group">
             <a
               href="/documentation/politica-de-uso-de-ia#niveis-aprovacao"
-              className="text-left transition-colors hover:text-white"
+              className="transition-colors hover:text-white"
             >
               15. NÍVEIS DE APROVAÇÃO
             </a>
+            <span className="flex-grow border-b-2 border-dotted border-gray-600 mx-2 group-hover:border-gray-400"></span>
             <span className="text-right">7</span>
           </div>
         </div>
@@ -198,9 +243,9 @@ export default function PoliticaUsoPage() {
       {/* 3. DEFINIÇÕES */}
       <section id="definicoes" className="text-justify">
         <h2 className="mb-4 text-2xl font-semibold text-white">3. DEFINIÇÕES</h2>
-        <div className="space-y-4">
+        <div className="space-y-4 ml-6">
           <div>
-            <strong className="text-white">Agentes de IA:</strong>
+            <strong className="text-white">I. Agentes de IA:</strong>
             <p className="mt-1">
               Programas ou sistemas que utilizam Inteligência Artificial para executar atividades de
               forma autônoma ou semiautônoma. Eles podem interagir com pessoas, outros sistemas ou
@@ -210,14 +255,20 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">Algoritmos:</strong>
+            <strong className="text-white">II. Agentes Autônomos:</strong>
+            <p className="mt-1">
+              São modelos de inteligência artificial que podem realizar tarefas complexas de forma autônoma, sem supervisão humana constante, aprendendo com o ambiente e tomando decisões com base em seus objetivos.
+            </p>
+          </div>
+          <div>
+            <strong className="text-white">III. Algoritmos:</strong>
             <p className="mt-1">
               Conjuntos de instruções lógicas e matemáticas que orientam como um dispositivo ou
               sistema deve processar informações para alcançar determinado resultado.
             </p>
           </div>
           <div>
-            <strong className="text-white">Alucinações:</strong>
+            <strong className="text-white">IV. Alucinações:</strong>
             <p className="mt-1">
               Refere-se à geração de conteúdo falso, incoerente ou inventado por um modelo de IA,
               mesmo que pareça plausível. Isso acontece quando o modelo "preenche lacunas" de
@@ -228,17 +279,17 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">Ataques Cibernéticos:</strong>
+            <strong className="text-white">V. Ataques Cibernéticos:</strong>
             <p className="mt-1">
               Ações maliciosas realizadas por indivíduos ou grupos com o objetivo de comprometer
               sistemas, redes ou dados. Esses ataques podem ter diferentes finalidades, como roubo
               de informações, interrupção de serviços, fraude financeira ou espionagem. Exemplos
               comuns incluem phishing (tentativas de enganar usuários para obter senhas), ransomware
-              (sequestro de dados mediante pagamento.
+              (sequestro de dados mediante pagamento).
             </p>
           </div>
           <div>
-            <strong className="text-white">Backup:</strong>
+            <strong className="text-white">VI. Backup:</strong>
             <p className="mt-1">
               Cópia de segurança das informações, realizada para evitar perdas em caso de falhas
               técnicas, exclusão acidental, ataques cibernéticos ou desastres. O backup pode ser
@@ -248,7 +299,7 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">Criptografia:</strong>
+            <strong className="text-white">VII. Criptografia:</strong>
             <p className="mt-1">
               Técnica de proteção que transforma informações em um código indecifrável para quem não
               possui a chave correta de leitura. É amplamente utilizada em troca de mensagens,
@@ -257,7 +308,7 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">Dados Pessoais:</strong>
+            <strong className="text-white">VIII. Dados Pessoais:</strong>
             <p className="mt-1">
               Informações que identificam ou permitem identificar uma pessoa, direta ou
               indiretamente. Isso inclui dados como nome, CPF, RG, e-mail, telefone, endereço,
@@ -266,7 +317,7 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">IA Generativa:</strong>
+            <strong className="text-white">IX. IA Generativa:</strong>
             <p className="mt-1">
               Tipo de Inteligência Artificial projetada para desenvolver conteúdo a partir de
               grandes volumes de dados já existentes. Ela pode produzir textos, imagens, músicas,
@@ -276,7 +327,7 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">Identificadores Digitais:</strong>
+            <strong className="text-white">X. Identificadores Digitais:</strong>
             <p className="mt-1">
               Informações eletrônicas que permitem reconhecer ou diferenciar um usuário, dispositivo
               ou conexão na internet. Esses identificadores podem ser usados para personalizar
@@ -286,7 +337,7 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">Incidentes de Segurança:</strong>
+            <strong className="text-white">XI. Incidentes de Segurança:</strong>
             <p className="mt-1">
               Eventos que afetam a confidencialidade, integridade ou disponibilidade de informações
               e sistemas. Podem incluir acessos não autorizados, vazamento de dados, roubo de
@@ -295,7 +346,7 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">Modelos de IA:</strong>
+            <strong className="text-white">XII. Modelos de IA:</strong>
             <p className="mt-1">
               Estruturas matemáticas e computacionais treinadas com grandes volumes de dados para
               reconhecer padrões, tomar decisões ou gerar resultados de forma automática. Os modelos
@@ -307,7 +358,7 @@ export default function PoliticaUsoPage() {
             </p>
           </div>
           <div>
-            <strong className="text-white">Prompt:</strong>
+            <strong className="text-white">XIII. Prompt:</strong>
             <p className="mt-1">
               Comando, pergunta ou instrução fornecida a um sistema de Inteligência Artificial para
               direcionar sua resposta ou ação. Quanto mais claro e detalhado for o prompt, maior a
@@ -392,12 +443,12 @@ export default function PoliticaUsoPage() {
           estratégicas da empresa.
         </p>
         <p className="mb-4">
-          Integrará o comitê os departamentos de "Compliance e Privacidade de Dados", "Tecnologia da
-          Informação" e "Gente Gestão", atuando de forma integrada na avaliação, desenvolvimento e
+          Integrará o comitê, os respectivos gestores dos departamentos de "Compliance e Privacidade de Dados", "Tecnologia da
+          Informação", "Gente e Gestão" e "Gestão de Riscos", atuando de forma integrada na avaliação, desenvolvimento e
           monitoramento das iniciativas de utilização e integração de IA na HPE, promovendo inovação
-          responsável, mitigando ameaças e prevenindo a utilização indevida das ferramentas de IA.
+          responsável, mitigando ameaças e prevenindo a utilização indevida das ferramentas de IA. Na ausência dos respectivos gestores, poderão ser nomeados, temporariamente, outros colaboradores para comporem o Comitê de IA.
         </p>
-        <p className="mb-4">São atribuições do Comitê de IA:</p>
+        <p className="mb-4">São atribuições do Comitê de IA("Comitê"):</p>
         <ul className="ml-6 space-y-2 list-disc list-inside text-gray-300">
           <li>
             Orientar e treinar os colaboradores no uso de IA promovendo a conscientização sobre
@@ -434,19 +485,14 @@ export default function PoliticaUsoPage() {
           proibido utilizar modelos de IA que não sejam a HPE-IA ou não homologados.
         </p>
 
-        <div className="mb-6 ml-6">
+        <div id="hpe-ia" className="mb-6 ml-6">
           <h3 className="mb-3 text-xl font-semibold text-white">7.1 HPE-IA</h3>
           <p>
-            Este é o modelo oficial para uso de IA generativa da HPE, criada como uma solução
-            interna, esta plataforma disponibiliza acesso a diversos modelos de IA de alto nível
-            encontrados no mercado, como, p.ex.: ChatGPT; Gemini; Grok etc., sendo todos eles
-            integrados em um ambiente seguro e fácil de usar, garantindo maior segurança e
-            integridade na governança do uso dos dados corporativos, bem como alta capacidade de
-            auditoria e transparência.
+            Este é o <u>modelo oficial</u> para uso de IA generativa da HPE, criada como uma solução interna, esta plataforma disponibiliza acesso a diversos modelos de IA de alto nível encontrados no mercado, como, p.ex.: ChatGPT; Gemini etc., sendo todos eles integrados em um ambiente seguro e fácil de usar, garantindo maior segurança e integridade na governança do uso dos dados corporativos, bem como alta capacidade de auditoria e transparência.
           </p>
         </div>
 
-        <div className="mb-6 ml-6">
+        <div id="outras-plataformas" className="mb-6 ml-6">
           <h3 className="mb-3 text-xl font-semibold text-white">
             7.2 OUTRAS PLATAFORMAS HOMOLOGADAS
           </h3>
@@ -471,29 +517,30 @@ export default function PoliticaUsoPage() {
           <p className="mt-4">
             Nos itens acima, as plataformas que oferecem produtos ou serviços deverão ser validadas
             pelo Comitê de IA, que fará uma análise da utilização ou contratação pelo departamento,
-            que irá fazer um requerimento direcionado ao e-mail: ia.comite@hpeautos.com.br, para
+            que irá fazer um requerimento direcionado ao e-mail: <strong><u>ia.comite@hpeautos.com.br</u></strong>, para
             devida análise e aprovação.
           </p>
           <p className="mt-4">No requerimento, deverão constar de forma detalhada:</p>
           <ol className="ml-6 space-y-2 list-decimal list-inside text-gray-300">
             <li>
-              Aprovação prévia do gestor do departamento (apenas no caso de a plataforma não ser um
+              <strong>Aprovação</strong> prévia (em cópia por e-mail) do gestor do departamento (apenas no caso de a plataforma não ser um
               fornecedor já contratado pela HPE);
             </li>
             <li>
-              Finalidade e necessidade do uso da plataforma ou sistema, ou seja, qual será o produto
-              ou serviço que ela irá produzir;
+              <strong>Finalidade</strong> do uso da plataforma ou sistema, ou seja, qual será o produto
+              ou serviço que ela irá produzir e sua necessidade específica;
+            </li>
+            <li>
+              <strong>Detalhamento</strong> dos dados utilizados, de forma a documentar com maior precisão e facilitar o processo de homologação. Portanto, são dados importantes que devem constar na requisição: <strong>(i)</strong> quais dados pessoais serão utilizados, sensíveis ou não (p.ex.: e-mail, nome de clientes ou colaboradores, CPF prontuários etc.); <strong>(ii)</strong> quais informações da empresa serão utilizadas, sejam sigilosas ou não (p.ex.: utilização de tabelas, manuais, relatórios, contratos, planilhas etc.); <strong>(iii)</strong> tipos de modelos de treinamento ou se ocorrerá a utilização de agentes autônomos; <strong>(iv)</strong> tempo de utilização da ferramenta, seja temporária ou não; e <strong>(v)</strong> quais os colaboradores que terão acesso a ferramenta.
             </li>
           </ol>
           <p className="mt-4">
-            O SLA para análise e devida homologação da plataforma deverá ser de: (i) XX dias úteis
-            para plataformas que não precisem de testes de uso em sua análise; e, (ii) XX dias úteis
+            O SLA para análise e devida homologação da plataforma deverá ser de: <strong>(i)</strong> 15 (quinze) dias úteis
+            para plataformas que não precisem de testes de uso em sua análise; e, <strong>(ii)</strong> 30 (trinta) dias úteis
             para plataformas que necessitem de testes de uso em sua análise.
           </p>
           <p className="mt-4">
-            O uso de plataformas não homologadas poderá ser configurado como uma atitude antiética,
-            conforme previsto no item 7.2.9, do Código de Ética e Conduta dos Colaboradores da HPE,
-            podendo acarretar infração passível de medidas disciplinares.
+            É vedado o uso de plataformas não homologadas. Assim sendo, a utilização não autorizada poderá ser configurada como uma atitude antiética, conforme previsto no item 7.2.9, do Código de Ética e Conduta dos Colaboradores da HPE, podendo acarretar infração passível de medidas disciplinares.
           </p>
         </div>
       </section>
@@ -502,13 +549,11 @@ export default function PoliticaUsoPage() {
       <section id="diretrizes-uso" className="text-justify">
         <h2 className="mb-4 text-2xl font-semibold text-white">8. DIRETRIZES DE USO</h2>
         <p className="mb-4">
-          O uso da plataforma HPE-IA e demais sistemas homologados devem estar em conformidade com
-          Código de Ética e Conduta dos Colaboradores, Política de Privacidade e Proteção de Dados
-          Pessoais, Política de Segurança da Informação, bem como demais políticas e normas da HPE.
+          O uso da plataforma HPE-IA e demais sistemas homologados devem estar em conformidade com Código de Ética e Conduta dos Colaboradores, Política de Privacidade e Proteção de Dados Pessoais, Política de Segurança da Informação, bem como demais políticas e normas da HPE.
         </p>
 
         <div className="mb-6 ml-6">
-          <h3 className="mb-3 text-xl font-semibold text-white">É permitido utilizar a IA para:</h3>
+          <h3 className="mb-3 text-xl font-semibold text-white">Exemplos para utilização das plataformas de IA:</h3>
           <ul className="ml-6 space-y-2 list-disc list-inside text-gray-300">
             <li>
               Apoiar a criação de conteúdos (e-mails, relatórios, apresentações, documentos técnicos
@@ -517,10 +562,11 @@ export default function PoliticaUsoPage() {
             <li>
               Otimizar tarefas administrativas, revisão textual, traduções e análise de dados;
             </li>
-            <li>Explorar soluções e conceitos inovadores relacionados ao setor automotivo;</li>
             <li>
-              Desenvolver ideias e realizar simulações, desde que sem incluir dados pessoais
-              sensíveis ou informações confidenciais da HPE;
+              Explorar soluções e conceitos inovadores relacionados ao setor automotivo;
+            </li>
+            <li>
+              Desenvolver ideias e realizar simulações a fim de obter melhorias em processos;
             </li>
             <li>
               Apoiar capacitação interna, mediante uso da IA para simulação de cenários e
@@ -537,46 +583,13 @@ export default function PoliticaUsoPage() {
           <h3 className="mb-3 text-xl font-semibold text-white">É expressamente proibido:</h3>
           <ul className="ml-6 space-y-2 list-disc list-inside text-gray-300">
             <li>
-              Compartilhar informações confidenciais da empresa, clientes, fornecedores ou parceiros
-              (contratos, estratégias de mercado, projetos, patentes etc.);
-            </li>
-            <li>
-              Inserir conteúdos protegidos por propriedade industrial, como desenhos técnicos,
-              códigos-fonte e algoritmos;
-            </li>
-            <li>
               Utilizar IA que violem leis de direitos autorais ou a Lei da Propriedade Industrial
               (Lei nº 9.279/1996);
             </li>
             <li>
-              Tomar decisões automatizadas com impacto financeiro, jurídico, regulatório ou
-              operacional sem revisão humana;
+              Tomar decisões automatizadas com impacto financeiro, jurídico, regulatório ou operacional sem revisão humana.
             </li>
-            <li>
-              Usar IA como substituto de conhecimento técnico especializado em áreas reguladas, sem
-              revisão humana;
-            </li>
-            <li>
-              Submeter dados da empresa para treinar "agentes de IA" sem requisição e devida
-              autorização do Comitê de IA;
-            </li>
-            <li>
-              Utilizar IA para treinar modelos externos com dados da HPE sem expressa autorização;
-            </li>
-            <li>
-              Realizar treinamentos, demonstrações externas ou publicações com uso de IA sem
-              aprovação das áreas responsáveis pelo conteúdo;
-            </li>
-            <li>
-              Utilizar as ferramentas disponibilizadas pela empresa para uso pessoal, considera-se
-              uso pessoal qualquer interação com ferramentas de IA que não esteja vinculada a
-              atividades ou finalidade adequada ao exercício laboral do colaborador na HPE;
-            </li>
-            <li>
-              Utilizar e-mails, números de telefone, qualquer outra credencial institucional ou
-              senha institucional ao criar contas em ferramentas de IA generativa disponíveis
-              publicamente e não homologadas pela HPE, sem autorização expressa do Comitê de IA.
-            </li>
+
           </ul>
         </div>
 
@@ -585,21 +598,14 @@ export default function PoliticaUsoPage() {
             8.1 RESPONSABILIDADE DOS USUÁRIOS
           </h3>
           <p className="mb-4">
-            O uso de ferramentas de IA generativa exige que o usuário atue com responsabilidade,
-            integridade. Cabe ao usuário interpretar criticamente as informações geradas, revisar
-            seu conteúdo e garantir sua precisão, relevância e conformidade com as diretrizes
-            institucionais.
+            O uso de ferramentas de IA generativa exige que o usuário atue com responsabilidade, integridade. Cabe ao usuário interpretar criticamente as informações geradas, revisar seu conteúdo e garantir sua precisão, relevância e conformidade com as diretrizes institucionais.
           </p>
           <p className="mb-4">
-            Como as ferramentas de IA estão em constante evolução e, às vezes, podem fornecer
-            informações imprecisas, ofensivas ou inapropriadas que não refletem as opiniões e
-            posições da HPE, cada usuário deve:
+            Como as ferramentas de IA estão em constante evolução e, às vezes, podem fornecer informações imprecisas, ofensivas ou inapropriadas que não refletem as opiniões e posições da HPE, cada usuário deve:
           </p>
           <ul className="ml-6 space-y-2 list-disc list-inside text-gray-300">
             <li>
-              Ser capaz de explicar e justificar qualquer resultado impreciso, validando
-              criticamente o conteúdo gerado antes de utilizar, prevenindo – com a revisão do
-              conteúdo – e mitigando a criação de informações decorrentes de "alucinações";
+              Ser capaz de explicar e justificar qualquer resultado impreciso, validando criticamente o conteúdo gerado antes de utilizar, prevenindo – com a revisão do conteúdo – e mitigando a criação de informações decorrentes de “alucinações”;
             </li>
             <li>Validar criticamente o conteúdo gerado antes de utilizar;</li>
             <li>
@@ -611,7 +617,7 @@ export default function PoliticaUsoPage() {
             <li>
               Reportar quaisquer incidentes de segurança, dúvidas, usos indevidos ou vazamento de
               informações à área de Segurança da Informação imediatamente por meio do e-mail
-              incidentes@hpeautos.com.br.
+              <strong><u>incidentes@hpeautos.com.br</u></strong>.
             </li>
           </ul>
         </div>
@@ -621,8 +627,7 @@ export default function PoliticaUsoPage() {
       <section id="seguranca-informacao" className="text-justify">
         <h2 className="mb-4 text-2xl font-semibold text-white">9. SEGURANÇA DA INFORMAÇÃO</h2>
         <p>
-          A área de Segurança da Informação da HPE atuará no controle da infraestrutura técnica,
-          controle de incidentes e cibersegurança.
+          A área de Segurança da Informação da HPE atuará na proteção dos sistemas e dados corporativos, além de gerenciar incidentes de segurança da informação e garantir controles para a cibersegurança.
         </p>
       </section>
 
@@ -632,31 +637,18 @@ export default function PoliticaUsoPage() {
           10. ARMAZENAMENTO E RETENÇÃO DE DADOS
         </h2>
         <p className="mb-4">
-          Com o objetivo de garantir a segurança da informação, a privacidade e a conformidade com
-          legislações aplicáveis, todas as interações realizadas com as ferramentas de Inteligência
-          Artificial generativa, por meio dos sistemas homologados pelo Comitê de IA estarão
-          sujeitas às seguintes diretrizes de temporalidade e retenção de dados:
+          Com o objetivo de garantir a segurança da informação, a privacidade e a conformidade com legislações aplicáveis, todas as interações realizadas com as ferramentas de Inteligência Artificial generativa, por meio dos sistemas homologados pelo Comitê de IA estarão sujeitas às seguintes diretrizes de temporalidade e retenção de dados:
         </p>
         <ul className="ml-6 space-y-2 list-disc list-inside text-gray-300">
           <li>
             <strong className="text-white">Retenção de dados:</strong> As informações inseridas e
             geradas durante o uso das plataformas de Inteligência Artificial serão armazenadas
             temporariamente, apenas pelo tempo estritamente necessário para o cumprimento da
-            finalidade da interação. O prazo de retenção poderá variar conforme a arquitetura,
-            configuração e política de armazenamento adotada por cada modelo ou sistema utilizado.
-            Entretanto, sempre que possível, a HPE adotará medidas para limitar a retenção de dados
-            ao mínimo necessário, promovendo a eliminação automática dos registros após seu uso.
-            Salvo exceções justificadas, de natureza técnica, legal ou operacional, previamente
-            aprovadas pelas áreas competentes, os registros das conversas não serão mantidos de
-            forma permanente.
+            finalidade da interação. <br />
+            O prazo de retenção poderá variar conforme a arquitetura, configuração e política de armazenamento adotada por cada modelo ou sistema utilizado. Entretanto, sempre que possível, a HPE adotará medidas para limitar a retenção de dados ao mínimo necessário, promovendo a eliminação automática dos registros após seu uso. Salvo exceções justificadas, de natureza técnica, legal ou operacional, previamente aprovadas pelas áreas competentes, os registros das conversas não serão mantidos de forma permanente.
           </li>
           <li>
-            <strong className="text-white">Exceções e Auditoria:</strong> Em casos de auditoria,
-            análise de segurança, ou investigação formal, os dados poderão ser preservados por
-            período superior, conforme determinação legal ou regulamentar, sempre mediante
-            autorização expressa da sempre mediante autorização expressa das diretorias envolvidas
-            no Comitê de IA, conforme suas orientações para auditorias técnicas dos departamentos
-            que fazem parte deste comitê.
+            <strong className="text-white">Exceções e Auditoria:</strong> Em casos de auditoria, análise de segurança, ou investigação formal, os dados poderão ser preservados por período superior, conforme determinação legal ou regulamentar, sempre mediante autorização expressa da sempre mediante autorização expressa das diretorias envolvidas no Comitê de IA, conforme suas orientações para auditorias técnicas dos departamentos que fazem parte deste comitê.
           </li>
         </ul>
       </section>
@@ -667,13 +659,10 @@ export default function PoliticaUsoPage() {
           11. MONITORAMENTO, AUDITORIA E PENALIDADES
         </h2>
         <p className="mb-4">
-          A HPE poderá monitorar o uso das ferramentas de IA com fins de auditoria, segurança e
-          conformidade com normas e políticas internas.
+          A HPE poderá monitorar o uso das ferramentas de IA com fins de auditoria, segurança e conformidade com normas e políticas internas. Desta forma, é vedada a utilização das ferramentas de IA disponibilizadas ou homologadas pela HPE para fins pessoais, devendo restringir seu uso para atividades ou finalidades adequadas ao exercício laboral do colaborador na HPE.
         </p>
         <p>
-          Violações desta política podem resultar em sanções disciplinares, incluindo advertências,
-          suspensão do contrato de trabalho e demissão sem ou por justa causa, além de
-          responsabilização civil, administrativa e/ou criminal conforme a gravidade do caso.
+          Violações desta política podem resultar em sanções disciplinares, incluindo advertências, suspensão do contrato de trabalho e demissão sem ou por justa causa, além de responsabilização civil, administrativa e/ou criminal conforme a gravidade do caso.
         </p>
       </section>
 
@@ -717,6 +706,11 @@ export default function PoliticaUsoPage() {
                 <td className="p-2 text-gray-300 border border-gray-600">16/09/2025</td>
                 <td className="p-2 text-gray-300 border border-gray-600">Publicação</td>
               </tr>
+              <tr>
+                <td className="p-2 text-gray-300 border border-gray-600">01</td>
+                <td className="p-2 text-gray-300 border border-gray-600">06/10/2025</td>
+                <td className="p-2 text-gray-300 border border-gray-600">Atualização</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -739,7 +733,7 @@ export default function PoliticaUsoPage() {
             <tbody>
               {/* Elaboradores */}
               <tr>
-                <td className="p-3 font-semibold text-gray-300 border border-gray-600" rowSpan={5}>
+                <td className="p-3 font-semibold text-gray-300 border border-gray-600" rowSpan={6}>
                   Elaborador(es):
                 </td>
                 <td className="p-3 text-gray-300 border border-gray-600">Camila Reis Ferreira</td>
@@ -757,7 +751,7 @@ export default function PoliticaUsoPage() {
               </tr>
               <tr>
                 <td className="p-3 text-gray-300 border border-gray-600">
-                  Janaina Selvino Gonçalves Siqueira
+                  Janaina Selvino G. Siqueira
                 </td>
                 <td className="p-3 text-gray-300 border border-gray-600">
                   Compliance e Privacidade de Dados
@@ -765,7 +759,7 @@ export default function PoliticaUsoPage() {
               </tr>
               <tr>
                 <td className="p-3 text-gray-300 border border-gray-600">
-                  João Emmanuel Lima de Oliveira
+                  João Emmanuel L. de Oliveira
                 </td>
                 <td className="p-3 text-gray-300 border border-gray-600">
                   Compliance e Privacidade de Dados
@@ -776,20 +770,36 @@ export default function PoliticaUsoPage() {
                   Gustavo Casadei Bellanda
                 </td>
                 <td className="p-3 text-gray-300 border border-gray-600">
-                  TI – Tecnologia da Informação (Sistemas)
+                  Tecnologia e Inovação
+                </td>
+              </tr>
+              <tr>
+                <td className="p-3 text-gray-300 border border-gray-600">
+                  Victor Hugo Silvino C. da Silva
+                </td>
+                <td className="p-3 text-gray-300 border border-gray-600">
+                  Tecnologia e Inovação
                 </td>
               </tr>
 
               {/* Aprovadores */}
               <tr>
-                <td className="p-3 font-semibold text-gray-300 border border-gray-600" rowSpan={5}>
+                <td className="p-3 font-semibold text-gray-300 border border-gray-600" rowSpan={6}>
                   Aprovador(es):
                 </td>
+                <td className="p-3 text-gray-300 border border-gray-600">
+                  Ailton Coimbra Bonfim
+                </td>
+                <td className="p-3 text-gray-300 border border-gray-600">
+                  Jurídico
+                </td>
+              </tr>
+              <tr>
                 <td className="p-3 text-gray-300 border border-gray-600">
                   Eduardo Mauricio Zalamena
                 </td>
                 <td className="p-3 text-gray-300 border border-gray-600">
-                  TI – Tecnologia da Informação
+                  Tecnologia e Inovação
                 </td>
               </tr>
               <tr>
@@ -797,7 +807,7 @@ export default function PoliticaUsoPage() {
                   Felipe Frota. de A. Koury
                 </td>
                 <td className="p-3 text-gray-300 border border-gray-600">
-                  Jurídico, Compliance e Privacidade de Dados
+                  Jurídico
                 </td>
               </tr>
               <tr>
@@ -805,18 +815,18 @@ export default function PoliticaUsoPage() {
                   Leticia Gonçalves Borges
                 </td>
                 <td className="p-3 text-gray-300 border border-gray-600">
-                  Gente & Gestão (Treinamentos)
-                </td>
-              </tr>
-              <tr>
-                <td className="p-3 text-gray-300 border border-gray-600">Ailton Coimbra Bonfim</td>
-                <td className="p-3 text-gray-300 border border-gray-600">
-                  Jurídico, Compliance e Privacidade de Dados
+                  Gente & Gestão
                 </td>
               </tr>
               <tr>
                 <td className="p-3 text-gray-300 border border-gray-600">Mauro Luís Correia</td>
                 <td className="p-3 text-gray-300 border border-gray-600">Presidência</td>
+              </tr>
+              <tr>
+                <td className="p-3 text-gray-300 border border-gray-600">Naasson Carlos de Almeida</td>
+                <td className="p-3 text-gray-300 border border-gray-600">
+                  Gente & Gestão
+                </td>
               </tr>
 
               {/* Homologadora */}
