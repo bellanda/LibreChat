@@ -94,7 +94,7 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
         const body = {
           file_id: file.file_id,
           query,
-          k: 5,
+          k: 10,
         };
         if (!entity_id) {
           return body;

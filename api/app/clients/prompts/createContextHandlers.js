@@ -50,7 +50,7 @@ function createContextHandlers(req, userMessageContent) {
       {
         file_id: file.file_id,
         query: userMessageContent,
-        k: 4,
+        k: 10,
       },
       {
         headers: {
