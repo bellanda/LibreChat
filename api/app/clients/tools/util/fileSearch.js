@@ -104,21 +104,41 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
         return body;
       };
 
-      const queryPromises = files.map((file) =>
-        axios
-          .post(`${process.env.RAG_API_URL}/query`, createQueryBody(file), {
+      /**
+       * Process files in batches with concurrency limit
+       * @param {Array} items - Items to process
+       * @param {number} batchSize - Maximum concurrent operations
+       * @param {Function} processor - Async function to process each item
+       * @returns {Promise<Array>} Results array
+       */
+      const batchProcess = async (items, batchSize, processor) => {
+        const results = [];
+        for (let i = 0; i < items.length; i += batchSize) {
+          const batch = items.slice(i, i + batchSize);
+          const batchPromises = batch.map(processor);
+          const batchResults = await Promise.all(batchPromises);
+          results.push(...batchResults);
+        }
+        return results;
+      };
+
+      const MAX_CONCURRENT_QUERIES = 5;
+
+      const queryProcessor = async (file) => {
+        try {
+          return await axios.post(`${process.env.RAG_API_URL}/query`, createQueryBody(file), {
             headers: {
               Authorization: `Bearer ${jwtToken}`,
               'Content-Type': 'application/json',
             },
-          })
-          .catch((error) => {
-            logger.error('Error encountered in `file_search` while querying file:', error);
-            return null;
-          }),
-      );
+          });
+        } catch (error) {
+          logger.error('Error encountered in `file_search` while querying file:', error);
+          return null;
+        }
+      };
 
-      const results = await Promise.all(queryPromises);
+      const results = await batchProcess(files, MAX_CONCURRENT_QUERIES, queryProcessor);
       const validResults = results.filter((result) => result !== null);
 
       if (validResults.length === 0) {

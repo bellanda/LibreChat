@@ -15,7 +15,6 @@ function createContextHandlers(req, userMessageContent) {
     return;
   }
 
-  const queryPromises = [];
   const processedFiles = [];
   const processedIds = new Set();
   const jwtToken = generateShortLivedToken(req.user.id);
@@ -64,8 +63,6 @@ function createContextHandlers(req, userMessageContent) {
   const processFile = async (file) => {
     if (file.embedded && !processedIds.has(file.file_id)) {
       try {
-        const promise = query(file);
-        queryPromises.push(promise);
         processedFiles.push(file);
         processedIds.add(file.file_id);
       } catch (error) {
@@ -74,9 +71,27 @@ function createContextHandlers(req, userMessageContent) {
     }
   };
 
+  /**
+   * Process files in batches with concurrency limit
+   * @param {Array} items - Items to process
+   * @param {number} batchSize - Maximum concurrent operations
+   * @param {Function} processor - Async function to process each item
+   * @returns {Promise<Array>} Results array
+   */
+  const batchProcess = async (items, batchSize, processor) => {
+    const results = [];
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const batchPromises = batch.map(processor);
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+    }
+    return results;
+  };
+
   const createContext = async () => {
     try {
-      if (!queryPromises.length || !processedFiles.length) {
+      if (!processedFiles.length) {
         return '';
       }
 
@@ -105,27 +120,49 @@ function createContextHandlers(req, userMessageContent) {
         </files>`
       }`;
 
-      const resolvedQueries = await Promise.all(queryPromises);
+      const MAX_CONCURRENT_QUERIES = 5;
+      const queryProcessor = async (file) => {
+        try {
+          return await query(file);
+        } catch (error) {
+          logger.error(`Error querying file ${file.filename}:`, error);
+          return null;
+        }
+      };
+
+      const resolvedQueries = await batchProcess(processedFiles, MAX_CONCURRENT_QUERIES, queryProcessor);
+      const validQueries = resolvedQueries.filter((result) => result !== null);
 
       // Log do conteúdo retornado para debug
-      logger.info(`📄 [createContextHandlers] Processando ${resolvedQueries.length} arquivos`);
-      resolvedQueries.forEach((queryResult, index) => {
-        const file = processedFiles[index];
-        logger.info(`📄 [createContextHandlers] Arquivo ${file.filename}:`);
-        logger.info(
-          `📄 [createContextHandlers] Tamanho dos dados: ${JSON.stringify(queryResult.data).length} caracteres`,
-        );
-        logger.info(
-          `📄 [createContextHandlers] Dados completos: ${JSON.stringify(queryResult.data)}`,
-        );
+      logger.info(`📄 [createContextHandlers] Processando ${validQueries.length} arquivos`);
+      validQueries.forEach((queryResult, index) => {
+        // Map back to original file by finding the matching file for this result
+        const fileIndex = resolvedQueries.findIndex((r) => r === queryResult);
+        const file = processedFiles[fileIndex];
+        if (file) {
+          logger.info(`📄 [createContextHandlers] Arquivo ${file.filename}:`);
+          logger.info(
+            `📄 [createContextHandlers] Tamanho dos dados: ${JSON.stringify(queryResult.data).length} caracteres`,
+          );
+          logger.info(
+            `📄 [createContextHandlers] Dados completos: ${JSON.stringify(queryResult.data)}`,
+          );
+        }
+      });
+
+      // Map valid queries back to their corresponding files
+      const queryFilePairs = [];
+      resolvedQueries.forEach((result, index) => {
+        if (result !== null) {
+          queryFilePairs.push({ queryResult: result, file: processedFiles[index] });
+        }
       });
 
       const context =
-        resolvedQueries.length === 0
+        validQueries.length === 0
           ? '\n\tThe semantic search did not return any results.'
-          : resolvedQueries
-              .map((queryResult, index) => {
-                const file = processedFiles[index];
+          : queryFilePairs
+              .map(({ queryResult, file }) => {
                 let contextItems = queryResult.data;
 
                 const generateContext = (currentContext) =>
