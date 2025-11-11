@@ -313,7 +313,7 @@ export default function PrecoTokenizacaoLimitacoesPage() {
           todos os testes mais famosos de Inteligência Artificial.
         </p>
         <div className="mt-4">
-          <img src="/assets/artificial-analysis-chart.png" alt="Gráfico de Nível de Inteligência" />
+          <img src="/assets/artificial-analysis-chart (11-11-2025).png" alt="Gráfico de Nível de Inteligência" />
         </div>
       </section>
       {/* ------------- Título e Introdução ------------- */}
