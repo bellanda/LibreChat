@@ -7,7 +7,7 @@ const {
   concurrentLimiter,
   messageUserLimiter,
 } = require('~/server/middleware');
-const { isEnabled } = require('~/server/utils');
+const { isEnabled } = require('@librechat/api');
 const { EModelEndpoint } = require('librechat-data-provider');
 
 const { LIMIT_CONCURRENT_MESSAGES, LIMIT_MESSAGE_IP, LIMIT_MESSAGE_USER } = process.env ?? {};

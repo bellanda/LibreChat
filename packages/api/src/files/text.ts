@@ -20,9 +20,7 @@ export async function parseText({
   file,
   file_id,
 }: {
-  req: Pick<ServerRequest, 'user'> & {
-    user?: { id: string };
-  };
+  req: ServerRequest;
   file: Express.Multer.File;
   file_id: string;
 }): Promise<{ text: string; bytes: number; source: string }> {

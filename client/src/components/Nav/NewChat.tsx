@@ -5,6 +5,7 @@ import { Constants, QueryKeys } from 'librechat-data-provider';
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalize, useNewConvo } from '~/hooks';
+import { clearMessagesCache } from '~/utils';
 import store from '~/store';
 
 export default function NewChat({
@@ -33,10 +34,7 @@ export default function NewChat({
         window.open('/c/new', '_blank');
         return;
       }
-      queryClient.setQueryData<TMessage[]>(
-        [QueryKeys.messages, conversation?.conversationId ?? Constants.NEW_CONVO],
-        [],
-      );
+      clearMessagesCache(queryClient, conversation?.conversationId);
       queryClient.invalidateQueries([QueryKeys.messages]);
       newConvo();
       navigate('/c/new', { state: { focusChat: true } });

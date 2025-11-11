@@ -1,14 +1,12 @@
 import { useToastContext } from '@librechat/client';
 import { useQueryClient } from '@tanstack/react-query';
-import type { EndpointFileConfig, TEndpointsConfig, TError } from 'librechat-data-provider';
+import type { TEndpointsConfig, TError } from 'librechat-data-provider';
 import {
   Constants,
-  EModelEndpoint,
   EToolResources,
   QueryKeys,
   defaultAssistantsVersion,
-  fileConfig as defaultFileConfig,
-  isAgentsEndpoint,
+  getEndpointFileConfig,
   isAssistantsEndpoint,
   mergeFileConfig,
 } from 'librechat-data-provider';
@@ -30,10 +28,9 @@ import useUpdateFiles from './useUpdateFiles';
 
 type UseFileHandling = {
   fileSetter?: FileSetter;
-  overrideEndpoint?: EModelEndpoint;
   fileFilter?: (file: File) => boolean;
-  overrideEndpointFileConfig?: EndpointFileConfig;
   additionalMetadata?: Record<string, string | undefined>;
+  overrideEndpoint?: string;
 };
 
 const useFileHandling = (params?: UseFileHandling) => {
@@ -56,11 +53,13 @@ const useFileHandling = (params?: UseFileHandling) => {
 
   const agent_id = params?.additionalMetadata?.agent_id ?? '';
   const assistant_id = params?.additionalMetadata?.assistant_id ?? '';
+  const endpointType = useMemo(() => conversation?.endpointType, [conversation?.endpointType]);
 
   const { data: fileConfig = null } = useGetFileConfig({
     select: (data) => mergeFileConfig(data),
   });
 
+  // Override endpoint if provided in params
   const endpoint = useMemo(
     () =>
       params?.overrideEndpoint ?? conversation?.endpointType ?? conversation?.endpoint ?? 'default',
@@ -71,7 +70,6 @@ const useFileHandling = (params?: UseFileHandling) => {
   const currentModel = conversation?.model ?? null;
   const modelDescription = getModelDescription(currentModel);
   const supportsImageAttachment = modelDescription?.supportsImageAttachment ?? true;
-
   const displayToast = useCallback(() => {
     if (errors.length > 1) {
       // TODO: this should not be a dynamic localize input!!
@@ -200,10 +198,7 @@ const useFileHandling = (params?: UseFileHandling) => {
 
     const formData = new FormData();
     formData.append('endpoint', endpoint);
-    formData.append(
-      'original_endpoint',
-      conversation?.endpointType || conversation?.endpoint || '',
-    );
+    formData.append('endpointType', endpointType ?? '');
     formData.append('file', extendedFile.file as File, encodeURIComponent(filename));
     formData.append('file_id', extendedFile.file_id);
 
@@ -227,8 +222,7 @@ const useFileHandling = (params?: UseFileHandling) => {
       }
     }
 
-    if (isAgentsEndpoint(endpoint)) {
-      console.log('🤖 [startUpload] Processing agents endpoint');
+    if (!isAssistantsEndpoint(endpointType ?? endpoint)) {
       if (!agent_id) {
         formData.append('message_file', 'true');
         console.log('📄 [startUpload] Added message_file=true');
@@ -242,10 +236,7 @@ const useFileHandling = (params?: UseFileHandling) => {
         formData.append('agent_id', conversation.agent_id);
         console.log('🆔 [startUpload] Added agent_id:', conversation.agent_id);
       }
-    }
 
-    if (!isAssistantsEndpoint(endpoint)) {
-      console.log('📤 [startUpload] Calling uploadFile.mutate for non-assistants endpoint');
       uploadFile.mutate(formData);
       return;
     }
@@ -315,18 +306,19 @@ const useFileHandling = (params?: UseFileHandling) => {
     /* Validate files */
     let filesAreValid: boolean;
     try {
+      const endpointFileConfig = getEndpointFileConfig({
+        endpoint,
+        fileConfig,
+        endpointType,
+      });
+
       filesAreValid = validateFiles({
         files,
         fileList,
         setError,
-        endpointFileConfig:
-          params?.overrideEndpointFileConfig ??
-          fileConfig?.endpoints?.[endpoint] ??
-          fileConfig?.endpoints?.default ??
-          defaultFileConfig.endpoints[endpoint] ??
-          defaultFileConfig.endpoints.default,
+        fileConfig,
+        endpointFileConfig,
         toolResource: _toolResource,
-        fileConfig: fileConfig,
       });
     } catch (error) {
       console.error('file validation error', error);
@@ -443,13 +435,6 @@ const useFileHandling = (params?: UseFileHandling) => {
         } else {
           // File wasn't processed, proceed with original
           const isImage = originalFile.type.split('/')[0] === 'image';
-          const tool_resource =
-            initialExtendedFile.tool_resource ?? params?.additionalMetadata?.tool_resource;
-          if (isAgentsEndpoint(endpoint) && !isImage && tool_resource == null) {
-            /** Note: this needs to be removed when we can support files to providers */
-            setError('com_error_files_unsupported_capability');
-            continue;
-          }
 
           // Update progress to show ready for upload
           const readyExtendedFile = {

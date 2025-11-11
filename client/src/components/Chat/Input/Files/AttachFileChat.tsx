@@ -1,14 +1,16 @@
-import type { EndpointFileConfig, TConversation } from 'librechat-data-provider';
+import type { TConversation } from 'librechat-data-provider';
 import {
   Constants,
-  fileConfig as defaultFileConfig,
+  EModelEndpoint,
+  getEndpointField,
+  getEndpointFileConfig,
   isAgentsEndpoint,
   isAssistantsEndpoint,
   mergeFileConfig,
   supportsFiles,
 } from 'librechat-data-provider';
 import { memo, useMemo } from 'react';
-import { useGetFileConfig } from '~/data-provider';
+import { useGetEndpointsQuery, useGetFileConfig } from '~/data-provider';
 import AttachFile from './AttachFile';
 import AttachFileMenu from './AttachFileMenu';
 
@@ -20,24 +22,49 @@ function AttachFileChat({
   conversation: TConversation | null;
 }) {
   const conversationId = conversation?.conversationId ?? Constants.NEW_CONVO;
-  const { endpoint, endpointType } = conversation ?? { endpoint: null };
+  const { endpoint } = conversation ?? { endpoint: null };
   const isAgents = useMemo(() => isAgentsEndpoint(endpoint), [endpoint]);
   const isAssistants = useMemo(() => isAssistantsEndpoint(endpoint), [endpoint]);
 
-  const { data: fileConfig = defaultFileConfig } = useGetFileConfig({
+  const { data: fileConfig = null } = useGetFileConfig({
     select: (data) => mergeFileConfig(data),
   });
 
-  const endpointFileConfig = fileConfig.endpoints[endpoint ?? ''] as EndpointFileConfig | undefined;
-  const endpointSupportsFiles: boolean = supportsFiles[endpointType ?? endpoint ?? ''] ?? false;
-  const isUploadDisabled = (disableInputs || endpointFileConfig?.disabled) ?? false;
+  const { data: endpointsConfig } = useGetEndpointsQuery();
+
+  const endpointType = useMemo(() => {
+    return (
+      getEndpointField(endpointsConfig, endpoint, 'type') ||
+      (endpoint as EModelEndpoint | undefined)
+    );
+  }, [endpoint, endpointsConfig]);
+
+  const endpointFileConfig = useMemo(
+    () =>
+      getEndpointFileConfig({
+        endpoint,
+        fileConfig,
+        endpointType,
+      }),
+    [endpoint, fileConfig, endpointType],
+  );
+  const endpointSupportsFiles: boolean = useMemo(
+    () => supportsFiles[endpointType ?? endpoint ?? ''] ?? false,
+    [endpointType, endpoint],
+  );
+  const isUploadDisabled = useMemo(
+    () => (disableInputs || endpointFileConfig?.disabled) ?? false,
+    [disableInputs, endpointFileConfig?.disabled],
+  );
 
   if (isAssistants && endpointSupportsFiles && !isUploadDisabled) {
     return <AttachFile disabled={disableInputs} />;
   } else if (isAgents || (endpointSupportsFiles && !isUploadDisabled)) {
     return (
       <AttachFileMenu
+        endpoint={endpoint}
         disabled={disableInputs}
+        endpointType={endpointType}
         conversationId={conversationId}
         agentId={conversation?.agent_id}
         endpointFileConfig={endpointFileConfig}

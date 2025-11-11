@@ -9,16 +9,13 @@ import { useArtifactsContext, useEditorContext } from '~/Providers';
 import { cn } from '~/utils';
 import { ArtifactCodeEditor } from './ArtifactCodeEditor';
 import { ArtifactPreview } from './ArtifactPreview';
-import { MermaidMarkdown } from './MermaidMarkdown';
 
 export default function ArtifactTabs({
   artifact,
-  isMermaid,
   editorRef,
   previewRef,
 }: {
   artifact: Artifact;
-  isMermaid: boolean;
   editorRef: React.MutableRefObject<CodeEditorRef>;
   previewRef: React.MutableRefObject<SandpackPreviewRef>;
 }) {
@@ -43,27 +40,23 @@ export default function ArtifactTabs({
         ref={contentRef}
         value="code"
         id="artifacts-code"
-        className={cn('overflow-auto flex-grow')}
+        className={cn('flex-grow overflow-auto')}
+        tabIndex={-1}
       >
-        {isMermaid ? (
-          <MermaidMarkdown content={content} isSubmitting={isSubmitting} />
-        ) : (
-          <ArtifactCodeEditor
-            files={files}
-            fileKey={fileKey}
-            template={template}
-            artifact={artifact}
-            editorRef={editorRef}
-            sharedProps={sharedProps}
-          />
-        )}
+        <ArtifactCodeEditor
+          files={files}
+          fileKey={fileKey}
+          template={template}
+          artifact={artifact}
+          editorRef={editorRef}
+          sharedProps={sharedProps}
+        />
       </Tabs.Content>
-      <Tabs.Content value="preview" className={cn('overflow-auto flex-grow', 'bg-white')}>
+      <Tabs.Content value="preview" className="flex-grow overflow-auto" tabIndex={-1}>
         <ArtifactPreview
           files={files}
           fileKey={fileKey}
           template={template}
-          isMermaid={isMermaid}
           previewRef={previewRef}
           sharedProps={sharedProps}
           currentCode={currentCode}

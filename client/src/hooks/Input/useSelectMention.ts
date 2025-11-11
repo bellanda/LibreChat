@@ -8,7 +8,6 @@ import type {
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import { useCallback } from 'react';
 import { useRecoilValue } from 'recoil';
-import { useChatContext } from '~/Providers';
 import type { ConvoGenerator, MentionOption } from '~/common';
 import { useDefaultConvo } from '~/hooks';
 import store from '~/store';
@@ -17,11 +16,13 @@ import { getConvoSwitchLogic, getModelSpecIconURL, logger, removeUnavailableTool
 export default function useSelectMention({
   presets,
   modelSpecs,
+  conversation,
   assistantsMap,
+  returnHandlers,
   endpointsConfig,
   newConversation,
-  returnHandlers,
 }: {
+  conversation: TConversation | null;
   presets?: TPreset[];
   modelSpecs: TModelSpec[];
   assistantsMap?: TAssistantsMap;
@@ -29,7 +30,6 @@ export default function useSelectMention({
   endpointsConfig: TEndpointsConfig;
   returnHandlers?: boolean;
 }) {
-  const { conversation } = useChatContext();
   const getDefaultConversation = useDefaultConvo();
   const modularChat = useRecoilValue(store.modularChat);
   const availableTools = useRecoilValue(store.availableTools);

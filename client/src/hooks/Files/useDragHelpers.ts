@@ -1,3 +1,4 @@
+import { useToastContext } from '@librechat/client';
 import { useQueryClient } from '@tanstack/react-query';
 import type * as t from 'librechat-data-provider';
 import {
@@ -6,9 +7,11 @@ import {
   defaultAgentCapabilities,
   EModelEndpoint,
   EToolResources,
+  getEndpointFileConfig,
   isAssistantsEndpoint,
+  mergeFileConfig,
   QueryKeys,
-  Tools
+  Tools,
 } from 'librechat-data-provider';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { DropTargetMonitor } from 'react-dnd';
@@ -17,10 +20,13 @@ import { NativeTypes } from 'react-dnd-html5-backend';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { isEphemeralAgent } from '~/common';
 import store, { ephemeralAgentByConvoId } from '~/store';
+import useLocalize from '../useLocalize';
 import useFileHandling from './useFileHandling';
 
 export default function useDragHelpers() {
   const queryClient = useQueryClient();
+  const { showToast } = useToastContext();
+  const localize = useLocalize();
   const [showModal, setShowModal] = useState(false);
   const [draggedFiles, setDraggedFiles] = useState<File[]>([]);
   const conversation = useRecoilValue(store.conversationByIndex(0)) || undefined;
@@ -33,9 +39,7 @@ export default function useDragHelpers() {
     [conversation?.endpoint],
   );
 
-  const { handleFiles } = useFileHandling({
-    overrideEndpoint: isAssistants ? undefined : EModelEndpoint.agents,
-  });
+  const { handleFiles } = useFileHandling();
 
   const handleOptionSelect = useCallback(
     (toolResource: EToolResources | undefined) => {
@@ -62,6 +66,26 @@ export default function useDragHelpers() {
 
   const handleDrop = useCallback(
     (item: { files: File[] }) => {
+      /** Early block: leverage endpoint file config to prevent drag/drop on disabled endpoints */
+      const currentEndpoint = conversationRef.current?.endpoint ?? 'default';
+      const currentEndpointType = conversationRef.current?.endpointType ?? undefined;
+      const cfg = queryClient.getQueryData<t.FileConfig>([QueryKeys.fileConfig]);
+      if (cfg) {
+        const mergedCfg = mergeFileConfig(cfg);
+        const endpointCfg = getEndpointFileConfig({
+          fileConfig: mergedCfg,
+          endpoint: currentEndpoint,
+          endpointType: currentEndpointType,
+        });
+        if (endpointCfg?.disabled === true) {
+          showToast({
+            message: localize('com_ui_attach_error_disabled'),
+            status: 'error',
+          });
+          return;
+        }
+      }
+
       if (isAssistants) {
         handleFilesRef.current(item.files);
         return;
@@ -110,7 +134,7 @@ export default function useDragHelpers() {
       setDraggedFiles(item.files);
       setShowModal(true);
     },
-    [isAssistants, queryClient],
+    [isAssistants, queryClient, showToast, localize],
   );
 
   const [{ canDrop, isOver }, drop] = useDrop(

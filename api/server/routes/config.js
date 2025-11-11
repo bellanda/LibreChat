@@ -12,6 +12,7 @@ const { getAppConfig } = require('~/server/services/Config/app');
 const { getProjectByName } = require('~/models/Project');
 const { getMCPManager } = require('~/config');
 const { getLogStores } = require('~/cache');
+const { mcpServersRegistry } = require('@librechat/api');
 
 const router = express.Router();
 const emailLoginEnabled =
@@ -116,6 +117,9 @@ router.get('/', async function (req, res) {
       sharePointPickerGraphScope: process.env.SHAREPOINT_PICKER_GRAPH_SCOPE,
       sharePointPickerSharePointScope: process.env.SHAREPOINT_PICKER_SHAREPOINT_SCOPE,
       openidReuseTokens,
+      conversationImportMaxFileSize: process.env.CONVERSATION_IMPORT_MAX_FILE_SIZE_BYTES
+        ? parseInt(process.env.CONVERSATION_IMPORT_MAX_FILE_SIZE_BYTES, 10)
+        : 0,
     };
 
     const minPasswordLength = parseInt(process.env.MIN_PASSWORD_LENGTH, 10);
@@ -123,7 +127,7 @@ router.get('/', async function (req, res) {
       payload.minPasswordLength = minPasswordLength;
     }
 
-    const getMCPServers = () => {
+    const getMCPServers = async () => {
       try {
         if (appConfig?.mcpConfig == null) {
           return;
@@ -132,9 +136,8 @@ router.get('/', async function (req, res) {
         if (!mcpManager) {
           return;
         }
-        const mcpServers = mcpManager.getAllServers();
+        const mcpServers = await mcpServersRegistry.getAllServerConfigs();
         if (!mcpServers) return;
-        const oauthServers = mcpManager.getOAuthServers();
         for (const serverName in mcpServers) {
           if (!payload.mcpServers) {
             payload.mcpServers = {};
@@ -143,7 +146,7 @@ router.get('/', async function (req, res) {
           payload.mcpServers[serverName] = removeNullishValues({
             startup: serverConfig?.startup,
             chatMenu: serverConfig?.chatMenu,
-            isOAuth: oauthServers?.has(serverName),
+            isOAuth: serverConfig.requiresOAuth,
             customUserVars: serverConfig?.customUserVars,
           });
         }
@@ -152,12 +155,12 @@ router.get('/', async function (req, res) {
       }
     };
 
-    getMCPServers();
+    await getMCPServers();
     const webSearchConfig = appConfig?.webSearch;
     if (
       webSearchConfig != null &&
       (webSearchConfig.searchProvider ||
-        webSearchConfig.scraperType ||
+        webSearchConfig.scraperProvider ||
         webSearchConfig.rerankerType)
     ) {
       payload.webSearch = {};
@@ -166,8 +169,8 @@ router.get('/', async function (req, res) {
     if (webSearchConfig?.searchProvider) {
       payload.webSearch.searchProvider = webSearchConfig.searchProvider;
     }
-    if (webSearchConfig?.scraperType) {
-      payload.webSearch.scraperType = webSearchConfig.scraperType;
+    if (webSearchConfig?.scraperProvider) {
+      payload.webSearch.scraperProvider = webSearchConfig.scraperProvider;
     }
     if (webSearchConfig?.rerankerType) {
       payload.webSearch.rerankerType = webSearchConfig.rerankerType;

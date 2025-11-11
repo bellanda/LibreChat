@@ -55,13 +55,13 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
   const getSpeedIcon = (speed: string) => {
     switch (speed) {
       case 'very-fast':
-        return <ZapIcon className="text-emerald-500 fill-current size-3" />;
+        return <ZapIcon className="size-3 fill-current text-emerald-500" />;
       case 'fast':
-        return <ZapIcon className="text-green-500 size-3" />;
+        return <ZapIcon className="size-3 text-green-500" />;
       case 'medium':
-        return <ClockIcon className="text-yellow-500 size-3" />;
+        return <ClockIcon className="size-3 text-yellow-500" />;
       case 'slow':
-        return <ClockIcon className="text-red-500 size-3" />;
+        return <ClockIcon className="size-3 text-red-500" />;
       default:
         return null;
     }
@@ -70,11 +70,11 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
   const getIntelligenceIcon = (intelligence: string) => {
     switch (intelligence) {
       case 'very-high':
-        return <StarIcon className="text-purple-500 fill-current size-3" />;
+        return <StarIcon className="size-3 fill-current text-purple-500" />;
       case 'high':
-        return <StarIcon className="text-blue-500 size-3" />;
+        return <StarIcon className="size-3 text-blue-500" />;
       case 'medium':
-        return <StarIcon className="text-gray-500 size-3" />;
+        return <StarIcon className="size-3 text-gray-500" />;
       default:
         return null;
     }
@@ -89,19 +89,19 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
       {modelDescription ? (
         <HoverCard openDelay={100}>
           <HoverCardTrigger asChild>
-            <div className="flex justify-between items-center w-full">
-              <div className="flex gap-2 items-center">
+            <div className="flex w-full items-center justify-between">
+              <div className="flex items-center gap-2">
                 {avatarUrl ? (
-                  <div className="flex overflow-hidden justify-center items-center w-5 h-5 rounded-full">
+                  <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
                     <img
                       src={avatarUrl}
                       alt={modelName ?? ''}
-                      className="object-cover w-full h-full"
+                      className="h-full w-full object-cover"
                     />
                   </div>
                 ) : (isAgentsEndpoint(endpoint.value) || isAssistantsEndpoint(endpoint.value)) &&
                   endpoint.icon ? (
-                  <div className="flex overflow-hidden justify-center items-center w-5 h-5 rounded-full">
+                  <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
                     {endpoint.icon}
                   </div>
                 ) : null}
@@ -112,8 +112,8 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                   </span>
                 </div>
               </div>
-              <div className="flex gap-2 items-center">
-                {isGlobal && <EarthIcon className="text-green-400 size-4" />}
+              <div className="flex items-center gap-2">
+                {isGlobal && <EarthIcon className="size-4 text-green-400" />}
                 {isSelected && (
                   <svg
                     width="16"
@@ -148,9 +148,9 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                   'https://sm.ign.com/ign_br/screenshot/default/image-2025-01-28t120749844_jm1s.jpg'
                 }
                 alt={modelName ?? ''}
-                className="object-cover mb-3 w-full h-32 rounded-lg"
+                className="mb-3 h-32 w-full rounded-lg object-cover"
               />
-              <div className="p-1 space-y-3">
+              <div className="space-y-3 p-1">
                 <div>
                   <h4 className="font-semibold text-text-primary">{modelDescription.title}</h4>
                   <p className="mt-1 text-sm text-text-secondary">{modelDescription.description}</p>
@@ -163,7 +163,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                   <div className="flex flex-wrap gap-2">
                     {modelDescription.prompt !== undefined && (
                       <TooltipAnchor description="Preço para tokens de entrada (prompt)">
-                        <div className="flex gap-1 items-center px-2 py-1 bg-emerald-100 rounded-full cursor-help dark:bg-emerald-900/30">
+                        <div className="flex cursor-help items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 dark:bg-emerald-900/30">
                           <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
                             Entrada: ${modelDescription.prompt}
                           </span>
@@ -172,7 +172,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                     )}
                     {modelDescription.completion !== undefined && (
                       <TooltipAnchor description="Preço para tokens de saída (completion)">
-                        <div className="flex gap-1 items-center px-2 py-1 bg-rose-100 rounded-full cursor-help dark:bg-rose-900/30">
+                        <div className="flex cursor-help items-center gap-1 rounded-full bg-rose-100 px-2 py-1 dark:bg-rose-900/30">
                           <span className="text-xs font-medium text-rose-600 dark:text-rose-300">
                             Saída: ${modelDescription.completion}
                           </span>
@@ -189,8 +189,8 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                     <div className="flex flex-wrap gap-2">
                       {modelDescription.characteristics.reasoning && (
                         <TooltipAnchor description="Capacidade avançada de raciocínio lógico e resolução de problemas complexos">
-                          <div className="flex gap-1 items-center px-2 py-1 bg-blue-100 rounded-full cursor-help dark:bg-blue-900/30">
-                            <BrainIcon className="text-blue-600 size-3" />
+                          <div className="flex cursor-help items-center gap-1 rounded-full bg-blue-100 px-2 py-1 dark:bg-blue-900/30">
+                            <BrainIcon className="size-3 text-blue-600" />
                             <span className="text-xs text-blue-700 dark:text-blue-300">
                               Reasoning
                             </span>
@@ -209,9 +209,9 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                                   : 'Processamento mais lento, mas com maior precisão'
                           }
                         >
-                          <div className="flex gap-1 items-center px-2 py-1 bg-gray-100 rounded-full cursor-help dark:bg-gray-800">
+                          <div className="flex cursor-help items-center gap-1 rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-800">
                             {getSpeedIcon(modelDescription.characteristics.speed)}
-                            <span className="text-xs text-gray-700 capitalize dark:text-gray-300">
+                            <span className="text-xs capitalize text-gray-700 dark:text-gray-300">
                               {modelDescription.characteristics.speed.replace('-', ' ')}
                             </span>
                           </div>
@@ -227,9 +227,9 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                                 : 'Inteligência sólida para tarefas do dia a dia'
                           }
                         >
-                          <div className="flex gap-1 items-center px-2 py-1 bg-purple-100 rounded-full cursor-help dark:bg-purple-900/30">
+                          <div className="flex cursor-help items-center gap-1 rounded-full bg-purple-100 px-2 py-1 dark:bg-purple-900/30">
                             {getIntelligenceIcon(modelDescription.characteristics.intelligence)}
-                            <span className="text-xs text-purple-700 capitalize dark:text-purple-300">
+                            <span className="text-xs capitalize text-purple-700 dark:text-purple-300">
                               {modelDescription.characteristics.intelligence.replace('-', ' ')}
                             </span>
                           </div>
@@ -237,8 +237,8 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                       )}
                       {modelDescription.characteristics.coding && (
                         <TooltipAnchor description="Especializado em programação, debug e desenvolvimento de software">
-                          <div className="flex gap-1 items-center px-2 py-1 bg-green-100 rounded-full cursor-help dark:bg-green-900/30">
-                            <CodeIcon className="text-green-600 size-3" />
+                          <div className="flex cursor-help items-center gap-1 rounded-full bg-green-100 px-2 py-1 dark:bg-green-900/30">
+                            <CodeIcon className="size-3 text-green-600" />
                             <span className="text-xs text-green-700 dark:text-green-300">
                               Coding
                             </span>
@@ -247,8 +247,8 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                       )}
                       {modelDescription.characteristics.math && (
                         <TooltipAnchor description="Excelente em cálculos matemáticos e resolução de problemas numéricos">
-                          <div className="flex gap-1 items-center px-2 py-1 bg-orange-100 rounded-full cursor-help dark:bg-orange-900/30">
-                            <CalculatorIcon className="text-orange-600 size-3" />
+                          <div className="flex cursor-help items-center gap-1 rounded-full bg-orange-100 px-2 py-1 dark:bg-orange-900/30">
+                            <CalculatorIcon className="size-3 text-orange-600" />
                             <span className="text-xs text-orange-700 dark:text-orange-300">
                               Math
                             </span>
@@ -257,8 +257,8 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                       )}
                       {modelDescription.characteristics.multimodal && (
                         <TooltipAnchor description="Capaz de processar texto, imagens e outros tipos de mídia">
-                          <div className="flex gap-1 items-center px-2 py-1 bg-pink-100 rounded-full cursor-help dark:bg-pink-900/30">
-                            <ImageIcon className="text-pink-600 size-3" />
+                          <div className="flex cursor-help items-center gap-1 rounded-full bg-pink-100 px-2 py-1 dark:bg-pink-900/30">
+                            <ImageIcon className="size-3 text-pink-600" />
                             <span className="text-xs text-pink-700 dark:text-pink-300">
                               Multimodal
                             </span>
@@ -277,7 +277,7 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
                       {modelDescription.useCases.map((useCase: string, index: number) => (
                         <li
                           key={index}
-                          className="flex gap-2 items-start text-xs text-text-secondary"
+                          className="flex items-start gap-2 text-xs text-text-secondary"
                         >
                           <CheckCircleIcon className="mt-0.5 size-3 flex-shrink-0 text-green-500" />
                           <span>{useCase}</span>
@@ -291,22 +291,22 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
           </HoverCardPortal>
         </HoverCard>
       ) : (
-        <div className="flex justify-between items-center w-full">
-          <div className="flex gap-2 items-center">
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center gap-2">
             {avatarUrl ? (
-              <div className="flex overflow-hidden justify-center items-center w-5 h-5 rounded-full">
-                <img src={avatarUrl} alt={modelName ?? ''} className="object-cover w-full h-full" />
+              <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
+                <img src={avatarUrl} alt={modelName ?? ''} className="h-full w-full object-cover" />
               </div>
             ) : (isAgentsEndpoint(endpoint.value) || isAssistantsEndpoint(endpoint.value)) &&
               endpoint.icon ? (
-              <div className="flex overflow-hidden justify-center items-center w-5 h-5 rounded-full">
+              <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
                 {endpoint.icon}
               </div>
             ) : null}
             <span>{modelName}</span>
           </div>
-          <div className="flex gap-2 items-center">
-            {isGlobal && <EarthIcon className="text-green-400 size-4" />}
+          <div className="flex items-center gap-2">
+            {isGlobal && <EarthIcon className="size-4 text-green-400" />}
             {isSelected && (
               <svg
                 width="16"

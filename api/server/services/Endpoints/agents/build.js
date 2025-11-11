@@ -63,9 +63,9 @@ const buildOptions = async (req, endpoint, parsedBody, endpointType) => {
   if (finalPromptPrefix) {
     req.body.promptPrefix = finalPromptPrefix;
   }
-
   const agentPromise = loadAgent({
     req,
+    spec,
     agent_id: isAgentsEndpoint(endpoint) ? agent_id : Constants.EPHEMERAL_AGENT_ID,
     endpoint,
     model_parameters,

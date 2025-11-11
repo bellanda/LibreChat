@@ -1,5 +1,5 @@
 import { useToastContext } from '@librechat/client';
-import { EModelEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint, getEndpointField } from 'librechat-data-provider';
 import { useCallback, useMemo, useState } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import type { AgentForm, AgentPanelProps, IconComponentTypes } from '~/common';
@@ -15,7 +15,6 @@ import { useAgentPanelContext, useFileMapContext } from '~/Providers';
 import {
   cn,
   defaultTextProps,
-  getEndpointField,
   getIconKey,
   processAgentOption,
   removeFocusOutlines,
@@ -183,7 +182,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
 
   return (
     <>
-      <div className="px-4 pt-3 h-auto bg-white dark:bg-transparent">
+      <div className="h-auto bg-white px-4 pt-3 dark:bg-transparent">
         {/* Avatar & Name */}
         <div className="mb-4">
           <AgentAvatar
@@ -271,15 +270,15 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
           <button
             type="button"
             onClick={() => setActivePanel(Panel.model)}
-            className="relative w-full h-10 font-medium rounded-lg btn btn-neutral border-token-border-light"
+            className="btn btn-neutral border-token-border-light relative h-10 w-full rounded-lg font-medium"
             aria-haspopup="true"
             aria-expanded="false"
           >
-            <div className="flex gap-2 items-center w-full">
+            <div className="flex w-full items-center gap-2">
               {Icon && (
-                <div className="flex relative flex-shrink-0 justify-center items-center w-6 h-6 text-black bg-white rounded-full shadow-stroke dark:bg-white">
+                <div className="shadow-stroke relative flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white text-black dark:bg-white">
                   <Icon
-                    className="w-2/3 h-2/3"
+                    className="h-2/3 w-2/3"
                     endpoint={providerValue as string}
                     endpointType={endpointType}
                     iconURL={endpointIconURL}
@@ -299,8 +298,8 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
           artifactsEnabled ||
           contextEnabled ||
           webSearchEnabled) && (
-          <div className="flex flex-col gap-3 items-start mb-4 w-full">
-            <label className="block font-medium text-token-text-primary">
+          <div className="mb-4 flex w-full flex-col items-start gap-3">
+            <label className="text-token-text-primary block font-medium">
               {localize('com_assistants_capabilities')}
             </label>
             {/* Code Execution */}
@@ -360,15 +359,15 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
                   />
                 ))}
             </div>
-            <div className="flex mt-2 space-x-2">
+            <div className="mt-2 flex space-x-2">
               {(toolsEnabled ?? false) && (
                 <button
                   type="button"
                   onClick={() => setShowToolDialog(true)}
-                  className="relative w-full h-9 font-medium rounded-lg btn btn-neutral border-token-border-light"
+                  className="btn btn-neutral border-token-border-light relative h-9 w-full rounded-lg font-medium"
                   aria-haspopup="dialog"
                 >
-                  <div className="flex gap-2 justify-center items-center w-full">
+                  <div className="flex w-full items-center justify-center gap-2">
                     {localize('com_assistants_add_tools')}
                   </div>
                 </button>
@@ -378,10 +377,10 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
                   type="button"
                   disabled={isEphemeralAgent(agent_id)}
                   onClick={handleAddActions}
-                  className="relative w-full h-9 font-medium rounded-lg btn btn-neutral border-token-border-light"
+                  className="btn btn-neutral border-token-border-light relative h-9 w-full rounded-lg font-medium"
                   aria-haspopup="dialog"
                 >
-                  <div className="flex gap-2 justify-center items-center w-full">
+                  <div className="flex w-full items-center justify-center gap-2">
                     {localize('com_assistants_add_actions')}
                   </div>
                 </button>
@@ -393,7 +392,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
         <div className="mb-4">
           <div className="mb-1.5 flex items-center gap-2">
             <span>
-              <label className="block font-medium text-token-text-primary">
+              <label className="text-token-text-primary block font-medium">
                 {localize('com_ui_support_contact')}
               </label>
             </span>
@@ -402,7 +401,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
             {/* Support Contact Name */}
             <div className="flex flex-col">
               <label
-                className="flex justify-between items-center mb-1"
+                className="mb-1 flex items-center justify-between"
                 htmlFor="support-contact-name"
               >
                 <span className="text-sm">{localize('com_ui_support_contact_name')}</span>
@@ -426,9 +425,16 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
                       type="text"
                       placeholder={localize('com_ui_support_contact_name_placeholder')}
                       aria-label="Support contact name"
+                      aria-invalid={error ? 'true' : 'false'}
+                      aria-describedby={error ? 'support-contact-name-error' : undefined}
                     />
                     {error && (
-                      <span className="text-sm text-red-500 transition duration-300 ease-in-out">
+                      <span
+                        id="support-contact-name-error"
+                        className="text-sm text-red-500 transition duration-300 ease-in-out"
+                        role="alert"
+                        aria-live="polite"
+                      >
                         {error.message}
                       </span>
                     )}
@@ -439,7 +445,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
             {/* Support Contact Email */}
             <div className="flex flex-col">
               <label
-                className="flex justify-between items-center mb-1"
+                className="mb-1 flex items-center justify-between"
                 htmlFor="support-contact-email"
               >
                 <span className="text-sm">{localize('com_ui_support_contact_email')}</span>
@@ -461,9 +467,16 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
                       type="email"
                       placeholder={localize('com_ui_support_contact_email_placeholder')}
                       aria-label="Support contact email"
+                      aria-invalid={error ? 'true' : 'false'}
+                      aria-describedby={error ? 'support-contact-email-error' : undefined}
                     />
                     {error && (
-                      <span className="text-sm text-red-500 transition duration-300 ease-in-out">
+                      <span
+                        id="support-contact-email-error"
+                        className="text-sm text-red-500 transition duration-300 ease-in-out"
+                        role="alert"
+                        aria-live="polite"
+                      >
                         {error.message}
                       </span>
                     )}

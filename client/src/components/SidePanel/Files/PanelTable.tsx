@@ -24,6 +24,7 @@ import {
 import {
   checkOpenAIStorage,
   fileConfig as defaultFileConfig,
+  getEndpointFileConfig,
   isAssistantsEndpoint,
   megabyte,
   mergeFileConfig,
@@ -86,7 +87,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
   const fileMap = useFileMapContext();
   const { showToast } = useToastContext();
   const { setFiles, conversation } = useChatContext();
-  const { data: fileConfig = defaultFileConfig } = useGetFileConfig({
+  const { data: fileConfig = null } = useGetFileConfig({
     select: (data) => mergeFileConfig(data),
   });
   const { addFile } = useUpdateFiles(setFiles);
@@ -103,6 +104,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
 
       const fileData = fileMap[file.file_id];
       const endpoint = conversation.endpoint;
+      const endpointType = conversation.endpointType;
 
       if (!fileData.source) {
         return;
@@ -126,13 +128,24 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
         });
       }
 
-      const { fileSizeLimit, supportedMimeTypes } =
-        fileConfig.endpoints[endpoint] ?? fileConfig.endpoints.default;
+      const endpointFileConfig = getEndpointFileConfig({
+        fileConfig,
+        endpoint,
+        endpointType,
+      });
 
-      if (fileData.bytes > fileSizeLimit) {
+      if (endpointFileConfig.disabled === true) {
+        showToast({
+          message: localize('com_ui_attach_error_disabled'),
+          status: 'error',
+        });
+        return;
+      }
+
+      if (fileData.bytes > (endpointFileConfig.fileSizeLimit ?? Number.MAX_SAFE_INTEGER)) {
         showToast({
           message: `${localize('com_ui_attach_error_size')} ${
-            fileSizeLimit / megabyte
+            (endpointFileConfig.fileSizeLimit ?? 0) / megabyte
           } MB (${endpoint})`,
           status: 'error',
         });
@@ -142,7 +155,10 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
       // Skip MIME type check for files originally uploaded for file_search (RAG API)
       // as they may have been converted from unsupported formats to .txt
       const isFileSearchFile = fileData.embedded === true || fileData.source === 'vectordb';
-      if (!isFileSearchFile && !defaultFileConfig.checkType(file.type, supportedMimeTypes)) {
+      if (
+        !isFileSearchFile &&
+        !defaultFileConfig.checkType(file.type, endpointFileConfig.supportedMimeTypes ?? [])
+      ) {
         showToast({
           message: `${localize('com_ui_attach_error_type')} ${file.type} (${endpoint})`,
           status: 'error',
@@ -165,14 +181,14 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
         metadata: fileData.metadata,
       });
     },
-    [addFile, fileMap, conversation, localize, showToast, fileConfig.endpoints],
+    [addFile, fileMap, conversation, localize, showToast, fileConfig],
   );
 
   const filenameFilter = table.getColumn('filename')?.getFilterValue() as string;
 
   return (
     <div role="region" aria-label={localize('com_files_table')} className="mt-2 space-y-2">
-      <div className="flex gap-4 items-center">
+      <div className="flex items-center gap-4">
         <Input
           placeholder={localize('com_files_filter')}
           value={filenameFilter ?? ''}
@@ -181,7 +197,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
         />
       </div>
 
-      <div className="bg-transparent rounded-lg border shadow-sm transition-colors border-border-light">
+      <div className="rounded-lg border border-border-light bg-transparent shadow-sm transition-colors">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -191,7 +207,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                     <TableHead
                       key={header.id}
                       style={{ width: index === 0 ? '75%' : '25%' }}
-                      className="py-3 text-sm font-medium text-left bg-surface-secondary text-text-secondary"
+                      className="bg-surface-secondary py-3 text-left text-sm font-medium text-text-secondary"
                     >
                       <div className="px-4">
                         {header.isPlaceholder
@@ -265,7 +281,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-sm text-center text-text-secondary"
+                    className="h-24 text-center text-sm text-text-secondary"
                   >
                     {localize('com_files_no_results')}
                   </TableCell>
@@ -276,18 +292,18 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
         </div>
       </div>
 
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowFiles(true)}
           aria-label={localize('com_sidepanel_manage_files')}
         >
-          <ArrowUpLeft className="w-4 h-4" aria-hidden="true" />
+          <ArrowUpLeft className="h-4 w-4" aria-hidden="true" />
           <span className="ml-2">{localize('com_sidepanel_manage_files')}</span>
         </Button>
 
-        <div className="flex gap-2 items-center" role="navigation" aria-label="Pagination">
+        <div className="flex items-center gap-2" role="navigation" aria-label="Pagination">
           <Button
             variant="outline"
             size="sm"

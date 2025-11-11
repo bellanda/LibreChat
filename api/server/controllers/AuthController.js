@@ -1,7 +1,15 @@
 const cookies = require('cookie');
 const jwt = require('jsonwebtoken');
-const openIdClient = require('openid-client');
+let openIdClient;
 const { logger } = require('@librechat/data-schemas');
+
+// Lazy load openid-client as ES module
+const getOpenIdClient = async () => {
+  if (!openIdClient) {
+    openIdClient = (await import('openid-client')).default;
+  }
+  return openIdClient;
+};
 const { isEnabled, findOpenIDUser } = require('@librechat/api');
 const {
   requestPasswordReset,
@@ -70,7 +78,8 @@ const refreshController = async (req, res) => {
   if (token_provider === 'openid' && isEnabled(process.env.OPENID_REUSE_TOKENS) === true) {
     try {
       const openIdConfig = getOpenIdConfig();
-      const tokenset = await openIdClient.refreshTokenGrant(openIdConfig, refreshToken);
+      const client = await getOpenIdClient();
+      const tokenset = await client.refreshTokenGrant(openIdConfig, refreshToken);
       const claims = tokenset.claims();
       const { user, error } = await findOpenIDUser({
         findUser,
@@ -116,11 +125,15 @@ const refreshController = async (req, res) => {
       const token = await setAuthTokens(userId, res, session);
 
       // trigger OAuth MCP server reconnection asynchronously (best effort)
-      void getOAuthReconnectionManager()
-        .reconnectServers(userId)
-        .catch((err) => {
-          logger.error('Error reconnecting OAuth MCP servers:', err);
-        });
+      try {
+        void getOAuthReconnectionManager()
+          .reconnectServers(userId)
+          .catch((err) => {
+            logger.error('[refreshController] Error reconnecting OAuth MCP servers:', err);
+          });
+      } catch (err) {
+        logger.warn(`[refreshController] Cannot attempt OAuth MCP servers reconnection:`, err);
+      }
 
       res.status(200).send({ token, user });
     } else if (req?.query?.retry) {

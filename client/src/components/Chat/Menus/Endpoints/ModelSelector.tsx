@@ -6,7 +6,12 @@ import { CustomMenu as Menu } from './CustomMenu';
 import DialogManager from './DialogManager';
 import { ModelSelectorChatProvider } from './ModelSelectorChatContext';
 import { ModelSelectorProvider, useModelSelectorContext } from './ModelSelectorContext';
-import { renderEndpoints, renderModelSpecs, renderSearchResults } from './components';
+import {
+  renderCustomGroups,
+  renderEndpoints,
+  renderModelSpecs,
+  renderSearchResults,
+} from './components';
 import { getDisplayValue, getSelectedIcon } from './utils';
 
 function ModelSelectorContent() {
@@ -68,11 +73,11 @@ function ModelSelectorContent() {
       aria-label={localize('com_ui_select_model')}
     >
       {selectedIcon && React.isValidElement(selectedIcon) && (
-        <div className="flex overflow-hidden flex-shrink-0 justify-center items-center">
+        <div className="flex flex-shrink-0 items-center justify-center overflow-hidden">
           {selectedIcon}
         </div>
       )}
-      <div className="flex-grow text-left truncate">
+      <div className="flex-grow truncate text-left">
         {modelDescription ? (
           <div className="flex flex-col">
             <span>{modelDescription.name}</span>
@@ -86,7 +91,7 @@ function ModelSelectorContent() {
   );
 
   return (
-    <div className="flex relative flex-col gap-2 items-center w-full max-w-md">
+    <div className="relative flex w-full max-w-md flex-col items-center gap-2">
       <Menu
         values={selectedValues}
         onValuesChange={(values: Record<string, any>) => {
@@ -104,8 +109,15 @@ function ModelSelectorContent() {
           renderSearchResults(searchResults, localize, searchValue)
         ) : (
           <>
-            {renderModelSpecs(modelSpecs, selectedValues.modelSpec || '')}
+            {/* Render ungrouped modelSpecs (no group field) */}
+            {renderModelSpecs(
+              modelSpecs?.filter((spec) => !spec.group) || [],
+              selectedValues.modelSpec || '',
+            )}
+            {/* Render endpoints (will include grouped specs matching endpoint names) */}
             {renderEndpoints(mappedEndpoints ?? [])}
+            {/* Render custom groups (specs with group field not matching any endpoint) */}
+            {renderCustomGroups(modelSpecs || [], mappedEndpoints ?? [])}
           </>
         )}
       </Menu>

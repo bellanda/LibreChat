@@ -3,7 +3,11 @@ const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
 const { sanitizeFilename } = require('@librechat/api');
-const { fileConfig: defaultFileConfig, mergeFileConfig } = require('librechat-data-provider');
+const {
+  mergeFileConfig,
+  getEndpointFileConfig,
+  fileConfig: defaultFileConfig,
+} = require('librechat-data-provider');
 const { getAppConfig } = require('~/server/services/Config');
 
 const storage = multer.diskStorage({
@@ -54,18 +58,20 @@ const createFileFilter = (customFileConfig) => {
 
     const endpoint = req.body.endpoint;
     const tool_resource = req.body.tool_resource;
+    const endpointType = req.body.endpointType;
 
     // Allow any file type for file_search tool_resource (RAG API) as we can convert unsupported files to .txt
     if (tool_resource === 'file_search') {
       return cb(null, true);
     }
 
-    const supportedTypes =
-      customFileConfig?.endpoints?.[endpoint]?.supportedMimeTypes ??
-      customFileConfig?.endpoints?.default.supportedMimeTypes ??
-      defaultFileConfig?.endpoints?.[endpoint]?.supportedMimeTypes;
+    const endpointFileConfig = getEndpointFileConfig({
+      fileConfig: customFileConfig,
+      endpoint,
+      endpointType,
+    });
 
-    if (!defaultFileConfig.checkType(file.mimetype, supportedTypes)) {
+    if (!defaultFileConfig.checkType(file.mimetype, endpointFileConfig.supportedMimeTypes)) {
       return cb(new Error('Unsupported file type: ' + file.mimetype), false);
     }
 

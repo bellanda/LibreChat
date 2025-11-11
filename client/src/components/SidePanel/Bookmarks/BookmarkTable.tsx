@@ -66,7 +66,7 @@ const BookmarkTable = () => {
   return (
     <BookmarkContext.Provider value={{ bookmarks }}>
       <div role="region" aria-label={localize('com_ui_bookmarks')} className="mt-2 space-y-2">
-        <div className="flex gap-4 items-center">
+        <div className="flex items-center gap-4">
           <Input
             placeholder={localize('com_ui_bookmarks_filter')}
             value={searchQuery}
@@ -75,7 +75,7 @@ const BookmarkTable = () => {
           />
         </div>
 
-        <div className="overflow-hidden bg-transparent rounded-lg border shadow-sm transition-colors border-border-light">
+        <div className="overflow-hidden rounded-lg border border-border-light bg-transparent shadow-sm transition-colors">
           <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow className="border-b border-border-light">
@@ -95,7 +95,7 @@ const BookmarkTable = () => {
                 currentRows.map(renderRow)
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-sm text-center text-text-secondary">
+                  <TableCell colSpan={3} className="h-24 text-center text-sm text-text-secondary">
                     {localize('com_ui_no_bookmarks')}
                   </TableCell>
                 </TableRow>
@@ -104,14 +104,15 @@ const BookmarkTable = () => {
           </Table>
         </div>
 
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2 justify-between">
+        <div className="flex items-center justify-between">
+          <div className="flex justify-between gap-2">
             <BookmarkEditDialog context="BookmarkPanel" open={open} setOpen={setOpen}>
               <OGDialogTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2 w-full text-sm"
+                  className="w-full gap-2 text-sm"
+                  aria-label={localize('com_ui_bookmarks_new')}
                   onClick={() => setOpen(!open)}
                 >
                   <BookmarkPlusIcon className="size-4" />
@@ -120,7 +121,7 @@ const BookmarkTable = () => {
               </OGDialogTrigger>
             </BookmarkEditDialog>
           </div>
-          <div className="flex gap-2 items-center" role="navigation" aria-label="Pagination">
+          <div className="flex items-center gap-2" role="navigation" aria-label="Pagination">
             <Button
               variant="outline"
               size="sm"

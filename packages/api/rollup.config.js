@@ -19,6 +19,7 @@ const plugins = [
   peerDepsExternal(),
   resolve({
     preferBuiltins: true,
+    skipSelf: true,
   }),
   json(),
   replace({

@@ -27,7 +27,7 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
   const anthropicConfig = appConfig.endpoints?.[EModelEndpoint.anthropic];
 
   if (anthropicConfig) {
-    clientOptions.streamRate = anthropicConfig.streamRate;
+    clientOptions._lc_stream_delay = anthropicConfig.streamRate;
     clientOptions.titleModel = anthropicConfig.titleModel;
     clientOptions.promptPrefix = anthropicConfig.promptPrefix;
   }
@@ -39,6 +39,7 @@ const initializeClient = async ({ req, res, endpointOption, overrideModel, optio
     if (allConfig.promptPrefix && !clientOptions.promptPrefix) {
       clientOptions.promptPrefix = allConfig.promptPrefix;
     }
+    clientOptions._lc_stream_delay = allConfig.streamRate;
   }
 
   if (optionsOnly) {

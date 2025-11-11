@@ -1,4 +1,4 @@
-import type { IRole } from '@librechat/data-schemas';
+import type { AppConfig, IRole } from '@librechat/data-schemas';
 import {
   PermissionTypes,
   Permissions,
@@ -7,7 +7,6 @@ import {
   roleDefaults,
 } from 'librechat-data-provider';
 import { isMemoryEnabled } from '~/memory/config';
-import type { AppConfig } from '~/types/config';
 
 /**
  * Checks if a permission type has explicit configuration
