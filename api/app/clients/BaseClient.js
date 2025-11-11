@@ -650,6 +650,28 @@ class BaseClient {
       opts,
     );
 
+    logger.info('[BaseClient] 🔨 BUILD MESSAGES - Calculated Prompt Tokens', {
+      endpoint: this.options.endpoint,
+      model: this.modelOptions?.model ?? this.model,
+      calculatedPromptTokens: promptTokens,
+      messagesCount: this.currentMessages.length,
+      payloadType: Array.isArray(payload) ? 'array' : typeof payload,
+      payloadLength: Array.isArray(payload)
+        ? payload.length
+        : typeof payload === 'string'
+          ? payload.length
+          : 'N/A',
+      payloadPreview: Array.isArray(payload)
+        ? payload.slice(0, 2).map((m) => ({
+            role: m.role,
+            contentLength:
+              typeof m.content === 'string' ? m.content.length : JSON.stringify(m.content).length,
+          }))
+        : typeof payload === 'string'
+          ? payload.substring(0, 200)
+          : 'N/A',
+    });
+
     if (tokenCountMap) {
       logger.debug('[BaseClient] tokenCountMap', tokenCountMap);
       if (tokenCountMap[userMessage.messageId]) {
@@ -745,35 +767,94 @@ class BaseClient {
       this.getTokenCountForResponse &&
       this.getTokenCount
     ) {
-      let completionTokens;
-
-      /**
-       * Metadata about input/output costs for the current message. The client
-       * should provide a function to get the current stream usage metadata; if not,
-       * use the legacy token estimations.
-       * @type {StreamUsage | null} */
-      const usage = this.getStreamUsage != null ? this.getStreamUsage() : null;
-
-      if (usage != null && Number(usage[this.outputTokensKey]) > 0) {
-        responseMessage.tokenCount = usage[this.outputTokensKey];
-        completionTokens = responseMessage.tokenCount;
-        await this.updateUserMessageTokenCount({
-          usage,
-          tokenCountMap,
-          userMessage,
-          userMessagePromise,
-          opts,
-        });
+      // Skip token recording for AgentClient - it handles tokens via recordCollectedUsage
+      if (this.clientName === EModelEndpoint.agents) {
+        logger.info(
+          '[BaseClient] ⏭️ SKIPPING TOKEN RECORDING - AgentClient handles via recordCollectedUsage',
+          {
+            endpoint: this.options.endpoint,
+            model: responseMessage.model,
+          },
+        );
       } else {
-        responseMessage.tokenCount = this.getTokenCountForResponse(responseMessage);
-        completionTokens = responseMessage.tokenCount;
-        await this.recordTokenUsage({
-          usage,
-          promptTokens,
-          completionTokens,
-          balance: balanceConfig,
-          model: responseMessage.model,
-        });
+        let completionTokens;
+
+        /**
+         * Metadata about input/output costs for the current message. The client
+         * should provide a function to get the current stream usage metadata; if not,
+         * use the legacy token estimations.
+         * @type {StreamUsage | null} */
+        const usage = this.getStreamUsage != null ? this.getStreamUsage() : null;
+
+        if (usage != null && Number(usage[this.outputTokensKey]) > 0) {
+          responseMessage.tokenCount = usage[this.outputTokensKey];
+          completionTokens = responseMessage.tokenCount;
+
+          logger.info('[BaseClient] 📊 TOKEN COUNT - API Usage Available', {
+            endpoint: this.options.endpoint,
+            model: responseMessage.model,
+            apiInputTokens: usage[this.inputTokensKey],
+            apiOutputTokens: usage[this.outputTokensKey],
+            calculatedPromptTokens: promptTokens,
+            calculatedCompletionTokens: completionTokens,
+            usageObject: usage,
+          });
+
+          await this.updateUserMessageTokenCount({
+            usage,
+            tokenCountMap,
+            userMessage,
+            userMessagePromise,
+            opts,
+          });
+
+          // Record token usage with API values - client-specific implementation will handle this
+          const actualPromptTokens = usage[this.inputTokensKey] ?? promptTokens;
+          logger.info('[BaseClient] 💾 RECORDING TOKENS - Delegating to Client', {
+            endpoint: this.options.endpoint,
+            model: responseMessage.model,
+            promptTokens: actualPromptTokens,
+            completionTokens,
+            source: 'API_USAGE',
+            note: 'Client-specific recordTokenUsage will be called with usage object',
+          });
+
+          await this.recordTokenUsage({
+            usage,
+            promptTokens: actualPromptTokens,
+            completionTokens,
+            balance: balanceConfig,
+            model: responseMessage.model,
+          });
+        } else {
+          responseMessage.tokenCount = this.getTokenCountForResponse(responseMessage);
+          completionTokens = responseMessage.tokenCount;
+
+          logger.info('[BaseClient] 📊 TOKEN COUNT - Using Calculated Values', {
+            endpoint: this.options.endpoint,
+            model: responseMessage.model,
+            calculatedPromptTokens: promptTokens,
+            calculatedCompletionTokens: completionTokens,
+            hasUsage: usage != null,
+            usageObject: usage,
+          });
+
+          logger.info('[BaseClient] 💾 RECORDING TOKENS - Using Calculated Values', {
+            endpoint: this.options.endpoint,
+            model: responseMessage.model,
+            promptTokens,
+            completionTokens,
+            source: 'CALCULATED',
+          });
+
+          await this.recordTokenUsage({
+            usage,
+            promptTokens,
+            completionTokens,
+            balance: balanceConfig,
+            model: responseMessage.model,
+          });
+        }
       }
     }
 

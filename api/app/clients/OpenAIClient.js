@@ -509,6 +509,24 @@ class OpenAIClient extends BaseClient {
       opts.getReqData({ promptTokens });
     }
 
+    logger.info('[OpenAIClient] 🔨 BUILD MESSAGES - Result', {
+      model: this.modelOptions?.model,
+      calculatedPromptTokens: promptTokens,
+      messagesCount: payload.length,
+      hasInstructions: !!instructions,
+      instructionsLength: instructions ? instructions.content.length : 0,
+      instructionsPreview: instructions ? instructions.content.substring(0, 300) : null,
+      payloadPreview: payload.slice(0, 2).map((m) => ({
+        role: m.role,
+        contentLength:
+          typeof m.content === 'string' ? m.content.length : JSON.stringify(m.content).length,
+        contentPreview:
+          typeof m.content === 'string'
+            ? m.content.substring(0, 200)
+            : JSON.stringify(m.content).substring(0, 200),
+      })),
+    });
+
     return result;
   }
 
@@ -621,12 +639,31 @@ class OpenAIClient extends BaseClient {
       const outputTokens = Math.abs(
         this.usage.completion_tokens_details.reasoning_tokens - this.usage[this.outputTokensKey],
       );
-      return {
+      const result = {
         ...this.usage.completion_tokens_details,
         [this.inputTokensKey]: this.usage[this.inputTokensKey],
         [this.outputTokensKey]: outputTokens,
       };
+
+      logger.info('[OpenAIClient] 📡 GET STREAM USAGE - With Reasoning', {
+        model: this.modelOptions?.model,
+        inputTokens: result[this.inputTokensKey],
+        outputTokens: result[this.outputTokensKey],
+        reasoningTokens: this.usage.completion_tokens_details.reasoning_tokens,
+        usageObject: this.usage,
+        resultObject: result,
+      });
+
+      return result;
     }
+
+    logger.info('[OpenAIClient] 📡 GET STREAM USAGE', {
+      model: this.modelOptions?.model,
+      inputTokens: this.usage?.[this.inputTokensKey],
+      outputTokens: this.usage?.[this.outputTokensKey],
+      usageObject: this.usage,
+    });
+
     return this.usage;
   }
 
@@ -669,6 +706,23 @@ class OpenAIClient extends BaseClient {
    * @returns {Promise<void>}
    */
   async recordTokenUsage({ promptTokens, completionTokens, usage, context = 'message' }) {
+    logger.info('[OpenAIClient] 💾 RECORD TOKEN USAGE - Entry', {
+      model: this.modelOptions.model,
+      context,
+      calculatedPromptTokens: promptTokens,
+      completionTokens,
+      hasUsage: usage != null,
+      usageInputTokens: usage?.[this.inputTokensKey],
+      usageObject: usage,
+    });
+
+    logger.info('[OpenAIClient] 💾 RECORD TOKEN USAGE - Creating Transactions', {
+      model: this.modelOptions.model,
+      context,
+      promptTokens,
+      completionTokens,
+    });
+
     await spendTokens(
       {
         context,
@@ -686,6 +740,11 @@ class OpenAIClient extends BaseClient {
       'reasoning_tokens' in usage &&
       typeof usage.reasoning_tokens === 'number'
     ) {
+      logger.info('[OpenAIClient] 💾 RECORD TOKEN USAGE - Creating Reasoning Transaction', {
+        model: this.modelOptions.model,
+        reasoningTokens: usage.reasoning_tokens,
+      });
+
       await spendTokens(
         {
           context: 'reasoning',
