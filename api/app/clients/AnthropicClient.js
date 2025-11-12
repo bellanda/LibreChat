@@ -218,20 +218,7 @@ class AnthropicClient extends BaseClient {
   getStreamUsage() {
     const inputUsage = this.message_start?.message?.usage ?? {};
     const outputUsage = this.message_delta?.usage ?? {};
-    const usage = Object.assign({}, inputUsage, outputUsage);
-
-    logger.info('[AnthropicClient] 📡 GET STREAM USAGE', {
-      model: this.modelOptions?.model ?? this.model,
-      messageStartUsage: inputUsage,
-      messageDeltaUsage: outputUsage,
-      mergedUsage: usage,
-      inputTokens: usage.input_tokens,
-      outputTokens: usage.output_tokens,
-      cacheCreation: usage.cache_creation_input_tokens,
-      cacheRead: usage.cache_read_input_tokens,
-    });
-
-    return usage;
+    return Object.assign({}, inputUsage, outputUsage);
   }
 
   /**
@@ -337,30 +324,10 @@ class AnthropicClient extends BaseClient {
   async recordTokenUsage({ promptTokens, completionTokens, usage, model, context = 'message' }) {
     const actualModel = model ?? this.modelOptions.model;
 
-    logger.info('[AnthropicClient] 💾 RECORD TOKEN USAGE - Entry', {
-      model: actualModel,
-      context,
-      hasUsage: usage != null,
-      usageInputTokens: usage?.input_tokens,
-      calculatedPromptTokens: promptTokens,
-      completionTokens,
-      usageObject: usage,
-    });
-
     if (usage != null && usage?.input_tokens != null) {
       const input = usage.input_tokens ?? 0;
       const write = usage.cache_creation_input_tokens ?? 0;
       const read = usage.cache_read_input_tokens ?? 0;
-
-      logger.info('[AnthropicClient] 💾 RECORD TOKEN USAGE - Using Structured Tokens', {
-        model: actualModel,
-        context,
-        inputTokens: input,
-        writeTokens: write,
-        readTokens: read,
-        completionTokens,
-        totalPromptTokens: input + write + read,
-      });
 
       await spendStructuredTokens(
         {
@@ -379,13 +346,6 @@ class AnthropicClient extends BaseClient {
       return;
     }
 
-    logger.info('[AnthropicClient] 💾 RECORD TOKEN USAGE - Using Simple Tokens', {
-      model: actualModel,
-      context,
-      promptTokens,
-      completionTokens,
-    });
-
     await spendTokens(
       {
         context,
@@ -403,8 +363,6 @@ class AnthropicClient extends BaseClient {
       messages,
       parentMessageId,
     });
-
-    logger.debug('[AnthropicClient] orderedMessages', { orderedMessages, parentMessageId });
 
     if (this.options.attachments) {
       const attachments = await this.options.attachments;
@@ -704,31 +662,6 @@ class AnthropicClient extends BaseClient {
       await buildMessagesPayload();
       processTokens();
 
-      logger.info('[AnthropicClient] 🔨 BUILD MESSAGES - Messages API Result', {
-        model: this.modelOptions.model,
-        calculatedPromptTokens: currentTokenCount,
-        messagesCount: messagesPayload.length,
-        systemMessageLength: this.systemMessage ? this.systemMessage.length : 0,
-        systemMessagePreview: this.systemMessage ? this.systemMessage.substring(0, 200) : null,
-        messagesPreview: messagesPayload.slice(0, 2).map((m) => ({
-          role: m.role,
-          contentLength: Array.isArray(m.content)
-            ? m.content
-                .map((c) => (typeof c === 'string' ? c.length : JSON.stringify(c).length))
-                .reduce((a, b) => a + b, 0)
-            : typeof m.content === 'string'
-              ? m.content.length
-              : JSON.stringify(m.content).length,
-          contentPreview: Array.isArray(m.content)
-            ? m.content.map((c) =>
-                typeof c === 'string' ? c.substring(0, 100) : JSON.stringify(c).substring(0, 100),
-              )
-            : typeof m.content === 'string'
-              ? m.content.substring(0, 200)
-              : JSON.stringify(m.content).substring(0, 200),
-        })),
-      });
-
       return {
         prompt: messagesPayload,
         context: messagesInWindow,
@@ -873,37 +806,6 @@ class AnthropicClient extends BaseClient {
       requestOptions.messages = addCacheControl(requestOptions.messages);
     }
 
-    logger.info('[AnthropicClient] 🚀 SEND COMPLETION - Request Payload', {
-      model,
-      useMessages: this.useMessages,
-      hasSystemMessage: !!this.systemMessage,
-      systemMessageLength: this.systemMessage ? this.systemMessage.length : 0,
-      systemMessagePreview: this.systemMessage ? this.systemMessage.substring(0, 300) : null,
-      messagesCount: Array.isArray(requestOptions.messages) ? requestOptions.messages.length : 0,
-      messagesPreview: Array.isArray(requestOptions.messages)
-        ? requestOptions.messages.slice(0, 2).map((m) => ({
-            role: m.role,
-            contentLength: Array.isArray(m.content)
-              ? m.content
-                  .map((c) => (typeof c === 'string' ? c.length : JSON.stringify(c).length))
-                  .reduce((a, b) => a + b, 0)
-              : typeof m.content === 'string'
-                ? m.content.length
-                : JSON.stringify(m.content).length,
-            contentPreview: Array.isArray(m.content)
-              ? m.content.map((c) =>
-                  typeof c === 'string' ? c.substring(0, 150) : JSON.stringify(c).substring(0, 150),
-                )
-              : typeof m.content === 'string'
-                ? m.content.substring(0, 300)
-                : JSON.stringify(m.content).substring(0, 300),
-          }))
-        : null,
-      promptLength: typeof requestOptions.prompt === 'string' ? requestOptions.prompt.length : 0,
-      promptPreview:
-        typeof requestOptions.prompt === 'string' ? requestOptions.prompt.substring(0, 500) : null,
-      maxTokens: requestOptions.max_tokens || requestOptions.max_tokens_to_sample,
-    });
     const handlers = createStreamEventHandlers(this.options.res);
     this.streamHandler = new SplitStreamHandler({
       accumulate: true,

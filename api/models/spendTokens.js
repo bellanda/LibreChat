@@ -15,32 +15,9 @@ const { createTransaction, createStructuredTransaction } = require('./Transactio
 const spendTokens = async (txData, tokenUsage) => {
   const { promptTokens, completionTokens } = tokenUsage;
 
-  logger.info('[spendTokens] 💰 CREATING TRANSACTIONS', {
-    conversationId: txData.conversationId,
-    context: txData?.context,
-    model: txData.model,
-    user: txData.user,
-    promptTokens,
-    completionTokens,
-  });
-
-  logger.debug(
-    `[spendTokens] conversationId: ${txData.conversationId}${
-      txData?.context ? ` | Context: ${txData?.context}` : ''
-    } | Token usage: `,
-    {
-      promptTokens,
-      completionTokens,
-    },
-  );
-  logger.debug(`[spendTokens] Model: ${txData.model}, User: ${txData.user}`);
   let prompt, completion;
   try {
     if (promptTokens !== undefined) {
-      logger.info('[spendTokens] 💰 Creating PROMPT transaction', {
-        model: txData.model,
-        rawAmount: promptTokens === 0 ? 0 : -Math.max(promptTokens, 0),
-      });
       prompt = await createTransaction({
         ...txData,
         tokenType: 'prompt',
@@ -49,10 +26,6 @@ const spendTokens = async (txData, tokenUsage) => {
     }
 
     if (completionTokens !== undefined) {
-      logger.info('[spendTokens] 💰 Creating COMPLETION transaction', {
-        model: txData.model,
-        rawAmount: completionTokens === 0 ? 0 : -Math.max(completionTokens, 0),
-      });
       completion = await createTransaction({
         ...txData,
         tokenType: 'completion',
@@ -60,27 +33,7 @@ const spendTokens = async (txData, tokenUsage) => {
       });
     }
 
-    if (prompt || completion) {
-      logger.info('[spendTokens] 💰 TRANSACTIONS CREATED', {
-        user: txData.user,
-        model: txData.model,
-        promptRawAmount: prompt?.prompt,
-        promptRate: prompt?.rate,
-        completionRawAmount: completion?.completion,
-        completionRate: completion?.rate,
-        balance: completion?.balance ?? prompt?.balance,
-      });
-      logger.debug('[spendTokens] Transaction data record against balance:', {
-        user: txData.user,
-        prompt: prompt?.prompt,
-        promptRate: prompt?.rate,
-        completion: completion?.completion,
-        completionRate: completion?.rate,
-        balance: completion?.balance ?? prompt?.balance,
-      });
-    } else {
-      logger.debug('[spendTokens] No transactions incurred against balance');
-    }
+    // No logging by default; rely on upstream summary logs
   } catch (err) {
     logger.error('[spendTokens]', err);
   }
@@ -104,35 +57,10 @@ const spendTokens = async (txData, tokenUsage) => {
 const spendStructuredTokens = async (txData, tokenUsage) => {
   const { promptTokens, completionTokens } = tokenUsage;
 
-  logger.info('[spendStructuredTokens] 💰 CREATING STRUCTURED TRANSACTIONS', {
-    conversationId: txData.conversationId,
-    context: txData?.context,
-    model: txData.model,
-    user: txData.user,
-    promptTokens,
-    completionTokens,
-  });
-
-  logger.debug(
-    `[spendStructuredTokens] conversationId: ${txData.conversationId}${
-      txData?.context ? ` | Context: ${txData?.context}` : ''
-    } | Token usage: `,
-    {
-      promptTokens,
-      completionTokens,
-    },
-  );
   let prompt, completion;
   try {
     if (promptTokens) {
       const { input = 0, write = 0, read = 0 } = promptTokens;
-      logger.info('[spendStructuredTokens] 💰 Creating STRUCTURED PROMPT transaction', {
-        model: txData.model,
-        inputTokens: -input,
-        writeTokens: -write,
-        readTokens: -read,
-        totalPromptTokens: input + write + read,
-      });
       prompt = await createStructuredTransaction({
         ...txData,
         tokenType: 'prompt',
@@ -143,10 +71,6 @@ const spendStructuredTokens = async (txData, tokenUsage) => {
     }
 
     if (completionTokens) {
-      logger.info('[spendStructuredTokens] 💰 Creating COMPLETION transaction', {
-        model: txData.model,
-        rawAmount: -completionTokens,
-      });
       completion = await createTransaction({
         ...txData,
         tokenType: 'completion',
@@ -154,27 +78,7 @@ const spendStructuredTokens = async (txData, tokenUsage) => {
       });
     }
 
-    if (prompt || completion) {
-      logger.info('[spendStructuredTokens] 💰 STRUCTURED TRANSACTIONS CREATED', {
-        user: txData.user,
-        model: txData.model,
-        promptRawAmount: prompt?.prompt,
-        promptRate: prompt?.rate,
-        completionRawAmount: completion?.completion,
-        completionRate: completion?.rate,
-        balance: completion?.balance ?? prompt?.balance,
-      });
-      logger.debug('[spendStructuredTokens] Transaction data record against balance:', {
-        user: txData.user,
-        prompt: prompt?.prompt,
-        promptRate: prompt?.rate,
-        completion: completion?.completion,
-        completionRate: completion?.rate,
-        balance: completion?.balance ?? prompt?.balance,
-      });
-    } else {
-      logger.debug('[spendStructuredTokens] No transactions incurred against balance');
-    }
+    // No logging by default; rely on upstream summary logs
   } catch (err) {
     logger.error('[spendStructuredTokens]', err);
   }

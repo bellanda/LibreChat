@@ -138,6 +138,12 @@ class AgentClient extends BaseClient {
     this.usage;
     /** @type {Record<string, number>} */
     this.indexTokenCountMap = {};
+    /** @type {number} */
+    this.lastPromptTokens = 0;
+    /** @type {Record<string, number> | undefined} */
+    this.lastPromptTokenMap = undefined;
+    /** @type {string | null} */
+    this.lastUserMessagePreview = null;
     /** @type {(messages: BaseMessage[]) => Promise<void>} */
     this.processMemory;
   }
@@ -378,6 +384,54 @@ class AgentClient extends BaseClient {
       promptTokens,
       messages,
     };
+
+    this.lastPromptTokens = typeof promptTokens === 'number' ? promptTokens : 0;
+    this.lastPromptTokenMap = tokenCountMap;
+
+    const extractMessageText = (message) => {
+      if (!message) {
+        return '';
+      }
+      if (typeof message.text === 'string' && message.text.trim().length > 0) {
+        return message.text;
+      }
+      if (typeof message.content === 'string' && message.content.trim().length > 0) {
+        return message.content;
+      }
+      if (Array.isArray(message.content)) {
+        return message.content
+          .map((part) => {
+            if (!part) {
+              return '';
+            }
+            if (typeof part === 'string') {
+              return part;
+            }
+            if (typeof part.text === 'string') {
+              return part.text;
+            }
+            if (typeof part.value === 'string') {
+              return part.value;
+            }
+            return '';
+          })
+          .filter(Boolean)
+          .join(' ');
+      }
+      return '';
+    };
+
+    const latestUserMessage =
+      [...orderedMessages]
+        .reverse()
+        .find(
+          (message) =>
+            message?.role === 'user' ||
+            message?.sender === 'user' ||
+            message?.isCreatedByUser === true,
+        ) ?? null;
+    const latestUserText = extractMessageText(latestUserMessage).trim();
+    this.lastUserMessagePreview = latestUserText ? latestUserText.slice(0, 160) : null;
 
     if (promptTokens >= 0 && typeof opts?.getReqData === 'function') {
       opts.getReqData({ promptTokens });
@@ -629,11 +683,6 @@ class AgentClient extends BaseClient {
     context = 'message',
     collectedUsage = this.collectedUsage,
   }) {
-    logger.debug('[AgentClient] recordCollectedUsage called with balance:', {
-      balance,
-      context,
-      collectedUsageLength: collectedUsage?.length,
-    });
     if (!collectedUsage || !collectedUsage.length) {
       return;
     }
@@ -641,7 +690,6 @@ class AgentClient extends BaseClient {
     // Prevent duplicate billing by checking if this context has already been recorded
     const recordingKey = `${this.conversationId}-${context}`;
     if (this._recordedUsage && this._recordedUsage.has(recordingKey)) {
-      logger.debug(`[recordCollectedUsage] SKIPPING - Already recorded usage for ${recordingKey}`);
       return;
     }
 
@@ -649,10 +697,6 @@ class AgentClient extends BaseClient {
     if (!this._recordedUsage) {
       this._recordedUsage = new Set();
     }
-
-    logger.debug(
-      `[recordCollectedUsage] Called with context: ${context}, collectedUsage.length: ${collectedUsage.length}`,
-    );
 
     // Log each usage entry to identify potential duplicates or inflated values
     const uniqueUsageValues = new Set();
@@ -665,19 +709,21 @@ class AgentClient extends BaseClient {
           duplicateEntries.push({ index, usage });
         }
         uniqueUsageValues.add(usageKey);
-
-        logger.debug(
-          `[recordCollectedUsage] Entry ${index}: input=${usage.input_tokens}, output=${usage.output_tokens}, model=${usage.model || 'unknown'}`,
-        );
       }
     });
 
-    if (duplicateEntries.length > 0) {
-      logger.warn(
-        `[recordCollectedUsage] DUPLICATE USAGE ENTRIES DETECTED: ${duplicateEntries.length} duplicates found`,
-        duplicateEntries,
-      );
-    }
+    const diagnostics = {
+      duplicateUsageEntries: duplicateEntries.length,
+      fallback: {
+        inputSource: null,
+        outputSource: null,
+      },
+      fallbackTokens: {
+        prompt: null,
+        completion: null,
+      },
+      suspiciousOutput: null,
+    };
 
     // Aggregate all tokens from the collected usage to avoid multiple billing
     let totalInputTokens = 0;
@@ -685,6 +731,41 @@ class AgentClient extends BaseClient {
     let totalCacheCreation = 0;
     let totalCacheRead = 0;
     let hasStructuredTokens = false;
+
+    const getResponseTextInfo = () => {
+      let responseText = '';
+      if (this.contentParts && this.contentParts.length > 0) {
+        responseText = this.contentParts
+          .filter((part) => part?.type === 'text' && part?.text)
+          .map((part) => part.text)
+          .join(' ')
+          .trim();
+      }
+
+      if (!responseText && this.run) {
+        try {
+          const runMessages = this.run.Graph?.getRunMessages?.() || [];
+          responseText = runMessages
+            .filter((msg) => msg?.content && typeof msg.content === 'string')
+            .map((msg) => msg.content)
+            .join(' ')
+            .trim();
+        } catch (err) {
+          logger.debug(`[recordCollectedUsage] Could not extract run messages: ${err.message}`);
+        }
+      }
+
+      const tokenCount = responseText ? this.getTokenCount(responseText) : 0;
+      return { responseText, tokenCount };
+    };
+
+    let responseDetails;
+    const ensureResponseDetails = () => {
+      if (!responseDetails) {
+        responseDetails = getResponseTextInfo();
+      }
+      return responseDetails;
+    };
 
     for (const usage of collectedUsage) {
       if (!usage) {
@@ -709,71 +790,32 @@ class AgentClient extends BaseClient {
 
       // REAL TOKEN VALIDATION: Check if output tokens seem excessive compared to actual content
       if (outputTokens > 20000) {
-        // Lowered threshold for early detection
-        logger.warn(
-          `[recordCollectedUsage] SUSPICIOUS OUTPUT TOKENS - Reported: ${outputTokens}, validating against actual content...`,
-        );
+        const { responseText, tokenCount: actualOutputTokens } = ensureResponseDetails();
+        const suspiciousInfo = {
+          reported: outputTokens,
+          actual: responseText ? actualOutputTokens : null,
+          adjusted: false,
+          ratio: null,
+          note: responseText ? 'validated' : 'no_response_text',
+        };
 
-        // Calculate real tokens based on actual response content
-        let actualOutputTokens = 0;
-        let responseText = '';
-
-        if (this.contentParts && this.contentParts.length > 0) {
-          // Get all text content from the response
-          responseText = this.contentParts
-            .filter((part) => part.type === 'text' && part.text)
-            .map((part) => part.text)
-            .join(' ');
-        }
-
-        // If no content from contentParts, try to get from the run's final output
-        if (!responseText && this.run) {
-          try {
-            const runMessages = this.run.Graph?.getRunMessages() || [];
-            responseText = runMessages
-              .filter((msg) => msg.content && typeof msg.content === 'string')
-              .map((msg) => msg.content)
-              .join(' ');
-          } catch (err) {
-            logger.debug(`[recordCollectedUsage] Could not extract run messages: ${err.message}`);
-          }
-        }
-
-        if (responseText) {
-          // Use the same tokenizer that the client uses
-          actualOutputTokens = this.getTokenCount(responseText);
-          logger.debug(`[recordCollectedUsage] Actual content token count: ${actualOutputTokens}`);
-          logger.debug(
-            `[recordCollectedUsage] Response content length: ${responseText.length} characters`,
-          );
-
-          // Calculate ratio for analysis
+        if (responseText && actualOutputTokens != null) {
           const ratio = outputTokens / Math.max(actualOutputTokens, 1);
-          logger.debug(`[recordCollectedUsage] Token ratio (reported/actual): ${ratio.toFixed(2)}`);
+          suspiciousInfo.ratio = Number.isFinite(ratio) ? Number(ratio.toFixed(2)) : null;
 
-          // If reported tokens are significantly higher than actual content (more than 3x difference)
-          if (outputTokens > actualOutputTokens * 3 && actualOutputTokens > 0) {
-            logger.error(
-              `[recordCollectedUsage] TOKEN MISMATCH DETECTED - Reported: ${outputTokens}, Actual: ${actualOutputTokens}, Ratio: ${ratio.toFixed(2)}x, using actual count`,
-            );
+          if (actualOutputTokens > 0 && outputTokens > actualOutputTokens * 3) {
             outputTokens = actualOutputTokens;
+            suspiciousInfo.adjusted = true;
+            suspiciousInfo.note = 'adjusted_to_actual';
           } else if (ratio > 1.5) {
-            logger.warn(
-              `[recordCollectedUsage] Token count seems high but acceptable - Reported: ${outputTokens}, Actual: ${actualOutputTokens}, Ratio: ${ratio.toFixed(2)}x`,
-            );
-          } else {
-            logger.debug(
-              `[recordCollectedUsage] Token count seems reasonable - Reported: ${outputTokens}, Actual: ${actualOutputTokens}`,
-            );
+            suspiciousInfo.note = 'high_ratio';
           }
         } else {
-          logger.warn(
-            `[recordCollectedUsage] No content found to validate token count, using conservative cap`,
-          );
-          // More conservative fallback: cap at 30k if we can't validate
           outputTokens = Math.min(outputTokens, 30000);
-          logger.warn(`[recordCollectedUsage] Applied conservative cap: ${outputTokens} tokens`);
+          suspiciousInfo.adjusted = true;
         }
+
+        diagnostics.suspiciousOutput = suspiciousInfo;
       }
 
       totalInputTokens += inputTokens;
@@ -786,15 +828,116 @@ class AgentClient extends BaseClient {
       }
     }
 
-    logger.debug(
-      `[recordCollectedUsage] Aggregated tokens - Input: ${totalInputTokens}, Output: ${totalOutputTokens}, CacheCreation: ${totalCacheCreation}, CacheRead: ${totalCacheRead}`,
-    );
-    logger.debug(`[recordCollectedUsage] hasStructuredTokens: ${hasStructuredTokens}`);
-    logger.debug(
-      `[recordCollectedUsage] model: ${model ?? this.model ?? this.options.agent.model_parameters.model}`,
-    );
-    logger.debug(`[recordCollectedUsage] conversationId: ${this.conversationId}`);
-    logger.debug(`[recordCollectedUsage] user: ${this.user ?? this.options.req.user?.id}`);
+    const providerReported = {
+      inputTokens: totalInputTokens,
+      outputTokens: totalOutputTokens,
+      cacheCreation: totalCacheCreation,
+      cacheRead: totalCacheRead,
+    };
+
+    // FALLBACK: Use calculated tokens when provider doesn't provide real usage
+    // This ensures we always have token accounting, even if provider returns 0 or invalid values
+    const needsInputFallback =
+      totalInputTokens === 0 && totalCacheCreation === 0 && totalCacheRead === 0;
+
+    if (needsInputFallback) {
+      let fallbackPromptTokens = 0;
+      let fallbackSource = null;
+
+      // Try lastPromptTokens first (most accurate, from buildMessages)
+      if (typeof this.lastPromptTokens === 'number' && this.lastPromptTokens > 0) {
+        fallbackPromptTokens = this.lastPromptTokens;
+        fallbackSource = 'lastPromptTokens';
+      }
+
+      // Try lastPromptTokenMap (token count map from buildMessages)
+      if (fallbackPromptTokens === 0 && this.lastPromptTokenMap) {
+        fallbackPromptTokens = Object.values(this.lastPromptTokenMap).reduce(
+          (sum, count) => sum + (Number(count) || 0),
+          0,
+        );
+        if (fallbackPromptTokens > 0) {
+          fallbackSource = 'lastPromptTokenMap';
+        }
+      }
+
+      // Try indexTokenCountMap (alternative token count map)
+      if (fallbackPromptTokens === 0 && this.indexTokenCountMap) {
+        fallbackPromptTokens = Object.values(this.indexTokenCountMap).reduce(
+          (sum, count) => sum + (Number(count) || 0),
+          0,
+        );
+        if (fallbackPromptTokens > 0) {
+          fallbackSource = 'indexTokenCountMap';
+        }
+      }
+
+      if (fallbackPromptTokens > 0) {
+        totalInputTokens = fallbackPromptTokens;
+        diagnostics.fallback.inputSource = fallbackSource ?? 'calculated';
+        diagnostics.fallbackTokens.prompt = fallbackPromptTokens;
+      }
+    }
+
+    // FALLBACK: Use calculated tokens for output when provider doesn't provide real usage
+    if (totalOutputTokens === 0) {
+      const { tokenCount: fallbackOutputTokens } = ensureResponseDetails();
+      if (fallbackOutputTokens > 0) {
+        totalOutputTokens = fallbackOutputTokens;
+        diagnostics.fallback.outputSource = 'responseText';
+        diagnostics.fallbackTokens.completion = fallbackOutputTokens;
+      }
+    }
+
+    // Final check: Ensure we always have token accounting
+    const hasAnyTokens =
+      totalInputTokens > 0 || totalOutputTokens > 0 || totalCacheCreation > 0 || totalCacheRead > 0;
+    const fallbackApplied =
+      diagnostics.fallback.inputSource != null || diagnostics.fallback.outputSource != null;
+
+    const responseInfo = ensureResponseDetails();
+    const responsePreview =
+      responseInfo.responseText && responseInfo.responseText.length > 0
+        ? responseInfo.responseText.slice(0, 160)
+        : null;
+
+    const recordedTokens = {
+      prompt: totalInputTokens,
+      completion: totalOutputTokens,
+      cacheCreation: totalCacheCreation,
+      cacheRead: totalCacheRead,
+    };
+
+    const summaryLog = {
+      conversationId: this.conversationId,
+      user: this.user ?? this.options.req.user?.id,
+      context,
+      model: model ?? this.model ?? this.options.agent.model,
+      collectedUsageCount: collectedUsage.length,
+      duplicateUsageEntries: diagnostics.duplicateUsageEntries,
+      hasStructuredTokens,
+      hasAnyTokens,
+      tokens: {
+        provider: providerReported,
+        recorded: recordedTokens,
+      },
+      fallbackApplied,
+      fallback:
+        fallbackApplied === false
+          ? null
+          : {
+              inputSource: diagnostics.fallback.inputSource,
+              outputSource: diagnostics.fallback.outputSource,
+              promptTokens: diagnostics.fallbackTokens.prompt,
+              completionTokens: diagnostics.fallbackTokens.completion,
+            },
+      suspiciousOutput: diagnostics.suspiciousOutput,
+      promptPreview: this.lastUserMessagePreview,
+      responsePreview,
+      responseTokenCount: responseInfo.tokenCount,
+    };
+
+    logger.info('[AgentUsage] summary', summaryLog);
 
     const txMetadata = {
       context,
@@ -807,6 +950,7 @@ class AgentClient extends BaseClient {
 
     try {
       // Make a single transaction call with aggregated tokens
+      // This ensures we always attempt to record tokens, even if values are 0
       if (hasStructuredTokens) {
         await spendStructuredTokens(txMetadata, {
           promptTokens: {
@@ -1255,18 +1399,29 @@ class AgentClient extends BaseClient {
         let input_tokens, output_tokens;
 
         if (item.usage) {
+          // Support multiple formats: OpenAI/Grok format (prompt_tokens/completion_tokens)
+          // and Anthropic format (input_tokens/output_tokens)
           input_tokens =
-            item.usage.prompt_tokens || item.usage.input_tokens || item.usage.inputTokens;
+            item.usage.prompt_tokens ||
+            item.usage.input_tokens ||
+            item.usage.inputTokens ||
+            item.usage.prompt_tokens_details?.text_tokens ||
+            0;
           output_tokens =
-            item.usage.completion_tokens || item.usage.output_tokens || item.usage.outputTokens;
+            item.usage.completion_tokens ||
+            item.usage.output_tokens ||
+            item.usage.outputTokens ||
+            item.usage.completion_tokens_details?.reasoning_tokens ||
+            0;
         } else if (item.tokenUsage) {
           input_tokens = item.tokenUsage.promptTokens;
           output_tokens = item.tokenUsage.completionTokens;
         }
 
         return {
-          input_tokens: input_tokens,
-          output_tokens: output_tokens,
+          input_tokens: input_tokens || 0,
+          output_tokens: output_tokens || 0,
+          model: item.usage?.model || item.model,
         };
       });
 

@@ -43,7 +43,10 @@ class ModelEndHandler {
     try {
       const agentContext = graph.getAgentContext(metadata);
       const isGoogle = agentContext.provider === Providers.GOOGLE;
-      const streamingDisabled = !!agentContext.clientOptions?.disableStreaming || graph.clientOptions?.disableStreaming || graph?.boundModel?.disableStreaming;
+      const streamingDisabled =
+        !!agentContext.clientOptions?.disableStreaming ||
+        graph.clientOptions?.disableStreaming ||
+        graph?.boundModel?.disableStreaming;
 
       const toolCalls = data?.output?.tool_calls;
       let hasUnprocessedToolCalls = false;
@@ -67,6 +70,15 @@ class ModelEndHandler {
       const modelName = metadata?.ls_model_name || agentContext.clientOptions?.model;
       if (modelName) {
         usage.model = modelName;
+      }
+
+      // Normalize usage format for Grok/OpenAI compatibility
+      // Grok returns prompt_tokens/completion_tokens, ensure we have both formats
+      if (usage.prompt_tokens != null && usage.input_tokens == null) {
+        usage.input_tokens = usage.prompt_tokens;
+      }
+      if (usage.completion_tokens != null && usage.output_tokens == null) {
+        usage.output_tokens = usage.completion_tokens;
       }
 
       this.collectedUsage.push(usage);
