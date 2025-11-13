@@ -13,6 +13,9 @@ const { getProjectByName } = require('~/models/Project');
 const { getMCPManager } = require('~/config');
 const { getLogStores } = require('~/cache');
 const { mcpServersRegistry } = require('@librechat/api');
+const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
+const { filterMcpServersByGroup } = require('~/server/services/Config/GroupsService');
+const optionalJwtAuth = require('~/server/middleware/optionalJwtAuth');
 
 const router = express.Router();
 const emailLoginEnabled =
@@ -30,12 +33,31 @@ const publicSharedLinksEnabled =
 const sharePointFilePickerEnabled = isEnabled(process.env.ENABLE_SHAREPOINT_FILEPICKER);
 const openidReuseTokens = isEnabled(process.env.OPENID_REUSE_TOKENS);
 
-router.get('/', async function (req, res) {
+const applyMcpFiltering = async (config, user) => {
+  if (!config?.mcpServers) {
+    return config;
+  }
+
+  const groupsConfig = await getCachedGroupsConfig();
+  const filteredServers = filterMcpServersByGroup(config.mcpServers, user, groupsConfig);
+
+  if (filteredServers === config.mcpServers) {
+    return config;
+  }
+
+  return {
+    ...config,
+    mcpServers: filteredServers,
+  };
+};
+
+router.get('/', optionalJwtAuth, async function (req, res) {
   const cache = getLogStores(CacheKeys.CONFIG_STORE);
 
   const cachedStartupConfig = await cache.get(CacheKeys.STARTUP_CONFIG);
   if (cachedStartupConfig) {
-    res.send(cachedStartupConfig);
+    const responsePayload = await applyMcpFiltering(cachedStartupConfig, req.user);
+    res.send(responsePayload);
     return;
   }
 
@@ -136,18 +158,26 @@ router.get('/', async function (req, res) {
         if (!mcpManager) {
           return;
         }
+        // Use appConfig.mcpConfig as source of truth for configured servers
+        const configuredServerNames = Object.keys(appConfig.mcpConfig);
+        if (configuredServerNames.length === 0) return;
+
         const mcpServers = await mcpServersRegistry.getAllServerConfigs();
         if (!mcpServers) return;
-        for (const serverName in mcpServers) {
+
+        for (const serverName of configuredServerNames) {
           if (!payload.mcpServers) {
             payload.mcpServers = {};
           }
           const serverConfig = mcpServers[serverName];
+          // Include server even if not in registry yet (may be initializing)
+          // Use appConfig.mcpConfig as fallback for basic config
+          const appServerConfig = appConfig.mcpConfig[serverName];
           payload.mcpServers[serverName] = removeNullishValues({
-            startup: serverConfig?.startup,
-            chatMenu: serverConfig?.chatMenu,
-            isOAuth: serverConfig.requiresOAuth,
-            customUserVars: serverConfig?.customUserVars,
+            startup: serverConfig?.startup ?? appServerConfig?.startup,
+            chatMenu: serverConfig?.chatMenu ?? appServerConfig?.chatMenu,
+            isOAuth: serverConfig?.requiresOAuth ?? false,
+            customUserVars: serverConfig?.customUserVars ?? appServerConfig?.customUserVars,
           });
         }
       } catch (error) {
@@ -184,8 +214,9 @@ router.get('/', async function (req, res) {
       payload.customFooter = process.env.CUSTOM_FOOTER;
     }
 
+    const responsePayload = await applyMcpFiltering(payload, req.user);
     await cache.set(CacheKeys.STARTUP_CONFIG, payload);
-    return res.status(200).send(payload);
+    return res.status(200).send(responsePayload);
   } catch (err) {
     logger.error('Error in startup config', err);
     return res.status(500).send({ error: err.message });

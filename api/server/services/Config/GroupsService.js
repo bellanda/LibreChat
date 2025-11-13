@@ -63,6 +63,7 @@ function getDefaultGroupsConfig() {
           },
           assistants: false,
           plugins: [],
+          mcpServers: ['*'],
         },
       },
     },
@@ -221,6 +222,39 @@ function getAllowedPlugins(user, groupsConfig) {
   return permissions.plugins || [];
 }
 
+/**
+ * Filter MCP servers based on user group permissions
+ * @param {Object} mcpConfig - The full MCP servers configuration
+ * @param {Object} user - The user object
+ * @param {Object} groupsConfig - The groups configuration
+ * @returns {Object} Filtered MCP configuration
+ */
+function filterMcpServersByGroup(mcpConfig, user, groupsConfig) {
+  if (!mcpConfig || !groupsConfig) {
+    return mcpConfig;
+  }
+
+  const userGroup = getUserGroup(user, groupsConfig);
+  const permissions = getGroupPermissions(userGroup, groupsConfig);
+  const allowedServers = permissions.mcpServers;
+
+  if (!Array.isArray(allowedServers)) {
+    return mcpConfig;
+  }
+
+  if (allowedServers.length === 0) {
+    return {};
+  }
+
+  if (allowedServers.includes('*')) {
+    return mcpConfig;
+  }
+
+  return Object.fromEntries(
+    Object.entries(mcpConfig).filter(([serverName]) => allowedServers.includes(serverName)),
+  );
+}
+
 module.exports = {
   loadGroupsConfig,
   getDefaultGroupsConfig,
@@ -230,4 +264,5 @@ module.exports = {
   filterModelsByGroup,
   hasAssistantsAccess,
   getAllowedPlugins,
+  filterMcpServersByGroup,
 };

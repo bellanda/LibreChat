@@ -1073,7 +1073,7 @@ describe('MCP Routes', () => {
         },
       });
 
-      expect(getMCPSetupData).toHaveBeenCalledWith('test-user-id');
+      expect(getMCPSetupData).toHaveBeenCalledWith(expect.objectContaining({ id: 'test-user-id' }));
       expect(getServerConnectionStatus).toHaveBeenCalledTimes(2);
     });
 

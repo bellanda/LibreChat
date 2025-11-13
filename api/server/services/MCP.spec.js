@@ -98,6 +98,17 @@ jest.mock('./Tools/mcp', () => ({
   reinitMCPServer: jest.fn(),
 }));
 
+jest.mock('~/server/services/Config/GroupsService', () => ({
+  filterMcpServersByGroup: jest.fn((config) => config),
+}));
+
+jest.mock('~/server/middleware/groupsMiddleware', () => ({
+  getCachedGroupsConfig: jest.fn().mockResolvedValue({}),
+}));
+
+const groupsService = require('~/server/services/Config/GroupsService');
+const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
+
 describe('tests for the new helper functions used by the MCP connection status endpoints', () => {
   let mockGetMCPManager;
   let mockGetFlowStateManager;
@@ -148,13 +159,19 @@ describe('tests for the new helper functions used by the MCP connection status e
       mockGetMCPManager.mockReturnValue(mockMCPManager);
       mockMcpServersRegistry.getOAuthServers.mockResolvedValue(mockOAuthServers);
 
-      const result = await getMCPSetupData(mockUserId);
+      const result = await getMCPSetupData({ id: mockUserId });
 
       expect(mockGetAppConfig).toHaveBeenCalled();
       expect(mockGetMCPManager).toHaveBeenCalledWith(mockUserId);
       expect(mockMCPManager.appConnections.getAll).toHaveBeenCalled();
       expect(mockMCPManager.getUserConnections).toHaveBeenCalledWith(mockUserId);
       expect(mockMcpServersRegistry.getOAuthServers).toHaveBeenCalled();
+      expect(getCachedGroupsConfig).toHaveBeenCalled();
+      expect(groupsService.filterMcpServersByGroup).toHaveBeenCalledWith(
+        mockConfig.mcpServers,
+        expect.objectContaining({ id: mockUserId }),
+        expect.anything(),
+      );
 
       expect(result).toEqual({
         mcpConfig: mockConfig.mcpServers,
@@ -166,7 +183,7 @@ describe('tests for the new helper functions used by the MCP connection status e
 
     it('should throw error when MCP config not found', async () => {
       mockGetAppConfig.mockResolvedValue({});
-      await expect(getMCPSetupData(mockUserId)).rejects.toThrow('MCP config not found');
+      await expect(getMCPSetupData({ id: mockUserId })).rejects.toThrow('MCP config not found');
     });
 
     it('should handle null values from MCP manager gracefully', async () => {
@@ -179,7 +196,7 @@ describe('tests for the new helper functions used by the MCP connection status e
       mockGetMCPManager.mockReturnValue(mockMCPManager);
       mockMcpServersRegistry.getOAuthServers.mockResolvedValue(new Set());
 
-      const result = await getMCPSetupData(mockUserId);
+      const result = await getMCPSetupData({ id: mockUserId });
 
       expect(result).toEqual({
         mcpConfig: mockConfig.mcpServers,

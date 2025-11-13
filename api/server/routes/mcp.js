@@ -416,9 +416,8 @@ router.get('/connection/status', requireJwtAuth, async (req, res) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const { mcpConfig, appConnections, userConnections, oauthServers } = await getMCPSetupData(
-      user.id,
-    );
+    const { mcpConfig, appConnections, userConnections, oauthServers } =
+      await getMCPSetupData(user);
     const connectionStatus = {};
 
     for (const [serverName] of Object.entries(mcpConfig)) {
@@ -457,9 +456,8 @@ router.get('/connection/status/:serverName', requireJwtAuth, async (req, res) =>
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const { mcpConfig, appConnections, userConnections, oauthServers } = await getMCPSetupData(
-      user.id,
-    );
+    const { mcpConfig, appConnections, userConnections, oauthServers } =
+      await getMCPSetupData(user);
 
     if (!mcpConfig[serverName]) {
       return res

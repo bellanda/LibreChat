@@ -26,6 +26,8 @@ const { reinitMCPServer } = require('./Tools/mcp');
 const { getAppConfig } = require('./Config');
 const { getLogStores } = require('~/cache');
 const { mcpServersRegistry } = require('@librechat/api');
+const { filterMcpServersByGroup } = require('~/server/services/Config/GroupsService');
+const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
 
 /**
  * @param {object} params
@@ -434,12 +436,28 @@ function createToolInstance({ res, toolName, serverName, toolDefinition, provide
  * @param {string} userId - The user ID
  * @returns {Object} Object containing mcpConfig, appConnections, userConnections, and oauthServers
  */
-async function getMCPSetupData(userId) {
+async function getMCPSetupData(userOrId) {
+  const userId = typeof userOrId === 'string' ? userOrId : userOrId?.id;
+  if (!userId) {
+    throw new Error('User identifier is required to load MCP setup data');
+  }
+
   const config = await getAppConfig();
-  const mcpConfig = config?.mcpConfig;
+  let mcpConfig = config?.mcpConfig;
 
   if (!mcpConfig) {
     throw new Error('MCP config not found');
+  }
+
+  try {
+    const groupsConfig = await getCachedGroupsConfig();
+    mcpConfig = filterMcpServersByGroup(
+      mcpConfig,
+      typeof userOrId === 'string' ? null : userOrId,
+      groupsConfig,
+    );
+  } catch (error) {
+    logger.error('[MCP] Failed to apply group-based MCP filtering', error);
   }
 
   const mcpManager = getMCPManager(userId);

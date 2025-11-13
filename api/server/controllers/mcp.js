@@ -11,6 +11,8 @@ const {
 } = require('~/server/services/Config');
 const { getMCPManager } = require('~/config');
 const { mcpServersRegistry } = require('@librechat/api');
+const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
+const { filterMcpServersByGroup } = require('~/server/services/Config/GroupsService');
 
 /**
  * Get all MCP tools available to the user
@@ -28,8 +30,17 @@ const getMCPTools = async (req, res) => {
       return res.status(200).json({ servers: {} });
     }
 
+    // Apply group-based filtering to MCP servers
+    let filteredMcpConfig = appConfig.mcpConfig;
+    try {
+      const groupsConfig = await getCachedGroupsConfig();
+      filteredMcpConfig = filterMcpServersByGroup(appConfig.mcpConfig, req.user, groupsConfig);
+    } catch (error) {
+      logger.error('[getMCPTools] Failed to apply group-based MCP filtering', error);
+    }
+
     const mcpManager = getMCPManager();
-    const configuredServers = Object.keys(appConfig.mcpConfig);
+    const configuredServers = Object.keys(filteredMcpConfig);
     const mcpServers = {};
 
     const cachePromises = configuredServers.map((serverName) =>
@@ -64,8 +75,8 @@ const getMCPTools = async (req, res) => {
       try {
         const serverTools = serverToolsMap.get(serverName);
 
-        // Get server config once
-        const serverConfig = appConfig.mcpConfig[serverName];
+        // Get server config once (use filtered config)
+        const serverConfig = filteredMcpConfig[serverName];
         const rawServerConfig = await mcpServersRegistry.getServerConfig(serverName, userId);
 
         // Initialize server object with all server-level data
