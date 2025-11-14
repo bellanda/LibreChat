@@ -90,12 +90,28 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     },
   );
 
-  const { mappedEndpoints, endpointRequiresUserKey } = useEndpoints({
+  const { mappedEndpoints: rawMappedEndpoints, endpointRequiresUserKey } = useEndpoints({
     agents,
     assistantsMap,
     startupConfig,
     endpointsConfig,
   });
+
+  const mappedEndpoints = useMemo(() => {
+    if (!rawMappedEndpoints?.length) {
+      return [];
+    }
+
+    const visibleEndpointGroups = new Set(
+      (modelSpecs || [])
+        .map((spec) => spec.group)
+        .filter((group): group is string => typeof group === 'string' && group.length > 0),
+    );
+
+    return rawMappedEndpoints.filter(
+      (endpoint) => endpoint.hasModels || visibleEndpointGroups.has(endpoint.value),
+    );
+  }, [rawMappedEndpoints, modelSpecs]);
 
   const { onSelectEndpoint, onSelectSpec } = useSelectMention({
     // presets,

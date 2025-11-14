@@ -1,28 +1,29 @@
-import { useMemo } from 'react';
-import { useGetModelsQuery } from 'librechat-data-provider/react-query';
+import type { TAssistantsMap, TEndpointsConfig } from 'librechat-data-provider';
 import {
+  EModelEndpoint,
+  PermissionBits,
+  PermissionTypes,
   Permissions,
   alternateName,
-  PermissionBits,
-  EModelEndpoint,
-  PermissionTypes,
-  isAgentsEndpoint,
   getConfigDefaults,
+  isAgentsEndpoint,
   isAssistantsEndpoint,
 } from 'librechat-data-provider';
-import type { TAssistantsMap, TEndpointsConfig } from 'librechat-data-provider';
+import { useGetModelsQuery } from 'librechat-data-provider/react-query';
+import { useMemo } from 'react';
 import type { MentionOption } from '~/common';
+import { EndpointIcon } from '~/components/Endpoints';
 import {
-  useGetPresetsQuery,
   useGetEndpointsQuery,
-  useListAgentsQuery,
+  useGetPresetsQuery,
   useGetStartupConfig,
+  useListAgentsQuery,
 } from '~/data-provider';
 import useAssistantListMap from '~/hooks/Assistants/useAssistantListMap';
-import { useAgentsMapContext } from '~/Providers/AgentsMapContext';
-import { mapEndpoints, getPresetTitle } from '~/utils';
-import { EndpointIcon } from '~/components/Endpoints';
 import useHasAccess from '~/hooks/Roles/useHasAccess';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import { useAgentsMapContext } from '~/Providers/AgentsMapContext';
+import { getPresetTitle, mapEndpoints } from '~/utils';
 
 const defaultInterface = getConfigDefaults().interface;
 
@@ -64,6 +65,7 @@ export default function useMentions({
   });
 
   const agentsMap = useAgentsMapContext();
+  const { getModelDescription } = useModelDescriptions();
   const { data: presets } = useGetPresetsQuery();
   const { data: modelsConfig } = useGetModelsQuery();
   const { data: startupConfig } = useGetStartupConfig();
@@ -165,17 +167,22 @@ export default function useMentions({
         return [];
       }
 
-      const models = (modelsConfig?.[endpoint] ?? []).map((model) => ({
-        value: endpoint,
-        label: model,
-        type: 'model' as const,
-        icon: EndpointIcon({
-          conversation: { endpoint, model },
-          endpointsConfig,
-          context: 'menu-item',
-          size: 20,
-        }),
-      }));
+      const models = (modelsConfig?.[endpoint] ?? []).map((model) => {
+        const modelDescription = getModelDescription(model);
+        return {
+          value: endpoint,
+          label: model,
+          displayLabel: modelDescription?.name ?? model,
+          description: modelDescription?.shortUseCase,
+          type: 'model' as const,
+          icon: EndpointIcon({
+            conversation: { endpoint, model },
+            endpointsConfig,
+            context: 'menu-item',
+            size: 20,
+          }),
+        };
+      });
       return models;
     });
 
@@ -250,6 +257,7 @@ export default function useMentions({
     includeAssistants,
     interfaceConfig.presets,
     interfaceConfig.modelSelect,
+    getModelDescription,
   ]);
 
   return {

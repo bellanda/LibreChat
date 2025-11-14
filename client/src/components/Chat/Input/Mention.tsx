@@ -1,18 +1,20 @@
-import { useState, useRef, useEffect } from 'react';
 import { useCombobox } from '@librechat/client';
-import { AutoSizer, List } from 'react-virtualized';
-import { EModelEndpoint } from 'librechat-data-provider';
 import type { TConversation } from 'librechat-data-provider';
-import type { MentionOption, ConvoGenerator } from '~/common';
+import { EModelEndpoint } from 'librechat-data-provider';
+import { useEffect, useRef, useState } from 'react';
+import { AutoSizer, List } from 'react-virtualized';
 import type { SetterOrUpdater } from 'recoil';
-import useSelectMention from '~/hooks/Input/useSelectMention';
-import { useLocalize, TranslationKeys } from '~/hooks';
-import { useAssistantsMapContext } from '~/Providers';
+import type { ConvoGenerator, MentionOption } from '~/common';
+import { TranslationKeys, useLocalize } from '~/hooks';
 import useMentions from '~/hooks/Input/useMentions';
+import useSelectMention from '~/hooks/Input/useSelectMention';
+import { useModelDescriptions } from '~/hooks/useModelDescriptions';
+import { useAssistantsMapContext } from '~/Providers';
 import { removeCharIfLast } from '~/utils';
 import MentionItem from './MentionItem';
 
-const ROW_HEIGHT = 40;
+const ROW_HEIGHT = 35;
+const MAX_VISIBLE_ROWS = 5;
 
 export default function Mention({
   conversation,
@@ -33,6 +35,7 @@ export default function Mention({
 }) {
   const localize = useLocalize();
   const assistantsMap = useAssistantsMapContext();
+  const { getModelDescription } = useModelDescriptions();
   const {
     options,
     presets,
@@ -93,11 +96,16 @@ export default function Mention({
       setActiveIndex(0);
       inputRef.current?.focus();
     } else if (mention.type === 'endpoint') {
-      const models = (modelsConfig?.[mention.value || ''] ?? []).map((model) => ({
-        value: mention.value,
-        label: model,
-        type: 'model',
-      }));
+      const models = (modelsConfig?.[mention.value || ''] ?? []).map((model) => {
+        const modelDescription = getModelDescription(model);
+        return {
+          value: mention.value,
+          label: model,
+          displayLabel: modelDescription?.name ?? model,
+          description: modelDescription?.shortUseCase,
+          type: 'model',
+        };
+      });
 
       setActiveIndex(0);
       setSearchValue('');
@@ -154,7 +162,7 @@ export default function Mention({
           timeoutRef.current = null;
           handleSelect(mention);
         }}
-        name={mention.label ?? ''}
+        name={mention.displayLabel ?? mention.label ?? ''}
         icon={mention.icon}
         description={mention.description}
         isActive={index === activeIndex}
@@ -208,7 +216,7 @@ export default function Mention({
           }}
         />
         {open && (
-          <div className="max-h-40">
+          <div className="max-h-[400px]">
             <AutoSizer disableHeight>
               {({ width }) => (
                 <List
@@ -218,7 +226,7 @@ export default function Mention({
                   rowCount={matches.length}
                   rowRenderer={rowRenderer}
                   scrollToIndex={activeIndex}
-                  height={Math.min(matches.length * ROW_HEIGHT, 160)}
+                  height={Math.min(matches.length * ROW_HEIGHT, ROW_HEIGHT * MAX_VISIBLE_ROWS)}
                 />
               )}
             </AutoSizer>

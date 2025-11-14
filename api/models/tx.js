@@ -194,7 +194,9 @@ const tokenValues = Object.assign(
     'pixtral-large': { prompt: 2.0, completion: 6.0 },
     'mistral-large': { prompt: 2.0, completion: 6.0 },
     'mixtral-8x22b': { prompt: 0.65, completion: 0.65 },
-    kimi: { prompt: 0.14, completion: 2.49 }, // Base pattern (using kimi-k2 pricing)
+    kimi: { prompt: 0.6, completion: 2.5 }, // Base pattern (using kimi-k2 pricing)
+    'kimi-k2-thinking': { prompt: 0.6, completion: 2.5 },
+    'accounts/fireworks/models/kimi-k2-thinking': { prompt: 0.6, completion: 2.5 },
     // GPT-OSS models (specific sizes)
     'gpt-oss:20b': { prompt: 0.1, completion: 0.3 },
     'gpt-oss-20b': { prompt: 0.1, completion: 0.3 },

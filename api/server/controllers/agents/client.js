@@ -659,6 +659,7 @@ class AgentClient extends BaseClient {
 
   /** @type {sendCompletion} */
   async sendCompletion(payload, opts = {}) {
+    this.agentInstructionTokens = this.calculateAgentInstructionTokens();
     await this.chatCompletion({
       payload,
       onProgress: opts.onProgress,
@@ -725,6 +726,12 @@ class AgentClient extends BaseClient {
       suspiciousOutput: null,
     };
 
+    const providerName =
+      this.options?.agent?.provider ??
+      this.options?.agent?.endpoint ??
+      this.options?.endpoint ??
+      'unknown';
+
     // Aggregate all tokens from the collected usage to avoid multiple billing
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
@@ -767,13 +774,30 @@ class AgentClient extends BaseClient {
       return responseDetails;
     };
 
-    for (const usage of collectedUsage) {
+    for (const [index, usage] of collectedUsage.entries()) {
       if (!usage) {
         continue;
       }
 
       const cache_creation = Number(usage.input_token_details?.cache_creation) || 0;
       const cache_read = Number(usage.input_token_details?.cache_read) || 0;
+
+      logger.info('[AgentUsage][UsageEntry]', {
+        provider: providerName,
+        index,
+        input_tokens: usage.input_tokens ?? null,
+        output_tokens: usage.output_tokens ?? null,
+        cache_creation,
+        cache_read,
+        model: usage.model ?? null,
+        raw_usage: {
+          input_tokens: usage.input_tokens ?? null,
+          output_tokens: usage.output_tokens ?? null,
+          input_token_details: usage.input_token_details ?? null,
+          completion_tokens_details: usage.completion_tokens_details ?? null,
+          reasoning_tokens: usage.reasoning_tokens ?? null,
+        },
+      });
 
       // Validate token values to prevent inflated numbers
       const inputTokens = Number(usage.input_tokens) || 0;
@@ -872,11 +896,40 @@ class AgentClient extends BaseClient {
         }
       }
 
+      const instructionTokens = this.agentInstructionTokens ?? 0;
+      if (fallbackPromptTokens === 0 && instructionTokens > 0) {
+        fallbackPromptTokens = instructionTokens;
+        fallbackSource = fallbackSource ?? 'agentInstructions';
+      } else if (instructionTokens > 0) {
+        fallbackPromptTokens += instructionTokens;
+      }
+
       if (fallbackPromptTokens > 0) {
         totalInputTokens = fallbackPromptTokens;
         diagnostics.fallback.inputSource = fallbackSource ?? 'calculated';
         diagnostics.fallbackTokens.prompt = fallbackPromptTokens;
       }
+
+      logger.info('[AgentUsage][FallbackEvaluation]', {
+        provider: providerName,
+        needsInputFallback,
+        fallbackSource: diagnostics.fallback.inputSource,
+        fallbackPromptTokens,
+        agentInstructionTokens: this.agentInstructionTokens ?? 0,
+        lastPromptTokens: this.lastPromptTokens ?? 0,
+        lastPromptTokenMapTotal: this.lastPromptTokenMap
+          ? Object.values(this.lastPromptTokenMap).reduce(
+              (sum, count) => sum + (Number(count) || 0),
+              0,
+            )
+          : 0,
+        indexTokenCountMapTotal: this.indexTokenCountMap
+          ? Object.values(this.indexTokenCountMap).reduce(
+              (sum, count) => sum + (Number(count) || 0),
+              0,
+            )
+          : 0,
+      });
     }
 
     // FALLBACK: Use calculated tokens for output when provider doesn't provide real usage
@@ -981,6 +1034,7 @@ class AgentClient extends BaseClient {
       input_tokens: totalInputTokens + totalCacheCreation + totalCacheRead,
       output_tokens: totalOutputTokens,
     };
+    this.agentInstructionTokens = 0;
   }
 
   /**

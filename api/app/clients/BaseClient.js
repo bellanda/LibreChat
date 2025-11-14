@@ -71,6 +71,8 @@ class BaseClient {
     this.currentMessages = [];
     /** @type {import('librechat-data-provider').VisionModes | undefined} */
     this.visionMode;
+    /** @type {number} */
+    this.agentInstructionTokens = 0;
   }
 
   setOptions() {
@@ -243,6 +245,44 @@ class BaseClient {
       text,
       isCreatedByUser: true,
     };
+  }
+
+  calculateAgentInstructionTokens() {
+    let total = 0;
+    const agents = [];
+    if (this.options?.agent) {
+      agents.push(this.options.agent);
+    }
+    if (this.agentConfigs?.size) {
+      agents.push(...this.agentConfigs.values());
+    }
+
+    const buildSystemContent = (agent) => {
+      if (!agent) {
+        return '';
+      }
+      const toolContext = agent.toolContextMap
+        ? Object.values(agent.toolContextMap).filter(Boolean).join('\n').trim()
+        : '';
+      const instructions = typeof agent.instructions === 'string' ? agent.instructions.trim() : '';
+      const additional =
+        typeof agent.additional_instructions === 'string'
+          ? agent.additional_instructions.trim()
+          : '';
+
+      const parts = [toolContext, instructions, additional].filter((part) => part && part.length);
+      return parts.join('\n').trim();
+    };
+
+    for (const agent of agents) {
+      const systemContent = buildSystemContent(agent);
+      if (!systemContent) {
+        continue;
+      }
+      total += this.getTokenCount(systemContent);
+    }
+
+    return total;
   }
 
   async handleStartMethods(message, opts) {
