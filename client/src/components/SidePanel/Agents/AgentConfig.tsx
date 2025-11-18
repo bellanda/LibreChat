@@ -2,7 +2,7 @@ import { useToastContext } from '@librechat/client';
 import { EModelEndpoint, getEndpointField } from 'librechat-data-provider';
 import { useCallback, useMemo, useState } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
-import type { AgentForm, AgentPanelProps, IconComponentTypes } from '~/common';
+import type { AgentForm, IconComponentTypes } from '~/common';
 import { Panel, isEphemeralAgent } from '~/common';
 import Action from '~/components/SidePanel/Builder/Action';
 import { MCPToolSelectDialog, ToolSelectDialog } from '~/components/Tools';
@@ -38,7 +38,7 @@ const inputClass = cn(
   removeFocusOutlines,
 );
 
-export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'createMutation'>) {
+export default function AgentConfig() {
   const localize = useLocalize();
   const fileMap = useFileMapContext();
   const { showToast } = useToastContext();
@@ -185,11 +185,7 @@ export default function AgentConfig({ createMutation }: Pick<AgentPanelProps, 'c
       <div className="h-auto bg-white px-4 pt-3 dark:bg-transparent">
         {/* Avatar & Name */}
         <div className="mb-4">
-          <AgentAvatar
-            agent_id={agent_id}
-            createMutation={createMutation}
-            avatar={agent?.['avatar'] ?? null}
-          />
+          <AgentAvatar avatar={agent?.['avatar'] ?? null} />
           <label className={labelClass} htmlFor="name">
             {localize('com_ui_name')}
             <span className="text-red-500">*</span>

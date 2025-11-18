@@ -1,21 +1,15 @@
-import { CheckMark } from '@librechat/client';
-import { Download } from 'lucide-react';
+import { Button } from '@librechat/client';
+import { CircleCheckBig, Download } from 'lucide-react';
 import { useState } from 'react';
 import type { Artifact } from '~/common';
 import { useLocalize } from '~/hooks';
 import useArtifactProps from '~/hooks/Artifacts/useArtifactProps';
-import { useEditorContext } from '~/Providers';
+import { useCodeState } from '~/Providers/EditorContext';
 import { cleanHtmlForRendering } from '~/utils/cleanHtml';
 
-const DownloadArtifact = ({
-  artifact,
-  className = '',
-}: {
-  artifact: Artifact;
-  className?: string;
-}) => {
+const DownloadArtifact = ({ artifact }: { artifact: Artifact }) => {
   const localize = useLocalize();
-  const { currentCode } = useEditorContext();
+  const { currentCode } = useCodeState();
   const [isDownloaded, setIsDownloaded] = useState(false);
   const { fileKey: fileName } = useArtifactProps({ artifact });
 
@@ -48,13 +42,14 @@ const DownloadArtifact = ({
   };
 
   return (
-    <button
-      className={`mr-2 text-text-secondary ${className}`}
+    <Button
+      size="icon"
+      variant="ghost"
       onClick={handleDownload}
       aria-label={localize('com_ui_download_artifact')}
     >
-      {isDownloaded ? <CheckMark className="w-4 h-4" /> : <Download className="w-4 h-4" />}
-    </button>
+      {isDownloaded ? <CircleCheckBig size={16} /> : <Download size={16} />}
+    </Button>
   );
 };
 

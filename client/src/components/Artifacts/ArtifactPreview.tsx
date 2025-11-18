@@ -1,11 +1,10 @@
-import type { PreviewProps, SandpackPreviewRef } from '@codesandbox/sandpack-react/unstyled';
-import {
-  SandpackPreview,
-  SandpackProvider,
+import type {
+  SandpackPreviewRef,
   SandpackProviderProps,
 } from '@codesandbox/sandpack-react/unstyled';
+import { SandpackPreview, SandpackProvider } from '@codesandbox/sandpack-react/unstyled';
 import type { TStartupConfig } from 'librechat-data-provider';
-import React, { memo, useMemo } from 'react';
+import { memo, useMemo, type MutableRefObject } from 'react';
 import type { ArtifactFiles } from '~/common';
 import { sharedFiles, sharedOptions } from '~/utils/artifacts';
 import { StaticHtmlPreview } from './StaticHtmlPreview';
@@ -23,7 +22,7 @@ export const ArtifactPreview = memo(function ({
   fileKey: string;
   template: SandpackProviderProps['template'];
   sharedProps: Partial<SandpackProviderProps>;
-  previewRef: React.MutableRefObject<SandpackPreviewRef>;
+  previewRef: MutableRefObject<SandpackPreviewRef>;
   currentCode?: string;
   startupConfig?: TStartupConfig;
 }) {
@@ -37,9 +36,7 @@ export const ArtifactPreview = memo(function ({
     }
     return {
       ...files,
-      [fileKey]: {
-        code,
-      },
+      [fileKey]: { code },
     };
   }, [currentCode, files, fileKey]);
 
@@ -47,12 +44,10 @@ export const ArtifactPreview = memo(function ({
     if (!startupConfig) {
       return sharedOptions;
     }
-    const _options: typeof sharedOptions = {
+    return {
       ...sharedOptions,
       bundlerURL: template === 'static' ? startupConfig.staticBundlerURL : startupConfig.bundlerURL,
     };
-
-    return _options;
   }, [startupConfig, template]);
 
   if (Object.keys(artifactFiles).length === 0) {
@@ -67,10 +62,7 @@ export const ArtifactPreview = memo(function ({
   // Use Sandpack for React/TypeScript and other dynamic content
   return (
     <SandpackProvider
-      files={{
-        ...artifactFiles,
-        ...sharedFiles,
-      }}
+      files={{ ...artifactFiles, ...sharedFiles }}
       options={options}
       {...sharedProps}
       template={template}

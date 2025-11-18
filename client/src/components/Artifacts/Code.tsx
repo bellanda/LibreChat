@@ -1,6 +1,6 @@
-import { CheckMark } from '@librechat/client';
+import { Button } from '@librechat/client';
 import copy from 'copy-to-clipboard';
-import { Clipboard } from 'lucide-react';
+import { CircleCheckBig, Copy } from 'lucide-react';
 import React, { memo, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
@@ -81,7 +81,7 @@ export const CodeMarkdown = memo(
     }, [content, isSubmitting, userScrolled]);
 
     return (
-      <div ref={scrollRef} className="overflow-y-auto max-h-full">
+      <div ref={scrollRef} className="max-h-full overflow-y-auto">
         <ReactMarkdown
           /* @ts-ignore */
           rehypePlugins={rehypePlugins}
@@ -119,12 +119,13 @@ export const CopyCodeButton: React.FC<{
   };
 
   return (
-    <button
-      className="mr-2 text-text-secondary"
+    <Button
+      size="icon"
+      variant="ghost"
       onClick={handleCopy}
       aria-label={isCopied ? localize('com_ui_copied') : localize('com_ui_copy_code')}
     >
-      {isCopied ? <CheckMark className="h-[18px] w-[18px]" /> : <Clipboard />}
-    </button>
+      {isCopied ? <CircleCheckBig size={16} /> : <Copy size={16} />}
+    </Button>
   );
 };
