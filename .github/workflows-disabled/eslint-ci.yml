@@ -52,12 +52,8 @@ jobs:
           # Ensure there are files to lint before running ESLint
           if [[ -z "$CHANGED_FILES" ]]; then
             echo "No matching files changed. Skipping ESLint."
-            echo "UPLOAD_SARIF=false" >> $GITHUB_ENV
             exit 0
           fi
-
-          # Set variable to allow SARIF upload
-          echo "UPLOAD_SARIF=true" >> $GITHUB_ENV
 
           # Run ESLint
           npx eslint --no-error-on-unmatched-pattern \
@@ -71,3 +67,4 @@ jobs:
         with:
           sarif_file: eslint-results.sarif
           wait-for-processing: true
+            $CHANGED_FILES

@@ -8,7 +8,7 @@ import supersub from 'remark-supersub';
 import type { PluggableList } from 'unified';
 import { ArtifactProvider, CodeBlockProvider } from '~/Providers';
 import { hasBrazilianCurrency, langSubset } from '~/utils';
-import { a, code, codeNoExecution, p } from './MarkdownComponents';
+import { a, code, codeNoExecution, img, p } from './MarkdownComponents';
 import MarkdownErrorBoundary from './MarkdownErrorBoundary';
 
 const MarkdownLite = memo(
@@ -48,6 +48,7 @@ const MarkdownLite = memo(
                   code: codeExecution ? code : codeNoExecution,
                   a,
                   p,
+                  img,
                 } as {
                   [nodeType: string]: React.ElementType;
                 }

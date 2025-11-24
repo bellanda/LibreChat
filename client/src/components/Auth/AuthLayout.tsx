@@ -57,13 +57,13 @@ function AuthLayout({
   };
 
   return (
-    <div className="flex relative flex-col min-h-screen bg-white dark:bg-gray-900">
+    <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 w-full h-10 bg-cover">
+        <div className="mt-6 h-10 w-full bg-cover">
           <img
             src="/assets/hpe-ia-neural.png"
-            className="object-contain w-full h-full"
+            className="h-full w-full object-contain"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
           />
         </div>
@@ -73,11 +73,11 @@ function AuthLayout({
         <ThemeSelector />
       </div>
 
-      <div className="flex flex-grow justify-center items-center">
-        <div className="overflow-hidden px-6 py-4 bg-white w-authPageWidth dark:bg-gray-900 sm:max-w-md sm:rounded-lg">
-          {!hasStartupConfigError && !isFetching && (
+      <div className="flex flex-grow items-center justify-center">
+        <div className="w-authPageWidth overflow-hidden bg-white px-6 py-4 dark:bg-gray-900 sm:max-w-md sm:rounded-lg">
+          {!hasStartupConfigError && !isFetching && header && (
             <h1
-              className="mb-4 text-3xl font-semibold text-center text-black dark:text-white"
+              className="mb-4 text-center text-3xl font-semibold text-black dark:text-white"
               style={{ userSelect: 'none' }}
             >
               {header}

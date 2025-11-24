@@ -171,7 +171,7 @@ function getDefaultHandlers({ res, aggregateContent, toolEndCallback, collectedU
   }
   const handlers = {
     [GraphEvents.CHAT_MODEL_END]: new ModelEndHandler(collectedUsage),
-    [GraphEvents.TOOL_END]: new ToolEndHandler(toolEndCallback),
+    [GraphEvents.TOOL_END]: new ToolEndHandler(toolEndCallback, logger),
     [GraphEvents.CHAT_MODEL_STREAM]: new ChatModelStreamHandler(),
     [GraphEvents.ON_RUN_STEP]: {
       /**

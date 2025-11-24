@@ -51,12 +51,64 @@ const applyMcpFiltering = async (config, user) => {
   };
 };
 
+/**
+ * Fetches MCP servers from registry and adds them to the payload.
+ * Uses appConfig definitions as the source of truth while enriching with registry data.
+ */
+const populateMcpServers = async (payload, appConfig) => {
+  try {
+    if (appConfig?.mcpConfig == null) {
+      return;
+    }
+
+    const mcpManager = getMCPManager();
+    if (!mcpManager) {
+      return;
+    }
+
+    const registryServers = (await mcpServersRegistry.getAllServerConfigs()) ?? {};
+    const configuredServerNames = Object.keys(appConfig.mcpConfig);
+    const serverNames =
+      configuredServerNames.length > 0 ? configuredServerNames : Object.keys(registryServers);
+
+    if (serverNames.length === 0) {
+      return;
+    }
+
+    for (const serverName of serverNames) {
+      if (!payload.mcpServers) {
+        payload.mcpServers = {};
+      }
+
+      const serverConfig = registryServers[serverName];
+      const appServerConfig = appConfig.mcpConfig[serverName];
+
+      payload.mcpServers[serverName] = removeNullishValues({
+        startup: serverConfig?.startup ?? appServerConfig?.startup,
+        chatMenu: serverConfig?.chatMenu ?? appServerConfig?.chatMenu,
+        isOAuth: serverConfig?.requiresOAuth ?? appServerConfig?.requiresOAuth ?? false,
+        customUserVars: serverConfig?.customUserVars ?? appServerConfig?.customUserVars,
+      });
+    }
+  } catch (error) {
+    logger.error('Error loading MCP servers', error);
+  }
+};
+
 router.get('/', optionalJwtAuth, async function (req, res) {
   const cache = getLogStores(CacheKeys.CONFIG_STORE);
 
   const cachedStartupConfig = await cache.get(CacheKeys.STARTUP_CONFIG);
   if (cachedStartupConfig) {
-    const responsePayload = await applyMcpFiltering(cachedStartupConfig, req.user);
+    const payload = {
+      ...cachedStartupConfig,
+      mcpServers: cachedStartupConfig.mcpServers
+        ? { ...cachedStartupConfig.mcpServers }
+        : undefined,
+    };
+    const appConfig = await getAppConfig({ role: req.user?.role });
+    await populateMcpServers(payload, appConfig);
+    const responsePayload = await applyMcpFiltering(payload, req.user);
     res.send(responsePayload);
     return;
   }
@@ -149,43 +201,7 @@ router.get('/', optionalJwtAuth, async function (req, res) {
       payload.minPasswordLength = minPasswordLength;
     }
 
-    const getMCPServers = async () => {
-      try {
-        if (appConfig?.mcpConfig == null) {
-          return;
-        }
-        const mcpManager = getMCPManager();
-        if (!mcpManager) {
-          return;
-        }
-        // Use appConfig.mcpConfig as source of truth for configured servers
-        const configuredServerNames = Object.keys(appConfig.mcpConfig);
-        if (configuredServerNames.length === 0) return;
-
-        const mcpServers = await mcpServersRegistry.getAllServerConfigs();
-        if (!mcpServers) return;
-
-        for (const serverName of configuredServerNames) {
-          if (!payload.mcpServers) {
-            payload.mcpServers = {};
-          }
-          const serverConfig = mcpServers[serverName];
-          // Include server even if not in registry yet (may be initializing)
-          // Use appConfig.mcpConfig as fallback for basic config
-          const appServerConfig = appConfig.mcpConfig[serverName];
-          payload.mcpServers[serverName] = removeNullishValues({
-            startup: serverConfig?.startup ?? appServerConfig?.startup,
-            chatMenu: serverConfig?.chatMenu ?? appServerConfig?.chatMenu,
-            isOAuth: serverConfig?.requiresOAuth ?? false,
-            customUserVars: serverConfig?.customUserVars ?? appServerConfig?.customUserVars,
-          });
-        }
-      } catch (error) {
-        logger.error('Error loading MCP servers', error);
-      }
-    };
-
-    await getMCPServers();
+    await populateMcpServers(payload, appConfig);
     const webSearchConfig = appConfig?.webSearch;
     if (
       webSearchConfig != null &&
