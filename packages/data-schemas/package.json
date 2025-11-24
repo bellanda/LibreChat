@@ -17,7 +17,7 @@
     "dist"
   ],
   "scripts": {
-    "clean": "node ../../scripts/clean-dist.mjs dist",
+    "clean": "node -e \"require('fs/promises').rm('dist',{ recursive: true, force: true }).catch(err => { if (err.code !== 'ENOENT') { console.error(err); process.exit(1); } })\"",
     "build": "npm run clean && rollup -c --silent --bundleConfigAsCjs",
     "build:watch": "rollup -c -w",
     "test": "jest --coverage --watch",
