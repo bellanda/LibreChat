@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.115.14",
-    "markdown-html-pdf>=0.3.1",
+    "markdown-html-pdf>=2.0.0",
     "uvicorn",
     "python-multipart",
     "playwright>=1.40.0",
