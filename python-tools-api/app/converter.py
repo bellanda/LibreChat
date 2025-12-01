@@ -1,5 +1,5 @@
 # converter.py
-from markdown_html_pdf.tools import markdown_to_html, markdown_to_pdf
+from markdown_html_pdf.tools import markdown_to_html_file, markdown_to_pdf_file
 
 # Debug flag
 # DEBUG = os.environ.get("DEBUG_CONSOLE_MARKDOWN_HTML_PDF_API") == "true"
@@ -35,7 +35,7 @@ class Converter:
                 print(f"[DEBUG] Temporary PDF file will be: {pdf_path}")
 
         # Perform conversion
-        await markdown_to_pdf(markdown_file_path=md_path, pdf_output_file_path=pdf_path)
+        await markdown_to_pdf_file(markdown_file_path=md_path, pdf_output_file_path=pdf_path)
         if DEBUG:
             print("[DEBUG] markdown_to_pdf conversion completed")
 
@@ -71,7 +71,7 @@ class Converter:
                 print(f"[DEBUG] Temporary HTML file will be: {html_path}")
 
         # Perform conversion to HTML
-        markdown_to_html(markdown_file_path=md_path, html_output_file_path=html_path, html_output_title="Output")
+        markdown_to_html_file(markdown_file_path=md_path, html_output_file_path=html_path, html_output_title="Output")
         if DEBUG:
             print("[DEBUG] markdown_to_html conversion completed")
 
