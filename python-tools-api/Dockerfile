@@ -1,4 +1,4 @@
-FROM python:3.13-slim-trixie
+FROM python:3.13-slim-bookworm
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN apt update && \
     wget \
     gnupg \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/cache/apt/*
 
 # Install Playwright and its browsers during build
 RUN uv run playwright install chromium
