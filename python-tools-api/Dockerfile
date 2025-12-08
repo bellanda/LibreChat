@@ -10,8 +10,8 @@ COPY . .
 RUN uv sync
 
 # Install system dependencies for markdown-html-pdf (wkhtmltopdf, fonts, etc)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN apt update && \
+    apt install -y --no-install-recommends \
     wkhtmltopdf \
     fonts-dejavu-core \
     fonts-liberation \
