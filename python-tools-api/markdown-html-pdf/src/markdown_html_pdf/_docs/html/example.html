@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Example</title>
+  <style>
+    /* ==============================================================
+     1️⃣  GITHUB‑STYLE (baseline – contém tudo que o “original” tem)
+    ============================================================== */
+    .markdown-body {
+      color-scheme: light;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      margin: 0;
+      color: #1f2328;
+      background-color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      font-size: 16px;
+      line-height: 1.5;
+      word-wrap: break-word
+    }
+
+    .markdown-body .octicon {
+      display: inline-block;
+      fill: currentColor;
+      vertical-align: text-bottom
+    }
+
+    .markdown-body h1:hover .anchor .octicon-link:before,
+    .markdown-body h2:hover .anchor .octicon-link:before,
+    .markdown-body h3:hover .anchor .octicon-link:before,
+    .markdown-body h4:hover .anchor .octicon-link:before,
+    .markdown-body h5:hover .anchor .octicon-link:before,
+    .markdown-body h6:hover .anchor .octicon-link:before {
+      width: 16px;
+      height: 16px;
+      content: ' ';
+      display: inline-block;
+      background-color: currentColor;
+      -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' version='1.1' aria-hidden='true'><path fill-rule='evenodd' d='M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z'></path></svg>");
+      mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' version='1.1' aria-hidden='true'><path fill-rule='evenodd' d='M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z'></path></svg>")
+    }
+
+    .markdown-body details,
+    .markdown-body figcaption,
+    .markdown-body figure {
+      display: block
+    }
+
+    .markdown-body summary {
+      display: list-item
+    }
+
+    .markdown-body [hidden] {
+      display: none !important
+    }
+
+    .markdown-body a {
+      background-color: transparent;
+      color: #0969da;
+      text-decoration: none
+    }
+
+    .markdown-body a:hover {
+      text-decoration: underline
+    }
+
+    .markdown-body abbr[title] {
+      border-bottom: none;
+      -webkit-text-decoration: underline dotted;
+      text-decoration: underline dotted
+    }
+
+    .markdown-body b,
+    .markdown-body strong {
+      font-weight: 600
+    }
+
+    .markdown-body dfn {
+      font-style: italic
+    }
+
+    .markdown-body h1 {
+      margin: .67em 0;
+      font-weight: 600;
+      padding-bottom: .3em;
+      font-size: 2em;
+      border-bottom: 1px solid #d1d9e0b3
+    }
+
+    .markdown-body h2 {
+      font-weight: 600;
+      padding-bottom: .3em;
+      font-size: 1.5em;
+      border-bottom: 1px solid #d1d9e0b3
+    }
+
+    .markdown-body h3 {
+      font-weight: 600;
+      font-size: 1.25em
+    }
+
+    .markdown-body h4 {
+      font-weight: 600;
+      font-size: 1em
+    }
+
+    .markdown-body h5 {
+      font-weight: 600;
+      font-size: .875em
+    }
+
+    .markdown-body h6 {
+      font-weight: 600;
+      font-size: .85em;
+      color: #59636e
+    }
+
+    .markdown-body p {
+      margin-top: 0;
+      margin-bottom: 10px
+    }
+
+    .markdown-body blockquote {
+      margin: 0;
+      padding: 0 1em;
+      color: #59636e;
+      border-left: .25em solid #d1d9e0
+    }
+
+    .markdown-body ol,
+    .markdown-body ul {
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-left: 2em
+    }
+
+    .markdown-body code,
+    .markdown-body kbd,
+    .markdown-body pre,
+    .markdown-body samp {
+      font-family: monospace;
+      font-size: 1em
+    }
+
+    .markdown-body pre {
+      margin-top: 0;
+      margin-bottom: 0;
+      font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+      font-size: 12px;
+      word-wrap: normal
+    }
+
+    .markdown-body table {
+      border-spacing: 0;
+      border-collapse: collapse;
+      display: block;
+      width: max-content;
+      max-width: 100%;
+      overflow: auto;
+      font-variant: tabular-nums;
+      font-size: 15px !important;
+    }
+
+    .markdown-body td,
+    .markdown-body th {
+      padding: 0
+    }
+
+    /* (demais regras do segundo bloco – mantidas inalteradas) */
+    .markdown-body .markdown-alert {
+      padding: .5rem 1rem;
+      margin-bottom: 1rem;
+      border-left: .25em solid #d1d9e0;
+      color: inherit
+    }
+
+    .markdown-body .markdown-alert-note {
+      border-left-color: #0969da
+    }
+
+    .markdown-body .markdown-alert-important {
+      border-left-color: #8250df
+    }
+
+    .markdown-body .markdown-alert-warning {
+      border-left-color: #9a6700
+    }
+
+    .markdown-body .markdown-alert-tip {
+      border-left-color: #1a7f37
+    }
+
+    .markdown-body .markdown-alert-caution {
+      border-left-color: #cf222e
+    }
+
+    .markdown-body .markdown-alert-title {
+      display: flex;
+      font-weight: 500;
+      align-items: center;
+      line-height: 1
+    }
+
+    /* (continua com todas as classes .pl‑* e demais ajustes do GitHub) */
+    .markdown-body .pl-c {
+      color: #59636e
+    }
+
+    .markdown-body .pl-c1,
+    .markdown-body .pl-s .pl-v {
+      color: #0550ae
+    }
+
+    .markdown-body .pl-e,
+    .markdown-body .pl-en {
+      color: #6639ba
+    }
+
+    .markdown-body .pl-s .pl-s1,
+    .markdown-body .pl-smi {
+      color: #1f2328
+    }
+
+    .markdown-body .pl-ent {
+      color: #0550ae
+    }
+
+    .markdown-body .pl-k {
+      color: #cf222e
+    }
+
+    .markdown-body .pl-pds,
+    .markdown-body .pl-s,
+    .markdown-body .pl-s .pl-pse .pl-s1,
+    .markdown-body .pl-sr,
+    .markdown-body .pl-sr .pl-cce,
+    .markdown-body .pl-sr .pl-sra,
+    .markdown-body .pl-sr .pl-sre {
+      color: #0a3069
+    }
+
+    .markdown-body .pl-smw,
+    .markdown-body .pl-v {
+      color: #953800
+    }
+
+    .markdown-body .pl-bu {
+      color: #82071e
+    }
+
+    .markdown-body .pl-ii {
+      color: #f6f8fa;
+      background-color: #82071e
+    }
+
+    .markdown-body .pl-c2 {
+      color: #f6f8fa;
+      background-color: #cf222e
+    }
+
+    .markdown-body .pl-sr .pl-cce {
+      font-weight: 700;
+      color: #116329
+    }
+
+    .markdown-body .pl-ml {
+      color: #3b2300
+    }
+
+    .markdown-body .pl-mh,
+    .markdown-body .pl-mh .pl-en,
+    .markdown-body .pl-ms {
+      font-weight: 700;
+      color: #0550ae
+    }
+
+    .markdown-body .pl-mi {
+      font-style: italic;
+      color: #1f2328
+    }
+
+    .markdown-body .pl-mb {
+      font-weight: 700;
+      color: #1f2328
+    }
+
+    .markdown-body .pl-md {
+      color: #82071e;
+      background-color: #ffebe9
+    }
+
+    .markdown-body .pl-mi1 {
+      color: #116329;
+      background-color: #dafbe1
+    }
+
+    .markdown-body .pl-mc {
+      color: #953800;
+      background-color: #ffd8b5
+    }
+
+    .markdown-body .pl-mi2 {
+      color: #d1d9e0;
+      background-color: #0550ae
+    }
+
+    .markdown-body .pl-mdr {
+      font-weight: 700;
+      color: #8250df
+    }
+
+    .markdown-body .pl-ba {
+      color: #59636e
+    }
+
+    .markdown-body .pl-sg {
+      color: #818b98
+    }
+
+    .markdown-body .pl-corl {
+      text-decoration: underline;
+      color: #0a3069
+    }
+
+    .markdown-body .task-list-item {
+      list-style-type: none
+    }
+
+    .markdown-body .task-list-item label {
+      font-weight: 400
+    }
+
+    .markdown-body .task-list-item.enabled label {
+      cursor: pointer
+    }
+
+    .markdown-body .task-list-item+.task-list-item {
+      margin-top: .25rem
+    }
+
+    .markdown-body .task-list-item .handle {
+      display: none
+    }
+
+    .markdown-body .task-list-item-checkbox {
+      margin: 0 .2em .25em -1.4em;
+      vertical-align: middle
+    }
+
+    .markdown-body ul:dir(rtl) .task-list-item-checkbox {
+      margin: 0 -1.6em .25em .2em
+    }
+
+    .markdown-body ol:dir(rtl) .task-list-item-checkbox {
+      margin: 0 -1.6em .25em .2em
+    }
+
+    /* ==============================================================
+               2️⃣  MODERN COMPACT (prioridade – sobrescreve o que for necessário)
+               ============================================================== */
+    .markdown-body {
+      color-scheme: light;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      margin: 0;
+      color: #1f2328;
+      background-color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      font-size: 16px;
+      line-height: 1.6;
+      /* Aumentado levemente para leitura */
+      word-wrap: break-word;
+      box-sizing: border-box;
+      min-width: 200px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 40px;
+    }
+
+    @media (max-width: 767px) {
+      .markdown-body {
+        padding: 15px;
+      }
+    }
+
+    /* --- MODERN TABLE STYLES (UI IMPRESSIVE) --- */
+    .markdown-body table {
+      border-spacing: 0;
+      border-collapse: separate;
+      display: table;
+      width: 100%;
+      table-layout: auto;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+      font-variant: tabular-nums;
+    }
+
+    .markdown-body table th {
+      font-weight: 600;
+      padding: 12px 16px;
+      background-color: #f8fafc;
+      color: #334155;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+      border-right: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .markdown-body table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      border-right: 1px solid #e2e8f0;
+      color: #475569;
+      background-color: #fff;
+    }
+
+    .markdown-body table th:last-child,
+    .markdown-body table td:last-child {
+      border-right: none;
+    }
+
+    .markdown-body table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .markdown-body table tr:hover td {
+      background-color: #f1f5f9;
+      transition: background-color 0.2s ease;
+    }
+
+    .markdown-body table tr:first-child th:first-child {
+      border-top-left-radius: 11px;
+    }
+
+    .markdown-body table tr:first-child th:last-child {
+      border-top-right-radius: 11px;
+    }
+
+    .markdown-body table tr:last-child td:first-child {
+      border-bottom-left-radius: 11px;
+    }
+
+    .markdown-body table tr:last-child td:last-child {
+      border-bottom-right-radius: 11px;
+    }
+
+    /* ELEMENTS & TYPOGRAPHY RESTORATION (mantém os estilos do GitHub, mas com ajustes) */
+    .markdown-body h1,
+    .markdown-body h2,
+    .markdown-body h3,
+    .markdown-body h4,
+    .markdown-body h5,
+    .markdown-body h6 {
+      margin-top: 0.75rem;
+      margin-bottom: 0.40rem;
+      font-weight: 600;
+      line-height: 1.25;
+      color: #111827;
+    }
+
+    .markdown-body h1 {
+      font-size: 2em;
+      padding-bottom: .3em;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .markdown-body h2 {
+      font-size: 1.5em;
+      padding-bottom: .3em;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .markdown-body a {
+      color: #0969da;
+      text-decoration: none;
+    }
+
+    .markdown-body a:hover {
+      text-decoration: underline;
+    }
+
+    .markdown-body p {
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
+    .markdown-body blockquote {
+      margin: 0 0 1rem;
+      padding: 0 1em;
+      color: #57606a;
+      border-left: .25em solid #d0d7de;
+    }
+
+    .markdown-body ul,
+    .markdown-body ol {
+      padding-left: 2em;
+      margin-bottom: 1rem;
+    }
+
+    /* Code Blocks Modernos */
+    .markdown-body pre {
+      padding: 16px;
+      overflow: auto;
+      font-size: 85%;
+      line-height: 1.45;
+      background-color: #f6f8fa;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .markdown-body code {
+      padding: .2em .4em;
+      margin: 0;
+      font-size: 85%;
+      background-color: #eff1f3;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+    }
+
+    .markdown-body pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .markdown-body hr {
+      height: .25em;
+      padding: 0;
+      margin: 24px 0;
+      background-color: #e1e4e8;
+      border: 0;
+    }
+
+    .markdown-body img {
+      max-width: 100%;
+      box-sizing: content-box;
+      border-radius: 6px;
+    }
+
+    /* Alerts (Admonitions) – já herdados do GitHub, mas mantidos aqui para garantir prioridade */
+    .markdown-body .markdown-alert {
+      padding: .5rem 1rem;
+      margin-bottom: 1rem;
+      border-left: .25em solid #d0d7de;
+      color: inherit;
+    }
+
+    .markdown-body .markdown-alert-note {
+      border-left-color: #0969da;
+    }
+
+    .markdown-body .markdown-alert-important {
+      border-left-color: #8250df;
+    }
+
+    .markdown-body .markdown-alert-warning {
+      border-left-color: #9a6700;
+    }
+
+    .markdown-body .markdown-alert-tip {
+      border-left-color: #1a7f37;
+    }
+
+    .markdown-body .markdown-alert-caution {
+      border-left-color: #cf222e;
+    }
+
+    .markdown-body .markdown-alert-title {
+      display: flex;
+      font-weight: 500;
+      align-items: center;
+      line-height: 1;
+    }
+
+    /* Checklist (Task list) – garante compatibilidade */
+    .markdown-body .task-list-item {
+      list-style-type: none;
+    }
+
+    .markdown-body .task-list-item-checkbox {
+      margin: 0 .2em .25em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body class="markdown-body">
+  <h1>markdown-html-pdf</h1>
+<p>A powerful Python package to convert Markdown files to PDF with syntax highlighting and emoji support.</p>
+<h2>Features</h2>
+<ul>
+<li>✨ Convert Markdown to PDF with beautiful formatting</li>
+<li>🎨 Syntax highlighting for code blocks</li>
+<li>😀 Full emoji support</li>
+<li>🔧 GitHub-flavored Markdown support</li>
+<li>📱 Responsive design optimized for print</li>
+<li>🚀 Fast conversion using Playwright</li>
+<li>💻 Command-line interface</li>
+<li>🐍 Python API</li>
+</ul>
+<h2>Installation</h2>
+<pre lang="bash"><code>uv add markdown-html-pdf
+</code></pre>
+<p>After installation, you need to install Playwright browsers:</p>
+<pre lang="bash"><code>uv run playwright install
+</code></pre>
+<p>Or use the built-in auto-installer on first run.</p>
+<h2>Usage</h2>
+<h3>Command Line</h3>
+<pre lang="bash"><code># Basic conversion
+uv run markdown-html-pdf input.md output.pdf
+</code></pre>
+<p>You can also use the shorter alias:</p>
+<pre lang="bash"><code>uv run md2pdf input.md output.pdf
+</code></pre>
+<h3>Python API</h3>
+<pre lang="python"><code>import asyncio
+from markdown_html_pdf import markdown_to_pdf
+
+async def convert():
+    await markdown_to_pdf(
+        markdown_file_path=&quot;input.md&quot;,
+        pdf_output_file_path=&quot;output.pdf&quot;
+    )
+
+asyncio.run(convert())
+</code></pre>
+<h2>Requirements</h2>
+<ul>
+<li>Python 3.12+</li>
+<li>Playwright (automatically installed)</li>
+</ul>
+<h2>How it works</h2>
+<ol>
+<li><strong>Markdown to HTML</strong>: Converts Markdown to HTML using <code>markdown-it-py</code> with GitHub-flavored Markdown support</li>
+<li><strong>Syntax Highlighting</strong>: Applies syntax highlighting to code blocks using Pygments</li>
+<li><strong>HTML to PDF</strong>: Uses Playwright to render HTML to PDF with optimized settings for text fidelity</li>
+</ol>
+<h2>Supported Markdown Features</h2>
+<ul>
+<li>Headers (H1-H6)</li>
+<li><strong>Bold</strong> and <em>italic</em> text</li>
+<li><code>Inline code</code> and code blocks with syntax highlighting</li>
+<li>Links and images</li>
+<li>Tables</li>
+<li>Lists (ordered and unordered)</li>
+<li>Blockquotes</li>
+<li>Horizontal rules</li>
+<li>Emojis 😎</li>
+</ul>
+<h2>Table Example</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Markdown to PDF</td>
+<td>✅</td>
+<td>Convert Markdown files to PDF format</td>
+</tr>
+<tr>
+<td>Syntax Highlighting</td>
+<td>✅</td>
+<td>Code blocks with syntax highlighting</td>
+</tr>
+<tr>
+<td>Emoji Support</td>
+<td>✅</td>
+<td>Full emoji support (😀 🎨 ✨)</td>
+</tr>
+<tr>
+<td>GitHub Flavored Markdown</td>
+<td>✅</td>
+<td>Support for GFM features</td>
+</tr>
+<tr>
+<td>Tables</td>
+<td>✅</td>
+<td>Render markdown tables</td>
+</tr>
+<tr>
+<td>Code Blocks</td>
+<td>✅</td>
+<td>Syntax highlighted code blocks</td>
+</tr>
+<tr>
+<td>Links</td>
+<td>✅</td>
+<td>Hyperlinks support</td>
+</tr>
+<tr>
+<td>Images</td>
+<td>✅</td>
+<td>Image embedding</td>
+</tr>
+</tbody>
+</table>
+<h2>License</h2>
+<p>MIT License - see LICENSE file for details.</p>
+<h2>Contributing</h2>
+<p>Contributions are welcome! Please feel free to submit a Pull Request.</p>
+
+</body>
+
+</html>

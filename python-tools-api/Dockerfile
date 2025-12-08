@@ -1,7 +1,9 @@
-FROM python:3.12-bullseye
-COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
+FROM python:3.13-slim-trixie
 
 WORKDIR /app
+
+# Add uv package manager
+COPY --from=docker.io/astral/uv:latest /uv /uvx /bin/
 
 COPY . .
 

@@ -14,5 +14,8 @@ dependencies = [
     "markdown-html-pdf",
 ]
 
+[tool.uv.workspace]
+members = ["markdown-html-pdf"]
+
 [tool.uv.sources]
-markdown-html-pdf = { git = "ssh://git@github.com/HPE-Automotores-do-Brasil-LTDA/markdown-html-pdf.git" }
+markdown-html-pdf = { workspace = true }
