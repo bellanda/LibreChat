@@ -65,7 +65,7 @@ const RightPanel = React.memo(
     const editorMode = useRecoilValue(store.promptsEditorMode);
     const hasShareAccess = useHasAccess({
       permissionType: PermissionTypes.PROMPTS,
-      permission: Permissions.SHARED_GLOBAL,
+      permission: Permissions.SHARE,
     });
 
     const updateGroupMutation = useUpdatePromptGroup({
@@ -95,10 +95,10 @@ const RightPanel = React.memo(
             onValueChange={
               canEdit
                 ? (value) =>
-                    updateGroupMutation.mutate({
-                      id: groupId,
-                      payload: { name: groupName, category: value },
-                    })
+                  updateGroupMutation.mutate({
+                    id: groupId,
+                    payload: { name: groupName, category: value },
+                  })
                 : undefined
             }
           />
@@ -130,7 +130,7 @@ const RightPanel = React.memo(
                   !canEdit
                 }
               >
-                <Rocket className="size-5 cursor-pointer text-white" />
+                <Rocket className="size-5 cursor-pointer text-white" aria-hidden="true" />
               </Button>
             )}
             <DeleteVersion
@@ -144,18 +144,18 @@ const RightPanel = React.memo(
         {editorMode === PromptsEditorMode.ADVANCED &&
           (isLoadingPrompts
             ? Array.from({ length: 6 }).map((_, index: number) => (
-                <div key={index} className="my-2">
-                  <Skeleton className="h-[72px] w-full" />
-                </div>
-              ))
+              <div key={index} className="my-2">
+                <Skeleton className="h-[72px] w-full" />
+              </div>
+            ))
             : prompts.length > 0 && (
-                <PromptVersions
-                  group={group}
-                  prompts={prompts}
-                  selectionIndex={selectionIndex}
-                  setSelectionIndex={setSelectionIndex}
-                />
-              ))}
+              <PromptVersions
+                group={group}
+                prompts={prompts}
+                selectionIndex={selectionIndex}
+                setSelectionIndex={setSelectionIndex}
+              />
+            ))}
       </div>
     );
   },
@@ -387,6 +387,7 @@ const PromptForm = () => {
   return (
     <FormProvider {...methods}>
       <form className="mt-4 flex w-full" onSubmit={handleSubmit((data) => onSave(data.prompt))}>
+        <h1 className="sr-only">{localize('com_ui_edit_prompt_page')}</h1>
         <div className="relative w-full">
           <div
             className="h-full w-full"
@@ -422,7 +423,7 @@ const PromptForm = () => {
                         onClick={() => setShowSidePanel(true)}
                         aria-label={localize('com_endpoint_open_menu')}
                       >
-                        <Menu className="size-5" />
+                        <Menu className="size-5" aria-hidden="true" />
                       </Button>
                       <div className="hidden lg:block">
                         {editorMode === PromptsEditorMode.SIMPLE && (

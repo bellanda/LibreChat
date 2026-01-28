@@ -1,23 +1,23 @@
+import type { TAttachment, TMessageContentParts } from 'librechat-data-provider';
 import {
-  Tools,
   Constants,
   ContentTypes,
   ToolCallTypes,
+  Tools,
   imageGenTools,
   isImageVisionTool,
 } from 'librechat-data-provider';
 import { memo } from 'react';
-import type { TMessageContentParts, TAttachment } from 'librechat-data-provider';
-import { OpenAIImageGen, EmptyText, Reasoning, ExecuteCode, AgentUpdate, Text } from './Parts';
-import { ErrorMessage } from './MessageContent';
-import RetrievalCall from './RetrievalCall';
 import AgentHandoff from './AgentHandoff';
 import CodeAnalyze from './CodeAnalyze';
 import Container from './Container';
-import WebSearch from './WebSearch';
-import ToolCall from './ToolCall';
-import ImageGen from './ImageGen';
 import Image from './Image';
+import ImageGen from './ImageGen';
+import { ErrorMessage } from './MessageContent';
+import { AgentUpdate, EmptyText, ExecuteCode, OpenAIImageGen, Reasoning, Text } from './Parts';
+import RetrievalCall from './RetrievalCall';
+import ToolCall from './ToolCall';
+import WebSearch from './WebSearch';
 
 type PartProps = {
   part?: TMessageContentParts;
@@ -103,7 +103,9 @@ const Part = memo(
         );
       } else if (
         isToolCall &&
-        (toolCall.name === 'image_gen_oai' || toolCall.name === 'image_edit_oai')
+        (toolCall.name === 'image_gen_oai' ||
+          toolCall.name === 'image_edit_oai' ||
+          toolCall.name === 'gemini_image_gen')
       ) {
         return (
           <OpenAIImageGen

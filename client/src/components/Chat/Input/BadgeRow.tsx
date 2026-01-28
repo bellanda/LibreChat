@@ -13,8 +13,7 @@ import React, {
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import type { BadgeItem } from '~/common';
 import { useChatBadges } from '~/hooks';
-import { useModelDescriptions } from '~/hooks/useModelDescriptions';
-import { BadgeRowProvider, useChatContext } from '~/Providers';
+import { BadgeRowProvider } from '~/Providers';
 import store from '~/store';
 import Artifacts from './Artifacts';
 import CodeInterpreter from './CodeInterpreter';
@@ -101,13 +100,13 @@ interface DragState {
 
 type DragAction =
   | {
-      type: 'START_DRAG';
-      badge: BadgeItem;
-      mouseX: number;
-      offsetX: number;
-      insertIndex: number;
-      isActive: boolean;
-    }
+    type: 'START_DRAG';
+    badge: BadgeItem;
+    mouseX: number;
+    offsetX: number;
+    insertIndex: number;
+    isActive: boolean;
+  }
   | { type: 'UPDATE_POSITION'; mouseX: number; insertIndex: number }
   | { type: 'END_DRAG' };
 
@@ -148,8 +147,6 @@ function BadgeRow({
   onToggle,
   isInChat,
 }: BadgeRowProps) {
-  const { conversation } = useChatContext();
-  const { getModelDescription } = useModelDescriptions();
   const [orderedBadges, setOrderedBadges] = useState<BadgeItem[]>([]);
   const [dragState, dispatch] = useReducer(dragReducer, {
     draggedBadge: null,
@@ -171,12 +168,6 @@ function BadgeRow({
     () => allBadges.filter((badge) => badge.isAvailable !== false),
     [allBadges],
   );
-
-  // Get current model capabilities
-  const currentModel = conversation?.model ?? null;
-  const modelDescription = getModelDescription(currentModel);
-  const supportsWebSearch = modelDescription?.supportsWebSearch ?? true;
-  const supportsCodeExecution = modelDescription?.supportsCodeExecution ?? true;
 
   const toggleBadge = useRecoilCallback(
     ({ snapshot, set }) =>

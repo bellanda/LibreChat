@@ -9,6 +9,11 @@ import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
 import type { Pluggable } from 'unified';
 import { Artifact, artifactPlugin } from '~/components/Artifacts/Artifact';
+import {
+  MCPUIResource,
+  MCPUIResourceCarousel,
+  mcpUIResourcePlugin,
+} from '~/components/MCPUIResource';
 import { unicodeCitation } from '~/components/Web';
 import { Citation, CompositeCitation, HighlightedText } from '~/components/Web/Citation';
 import { ArtifactProvider, CodeBlockProvider } from '~/Providers';
@@ -56,8 +61,9 @@ const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
     remarkGfm,
     remarkDirective,
     artifactPlugin,
-    [remarkMath, { singleDollarTextMath: !shouldDisableSingleDollar }],
+    [remarkMath, { singleDollarTextMath: false }],
     unicodeCitation,
+    mcpUIResourcePlugin,
   ];
 
   if (isInitializing) {
@@ -89,6 +95,8 @@ const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
                 citation: Citation,
                 'highlighted-text': HighlightedText,
                 'composite-citation': CompositeCitation,
+                'mcp-ui-resource': MCPUIResource,
+                'mcp-ui-carousel': MCPUIResourceCarousel,
               } as {
                 [nodeType: string]: React.ElementType;
               }

@@ -1,24 +1,23 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useRecoilState } from 'recoil';
-import { useOutletContext } from 'react-router-dom';
+import { Button, NewChatIcon, TooltipAnchor, useMediaQuery } from '@librechat/client';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import { TooltipAnchor, Button, NewChatIcon, useMediaQuery } from '@librechat/client';
-import { PermissionTypes, Permissions, QueryKeys } from 'librechat-data-provider';
 import type t from 'librechat-data-provider';
-import type { ContextType } from '~/common';
-import { useDocumentTitle, useHasAccess, useLocalize, TranslationKeys } from '~/hooks';
-import { useGetEndpointsQuery, useGetAgentCategoriesQuery } from '~/data-provider';
-import MarketplaceAdminSettings from './MarketplaceAdminSettings';
+import { PermissionTypes, Permissions, QueryKeys } from 'librechat-data-provider';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
+import { useRecoilState } from 'recoil';
 import { SidePanelProvider, useChatContext } from '~/Providers';
-import { SidePanelGroup } from '~/components/SidePanel';
+import type { ContextType } from '~/common';
 import { OpenSidebar } from '~/components/Chat/Menus';
-import { cn, clearMessagesCache } from '~/utils';
-import CategoryTabs from './CategoryTabs';
-import AgentDetail from './AgentDetail';
-import SearchBar from './SearchBar';
-import AgentGrid from './AgentGrid';
+import { SidePanelGroup } from '~/components/SidePanel';
+import { useGetAgentCategoriesQuery, useGetEndpointsQuery } from '~/data-provider';
+import { TranslationKeys, useDocumentTitle, useHasAccess, useLocalize } from '~/hooks';
 import store from '~/store';
+import { clearMessagesCache, cn } from '~/utils';
+import AgentDetail from './AgentDetail';
+import AgentGrid from './AgentGrid';
+import CategoryTabs from './CategoryTabs';
+import MarketplaceAdminSettings from './MarketplaceAdminSettings';
+import SearchBar from './SearchBar';
 
 interface AgentMarketplaceProps {
   className?: string;
@@ -295,7 +294,7 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
                               variant="outline"
                               data-testid="agents-new-chat-button"
                               aria-label={localize('com_ui_new_chat')}
-                              className="rounded-xl border border-border-light bg-surface-secondary p-2 hover:bg-surface-hover max-md:hidden"
+                              className="rounded-xl border border-border-light bg-surface-secondary p-2 hover:bg-surface-active-alt max-md:hidden"
                               onClick={handleNewChat}
                             >
                               <NewChatIcon />
@@ -356,9 +355,9 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
                   <div
                     className={cn(
                       isTransitioning &&
-                        (animationDirection === 'right'
-                          ? 'motion-safe:animate-slide-out-left'
-                          : 'motion-safe:animate-slide-out-right'),
+                      (animationDirection === 'right'
+                        ? 'motion-safe:animate-slide-out-left'
+                        : 'motion-safe:animate-slide-out-right'),
                     )}
                     key={`pane-current-${displayCategory}`}
                   >
@@ -469,8 +468,8 @@ const AgentMarketplace: React.FC<AgentMarketplaceProps> = ({ className = '' }) =
                                     : categoryData.label,
                                   description: categoryData.description?.startsWith('com_')
                                     ? localize(
-                                        categoryData.description as Parameters<typeof localize>[0],
-                                      )
+                                      categoryData.description as Parameters<typeof localize>[0],
+                                    )
                                     : categoryData.description || '',
                                 };
                               }

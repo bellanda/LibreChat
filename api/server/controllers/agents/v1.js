@@ -5,7 +5,9 @@ const { logger } = require('@librechat/data-schemas');
 const {
   agentCreateSchema,
   agentUpdateSchema,
+  refreshListAvatars,
   mergeAgentOcrConversion,
+  MAX_AVATAR_REFRESH_AGENTS,
   convertOcrToContextInPlace,
 } = require('@librechat/api');
 const {
@@ -38,14 +40,13 @@ const {
   grantPermission,
 } = require('~/server/services/PermissionService');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
+const { getCategoriesWithCounts, deleteFileByFilter } = require('~/models');
 const { resizeAvatar } = require('~/server/services/Files/images/avatar');
 const { getFileStrategy } = require('~/server/utils/getFileStrategy');
 const { refreshS3Url } = require('~/server/services/Files/S3/crud');
 const { filterFile } = require('~/server/services/Files/process');
 const { updateAction, getActions } = require('~/models/Action');
 const { getCachedTools } = require('~/server/services/Config');
-const { deleteFileByFilter } = require('~/models/File');
-const { getCategoriesWithCounts } = require('~/models');
 const { getLogStores } = require('~/cache');
 
 const systemTools = {
@@ -110,13 +111,17 @@ const createAgentHandler = async (req, res) => {
     const validatedData = agentCreateSchema.parse(req.body);
     const { tools = [], ...agentData } = removeNullishValues(validatedData);
 
+    if (agentData.model_parameters && typeof agentData.model_parameters === 'object') {
+      agentData.model_parameters = removeNullishValues(agentData.model_parameters, true);
+    }
+
     const { id: userId } = req.user;
 
     agentData.id = `agent_${nanoid()}`;
     agentData.author = userId;
     agentData.tools = [];
 
-    const availableTools = await getCachedTools();
+    const availableTools = (await getCachedTools()) ?? {};
     for (const tool of tools) {
       if (availableTools[tool]) {
         agentData.tools.push(tool);
@@ -260,6 +265,11 @@ const updateAgentHandler = async (req, res) => {
     // Preserve explicit null for avatar to allow resetting the avatar
     const { avatar: avatarField, _id, ...rest } = validatedData;
     const updateData = removeNullishValues(rest);
+
+    if (updateData.model_parameters && typeof updateData.model_parameters === 'object') {
+      updateData.model_parameters = removeNullishValues(updateData.model_parameters, true);
+    }
+
     if (avatarField === null) {
       updateData.avatar = avatarField;
     }
@@ -536,6 +546,35 @@ const getListAgentsHandler = async (req, res) => {
       requiredPermissions: PermissionBits.VIEW,
     });
 
+    /**
+     * Refresh all S3 avatars for this user's accessible agent set (not only the current page)
+     * This addresses page-size limits preventing refresh of agents beyond the first page
+     */
+    const cache = getLogStores(CacheKeys.S3_EXPIRY_INTERVAL);
+    const refreshKey = `${userId}:agents_avatar_refresh`;
+    const alreadyChecked = await cache.get(refreshKey);
+    if (alreadyChecked) {
+      logger.debug('[/Agents] S3 avatar refresh already checked, skipping');
+    } else {
+      try {
+        const fullList = await getListAgentsByAccess({
+          accessibleIds,
+          otherParams: {},
+          limit: MAX_AVATAR_REFRESH_AGENTS,
+          after: null,
+        });
+        await refreshListAvatars({
+          agents: fullList?.data ?? [],
+          userId,
+          refreshS3Url,
+          updateAgent,
+        });
+        await cache.set(refreshKey, true, Time.THIRTY_MINUTES);
+      } catch (err) {
+        logger.error('[/Agents] Error refreshing avatars for full list: %o', err);
+      }
+    }
+
     // Use the new ACL-aware function
     const data = await getListAgentsByAccess({
       accessibleIds,
@@ -571,7 +610,7 @@ const getListAgentsHandler = async (req, res) => {
     }
     return res.json(data);
   } catch (error) {
-    logger.error('[/Agents] Error listing Agents', error);
+    logger.error('[/Agents] Error listing Agents: %o', error);
     res.status(500).json({ error: error.message });
   }
 };

@@ -16,8 +16,6 @@ const { getRoleByName } = require('~/models/Role');
 
 const router = express.Router();
 
-router.use(moderateText);
-
 const checkAgentAccess = generateCheckAccess({
   permissionType: PermissionTypes.AGENTS,
   permissions: [Permissions.USE],
@@ -28,6 +26,7 @@ const checkAgentResourceAccess = canAccessAgentFromBody({
   requiredPermission: PermissionBits.VIEW,
 });
 
+router.use(moderateText);
 router.use(checkAgentAccess);
 router.use(checkAgentResourceAccess);
 router.use(validateConvoAccess);

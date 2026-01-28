@@ -40,7 +40,7 @@ export default function ExportModal({
   const [filename, setFileName] = useState('');
   const [type, setType] = useState<string>('screenshot');
 
-  const [includeOptions, setIncludeOptions] = useState<boolean | 'indeterminate'>(false);
+  const [includeOptions, setIncludeOptions] = useState<boolean | 'indeterminate'>(true);
   const [exportBranches, setExportBranches] = useState<boolean | 'indeterminate'>(false);
   const [recursive, setRecursive] = useState<boolean | 'indeterminate'>(true);
   const [lastMessageOnly, setLastMessageOnly] = useState<boolean | 'indeterminate'>(true);
@@ -54,7 +54,7 @@ export default function ExportModal({
   useEffect(() => {
     setFileName(filenamify(String(conversation?.title ?? 'file')));
     setType('screenshot');
-    setIncludeOptions(false);
+    setIncludeOptions(true);
     setExportBranches(false);
     setRecursive(true);
     setLastMessageOnly(true);
@@ -67,8 +67,6 @@ export default function ExportModal({
     setExportBranches(branches);
     setIncludeOptions(options);
     setType(newType);
-    setIncludeOptions(false);
-    setExportBranches(false);
     setLastMessageOnly(true);
   }, []);
 
@@ -95,10 +93,10 @@ export default function ExportModal({
         title={localize('com_nav_export_conversation')}
         className="max-w-full sm:max-w-2xl"
         main={
-          <div className="flex flex-col gap-6 items-center w-full">
-            <div className="grid gap-6 w-full sm:grid-cols-2">
-              <div className="flex flex-col col-span-1 gap-2 justify-start items-start">
-                <Label htmlFor="filename" className="text-sm font-medium text-left">
+          <div className="flex w-full flex-col items-center gap-6">
+            <div className="grid w-full gap-6 sm:grid-cols-2">
+              <div className="col-span-1 flex flex-col items-start justify-start gap-2">
+                <Label htmlFor="filename" className="text-left text-sm font-medium">
                   {localize('com_nav_export_filename')}
                 </Label>
                 <Input
@@ -108,8 +106,8 @@ export default function ExportModal({
                   placeholder={localize('com_nav_export_filename_placeholder')}
                 />
               </div>
-              <div className="flex flex-col col-span-1 gap-2 justify-start items-start w-full">
-                <Label htmlFor="type" className="text-sm font-medium text-left">
+              <div className="col-span-1 flex w-full flex-col items-start justify-start gap-2">
+                <Label htmlFor="type" className="text-left text-sm font-medium">
                   {localize('com_nav_export_type')}
                 </Label>
                 <Dropdown
@@ -121,10 +119,10 @@ export default function ExportModal({
                 />
               </div>
             </div>
-            <div className="grid gap-6 w-full sm:grid-cols-2">
-              <div className="flex flex-col col-span-1 gap-2 justify-start items-start">
-                <div className="grid gap-2 items-center w-full">
-                  <Label htmlFor="includeOptions" className="text-sm font-medium text-left">
+            <div className="grid w-full gap-6 sm:grid-cols-2">
+              <div className="col-span-1 flex flex-col items-start justify-start gap-2">
+                <div className="grid w-full items-center gap-2">
+                  <Label htmlFor="includeOptions" className="text-left text-sm font-medium">
                     {localize('com_nav_export_include_endpoint_options')}
                   </Label>
                   <div className="flex h-[40px] w-full items-center space-x-3">
@@ -147,8 +145,8 @@ export default function ExportModal({
                   </div>
                 </div>
               </div>
-              <div className="grid gap-2 items-center w-full">
-                <Label htmlFor="exportBranches" className="text-sm font-medium text-left">
+              <div className="grid w-full items-center gap-2">
+                <Label htmlFor="exportBranches" className="text-left text-sm font-medium">
                   {localize('com_nav_export_all_message_branches')}
                 </Label>
                 <div className="flex h-[40px] w-full items-center space-x-3">
@@ -171,8 +169,8 @@ export default function ExportModal({
                 </div>
               </div>
               {type === 'json' ? (
-                <div className="grid gap-2 items-center w-full">
-                  <Label htmlFor="recursive" className="text-sm font-medium text-left">
+                <div className="grid w-full items-center gap-2">
+                  <Label htmlFor="recursive" className="text-left text-sm font-medium">
                     {localize('com_nav_export_recursive_or_sequential')}
                   </Label>
                   <div className="flex h-[40px] w-full items-center space-x-3">
@@ -193,8 +191,8 @@ export default function ExportModal({
                 </div>
               ) : null}
               {lastMessageOnlySupport ? (
-                <div className="grid gap-2 items-center w-full">
-                  <Label htmlFor="lastMessageOnly" className="text-sm font-medium text-left">
+                <div className="grid w-full items-center gap-2">
+                  <Label htmlFor="lastMessageOnly" className="text-left text-sm font-medium">
                     Última mensagem
                   </Label>
                   <div className="flex h-[40px] w-full items-center space-x-3">
@@ -202,8 +200,11 @@ export default function ExportModal({
                       id="lastMessageOnly"
                       checked={lastMessageOnly}
                       onCheckedChange={setLastMessageOnly}
+                      aria-labelledby="lastMessageOnly-label"
+                      aria-label={undefined}
                     />
                     <label
+                      id="lastMessageOnly-label"
                       htmlFor="lastMessageOnly"
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-gray-50"
                     >

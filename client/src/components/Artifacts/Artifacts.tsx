@@ -187,18 +187,18 @@ export default function Artifacts() {
             'flex w-full flex-col bg-surface-primary text-xl text-text-primary',
             isMobile
               ? cn(
-                  'fixed inset-x-0 bottom-0 z-[100] rounded-t-[20px] shadow-[0_-10px_60px_rgba(0,0,0,0.35)]',
-                  isVisible && !isClosing
-                    ? 'translate-y-0 opacity-100'
-                    : 'duration-250 translate-y-full opacity-0 transition-all',
-                  isDragging ? '' : 'transition-all duration-300',
-                )
+                'fixed inset-x-0 bottom-0 z-[100] rounded-t-[20px] shadow-[0_-10px_60px_rgba(0,0,0,0.35)]',
+                isVisible && !isClosing
+                  ? 'translate-y-0 opacity-100'
+                  : 'duration-250 translate-y-full opacity-0 transition-all',
+                isDragging ? '' : 'transition-all duration-300',
+              )
               : cn(
-                  'h-full shadow-2xl',
-                  isVisible && !isClosing
-                    ? 'duration-350 translate-x-0 opacity-100 transition-all'
-                    : 'translate-x-5 opacity-0 transition-all duration-300',
-                ),
+                'h-full shadow-2xl',
+                isVisible && !isClosing
+                  ? 'duration-350 translate-x-0 opacity-100 transition-all'
+                  : 'translate-x-5 opacity-0 transition-all duration-300',
+              ),
           )}
           style={isMobile ? { height: `${height}vh` } : { overflow: 'hidden' }}
         >
@@ -257,7 +257,11 @@ export default function Artifacts() {
                   {isRefreshing ? (
                     <Spinner size={16} />
                   ) : (
-                    <RefreshCw size={16} className="transition-transform duration-200" />
+                    <RefreshCw
+                      size={16}
+                      className="transition-transform duration-200"
+                      aria-hidden="true"
+                    />
                   )}
                 </Button>
               )}
@@ -284,7 +288,7 @@ export default function Artifacts() {
                 onClick={closeArtifacts}
                 aria-label={localize('com_ui_close')}
               >
-                <X size={16} />
+                <X size={16} aria-hidden="true" />
               </Button>
             </div>
           </div>

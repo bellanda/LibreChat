@@ -1,18 +1,18 @@
-import { useCallback, useMemo, memo } from 'react';
 import { useAtomValue } from 'jotai';
-import { useRecoilValue } from 'recoil';
 import type { TMessage, TMessageContentParts } from 'librechat-data-provider';
-import type { TMessageProps, TMessageIcon } from '~/common';
+import { memo, useCallback, useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import type { TMessageIcon, TMessageProps } from '~/common';
 import ContentParts from '~/components/Chat/Messages/Content/ContentParts';
-import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
-import SiblingSwitch from '~/components/Chat/Messages/SiblingSwitch';
 import HoverButtons from '~/components/Chat/Messages/HoverButtons';
 import MessageIcon from '~/components/Chat/Messages/MessageIcon';
-import { useAttachments, useMessageActions } from '~/hooks';
+import SiblingSwitch from '~/components/Chat/Messages/SiblingSwitch';
 import SubRow from '~/components/Chat/Messages/SubRow';
-import { fontSizeAtom } from '~/store/fontSize';
-import { cn, logger } from '~/utils';
+import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
+import { useAttachments, useContentMetadata, useLocalize, useMessageActions } from '~/hooks';
 import store from '~/store';
+import { fontSizeAtom } from '~/store/fontSize';
+import { cn, getMessageAriaLabel, logger } from '~/utils';
 
 type ContentRenderProps = {
   message?: TMessage;
@@ -36,6 +36,7 @@ const ContentRender = memo(
     setCurrentEditId,
     isSubmittingFamily = false,
   }: ContentRenderProps) => {
+    const localize = useLocalize();
     const { attachments, searchResults } = useAttachments({
       messageId: msg?.messageId,
       attachments: msg?.attachments,
@@ -65,15 +66,20 @@ const ContentRender = memo(
     const fontSize = useAtomValue(fontSizeAtom);
     const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
 
+    const { hasParallelContent } = useContentMetadata(msg);
+
     const handleRegenerateMessage = useCallback(() => regenerateMessage(), [regenerateMessage]);
+    const hasNoChildren = !(msg?.children?.length ?? 0);
     const isLast = useMemo(
       () =>
-        !(msg?.children?.length ?? 0) && (msg?.depth === latestMessage?.depth || msg?.depth === -1),
-      [msg?.children, msg?.depth, latestMessage?.depth],
+        hasNoChildren && (msg?.depth === latestMessage?.depth || msg?.depth === -1),
+      [hasNoChildren, msg?.depth, latestMessage?.depth],
     );
     const isLatestMessage = msg?.messageId === latestMessage?.messageId;
     const showCardRender = isLast && !isSubmittingFamily && isCard;
     const isLatestCard = isCard && !isSubmittingFamily && isLatestMessage;
+    /** Only pass isSubmitting to the latest message to prevent unnecessary re-renders */
+    const effectiveIsSubmitting = isLatestMessage ? isSubmitting : false;
 
     const iconData: TMessageIcon = useMemo(
       () => ({
@@ -98,13 +104,13 @@ const ContentRender = memo(
       () =>
         showCardRender && !isLatestMessage
           ? () => {
-              logger.log(
-                'latest_message',
-                `Message Card click: Setting ${msg?.messageId} as latest message`,
-              );
-              logger.dir(msg);
-              setLatestMessage(msg!);
-            }
+            logger.log(
+              'latest_message',
+              `Message Card click: Setting ${msg?.messageId} as latest message`,
+            );
+            logger.dir(msg);
+            setLatestMessage(msg!);
+          }
           : undefined,
       [showCardRender, isLatestMessage, msg, setLatestMessage],
     );
@@ -113,12 +119,20 @@ const ContentRender = memo(
       return null;
     }
 
+    const getChatWidthClass = () => {
+      if (maximizeChatSpace) {
+        return 'w-full max-w-full md:px-5 lg:px-1 xl:px-5';
+      }
+      if (hasParallelContent) {
+        return 'md:max-w-[58rem] xl:max-w-[70rem]';
+      }
+      return 'md:max-w-[47rem] xl:max-w-[55rem]';
+    };
+
     const baseClasses = {
       common: 'group mx-auto flex flex-1 gap-3 transition-all duration-300 transform-gpu ',
       card: 'relative w-full gap-1 rounded-lg border border-border-medium bg-surface-primary-alt p-2 md:w-1/2 md:gap-3 md:p-4',
-      chat: maximizeChatSpace
-        ? 'w-full max-w-full md:px-5 lg:px-1 xl:px-5'
-        : 'md:max-w-[47rem] xl:max-w-[55rem]',
+      chat: getChatWidthClass(),
     };
 
     const conditionalClasses = {
@@ -130,7 +144,7 @@ const ContentRender = memo(
     return (
       <div
         id={msg.messageId}
-        aria-label={`message-${msg.depth}-${msg.messageId}`}
+        aria-label={getMessageAriaLabel(msg, localize)}
         className={cn(
           baseClasses.common,
           isCard ? baseClasses.card : baseClasses.chat,
@@ -152,19 +166,24 @@ const ContentRender = memo(
           <div className="absolute right-0 top-0 m-2 h-3 w-3 rounded-full bg-text-primary" />
         )}
 
-        <div className="relative flex flex-shrink-0 flex-col items-center">
-          <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
-            <MessageIcon iconData={iconData} assistant={assistant} agent={agent} />
+        {!hasParallelContent && (
+          <div className="relative flex flex-shrink-0 flex-col items-center">
+            <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
+              <MessageIcon iconData={iconData} assistant={assistant} agent={agent} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div
           className={cn(
-            'relative flex w-11/12 flex-col',
+            'relative flex flex-col',
+            hasParallelContent ? 'w-full' : 'w-11/12',
             msg.isCreatedByUser ? 'user-turn' : 'agent-turn',
           )}
         >
-          <h2 className={cn('select-none font-semibold', fontSize)}>{messageLabel}</h2>
+          {!hasParallelContent && (
+            <h2 className={cn('select-none font-semibold', fontSize)}>{messageLabel}</h2>
+          )}
 
           <div className="flex flex-col gap-1">
             <div className="flex max-w-full flex-grow flex-col gap-0">
@@ -175,17 +194,16 @@ const ContentRender = memo(
                 siblingIdx={siblingIdx}
                 messageId={msg.messageId}
                 attachments={attachments}
-                isSubmitting={isSubmitting}
                 searchResults={searchResults}
                 setSiblingIdx={setSiblingIdx}
                 isLatestMessage={isLatestMessage}
+                isSubmitting={effectiveIsSubmitting}
                 isCreatedByUser={msg.isCreatedByUser}
                 conversationId={conversation?.conversationId}
                 content={msg.content as Array<TMessageContentParts | undefined>}
               />
             </div>
-
-            {(isSubmittingFamily || isSubmitting) && !(msg.children?.length ?? 0) ? (
+            {hasNoChildren && effectiveIsSubmitting ? (
               <PlaceholderRow isCard={isCard} />
             ) : (
               <SubRow classes="text-xs">

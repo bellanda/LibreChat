@@ -169,7 +169,8 @@ function extractFirebaseFilePath(urlString) {
 const deleteFirebaseFile = async (req, file) => {
   if (file.embedded && process.env.RAG_API_URL) {
     const jwtToken = req.headers.authorization.split(' ')[1];
-    axios.delete(`${process.env.RAG_API_URL}/documents`, {
+    try {
+      await axios.delete(`${process.env.RAG_API_URL}/documents`, {
       headers: {
         Authorization: `Bearer ${jwtToken}`,
         'Content-Type': 'application/json',
@@ -177,6 +178,15 @@ const deleteFirebaseFile = async (req, file) => {
       },
       data: [file.file_id],
     });
+    } catch (error) {
+      if (error.response?.status === 404) {
+        logger.warn(
+          `[deleteFirebaseFile] Document ${file.file_id} not found in RAG API, may have been deleted already`,
+        );
+      } else {
+        logger.error('[deleteFirebaseFile] Error deleting document from RAG API:', error);
+      }
+    }
   }
 
   const fileName = extractFirebaseFilePath(file.filepath);

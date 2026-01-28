@@ -86,7 +86,6 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
       }
 
       /**
-       *
        * @param {import('librechat-data-provider').TFile} file
        * @returns {{ file_id: string, query: string, k: number, entity_id?: string }}
        */
@@ -94,7 +93,7 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
         const body = {
           file_id: file.file_id,
           query,
-          k: 10,
+          k: 5,
         };
         if (!entity_id) {
           return body;
@@ -104,41 +103,21 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
         return body;
       };
 
-      /**
-       * Process files in batches with concurrency limit
-       * @param {Array} items - Items to process
-       * @param {number} batchSize - Maximum concurrent operations
-       * @param {Function} processor - Async function to process each item
-       * @returns {Promise<Array>} Results array
-       */
-      const batchProcess = async (items, batchSize, processor) => {
-        const results = [];
-        for (let i = 0; i < items.length; i += batchSize) {
-          const batch = items.slice(i, i + batchSize);
-          const batchPromises = batch.map(processor);
-          const batchResults = await Promise.all(batchPromises);
-          results.push(...batchResults);
-        }
-        return results;
-      };
-
-      const MAX_CONCURRENT_QUERIES = 5;
-
-      const queryProcessor = async (file) => {
-        try {
-          return await axios.post(`${process.env.RAG_API_URL}/query`, createQueryBody(file), {
+      const queryPromises = files.map((file) =>
+        axios
+          .post(`${process.env.RAG_API_URL}/query`, createQueryBody(file), {
             headers: {
               Authorization: `Bearer ${jwtToken}`,
               'Content-Type': 'application/json',
             },
-          });
-        } catch (error) {
+          })
+          .catch((error) => {
           logger.error('Error encountered in `file_search` while querying file:', error);
           return null;
-        }
-      };
+          }),
+      );
 
-      const results = await batchProcess(files, MAX_CONCURRENT_QUERIES, queryProcessor);
+      const results = await Promise.all(queryPromises);
       const validResults = results.filter((result) => result !== null);
 
       if (validResults.length === 0) {
@@ -159,6 +138,13 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
         .sort((a, b) => a.distance - b.distance)
         // TODO: make this configurable
         .slice(0, 10);
+
+      if (formattedResults.length === 0) {
+        return [
+          'No content found in the files. The files may not have been processed correctly or you may need to refine your query.',
+          undefined,
+        ];
+      }
 
       const formattedString = formattedResults
         .map(
@@ -189,11 +175,12 @@ const createFileSearchTool = async ({ userId, files, entity_id, fileCitations = 
           ? `
 
 **CITE FILE SEARCH RESULTS:**
-Use anchor markers immediately after statements derived from file content. Reference the filename in your text:
+Use the EXACT anchor markers shown below (copy them verbatim) immediately after statements derived from file content. Reference the filename in your text:
 - File citation: "The document.pdf states that... \\ue202turn0file0"  
 - Page reference: "According to report.docx... \\ue202turn0file1"
 - Multi-file: "Multiple sources confirm... \\ue200\\ue202turn0file0\\ue202turn0file1\\ue201"
 
+**CRITICAL:** Output these escape sequences EXACTLY as shown (e.g., \\ue202turn0file0). Do NOT substitute with other characters like † or similar symbols.
 **ALWAYS mention the filename in your text before the citation marker. NEVER use markdown links or footnotes.**`
           : ''
       }`,

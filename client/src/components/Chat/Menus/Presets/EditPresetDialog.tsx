@@ -1,41 +1,43 @@
-import { useRecoilState } from 'recoil';
-import { useCallback, useEffect, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, isAgentsEndpoint } from 'librechat-data-provider';
 import {
   Input,
   Label,
   OGDialog,
+  OGDialogContent,
   OGDialogTitle,
   SelectDropDown,
-  OGDialogContent,
 } from '@librechat/client';
-import type { TModelsConfig, TEndpointsConfig } from 'librechat-data-provider';
-import {
-  cn,
-  defaultTextProps,
-  removeFocusOutlines,
-  mapEndpoints,
-  getConvoSwitchLogic,
-} from '~/utils';
-import { useSetIndexOptions, useLocalize, useDebouncedInput } from '~/hooks';
+import { useQueryClient } from '@tanstack/react-query';
+import type { TEndpointsConfig, TModelsConfig } from 'librechat-data-provider';
+import { QueryKeys, isAgentsEndpoint } from 'librechat-data-provider';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useRecoilState } from 'recoil';
 import PopoverButtons from '~/components/Chat/Input/PopoverButtons';
 import { EndpointSettings } from '~/components/Endpoints';
 import { useGetEndpointsQuery } from '~/data-provider';
+import { useDebouncedInput, useLocalize, useSetIndexOptions } from '~/hooks';
 import { useChatContext } from '~/Providers';
 import store from '~/store';
+import {
+  cn,
+  defaultTextProps,
+  getConvoSwitchLogic,
+  mapEndpoints,
+  removeFocusOutlines,
+} from '~/utils';
 
 const EditPresetDialog = ({
   exportPreset,
   submitPreset,
+  triggerRef,
 }: {
   exportPreset: () => void;
   submitPreset: () => void;
+  triggerRef?: React.RefObject<HTMLDivElement>;
 }) => {
   const localize = useLocalize();
   const queryClient = useQueryClient();
   const { preset, setPreset } = useChatContext();
-  const { setOption, setOptions, setAgentOption } = useSetIndexOptions(preset);
+  const { setOption, setOptions } = useSetIndexOptions(preset);
   const [onTitleChange, title] = useDebouncedInput({
     setOption,
     optionKey: 'title',
@@ -142,10 +144,10 @@ const EditPresetDialog = ({
   }
 
   return (
-    <OGDialog open={presetModalVisible} onOpenChange={handleOpenChange}>
+    <OGDialog open={presetModalVisible} onOpenChange={handleOpenChange} triggerRef={triggerRef}>
       <OGDialogContent className="h-[100dvh] max-h-[100dvh] w-full max-w-full overflow-y-auto bg-white dark:border-gray-700 dark:bg-gray-850 dark:text-gray-300 md:h-auto md:max-h-[90vh] md:max-w-[75vw] md:rounded-lg lg:max-w-[950px]">
         <OGDialogTitle>
-          {`${localize('com_ui_edit')} ${localize('com_endpoint_preset')} - ${preset?.title}`}
+          {localize('com_ui_edit_preset_title', { title: preset?.title })}
         </OGDialogTitle>
 
         <div className="flex w-full flex-col gap-2 px-1 pb-4 md:gap-4">

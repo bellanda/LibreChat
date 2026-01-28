@@ -189,11 +189,11 @@ const AdminSettings = () => {
                       setValue={setValue}
                       {...(selectedRole === SystemRoles.ADMIN && promptPerm === Permissions.USE
                         ? {
-                            confirmChange: (
-                              newValue: boolean,
-                              onChange: (value: boolean) => void,
-                            ) => setConfirmAdminUseChange({ newValue, callback: onChange }),
-                          }
+                          confirmChange: (
+                            newValue: boolean,
+                            onChange: (value: boolean) => void,
+                          ) => setConfirmAdminUseChange({ newValue, callback: onChange }),
+                        }
                         : {})}
                     />
                     {selectedRole === SystemRoles.ADMIN && promptPerm === Permissions.USE && (

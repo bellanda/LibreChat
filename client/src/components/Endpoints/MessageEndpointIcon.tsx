@@ -1,20 +1,20 @@
-import { memo } from 'react';
-import { Feather } from 'lucide-react';
-import { EModelEndpoint, isAssistantsEndpoint, alternateName } from 'librechat-data-provider';
 import {
-  Plugin,
+  AnthropicIcon,
+  AssistantIcon,
+  AzureMinimalIcon,
+  BedrockIcon,
+  CodeyIcon,
+  CustomMinimalIcon,
+  GeminiIcon,
   GPTIcon,
   PaLMIcon,
-  CodeyIcon,
-  GeminiIcon,
-  BedrockIcon,
-  AssistantIcon,
-  AnthropicIcon,
-  AzureMinimalIcon,
-  CustomMinimalIcon,
+  Plugin,
 } from '@librechat/client';
-import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
+import { alternateName, EModelEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
+import { Feather } from 'lucide-react';
+import { memo } from 'react';
 import { IconProps } from '~/common';
+import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
 import { cn } from '~/utils';
 
 type EndpointIcon = {
@@ -119,7 +119,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
     ) : (
       <div className="h-6 w-6">
         <div className="shadow-stroke flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
-          <Feather className="h-2/3 w-2/3 text-gray-400" />
+          <Feather className="h-2/3 w-2/3 text-gray-400" aria-hidden="true" />
         </div>
       </div>
     ),

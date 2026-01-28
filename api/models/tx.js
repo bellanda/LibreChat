@@ -172,7 +172,9 @@ const tokenValues = Object.assign(
     'gemini-2.5-flash': { prompt: 0.3, completion: 2.5 },
     'gemini-2.5-flash-lite': { prompt: 0.1, completion: 0.4 },
     'gemini-2.5-pro': { prompt: 1.25, completion: 10 },
+    'gemini-2.5-flash-image': { prompt: 0.15, completion: 30 },
     'gemini-3': { prompt: 2, completion: 12 },
+    'gemini-3-pro-image': { prompt: 2, completion: 120 },
     'gemini-pro-vision': { prompt: 0.5, completion: 1.5 },
     grok: { prompt: 2.0, completion: 10.0 }, // Base pattern defaults to grok-2
     'grok-beta': { prompt: 5.0, completion: 15.0 },
@@ -261,8 +263,14 @@ const cacheTokenValues = {
   'claude-3.5-haiku': { write: 1, read: 0.08 },
   'claude-3-5-haiku': { write: 1, read: 0.08 },
   'claude-3-haiku': { write: 0.3, read: 0.03 },
+  'claude-haiku-4-5': { write: 1.25, read: 0.1 },
   'claude-sonnet-4': { write: 3.75, read: 0.3 },
   'claude-opus-4': { write: 18.75, read: 1.5 },
+  'claude-opus-4-5': { write: 6.25, read: 0.5 },
+  // DeepSeek models - cache hit: $0.028/1M, cache miss: $0.28/1M
+  deepseek: { write: 0.28, read: 0.028 },
+  'deepseek-chat': { write: 0.28, read: 0.028 },
+  'deepseek-reasoner': { write: 0.28, read: 0.028 },
 };
 
 /**
@@ -325,13 +333,11 @@ const getValueKey = (model, endpoint) => {
  */
 const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConfig }) => {
   if (endpointTokenConfig) {
-    const multiplier = endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
-    return multiplier;
+    return endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
   }
 
   if (valueKey && tokenType) {
-    const multiplier = tokenValues[valueKey][tokenType] ?? defaultRate;
-    return multiplier;
+    return tokenValues[valueKey][tokenType] ?? defaultRate;
   }
 
   if (!tokenType || !model) {
@@ -344,8 +350,7 @@ const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConf
   }
 
   // If we got this far, and values[tokenType] is undefined somehow, return a rough average of default multipliers
-  const multiplier = tokenValues[valueKey]?.[tokenType] ?? defaultRate;
-  return multiplier;
+  return tokenValues[valueKey]?.[tokenType] ?? defaultRate;
 };
 
 /**

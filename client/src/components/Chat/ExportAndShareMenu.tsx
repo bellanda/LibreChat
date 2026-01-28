@@ -1,11 +1,11 @@
-import { useState, useId, useRef } from 'react';
-import { useRecoilValue } from 'recoil';
 import * as Ariakit from '@ariakit/react';
-import { Upload, Share2 } from 'lucide-react';
 import { DropdownPopup, TooltipAnchor, useMediaQuery } from '@librechat/client';
+import { Share2, Upload } from 'lucide-react';
+import { useId, useRef, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import type * as t from '~/common';
-import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
 import { ShareButton } from '~/components/Conversations/ConvoOptions';
+import ExportModal from '~/components/Nav/ExportConversation/ExportModal';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
@@ -81,10 +81,10 @@ export default function ExportAndShareMenu({
               <Ariakit.MenuButton
                 id="export-menu-button"
                 aria-label="Export options"
-                className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light bg-transparent text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
+                className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light bg-presentation text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
               >
                 <Share2
-                  className="icon-md text-text-secondary"
+                  className="icon-lg text-text-primary"
                   aria-hidden="true"
                   focusable="false"
                 />

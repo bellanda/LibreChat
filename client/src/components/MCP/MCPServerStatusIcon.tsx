@@ -1,8 +1,9 @@
-import React from 'react';
 import { Spinner } from '@librechat/client';
-import { SettingsIcon, AlertTriangle, KeyRound, PlugZap, X } from 'lucide-react';
 import type { MCPServerStatus, TPlugin } from 'librechat-data-provider';
+import { AlertTriangle, KeyRound, PlugZap, SettingsIcon, X } from 'lucide-react';
+import React from 'react';
 import { useLocalize } from '~/hooks';
+import { cn } from '~/utils';
 
 let localize: ReturnType<typeof useLocalize>;
 
@@ -25,10 +26,18 @@ interface MCPServerStatusIconProps {
   canCancel: boolean;
   onCancel: (e: React.MouseEvent) => void;
   hasCustomUserVars?: boolean;
+  /** When true, renders as a small status dot for compact layouts */
+  compact?: boolean;
 }
 
 /**
- * Renders the appropriate status icon for an MCP server based on its state
+ * Renders the appropriate status icon for an MCP server based on its state.
+ *
+ * Unified icon system:
+ * - SettingsIcon: Configure/auth status (for connected servers with custom vars)
+ * - KeyRound / PlugZap: Connect/Authenticate (for disconnected servers that need connection)
+ * - Spinner: Loading state (during connection)
+ * - X: Cancel (during OAuth flow, shown on hover over spinner)
  */
 export default function MCPServerStatusIcon({
   serverName,
@@ -39,8 +48,15 @@ export default function MCPServerStatusIcon({
   canCancel,
   onCancel,
   hasCustomUserVars = false,
+  compact = false,
 }: MCPServerStatusIconProps) {
   localize = useLocalize();
+
+  // Compact mode: render as a small status dot
+  if (compact) {
+    return <CompactStatusDot serverStatus={serverStatus} isInitializing={isInitializing} />;
+  }
+
   if (isInitializing) {
     return (
       <InitializingStatusIcon
@@ -89,6 +105,42 @@ export default function MCPServerStatusIcon({
   }
 
   return null;
+}
+
+interface CompactStatusDotProps {
+  serverStatus?: MCPServerStatus;
+  isInitializing: boolean;
+}
+
+function CompactStatusDot({ serverStatus, isInitializing }: CompactStatusDotProps) {
+  if (isInitializing) {
+    return (
+      <div className="flex size-3.5 items-center justify-center rounded-full border-2 border-surface-secondary bg-blue-500">
+        <div className="size-1.5 animate-pulse rounded-full bg-white" />
+      </div>
+    );
+  }
+
+  if (!serverStatus) {
+    return <div className="size-3 rounded-full border-2 border-surface-secondary bg-gray-400" />;
+  }
+
+  const { connectionState, requiresOAuth } = serverStatus;
+
+  let colorClass = 'bg-gray-400';
+  if (connectionState === 'connected') {
+    colorClass = 'bg-green-500';
+  } else if (connectionState === 'connecting') {
+    colorClass = 'bg-blue-500';
+  } else if (connectionState === 'error') {
+    colorClass = 'bg-red-500';
+  } else if (connectionState === 'disconnected' && requiresOAuth) {
+    colorClass = 'bg-amber-500';
+  }
+
+  return (
+    <div className={cn('size-3 rounded-full border-2 border-surface-secondary', colorClass)} />
+  );
 }
 
 function InitializingStatusIcon({ serverName, onCancel, canCancel }: InitializingStatusProps) {

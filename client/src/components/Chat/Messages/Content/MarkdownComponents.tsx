@@ -1,14 +1,14 @@
-import React, { memo, useMemo, useRef, useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
 import { useToastContext } from '@librechat/client';
 import { PermissionTypes, Permissions, apiBaseUrl } from 'librechat-data-provider';
+import React, { memo, useEffect, useMemo, useRef } from 'react';
+import { useRecoilValue } from 'recoil';
 import CodeBlock from '~/components/Messages/Content/CodeBlock';
-import useHasAccess from '~/hooks/Roles/useHasAccess';
 import { useFileDownload } from '~/data-provider';
-import { useCodeBlockContext } from '~/Providers';
-import { handleDoubleClick } from '~/utils';
 import { useLocalize } from '~/hooks';
+import useHasAccess from '~/hooks/Roles/useHasAccess';
+import { useCodeBlockContext } from '~/Providers';
 import store from '~/store';
+import { handleDoubleClick } from '~/utils';
 
 type TCodeProps = {
   inline?: boolean;
@@ -24,10 +24,11 @@ export const code: React.ElementType = memo(({ className, children }: TCodeProps
   const match = /language-(\w+)/.exec(className ?? '');
   const lang = match && match[1];
   const isMath = lang === 'math';
+  const isMermaid = lang === 'mermaid';
   const isSingleLine = typeof children === 'string' && children.split('\n').length === 1;
 
   const { getNextIndex, resetCounter } = useCodeBlockContext();
-  const blockIndex = useRef(getNextIndex(isMath || isSingleLine)).current;
+  const blockIndex = useRef(getNextIndex(isMath || isMermaid || isSingleLine)).current;
 
   useEffect(() => {
     resetCounter();
@@ -35,6 +36,13 @@ export const code: React.ElementType = memo(({ className, children }: TCodeProps
 
   if (isMath) {
     return <>{children}</>;
+  } else if (isMermaid) {
+    const content = typeof children === 'string' ? children : String(children);
+    return (
+      <MermaidErrorBoundary code={content}>
+        <Mermaid id={`mermaid-${blockIndex}`}>{content}</Mermaid>
+      </MermaidErrorBoundary>
+    );
   } else if (isSingleLine) {
     return (
       <code onDoubleClick={handleDoubleClick} className={className}>
@@ -59,6 +67,9 @@ export const codeNoExecution: React.ElementType = memo(({ className, children }:
 
   if (lang === 'math') {
     return children;
+  } else if (lang === 'mermaid') {
+    const content = typeof children === 'string' ? children : String(children);
+    return <Mermaid>{content}</Mermaid>;
   } else if (typeof children === 'string' && children.split('\n').length === 1) {
     return (
       <code onDoubleClick={handleDoubleClick} className={className}>

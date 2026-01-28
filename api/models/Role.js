@@ -160,9 +160,9 @@ async function updateAccessPermissions(roleName, permissionsUpdate, roleData) {
         await updateRoleByName(roleName, updateObj);
       }
 
-      logger.debug(`Updated '${roleName}' role permissions`);
+      logger.info(`Updated '${roleName}' role permissions`);
     } else {
-      // No changes needed for role permissions
+      logger.info(`No changes needed for '${roleName}' role permissions`);
     }
   } catch (error) {
     logger.error(`Failed to update ${roleName} role permissions:`, error);

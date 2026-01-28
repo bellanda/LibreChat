@@ -7,7 +7,7 @@ import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
 import type { PluggableList } from 'unified';
 import { ArtifactProvider, CodeBlockProvider } from '~/Providers';
-import { hasBrazilianCurrency, langSubset } from '~/utils';
+import { langSubset } from '~/utils';
 import { a, code, codeNoExecution, img, p } from './MarkdownComponents';
 import MarkdownErrorBoundary from './MarkdownErrorBoundary';
 
@@ -38,7 +38,7 @@ const MarkdownLite = memo(
                 /** @ts-ignore */
                 supersub,
                 remarkGfm,
-                [remarkMath, { singleDollarTextMath: !shouldDisableSingleDollar }],
+                [remarkMath, { singleDollarTextMath: false }],
               ]}
               /** @ts-ignore */
               rehypePlugins={rehypePlugins}

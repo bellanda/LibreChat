@@ -1,15 +1,15 @@
-import { useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { useRecoilValue } from 'recoil';
-import { CSSTransition } from 'react-transition-group';
 import type { TMessage } from 'librechat-data-provider';
-import { useScreenshot, useMessageScrolling, useLocalize } from '~/hooks';
+import { useRef, useState } from 'react';
+import { CSSTransition } from 'react-transition-group';
+import { useRecoilValue } from 'recoil';
 import ScrollToBottom from '~/components/Messages/ScrollToBottom';
+import { useLocalize, useMessageScrolling, useScreenshot } from '~/hooks';
 import { MessagesViewProvider } from '~/Providers';
-import { fontSizeAtom } from '~/store/fontSize';
-import MultiMessage from './MultiMessage';
-import { cn } from '~/utils';
 import store from '~/store';
+import { fontSizeAtom } from '~/store/fontSize';
+import { cn } from '~/utils';
+import MultiMessage from './MultiMessage';
 
 function MessagesViewContent({
   messagesTree: _messagesTree,
@@ -21,6 +21,7 @@ function MessagesViewContent({
   const { screenshotTargetRef } = useScreenshot();
   const scrollButtonPreference = useRecoilValue(store.showScrollButton);
   const [currentEditId, setCurrentEditId] = useState<number | string | null>(-1);
+  const scrollToBottomRef = useRef<HTMLButtonElement>(null);
 
   const {
     conversation,
@@ -47,7 +48,7 @@ function MessagesViewContent({
               width: '100%',
             }}
           >
-            <div className="flex flex-col pb-9 dark:bg-transparent">
+            <div className="flex flex-col pb-9 pt-14 dark:bg-transparent">
               {(_messagesTree && _messagesTree.length == 0) || _messagesTree === null ? (
                 <div
                   className={cn(
@@ -87,8 +88,9 @@ function MessagesViewContent({
             classNames="scroll-animation"
             unmountOnExit={true}
             appear={true}
+            nodeRef={scrollToBottomRef}
           >
-            <ScrollToBottom scrollHandler={handleSmoothToRef} />
+            <ScrollToBottom ref={scrollToBottomRef} scrollHandler={handleSmoothToRef} />
           </CSSTransition>
         </div>
       </div>

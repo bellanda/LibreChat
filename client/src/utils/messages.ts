@@ -1,6 +1,7 @@
-import { ContentTypes, QueryKeys, Constants } from 'librechat-data-provider';
-import type { TMessage, TMessageContentParts } from 'librechat-data-provider';
 import type { QueryClient } from '@tanstack/react-query';
+import type { TMessage, TMessageContentParts } from 'librechat-data-provider';
+import { Constants, ContentTypes, QueryKeys } from 'librechat-data-provider';
+import useLocalize from '~/hooks/useLocalize';
 
 export const TEXT_KEY_DIVIDER = '|||';
 
@@ -169,4 +170,19 @@ export const clearMessagesCache = (
   if (convoId !== Constants.NEW_CONVO) {
     queryClient.setQueryData<TMessage[]>([QueryKeys.messages, Constants.NEW_CONVO], []);
   }
+};
+
+export const getMessageAriaLabel = (
+  message: TMessage | null | undefined,
+  localize: ReturnType<typeof useLocalize>,
+): string => {
+  if (!message) {
+    return '';
+  }
+
+  const sender = message.isCreatedByUser
+    ? localize('com_user_message')
+    : localize('com_assistant_message') || 'Assistant message';
+
+  return `${sender} ${message.depth !== undefined ? `depth ${message.depth}` : ''}`.trim();
 };

@@ -10,8 +10,11 @@ const {
   sanitizeTitle,
   resolveHeaders,
   createSafeUser,
+  initializeAgent,
   getBalanceConfig,
+  getProviderConfig,
   memoryInstructions,
+  GenerationJobManager,
   getTransactionsConfig,
   createMemoryProcessor,
   filterMalformedContentParts,
@@ -34,21 +37,19 @@ const {
   EModelEndpoint,
   PermissionTypes,
   isAgentsEndpoint,
-  AgentCapabilities,
+  isEphemeralAgentId,
   bedrockInputSchema,
   removeNullishValues,
 } = require('librechat-data-provider');
-const { initializeAgent } = require('~/server/services/Endpoints/agents/agent');
 const { spendTokens, spendStructuredTokens } = require('~/models/spendTokens');
-const { getFormattedMemories, deleteMemory, setMemory } = require('~/models');
 const { encodeAndFormat } = require('~/server/services/Files/images/encode');
-const { getProviderConfig } = require('~/server/services/Endpoints');
 const { createContextHandlers } = require('~/app/clients/prompts');
-const { checkCapability } = require('~/server/services/Config');
+const { getConvoFiles } = require('~/models/Conversation');
 const BaseClient = require('~/app/clients/BaseClient');
 const { getRoleByName } = require('~/models/Role');
 const { loadAgent } = require('~/models/Agent');
 const { getMCPManager } = require('~/config');
+const db = require('~/models');
 
 const omitTitleOptions = new Set([
   'stream',
@@ -94,59 +95,137 @@ function logToolError(graph, error, toolId) {
   });
 }
 
-/**
- * Applies agent labeling to conversation history when multi-agent patterns are detected.
- * Labels content parts by their originating agent to prevent identity confusion.
- *
- * @param {TMessage[]} orderedMessages - The ordered conversation messages
- * @param {Agent} primaryAgent - The primary agent configuration
- * @param {Map<string, Agent>} agentConfigs - Map of additional agent configurations
- * @returns {TMessage[]} Messages with agent labels applied where appropriate
- */
-function applyAgentLabelsToHistory(orderedMessages, primaryAgent, agentConfigs) {
-  const shouldLabelByAgent = (primaryAgent.edges?.length ?? 0) > 0 || (agentConfigs?.size ?? 0) > 0;
+/** Regex pattern to match agent ID suffix (____N) */
+const AGENT_SUFFIX_PATTERN = /____(\d+)$/;
 
-  if (!shouldLabelByAgent) {
-    return orderedMessages;
+/**
+ * Finds the primary agent ID within a set of agent IDs.
+ * Primary = no suffix (____N) or lowest suffix number.
+ * @param {Set<string>} agentIds
+ * @returns {string | null}
+ */
+function findPrimaryAgentId(agentIds) {
+  let primaryAgentId = null;
+  let lowestSuffixIndex = Infinity;
+
+  for (const agentId of agentIds) {
+    const suffixMatch = agentId.match(AGENT_SUFFIX_PATTERN);
+    if (!suffixMatch) {
+      return agentId;
+    }
+    const suffixIndex = parseInt(suffixMatch[1], 10);
+    if (suffixIndex < lowestSuffixIndex) {
+      lowestSuffixIndex = suffixIndex;
+      primaryAgentId = agentId;
+    }
   }
 
-  const processedMessages = [];
+  return primaryAgentId;
+}
 
-  for (let i = 0; i < orderedMessages.length; i++) {
-    const message = orderedMessages[i];
+/**
+ * Creates a mapMethod for getMessagesForConversation that processes agent content.
+ * - Strips agentId/groupId metadata from all content
+ * - For parallel agents (addedConvo with groupId): filters each group to its primary agent
+ * - For handoffs (agentId without groupId): keeps all content from all agents
+ * - For multi-agent: applies agent labels to content
+ *
+ * The key distinction:
+ * - Parallel execution (addedConvo): Parts have both agentId AND groupId
+ * - Handoffs: Parts only have agentId, no groupId
+ *
+ * @param {Agent} primaryAgent - Primary agent configuration
+ * @param {Map<string, Agent>} [agentConfigs] - Additional agent configurations
+ * @returns {(message: TMessage) => TMessage} Map method for processing messages
+ */
+function createMultiAgentMapper(primaryAgent, agentConfigs) {
+  const hasMultipleAgents = (primaryAgent.edges?.length ?? 0) > 0 || (agentConfigs?.size ?? 0) > 0;
 
-    /** @type {Record<string, string>} */
-    const agentNames = { [primaryAgent.id]: primaryAgent.name || 'Assistant' };
-
+  /** @type {Record<string, string> | null} */
+  let agentNames = null;
+  if (hasMultipleAgents) {
+    agentNames = { [primaryAgent.id]: primaryAgent.name || 'Assistant' };
     if (agentConfigs) {
       for (const [agentId, agentConfig] of agentConfigs.entries()) {
         agentNames[agentId] = agentConfig.name || agentConfig.id;
       }
     }
-
-    if (
-      !message.isCreatedByUser &&
-      message.metadata?.agentIdMap &&
-      Array.isArray(message.content)
-    ) {
-      try {
-        const labeledContent = labelContentByAgent(
-          message.content,
-          message.metadata.agentIdMap,
-          agentNames,
-        );
-
-        processedMessages.push({ ...message, content: labeledContent });
-      } catch (error) {
-        logger.error('[AgentClient] Error applying agent labels to message:', error);
-        processedMessages.push(message);
-      }
-    } else {
-      processedMessages.push(message);
-    }
   }
 
-  return processedMessages;
+  return (message) => {
+    if (message.isCreatedByUser || !Array.isArray(message.content)) {
+      return message;
+    }
+
+    // Check for metadata
+    const hasAgentMetadata = message.content.some((part) => part?.agentId || part?.groupId != null);
+    if (!hasAgentMetadata) {
+      return message;
+    }
+
+    try {
+      // Build a map of groupId -> Set of agentIds, to find primary per group
+      /** @type {Map<number, Set<string>>} */
+      const groupAgentMap = new Map();
+
+      for (const part of message.content) {
+        const groupId = part?.groupId;
+        const agentId = part?.agentId;
+        if (groupId != null && agentId) {
+          if (!groupAgentMap.has(groupId)) {
+            groupAgentMap.set(groupId, new Set());
+          }
+          groupAgentMap.get(groupId).add(agentId);
+        }
+      }
+
+      // For each group, find the primary agent
+      /** @type {Map<number, string>} */
+      const groupPrimaryMap = new Map();
+      for (const [groupId, agentIds] of groupAgentMap) {
+        const primary = findPrimaryAgentId(agentIds);
+        if (primary) {
+          groupPrimaryMap.set(groupId, primary);
+        }
+      }
+
+      /** @type {Array<TMessageContentParts>} */
+      const filteredContent = [];
+      /** @type {Record<number, string>} */
+      const agentIdMap = {};
+
+      for (const part of message.content) {
+        const agentId = part?.agentId;
+        const groupId = part?.groupId;
+
+        // Filtering logic:
+        // - No groupId (handoffs): always include
+        // - Has groupId (parallel): only include if it's the primary for that group
+        const isParallelPart = groupId != null;
+        const groupPrimary = isParallelPart ? groupPrimaryMap.get(groupId) : null;
+        const shouldInclude = !isParallelPart || !agentId || agentId === groupPrimary;
+
+        if (shouldInclude) {
+          const newIndex = filteredContent.length;
+          const { agentId: _a, groupId: _g, ...cleanPart } = part;
+          filteredContent.push(cleanPart);
+          if (agentId && hasMultipleAgents) {
+            agentIdMap[newIndex] = agentId;
+      }
+        }
+      }
+
+      const finalContent =
+        Object.keys(agentIdMap).length > 0 && agentNames
+          ? labelContentByAgent(filteredContent, agentIdMap, agentNames)
+          : filteredContent;
+
+      return { ...message, content: finalContent };
+    } catch (error) {
+      logger.error('[AgentClient] Error processing multi-agent message:', error);
+      return message;
+    }
+  };
 }
 
 class AgentClient extends BaseClient {
@@ -185,7 +264,7 @@ class AgentClient extends BaseClient {
     /** @type {AgentClientOptions} */
     this.options = Object.assign({ endpoint: options.endpoint }, clientOptions);
     /** @type {string} */
-    this.model = this.options.agent.model;
+    this.model = this.options.agent.model_parameters.model;
     /** The key for the usage object's input tokens
      * @type {string} */
     this.inputTokensKey = 'input_tokens';
@@ -196,16 +275,8 @@ class AgentClient extends BaseClient {
     this.usage;
     /** @type {Record<string, number>} */
     this.indexTokenCountMap = {};
-    /** @type {number} */
-    this.lastPromptTokens = 0;
-    /** @type {Record<string, number> | undefined} */
-    this.lastPromptTokenMap = undefined;
-    /** @type {string | null} */
-    this.lastUserMessagePreview = null;
     /** @type {(messages: BaseMessage[]) => Promise<void>} */
     this.processMemory;
-    /** @type {Record<number, string> | null} */
-    this.agentIdMap = null;
   }
 
   /**
@@ -215,9 +286,7 @@ class AgentClient extends BaseClient {
     return this.contentParts;
   }
 
-  setOptions(options) {
-    logger.info('[api/server/controllers/agents/client.js] setOptions', options);
-  }
+  setOptions(_options) {}
 
   /**
    * `AgentClient` is not opinionated about vision requests, so we don't do anything here
@@ -292,17 +361,14 @@ class AgentClient extends BaseClient {
     { instructions = null, additional_instructions = null },
     opts,
   ) {
-    let orderedMessages = this.constructor.getMessagesForConversation({
+    /** Always pass mapMethod; getMessagesForConversation applies it only to messages with addedConvo flag */
+    const orderedMessages = this.constructor.getMessagesForConversation({
       messages,
       parentMessageId,
       summary: this.shouldSummarize,
+      mapMethod: createMultiAgentMapper(this.options.agent, this.agentConfigs),
+      mapCondition: (message) => message.addedConvo === true,
     });
-
-    orderedMessages = applyAgentLabelsToHistory(
-      orderedMessages,
-      this.options.agent,
-      this.agentConfigs,
-    );
 
     let payload;
     /** @type {number | undefined} */
@@ -451,54 +517,6 @@ class AgentClient extends BaseClient {
       messages,
     };
 
-    this.lastPromptTokens = typeof promptTokens === 'number' ? promptTokens : 0;
-    this.lastPromptTokenMap = tokenCountMap;
-
-    const extractMessageText = (message) => {
-      if (!message) {
-        return '';
-      }
-      if (typeof message.text === 'string' && message.text.trim().length > 0) {
-        return message.text;
-      }
-      if (typeof message.content === 'string' && message.content.trim().length > 0) {
-        return message.content;
-      }
-      if (Array.isArray(message.content)) {
-        return message.content
-          .map((part) => {
-            if (!part) {
-              return '';
-            }
-            if (typeof part === 'string') {
-              return part;
-            }
-            if (typeof part.text === 'string') {
-              return part.text;
-            }
-            if (typeof part.value === 'string') {
-              return part.value;
-            }
-            return '';
-          })
-          .filter(Boolean)
-          .join(' ');
-      }
-      return '';
-    };
-
-    const latestUserMessage =
-      [...orderedMessages]
-        .reverse()
-        .find(
-          (message) =>
-            message?.role === 'user' ||
-            message?.sender === 'user' ||
-            message?.isCreatedByUser === true,
-        ) ?? null;
-    const latestUserText = extractMessageText(latestUserMessage).trim();
-    this.lastUserMessagePreview = latestUserText ? latestUserText.slice(0, 160) : null;
-
     if (promptTokens >= 0 && typeof opts?.getReqData === 'function') {
       opts.getReqData({ promptTokens });
     }
@@ -596,18 +614,27 @@ class AgentClient extends BaseClient {
       );
     }
 
-    const agent = await initializeAgent({
+    const agent = await initializeAgent(
+      {
       req: this.options.req,
       res: this.options.res,
       agent: prelimAgent,
       allowedProviders,
       endpointOption: {
-        endpoint:
-          prelimAgent.id !== Constants.EPHEMERAL_AGENT_ID
+          endpoint: !isEphemeralAgentId(prelimAgent.id)
             ? EModelEndpoint.agents
             : memoryConfig.agent?.provider,
       },
-    });
+      },
+      {
+        getConvoFiles,
+        getFiles: db.getFiles,
+        getUserKey: db.getUserKey,
+        updateFilesUsage: db.updateFilesUsage,
+        getUserKeyValues: db.getUserKeyValues,
+        getToolFilesByIds: db.getToolFilesByIds,
+      },
+    );
 
     if (!agent) {
       logger.warn(
@@ -636,17 +663,20 @@ class AgentClient extends BaseClient {
     const userId = this.options.req.user.id + '';
     const messageId = this.responseMessageId + '';
     const conversationId = this.conversationId + '';
+    const streamId = this.options.req?._resumableStreamId || null;
     const [withoutKeys, processMemory] = await createMemoryProcessor({
       userId,
       config,
       messageId,
+      streamId,
       conversationId,
       memoryMethods: {
-        setMemory,
-        deleteMemory,
-        getFormattedMemories,
+        setMemory: db.setMemory,
+        deleteMemory: db.deleteMemory,
+        getFormattedMemories: db.getFormattedMemories,
       },
       res: this.options.res,
+      user: createSafeUser(this.options.req.user),
     });
 
     this.processMemory = processMemory;
@@ -725,7 +755,6 @@ class AgentClient extends BaseClient {
 
   /** @type {sendCompletion} */
   async sendCompletion(payload, opts = {}) {
-    this.agentInstructionTokens = this.calculateAgentInstructionTokens();
     await this.chatCompletion({
       payload,
       onProgress: opts.onProgress,
@@ -734,9 +763,7 @@ class AgentClient extends BaseClient {
     });
 
     const completion = filterMalformedContentParts(this.contentParts);
-    const metadata = this.agentIdMap ? { agentIdMap: this.agentIdMap } : undefined;
-
-    return { completion, metadata };
+    return { completion };
   }
 
   /**
@@ -757,121 +784,38 @@ class AgentClient extends BaseClient {
     if (!collectedUsage || !collectedUsage.length) {
       return;
     }
+    // Use first entry's input_tokens as the base input (represents initial user message context)
+    // Support both OpenAI format (input_token_details) and Anthropic format (cache_*_input_tokens)
+    const firstUsage = collectedUsage[0];
+    const input_tokens =
+      (firstUsage?.input_tokens || 0) +
+      (Number(firstUsage?.input_token_details?.cache_creation) ||
+        Number(firstUsage?.cache_creation_input_tokens) ||
+        0) +
+      (Number(firstUsage?.input_token_details?.cache_read) ||
+        Number(firstUsage?.cache_read_input_tokens) ||
+        0);
 
-    // Prevent duplicate billing by checking if this context has already been recorded
-    const recordingKey = `${this.conversationId}-${context}`;
-    if (this._recordedUsage && this._recordedUsage.has(recordingKey)) {
-      return;
-    }
+    // Sum output_tokens directly from all entries - works for both sequential and parallel execution
+    // This avoids the incremental calculation that produced negative values for parallel agents
+    let total_output_tokens = 0;
 
-    // Initialize the tracking set if it doesn't exist
-    if (!this._recordedUsage) {
-      this._recordedUsage = new Set();
-    }
-
-    // Log each usage entry to identify potential duplicates or inflated values
-    const uniqueUsageValues = new Set();
-    const duplicateEntries = [];
-
-    collectedUsage.forEach((usage, index) => {
-      if (usage) {
-        const usageKey = `${usage.input_tokens || 0}-${usage.output_tokens || 0}`;
-        if (uniqueUsageValues.has(usageKey)) {
-          duplicateEntries.push({ index, usage });
-        }
-        uniqueUsageValues.add(usageKey);
-      }
-    });
-
-    const diagnostics = {
-      duplicateUsageEntries: duplicateEntries.length,
-      fallback: {
-        inputSource: null,
-        outputSource: null,
-      },
-      fallbackTokens: {
-        prompt: null,
-        completion: null,
-      },
-      suspiciousOutput: null,
-    };
-
-    const providerName =
-      this.options?.agent?.provider ??
-      this.options?.agent?.endpoint ??
-      this.options?.endpoint ??
-      'unknown';
-
-    // Aggregate all tokens from the collected usage to avoid multiple billing
-    let totalInputTokens = 0;
-    let totalOutputTokens = 0;
-    let totalCacheCreation = 0;
-    let totalCacheRead = 0;
-    let hasStructuredTokens = false;
-
-    const getResponseTextInfo = () => {
-      let responseText = '';
-      if (this.contentParts && this.contentParts.length > 0) {
-        responseText = this.contentParts
-          .filter((part) => part?.type === 'text' && part?.text)
-          .map((part) => part.text)
-          .join(' ')
-          .trim();
-      }
-
-      if (!responseText && this.run) {
-        try {
-          const runMessages = this.run.Graph?.getRunMessages?.() || [];
-          responseText = runMessages
-            .filter((msg) => msg?.content && typeof msg.content === 'string')
-            .map((msg) => msg.content)
-            .join(' ')
-            .trim();
-        } catch (err) {
-          logger.debug(`[recordCollectedUsage] Could not extract run messages: ${err.message}`);
-        }
-      }
-
-      const tokenCount = responseText ? this.getTokenCount(responseText) : 0;
-      return { responseText, tokenCount };
-    };
-
-    let responseDetails;
-    const ensureResponseDetails = () => {
-      if (!responseDetails) {
-        responseDetails = getResponseTextInfo();
-      }
-      return responseDetails;
-    };
-
-    for (const [index, usage] of collectedUsage.entries()) {
+    for (const usage of collectedUsage) {
       if (!usage) {
         continue;
       }
 
-      const cache_creation = Number(usage.input_token_details?.cache_creation) || 0;
-      const cache_read = Number(usage.input_token_details?.cache_read) || 0;
+      // Support both OpenAI format (input_token_details) and Anthropic format (cache_*_input_tokens)
+      const cache_creation =
+        Number(usage.input_token_details?.cache_creation) ||
+        Number(usage.cache_creation_input_tokens) ||
+        0;
+      const cache_read =
+        Number(usage.input_token_details?.cache_read) || Number(usage.cache_read_input_tokens) || 0;
 
-      logger.info('[AgentUsage][UsageEntry]', {
-        provider: providerName,
-        index,
-        input_tokens: usage.input_tokens ?? null,
-        output_tokens: usage.output_tokens ?? null,
-        cache_creation,
-        cache_read,
-        model: usage.model ?? null,
-        raw_usage: {
-          input_tokens: usage.input_tokens ?? null,
-          output_tokens: usage.output_tokens ?? null,
-          input_token_details: usage.input_token_details ?? null,
-          completion_tokens_details: usage.completion_tokens_details ?? null,
-          reasoning_tokens: usage.reasoning_tokens ?? null,
-        },
-      });
+      // Accumulate output tokens for the usage summary
+      total_output_tokens += Number(usage.output_tokens) || 0;
 
-      // Validate token values to prevent inflated numbers
-      const inputTokens = Number(usage.input_tokens) || 0;
-      let outputTokens = Number(usage.output_tokens) || 0;
       const txMetadata = {
         context,
         balance,
@@ -879,232 +823,40 @@ class AgentClient extends BaseClient {
         conversationId: this.conversationId,
         user: this.user ?? this.options.req.user?.id,
         endpointTokenConfig: this.options.endpointTokenConfig,
-        model: this.model ?? this.options.agent.model,
+        model: usage.model ?? model ?? this.model ?? this.options.agent.model_parameters.model,
       };
 
-      // REAL TOKEN VALIDATION: Check if output tokens seem excessive compared to actual content
-      if (outputTokens > 20000) {
-        const { responseText, tokenCount: actualOutputTokens } = ensureResponseDetails();
-        const suspiciousInfo = {
-          reported: outputTokens,
-          actual: responseText ? actualOutputTokens : null,
-          adjusted: false,
-          ratio: null,
-          note: responseText ? 'validated' : 'no_response_text',
-        };
-
-        if (responseText && actualOutputTokens != null) {
-          const ratio = outputTokens / Math.max(actualOutputTokens, 1);
-          suspiciousInfo.ratio = Number.isFinite(ratio) ? Number(ratio.toFixed(2)) : null;
-
-          if (actualOutputTokens > 0 && outputTokens > actualOutputTokens * 3) {
-            outputTokens = actualOutputTokens;
-            suspiciousInfo.adjusted = true;
-            suspiciousInfo.note = 'adjusted_to_actual';
-          } else if (ratio > 1.5) {
-            suspiciousInfo.note = 'high_ratio';
-          }
-        } else {
-          outputTokens = Math.min(outputTokens, 30000);
-          suspiciousInfo.adjusted = true;
-        }
-
-        diagnostics.suspiciousOutput = suspiciousInfo;
-      }
-
-      totalInputTokens += inputTokens;
-      totalOutputTokens += outputTokens;
-      totalCacheCreation += cache_creation;
-      totalCacheRead += cache_read;
-
       if (cache_creation > 0 || cache_read > 0) {
-        hasStructuredTokens = true;
-      }
-    }
-
-    const providerReported = {
-      inputTokens: totalInputTokens,
-      outputTokens: totalOutputTokens,
-      cacheCreation: totalCacheCreation,
-      cacheRead: totalCacheRead,
-    };
-
-    // FALLBACK: Use calculated tokens when provider doesn't provide real usage
-    // This ensures we always have token accounting, even if provider returns 0 or invalid values
-    const needsInputFallback =
-      totalInputTokens === 0 && totalCacheCreation === 0 && totalCacheRead === 0;
-
-    if (needsInputFallback) {
-      let fallbackPromptTokens = 0;
-      let fallbackSource = null;
-
-      // Try lastPromptTokens first (most accurate, from buildMessages)
-      if (typeof this.lastPromptTokens === 'number' && this.lastPromptTokens > 0) {
-        fallbackPromptTokens = this.lastPromptTokens;
-        fallbackSource = 'lastPromptTokens';
-      }
-
-      // Try lastPromptTokenMap (token count map from buildMessages)
-      if (fallbackPromptTokens === 0 && this.lastPromptTokenMap) {
-        fallbackPromptTokens = Object.values(this.lastPromptTokenMap).reduce(
-          (sum, count) => sum + (Number(count) || 0),
-          0,
-        );
-        if (fallbackPromptTokens > 0) {
-          fallbackSource = 'lastPromptTokenMap';
-        }
-      }
-
-      // Try indexTokenCountMap (alternative token count map)
-      if (fallbackPromptTokens === 0 && this.indexTokenCountMap) {
-        fallbackPromptTokens = Object.values(this.indexTokenCountMap).reduce(
-          (sum, count) => sum + (Number(count) || 0),
-          0,
-        );
-        if (fallbackPromptTokens > 0) {
-          fallbackSource = 'indexTokenCountMap';
-        }
-      }
-
-      const instructionTokens = this.agentInstructionTokens ?? 0;
-      if (fallbackPromptTokens === 0 && instructionTokens > 0) {
-        fallbackPromptTokens = instructionTokens;
-        fallbackSource = fallbackSource ?? 'agentInstructions';
-      } else if (instructionTokens > 0) {
-        fallbackPromptTokens += instructionTokens;
-      }
-
-      if (fallbackPromptTokens > 0) {
-        totalInputTokens = fallbackPromptTokens;
-        diagnostics.fallback.inputSource = fallbackSource ?? 'calculated';
-        diagnostics.fallbackTokens.prompt = fallbackPromptTokens;
-      }
-
-      logger.info('[AgentUsage][FallbackEvaluation]', {
-        provider: providerName,
-        needsInputFallback,
-        fallbackSource: diagnostics.fallback.inputSource,
-        fallbackPromptTokens,
-        agentInstructionTokens: this.agentInstructionTokens ?? 0,
-        lastPromptTokens: this.lastPromptTokens ?? 0,
-        lastPromptTokenMapTotal: this.lastPromptTokenMap
-          ? Object.values(this.lastPromptTokenMap).reduce(
-              (sum, count) => sum + (Number(count) || 0),
-              0,
-            )
-          : 0,
-        indexTokenCountMapTotal: this.indexTokenCountMap
-          ? Object.values(this.indexTokenCountMap).reduce(
-              (sum, count) => sum + (Number(count) || 0),
-              0,
-            )
-          : 0,
-      });
-    }
-
-    // FALLBACK: Use calculated tokens for output when provider doesn't provide real usage
-    if (totalOutputTokens === 0) {
-      const { tokenCount: fallbackOutputTokens } = ensureResponseDetails();
-      if (fallbackOutputTokens > 0) {
-        totalOutputTokens = fallbackOutputTokens;
-        diagnostics.fallback.outputSource = 'responseText';
-        diagnostics.fallbackTokens.completion = fallbackOutputTokens;
-      }
-    }
-
-    // Final check: Ensure we always have token accounting
-    const hasAnyTokens =
-      totalInputTokens > 0 || totalOutputTokens > 0 || totalCacheCreation > 0 || totalCacheRead > 0;
-    const fallbackApplied =
-      diagnostics.fallback.inputSource != null || diagnostics.fallback.outputSource != null;
-
-    const responseInfo = ensureResponseDetails();
-    const responsePreview =
-      responseInfo.responseText && responseInfo.responseText.length > 0
-        ? responseInfo.responseText.slice(0, 160)
-        : null;
-
-    const recordedTokens = {
-      prompt: totalInputTokens,
-      completion: totalOutputTokens,
-      cacheCreation: totalCacheCreation,
-      cacheRead: totalCacheRead,
-    };
-
-    const summaryLog = {
-      conversationId: this.conversationId,
-      user: this.user ?? this.options.req.user?.id,
-      context,
-      model: model ?? this.model ?? this.options.agent.model,
-      collectedUsageCount: collectedUsage.length,
-      duplicateUsageEntries: diagnostics.duplicateUsageEntries,
-      hasStructuredTokens,
-      hasAnyTokens,
-      tokens: {
-        provider: providerReported,
-        recorded: recordedTokens,
-      },
-      fallbackApplied,
-      fallback:
-        fallbackApplied === false
-          ? null
-          : {
-              inputSource: diagnostics.fallback.inputSource,
-              outputSource: diagnostics.fallback.outputSource,
-              promptTokens: diagnostics.fallbackTokens.prompt,
-              completionTokens: diagnostics.fallbackTokens.completion,
-            },
-      suspiciousOutput: diagnostics.suspiciousOutput,
-      promptPreview: this.lastUserMessagePreview,
-      responsePreview,
-      responseTokenCount: responseInfo.tokenCount,
-    };
-
-    logger.info('[AgentUsage] summary', summaryLog);
-
-    const txMetadata = {
-      context,
-      balance,
-      conversationId: this.conversationId,
-      user: this.user ?? this.options.req.user?.id,
-      endpointTokenConfig: this.options.endpointTokenConfig,
-      model: model ?? this.model ?? this.options.agent.model,
-    };
-
-    try {
-      // Make a single transaction call with aggregated tokens
-      // This ensures we always attempt to record tokens, even if values are 0
-      if (hasStructuredTokens) {
-        await spendStructuredTokens(txMetadata, {
+        spendStructuredTokens(txMetadata, {
           promptTokens: {
-            input: totalInputTokens,
-            write: totalCacheCreation,
-            read: totalCacheRead,
+            input: usage.input_tokens,
+            write: cache_creation,
+            read: cache_read,
           },
-          completionTokens: totalOutputTokens,
+          completionTokens: usage.output_tokens,
+        }).catch((err) => {
+          logger.error(
+            '[api/server/controllers/agents/client.js #recordCollectedUsage] Error spending structured tokens',
+            err,
+          );
         });
-      } else {
-        await spendTokens(txMetadata, {
-          promptTokens: totalInputTokens,
-          completionTokens: totalOutputTokens,
-        });
+        continue;
       }
-
-      // Mark this context as recorded to prevent duplicate billing
-      this._recordedUsage.add(recordingKey);
-      logger.debug(`[recordCollectedUsage] Successfully recorded usage for ${recordingKey}`);
-    } catch (err) {
+      spendTokens(txMetadata, {
+        promptTokens: usage.input_tokens,
+        completionTokens: usage.output_tokens,
+      }).catch((err) => {
       logger.error(
         '[api/server/controllers/agents/client.js #recordCollectedUsage] Error spending tokens',
         err,
       );
+      });
     }
 
     this.usage = {
-      input_tokens: totalInputTokens + totalCacheCreation + totalCacheRead,
-      output_tokens: totalOutputTokens,
+      input_tokens,
+      output_tokens: total_output_tokens,
     };
-    this.agentInstructionTokens = 0;
   }
 
   /**
@@ -1211,12 +963,10 @@ class AgentClient extends BaseClient {
        */
       const runAgents = async (messages) => {
         const agents = [this.options.agent];
-        if (
-          this.agentConfigs &&
-          this.agentConfigs.size > 0 &&
-          ((this.options.agent.edges?.length ?? 0) > 0 ||
-            (await checkCapability(this.options.req, AgentCapabilities.chain)))
-        ) {
+        // Include additional agents when:
+        // - agentConfigs has agents (from addedConvo parallel execution or agent handoffs)
+        // - Agents without incoming edges become start nodes and run in parallel automatically
+        if (this.agentConfigs && this.agentConfigs.size > 0) {
           agents.push(...this.agentConfigs.values());
         }
 
@@ -1276,6 +1026,12 @@ class AgentClient extends BaseClient {
         }
 
         this.run = run;
+
+        const streamId = this.options.req?._resumableStreamId;
+        if (streamId && run.Graph) {
+          GenerationJobManager.setGraph(streamId, run.Graph);
+        }
+
         if (userMCPAuthMap != null) {
           config.configurable.userMCPAuthMap = userMCPAuthMap;
         }
@@ -1305,36 +1061,6 @@ class AgentClient extends BaseClient {
             part.tool_call_ids
           );
         });
-      }
-
-      try {
-        /** Capture agent ID map if we have edges or multiple agents */
-        const shouldStoreAgentMap =
-          (this.options.agent.edges?.length ?? 0) > 0 || (this.agentConfigs?.size ?? 0) > 0;
-        if (shouldStoreAgentMap && run?.Graph) {
-          const contentPartAgentMap = run.Graph.getContentPartAgentMap();
-          if (contentPartAgentMap && contentPartAgentMap.size > 0) {
-            this.agentIdMap = Object.fromEntries(contentPartAgentMap);
-            logger.debug('[AgentClient] Captured agent ID map:', {
-              totalParts: this.contentParts.length,
-              mappedParts: Object.keys(this.agentIdMap).length,
-            });
-          }
-        }
-
-        const balanceConfig = getBalanceConfig(appConfig);
-        const transactionsConfig = getTransactionsConfig(appConfig);
-        await this.recordCollectedUsage({
-          context: 'message',
-          balance: balanceConfig,
-          transactions: transactionsConfig,
-        });
-        logger.debug(`[chatCompletion] Finished calling recordCollectedUsage`);
-      } catch (err) {
-        logger.error(
-          '[api/server/controllers/agents/client.js #chatCompletion] Error recording collected usage',
-          err,
-        );
       }
     } catch (err) {
       logger.error(
@@ -1386,7 +1112,15 @@ class AgentClient extends BaseClient {
       throw new Error('Run not initialized');
     }
     const { handleLLMEnd, collected: collectedMetadata } = createMetadataAggregator();
-    const { req, res, agent } = this.options;
+    const { req, agent } = this.options;
+
+    if (req?.body?.isTemporary) {
+      logger.debug(
+        `[api/server/controllers/agents/client.js #titleConvo] Skipping title generation for temporary conversation`,
+      );
+      return;
+    }
+
     const appConfig = req.config;
     let endpoint = agent.endpoint;
 
@@ -1398,21 +1132,10 @@ class AgentClient extends BaseClient {
     let titleProviderConfig = getProviderConfig({ provider: endpoint, appConfig });
 
     /** @type {TEndpoint | undefined} */
-    let endpointConfig;
-
-    // For custom endpoints, use customEndpointConfig but merge with all config
-    if (titleProviderConfig.customEndpointConfig) {
-      endpointConfig = {
-        ...titleProviderConfig.customEndpointConfig,
-        // Only add promptPrefix from all config if it exists and customEndpointConfig doesn't have it
-        ...(appConfig.endpoints?.all?.promptPrefix &&
-          !titleProviderConfig.customEndpointConfig.promptPrefix && {
-            promptPrefix: appConfig.endpoints.all.promptPrefix,
-          }),
-      };
-    } else {
-      endpointConfig = appConfig.endpoints?.all ?? appConfig.endpoints?.[endpoint];
-    }
+    const endpointConfig =
+      appConfig.endpoints?.all ??
+      appConfig.endpoints?.[endpoint] ??
+      titleProviderConfig.customEndpointConfig;
     if (!endpointConfig) {
       logger.debug(
         `[api/server/controllers/agents/client.js #titleConvo] No endpoint config for "${endpoint}"`,
@@ -1454,11 +1177,12 @@ class AgentClient extends BaseClient {
 
     const options = await titleProviderConfig.getOptions({
       req,
-      res,
-      optionsOnly: true,
-      overrideEndpoint: endpoint,
-      overrideModel: clientOptions.model,
-      endpointOption: { model_parameters: clientOptions },
+      endpoint,
+      model_parameters: clientOptions,
+      db: {
+        getUserKey: db.getUserKey,
+        getUserKeyValues: db.getUserKeyValues,
+      },
     });
 
     let provider = options.provider ?? titleProviderConfig.overrideProvider ?? agent.provider;
@@ -1553,29 +1277,18 @@ class AgentClient extends BaseClient {
         let input_tokens, output_tokens;
 
         if (item.usage) {
-          // Support multiple formats: OpenAI/Grok format (prompt_tokens/completion_tokens)
-          // and Anthropic format (input_tokens/output_tokens)
           input_tokens =
-            item.usage.prompt_tokens ||
-            item.usage.input_tokens ||
-            item.usage.inputTokens ||
-            item.usage.prompt_tokens_details?.text_tokens ||
-            0;
+            item.usage.prompt_tokens || item.usage.input_tokens || item.usage.inputTokens;
           output_tokens =
-            item.usage.completion_tokens ||
-            item.usage.output_tokens ||
-            item.usage.outputTokens ||
-            item.usage.completion_tokens_details?.reasoning_tokens ||
-            0;
+            item.usage.completion_tokens || item.usage.output_tokens || item.usage.outputTokens;
         } else if (item.tokenUsage) {
           input_tokens = item.tokenUsage.promptTokens;
           output_tokens = item.tokenUsage.completionTokens;
         }
 
         return {
-          input_tokens: input_tokens || 0,
-          output_tokens: output_tokens || 0,
-          model: item.usage?.model || item.model,
+          input_tokens: input_tokens,
+          output_tokens: output_tokens,
         };
       });
 

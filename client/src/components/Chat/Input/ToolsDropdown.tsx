@@ -1,19 +1,19 @@
-import React, { useState, useMemo, useCallback } from 'react';
 import * as Ariakit from '@ariakit/react';
-import { Globe, Settings, Settings2, TerminalSquareIcon } from 'lucide-react';
-import { TooltipAnchor, DropdownPopup, PinIcon, VectorIcon } from '@librechat/client';
-import type { MenuItemProps } from '~/common';
+import { DropdownPopup, PinIcon, TooltipAnchor, VectorIcon } from '@librechat/client';
 import {
-  AuthType,
-  Permissions,
   ArtifactModes,
+  AuthType,
   PermissionTypes,
+  Permissions,
   defaultAgentCapabilities,
 } from 'librechat-data-provider';
-import { useLocalize, useHasAccess, useAgentCapabilities } from '~/hooks';
+import { Globe, Settings, Settings2, TerminalSquareIcon } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import type { MenuItemProps } from '~/common';
 import ArtifactsSubMenu from '~/components/Chat/Input/ArtifactsSubMenu';
 import MCPSubMenu from '~/components/Chat/Input/MCPSubMenu';
 import { useGetStartupConfig } from '~/data-provider';
+import { useAgentCapabilities, useHasAccess, useLocalize } from '~/hooks';
 import { useBadgeRowContext } from '~/Providers';
 import { cn } from '~/utils';
 
@@ -69,6 +69,11 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
 
   const canUseFileSearch = useHasAccess({
     permissionType: PermissionTypes.FILE_SEARCH,
+    permission: Permissions.USE,
+  });
+
+  const canUseMcp = useHasAccess({
+    permissionType: PermissionTypes.MCP_SERVERS,
     permission: Permissions.USE,
   });
 
@@ -168,7 +173,7 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
       render: (props) => (
         <div {...props}>
           <div className="flex items-center gap-2">
-            <Globe className="icon-md" />
+            <Globe className="icon-md" aria-hidden="true" />
             <span>{localize('com_ui_web_search')}</span>
           </div>
           <div className="flex items-center gap-1">
@@ -188,7 +193,7 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
                 ref={searchMenuTriggerRef}
               >
                 <div className="h-4 w-4">
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-4 w-4" aria-hidden="true" />
                 </div>
               </button>
             )}
@@ -222,7 +227,7 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
       render: (props) => (
         <div {...props}>
           <div className="flex items-center gap-2">
-            <TerminalSquareIcon className="icon-md" />
+            <TerminalSquareIcon className="icon-md" aria-hidden="true" />
             <span>{localize('com_assistants_code_interpreter')}</span>
           </div>
           <div className="flex items-center gap-1">
@@ -242,7 +247,7 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
                 aria-label="Configure code interpreter"
               >
                 <div className="h-4 w-4">
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-4 w-4" aria-hidden="true" />
                 </div>
               </button>
             )}
@@ -286,8 +291,8 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
     });
   }
 
-  const { configuredServers } = mcpServerManager;
-  if (configuredServers && configuredServers.length > 0) {
+  const { availableMCPServers } = mcpServerManager;
+  if (canUseMcp && availableMCPServers && availableMCPServers.length > 0) {
     dropdownItems.push({
       hideOnClick: false,
       render: (props) => <MCPSubMenu {...props} placeholder={mcpPlaceholder} />,
@@ -306,11 +311,12 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
           id="tools-dropdown-button"
           aria-label="Tools Options"
           className={cn(
-            'flex size-9 items-center justify-center rounded-full p-1 transition-colors hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50',
+            'flex size-9 items-center justify-center rounded-full p-1 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-50',
+            isPopoverActive && 'bg-surface-hover',
           )}
         >
           <div className="flex w-full items-center justify-center gap-2">
-            <Settings2 className="icon-md" />
+            <Settings2 className="size-5" aria-hidden="true" />
           </div>
         </Ariakit.MenuButton>
       }

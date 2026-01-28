@@ -1,12 +1,11 @@
 import { Button, MobileSidebar, NewChatIcon, Sidebar, TooltipAnchor } from '@librechat/client';
 import { useQueryClient } from '@tanstack/react-query';
-import type { TMessage } from 'librechat-data-provider';
-import { Constants, QueryKeys } from 'librechat-data-provider';
+import { QueryKeys } from 'librechat-data-provider';
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalize, useNewConvo } from '~/hooks';
-import { clearMessagesCache } from '~/utils';
 import store from '~/store';
+import { clearMessagesCache } from '~/utils';
 
 export default function NewChat({
   index = 0,
@@ -27,6 +26,14 @@ export default function NewChat({
   const navigate = useNavigate();
   const localize = useLocalize();
   const { conversation } = store.useCreateConversationAtom(index);
+
+  const handleToggleNav = useCallback(() => {
+    toggleNav();
+    // Delay focus until after the sidebar animation completes (200ms)
+    setTimeout(() => {
+      document.getElementById(OPEN_SIDEBAR_ID)?.focus();
+    }, 250);
+  }, [toggleNav]);
 
   const clickHandler: React.MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
@@ -52,19 +59,23 @@ export default function NewChat({
           description={localize('com_nav_close_sidebar')}
           render={
             <Button
+              id={CLOSE_SIDEBAR_ID}
               size="icon"
               variant="outline"
               data-testid="close-sidebar-button"
               aria-label={localize('com_nav_close_sidebar')}
-              className="p-2 bg-transparent rounded-full border-none hover:bg-surface-hover md:rounded-xl"
-              onClick={toggleNav}
+              aria-expanded={true}
+              className="rounded-full border-none bg-transparent duration-0 hover:bg-surface-active-alt md:rounded-xl"
+              onClick={handleToggleNav}
             >
-              <Sidebar className="max-md:hidden" />
-              <MobileSidebar className="inline-flex justify-center items-center m-1 size-10 md:hidden" />
+              <Sidebar aria-hidden="true" className="max-md:hidden" />
+              <MobileSidebar
+                aria-hidden="true"
+                className="icon-lg m-1 inline-flex items-center justify-center md:hidden"
+              />
             </Button>
           }
         />
-
         <div className="flex gap-0.5">
           {headerButtons}
 
@@ -76,10 +87,9 @@ export default function NewChat({
                 variant="outline"
                 data-testid="nav-new-chat-button"
                 aria-label={localize('com_ui_new_chat')}
-                className="p-2 w-full bg-transparent rounded-full border-none hover:bg-surface-hover md:rounded-xl"
+                className="rounded-full border-none bg-transparent duration-0 hover:bg-surface-active-alt md:rounded-xl"
                 onClick={clickHandler}
               >
-                + Novo Chat
                 <NewChatIcon className="icon-lg text-text-primary" />
               </Button>
             }

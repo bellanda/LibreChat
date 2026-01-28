@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const fetch = require('node-fetch');
 const { logger } = require('@librechat/data-schemas');
 const {
+  countTokens,
   getBalanceConfig,
   extractFileContext,
   encodeAndFormatAudios,
@@ -17,6 +18,7 @@ const {
   EModelEndpoint,
   isParamEndpoint,
   isAgentsEndpoint,
+  isEphemeralAgentId,
   supportsBalanceCheck,
 } = require('librechat-data-provider');
 const { getMessages, saveMessage, updateMessage, saveConvo, getConvo } = require('~/models');
@@ -104,8 +106,8 @@ class BaseClient {
    * @returns {string}
    */
   getResponseModel() {
-    if (isAgentsEndpoint(this.options.endpoint) && this.options.agent && this.options.agent.model) {
-      return this.options.agent.model;
+    if (isAgentsEndpoint(this.options.endpoint) && this.options.agent && this.options.agent.id) {
+      return this.options.agent.id;
     }
 
     return this.modelOptions?.model ?? this.model;
@@ -746,7 +748,7 @@ class BaseClient {
       iconURL: this.options.iconURL,
       endpoint: this.options.endpoint,
       ...(this.metadata ?? {}),
-      metadata,
+      metadata: Object.keys(metadata ?? {}).length > 0 ? metadata : undefined,
     };
 
     if (typeof completion === 'string') {
@@ -1106,7 +1108,9 @@ class BaseClient {
         message.tokenCount = message.summaryTokenCount;
       }
 
-      orderedMessages.push(message);
+      const shouldMap = mapMethod != null && (mapCondition != null ? mapCondition(message) : true);
+      const processedMessage = shouldMap ? mapMethod(message) : message;
+      orderedMessages.push(processedMessage);
 
       if (summary && message.summary) {
         break;
@@ -1266,8 +1270,8 @@ class BaseClient {
       this.options.req,
       attachments,
       {
-        provider: this.options.agent?.provider,
-        endpoint: this.options.agent?.endpoint,
+        provider: this.options.agent?.provider ?? this.options.endpoint,
+        endpoint: this.options.agent?.endpoint ?? this.options.endpoint,
         useResponsesApi: this.options.agent?.model_parameters?.useResponsesApi,
       },
       getStrategyFunctions,
@@ -1284,8 +1288,8 @@ class BaseClient {
       this.options.req,
       attachments,
       {
-        provider: this.options.agent?.provider,
-        endpoint: this.options.agent?.endpoint,
+        provider: this.options.agent?.provider ?? this.options.endpoint,
+        endpoint: this.options.agent?.endpoint ?? this.options.endpoint,
       },
       getStrategyFunctions,
     );
@@ -1299,8 +1303,8 @@ class BaseClient {
       this.options.req,
       attachments,
       {
-        provider: this.options.agent?.provider,
-        endpoint: this.options.agent?.endpoint,
+        provider: this.options.agent?.provider ?? this.options.endpoint,
+        endpoint: this.options.agent?.endpoint ?? this.options.endpoint,
       },
       getStrategyFunctions,
     );

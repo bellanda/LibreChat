@@ -29,8 +29,8 @@ const {
 const { addResourceFileId, deleteResourceFileId } = require('~/server/controllers/assistants/v2');
 const { addAgentResourceFile, removeAgentResourceFiles } = require('~/models/Agent');
 const { getOpenAIClient } = require('~/server/controllers/assistants/helpers');
-const { createFile, updateFileUsage, deleteFiles } = require('~/models/File');
 const { loadAuthValues } = require('~/server/services/Tools/credentials');
+const { createFile, updateFileUsage, deleteFiles } = require('~/models');
 const { getFileStrategy } = require('~/server/utils/getFileStrategy');
 const { checkCapability } = require('~/server/services/Config');
 const { LB_QueueAsyncCall } = require('~/server/utils/queue');
@@ -623,10 +623,7 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
     fileInfoMetadata = { fileIdentifier };
   } else if (tool_resource === EToolResources.file_search) {
     const isFileSearchEnabled = await checkCapability(req, AgentCapabilities.file_search);
-    // Allow file_search for ephemeral agents even if not explicitly enabled in endpoint config
-    // since we've added file_search to ephemeral agent tools by default
-    const isEphemeralAgent = agent_id === Constants.EPHEMERAL_AGENT_ID || messageAttachment;
-    if (!isFileSearchEnabled && !isEphemeralAgent) {
+    if (!isFileSearchEnabled) {
       throw new Error('File search is not enabled for Agents');
     }
     // Note: File search processing continues to dual storage logic below

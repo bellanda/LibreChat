@@ -1,8 +1,6 @@
-import React from 'react';
-import { RefreshCw } from 'lucide-react';
 import { Button, Spinner } from '@librechat/client';
-import { useLocalize, useMCPServerManager, useMCPConnectionStatus } from '~/hooks';
-import { useGetStartupConfig } from '~/data-provider';
+import { RefreshCw, Trash2 } from 'lucide-react';
+import { useLocalize, useMCPConnectionStatus, useMCPServerManager } from '~/hooks';
 
 interface ServerInitializationSectionProps {
   sidePanel?: boolean;
@@ -21,12 +19,18 @@ export default function ServerInitializationSection({
 }: ServerInitializationSectionProps) {
   const localize = useLocalize();
 
-  const { initializeServer, cancelOAuthFlow, isInitializing, isCancellable, getOAuthUrl } =
-    useMCPServerManager({ conversationId });
+  const {
+    getOAuthUrl,
+    isCancellable,
+    isInitializing,
+    cancelOAuthFlow,
+    initializeServer,
+    availableMCPServers,
+    revokeOAuthForServer,
+  } = useMCPServerManager({ conversationId });
 
-  const { data: startupConfig } = useGetStartupConfig();
   const { connectionStatus } = useMCPConnectionStatus({
-    enabled: !!startupConfig?.mcpServers && Object.keys(startupConfig.mcpServers).length > 0,
+    enabled: !!availableMCPServers && availableMCPServers.length > 0,
   });
 
   const serverStatus = connectionStatus?.[serverName];
@@ -85,17 +89,28 @@ export default function ServerInitializationSection({
   const icon = isServerInitializing ? (
     <Spinner className="h-4 w-4" />
   ) : (
-    <RefreshCw className="h-4 w-4" />
+    <RefreshCw className="h-4 w-4" aria-hidden="true" />
   );
 
   return (
-    <div className={outerClass}>
+    <div className="flex items-center gap-2">
+      {requiresOAuth && revokeOAuthForServer && (
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => revokeOAuthForServer(serverName)}
+          aria-label={localize('com_ui_revoke')}
+        >
+          <Trash2 className="h-4 w-4" />
+          {localize('com_ui_revoke')}
+        </Button>
+      )}
       <Button
         variant={buttonVariant}
         onClick={() => initializeServer(serverName, false)}
         disabled={isServerInitializing}
         size={sidePanel ? 'sm' : 'default'}
-        className="w-full"
+        className="flex-1"
       >
         {icon}
         {buttonText}

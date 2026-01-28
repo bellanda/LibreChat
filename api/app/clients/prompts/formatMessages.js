@@ -58,17 +58,6 @@ const formatMessage = ({ message, userName, assistantName, endpoint, langChain =
     content,
   };
 
-  // Log do conteúdo formatado para debug (apenas para mensagens de usuário)
-  if (role === 'user' && content) {
-    logger.info(`📄 [formatMessage] Conteúdo formatado para o modelo (role: ${role}):`);
-    logger.info(`📄 [formatMessage] Tamanho do conteúdo: ${content.length} caracteres`);
-    logger.info(`📄 [formatMessage] Primeiros 500 caracteres: ${content.substring(0, 500)}`);
-    logger.info(
-      `📄 [formatMessage] Últimos 500 caracteres: ${content.substring(content.length - 500)}`,
-    );
-    logger.info(`📄 [formatMessage] Conteúdo completo:\n${content}`);
-  }
-
   const { image_urls } = message;
   if (Array.isArray(image_urls) && image_urls.length > 0 && role === 'user') {
     return formatVisionMessage({

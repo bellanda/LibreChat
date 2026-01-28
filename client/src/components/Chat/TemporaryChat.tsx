@@ -1,12 +1,10 @@
-import React from 'react';
-import { motion } from 'framer-motion';
 import { TooltipAnchor } from '@librechat/client';
 import { MessageCircleDashed } from 'lucide-react';
-import { useRecoilState, useRecoilCallback } from 'recoil';
+import { useRecoilCallback, useRecoilState } from 'recoil';
 import { useChatContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
-import { cn } from '~/utils';
 import store from '~/store';
+import { cn } from '~/utils';
 
 export function TemporaryChat() {
   const localize = useLocalize();
@@ -43,6 +41,7 @@ export function TemporaryChat() {
           <button
             onClick={handleBadgeToggle}
             aria-label={localize(temporaryBadge.label)}
+            aria-pressed={isTemporary}
             className={cn(
               'inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light text-text-primary transition-all ease-in-out hover:bg-surface-tertiary',
               isTemporary
@@ -54,6 +53,7 @@ export function TemporaryChat() {
             {temporaryBadge.icon && (
               <temporaryBadge.icon
                 className={cn('relative h-5 w-5 md:h-4 md:w-4', !temporaryBadge.label && 'mx-auto')}
+                aria-hidden="true"
               />
             )}
           </button>

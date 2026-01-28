@@ -85,7 +85,6 @@ Please specify a correct \`imageOutputType\` value (case-sensitive).
     let errorMessage = `Invalid custom config file at ${configPath}:
 ${JSON.stringify(result.error, null, 2)}`;
 
-    if (i === 0) {
       logger.error(errorMessage);
       const speechError = result.error.errors.find(
         (err) =>
@@ -101,13 +100,22 @@ If you're getting this error, please refer to the latest documentation:
 https://www.librechat.ai/docs/configuration/stt_tts`);
       }
 
-      i++;
+    if (process.env.CONFIG_BYPASS_VALIDATION === 'true') {
+      logger.warn(
+        'CONFIG_BYPASS_VALIDATION is enabled. Continuing with default configuration despite validation errors.',
+      );
+      return null;
     }
 
-    return null;
+    logger.error(
+      'Exiting due to invalid configuration. Set CONFIG_BYPASS_VALIDATION=true to bypass this check.',
+    );
+    process.exit(1);
   } else {
     if (printConfig) {
-      logger.info('Custom config file loaded successfully');
+      logger.info('Custom config file loaded:');
+      logger.info(JSON.stringify(customConfig, null, 2));
+      logger.debug('Custom config:', customConfig);
     }
   }
 

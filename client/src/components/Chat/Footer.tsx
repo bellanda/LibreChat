@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import TagManager from 'react-gtm-module';
 import { Constants } from 'librechat-data-provider';
+import React, { useEffect } from 'react';
+import TagManager from 'react-gtm-module';
+import ReactMarkdown from 'react-markdown';
 import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 
@@ -20,6 +20,9 @@ export default function Footer({ className }: { className?: string }) {
       rel="noreferrer"
     >
       {localize('com_ui_privacy_policy')}
+      {privacyPolicy.openNewTab === true && (
+        <span className="sr-only">{' ' + localize('com_ui_opens_new_tab')}</span>
+      )}
     </a>
   );
 
@@ -31,6 +34,9 @@ export default function Footer({ className }: { className?: string }) {
       rel="noreferrer"
     >
       {localize('com_ui_terms_of_service')}
+      {termsOfService.openNewTab === true && (
+        <span className="sr-only">{' ' + localize('com_ui_opens_new_tab')}</span>
+      )}
     </a>
   );
 
@@ -38,9 +44,9 @@ export default function Footer({ className }: { className?: string }) {
     typeof config?.customFooter === 'string'
       ? config.customFooter
       : '[LibreChat ' +
-        Constants.VERSION +
-        '](https://librechat.ai) - ' +
-        localize('com_ui_latest_footer')
+      Constants.VERSION +
+      '](https://librechat.ai) - ' +
+      localize('com_ui_latest_footer')
   ).split('|');
 
   useEffect(() => {
@@ -66,6 +72,7 @@ export default function Footer({ className }: { className?: string }) {
                 {...otherProps}
               >
                 {children}
+                <span className="sr-only">{' ' + localize('com_ui_opens_new_tab')}</span>
               </a>
             );
           },

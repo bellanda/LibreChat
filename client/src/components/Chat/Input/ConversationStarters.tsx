@@ -1,9 +1,9 @@
-import { useMemo, useCallback } from 'react';
-import { EModelEndpoint, Constants } from 'librechat-data-provider';
-import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
+import { Constants, EModelEndpoint } from 'librechat-data-provider';
+import { useCallback, useMemo } from 'react';
+import { useAgentsMapContext, useAssistantsMapContext, useChatContext } from '~/Providers';
 import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
-import { getIconEndpoint, getEntity } from '~/utils';
 import { useSubmitMessage } from '~/hooks';
+import { getEntity, getIconEndpoint } from '~/utils';
 
 const ConversationStarters = () => {
   const { conversation } = useChatContext();
@@ -13,13 +13,7 @@ const ConversationStarters = () => {
 
   const endpointType = useMemo(() => {
     let ep = conversation?.endpoint ?? '';
-    if (
-      [
-        EModelEndpoint.chatGPTBrowser,
-        EModelEndpoint.azureOpenAI,
-        EModelEndpoint.gptPlugins,
-      ].includes(ep as EModelEndpoint)
-    ) {
+    if (ep === EModelEndpoint.azureOpenAI) {
       ep = EModelEndpoint.openAI;
     }
     return getIconEndpoint({

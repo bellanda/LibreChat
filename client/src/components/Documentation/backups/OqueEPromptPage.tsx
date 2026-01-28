@@ -1,4 +1,5 @@
 
+
 export default function PrimeiroPromptPage() {
   return (
     <div className="mx-auto p-2 text-gray-100 ">
@@ -24,32 +25,32 @@ export default function PrimeiroPromptPage() {
         Defina o papel ou estilo que a IA deve adotar. <br />
         {/* <span className="bg-gray-800 px-2 py-1 rounded font-mono">Ex.: "Aja como um historiador especialista no Brasil colonial..."</span> */}
         <pre className="bg-gray-900 p-2 rounded font-mono text-sm text-gray-100 whitespace-pre-wrap">
-            Ex.: Aja como um historiador especialista no Brasil colonial...
-          </pre>
+          Ex.: Aja como um historiador especialista no Brasil colonial...
+        </pre>
       </p>
 
       <h3 className="text-xl font-medium text-green-300 mt-4">2. Contexto (O cenário)</h3>
       <p className="mb-3">
         Ofereça o contexto necessário para que a IA entenda propósito e público. <br />
         <pre className="bg-gray-900 p-2 rounded font-mono text-sm text-gray-100 whitespace-pre-wrap">
-            Ex.: "...e prepare material de estudo para alunos do ensino médio."
-          </pre>
+          Ex.: "...e prepare material de estudo para alunos do ensino médio."
+        </pre>
       </p>
 
       <h3 className="text-xl font-medium text-green-300 mt-4">3. Tarefa (A instrução clara)</h3>
       <p className="mb-3">
         Seja explícito sobre a ação desejada, usando verbos de ação. <br />
         <pre className="bg-gray-900 p-2 rounded font-mono text-sm text-gray-100 whitespace-pre-wrap">
-            Ex.: Crie um resumo dos três principais ciclos econômicos do período.
-          </pre>
+          Ex.: Crie um resumo dos três principais ciclos econômicos do período.
+        </pre>
       </p>
 
       <h3 className="text-xl font-medium text-green-300 mt-4">4. Formato (A estrutura da resposta)</h3>
       <p className="mb-6">
         Especifique como quer receber a informação. <br />
         <pre className="bg-gray-900 p-2 rounded font-mono text-sm text-gray-100 whitespace-pre-wrap">
-            Ex.: Apresente em lista numerada, cada ciclo com título e dois parágrafos.
-          </pre>
+          Ex.: Apresente em lista numerada, cada ciclo com título e dois parágrafos.
+        </pre>
       </p>
 
       {/* Seção 3 */}

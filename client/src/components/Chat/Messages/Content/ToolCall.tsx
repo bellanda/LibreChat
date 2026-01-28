@@ -1,13 +1,13 @@
-import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Button } from '@librechat/client';
-import { TriangleAlert } from 'lucide-react';
-import { actionDelimiter, actionDomainSeparator, Constants } from 'librechat-data-provider';
 import type { TAttachment } from 'librechat-data-provider';
+import { actionDelimiter, actionDomainSeparator, Constants } from 'librechat-data-provider';
+import { TriangleAlert } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocalize, useProgress } from '~/hooks';
+import { cn, logger } from '~/utils';
 import { AttachmentGroup } from './Parts';
-import ToolCallInfo from './ToolCallInfo';
 import ProgressText from './ProgressText';
-import { logger, cn } from '~/utils';
+import ToolCallInfo from './ToolCallInfo';
 
 export default function ToolCall({
   initialProgress = 0.1,
@@ -236,7 +236,7 @@ export default function ToolCall({
             </Button>
           </div>
           <p className="flex items-center text-xs text-text-warning">
-            <TriangleAlert className="mr-1.5 inline-block h-4 w-4" />
+            <TriangleAlert className="mr-1.5 inline-block h-4 w-4" aria-hidden="true" />
             {localize('com_assistants_allow_sites_you_trust')}
           </p>
         </div>

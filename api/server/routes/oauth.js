@@ -1,17 +1,8 @@
 // file deepcode ignore NoRateLimitingForLogin: Rate limiting is handled by the `loginLimiter` middleware
 const express = require('express');
 const passport = require('passport');
-let randomState;
+const { randomState } = require('openid-client');
 const { logger } = require('@librechat/data-schemas');
-
-// Lazy load randomState from openid-client as ES module
-const getRandomState = async () => {
-  if (!randomState) {
-    const openidClient = await import('openid-client');
-    randomState = openidClient.randomState;
-  }
-  return randomState;
-};
 const { ErrorTypes } = require('librechat-data-provider');
 const { isEnabled, createSetBalanceConfig } = require('@librechat/api');
 const { checkDomainAllowed, loginLimiter, logHeaders, checkBan } = require('~/server/middleware');
@@ -51,7 +42,7 @@ const oauthHandler = async (req, res, next) => {
       isEnabled(process.env.OPENID_REUSE_TOKENS) === true
     ) {
       await syncUserEntraGroupMemberships(req.user, req.user.tokenset.access_token);
-      setOpenIDAuthTokens(req.user.tokenset, res, req.user._id.toString());
+      setOpenIDAuthTokens(req.user.tokenset, req, res, req.user._id.toString());
     } else {
       await setAuthTokens(req.user._id, res);
     }
@@ -125,11 +116,10 @@ router.get(
 /**
  * OpenID Routes
  */
-router.get('/openid', async (req, res, next) => {
-  const stateFn = await getRandomState();
+router.get('/openid', (req, res, next) => {
   return passport.authenticate('openid', {
     session: false,
-    state: stateFn(),
+    state: randomState(),
   })(req, res, next);
 });
 

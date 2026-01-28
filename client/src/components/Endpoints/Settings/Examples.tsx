@@ -1,11 +1,11 @@
-import React from 'react';
-import { Plus, Minus } from 'lucide-react';
 import { Button, Label } from '@librechat/client';
-import TextareaAutosize from 'react-textarea-autosize';
 import type { TExample } from 'librechat-data-provider';
+import { Minus, Plus } from 'lucide-react';
+import React from 'react';
+import TextareaAutosize from 'react-textarea-autosize';
 import type { TSetExample } from '~/common';
-import { cn, defaultTextProps } from '~/utils/';
 import { useLocalize } from '~/hooks';
+import { cn, defaultTextProps } from '~/utils/';
 
 type TExamplesProps = {
   readonly?: boolean;
@@ -25,9 +25,8 @@ function Examples({ readonly, examples, setExample, addExample, removeExample }:
           <React.Fragment key={idx}>
             {/* Input */}
             <div
-              className={`col-span-${
-                examples.length === 1 ? '1' : 'full'
-              } flex flex-col items-center justify-start gap-6 sm:col-span-1`}
+              className={`col-span-${examples.length === 1 ? '1' : 'full'
+                } flex flex-col items-center justify-start gap-6 sm:col-span-1`}
             >
               <div className="grid w-full items-center gap-2">
                 <Label htmlFor={`input-${idx}`} className="text-left text-sm font-medium">
@@ -50,9 +49,8 @@ function Examples({ readonly, examples, setExample, addExample, removeExample }:
 
             {/* Output */}
             <div
-              className={`col-span-${
-                examples.length === 1 ? '1' : 'full'
-              } flex flex-col items-center justify-start gap-6 sm:col-span-1`}
+              className={`col-span-${examples.length === 1 ? '1' : 'full'
+                } flex flex-col items-center justify-start gap-6 sm:col-span-1`}
             >
               <div className="grid w-full items-center gap-2">
                 <Label htmlFor={`output-${idx}`} className="text-left text-sm font-medium">
@@ -81,14 +79,14 @@ function Examples({ readonly, examples, setExample, addExample, removeExample }:
           className="mr-2 mt-1 h-auto items-center justify-center bg-transparent px-3 py-2 text-xs font-medium font-normal text-black hover:bg-gray-100 hover:text-black focus:ring-0 focus:ring-offset-0 dark:bg-transparent dark:text-white dark:hover:bg-gray-700 dark:hover:text-white dark:focus:outline-none dark:focus:ring-offset-0"
           onClick={removeExample}
         >
-          <Minus className="w-[16px]" />
+          <Minus className="w-[16px]" aria-hidden="true" />
         </Button>
         <Button
           type="button"
           className="mt-1 h-auto items-center justify-center bg-transparent px-3 py-2 text-xs font-medium font-normal text-black hover:bg-gray-100 hover:text-black focus:ring-0 focus:ring-offset-0 dark:bg-transparent dark:text-white dark:hover:bg-gray-700 dark:hover:text-white dark:focus:outline-none dark:focus:ring-offset-0"
           onClick={addExample}
         >
-          <Plus className="w-[16px]" />
+          <Plus className="w-[16px]" aria-hidden="true" />
         </Button>
       </div>
     </>

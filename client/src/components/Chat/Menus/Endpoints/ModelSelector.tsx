@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { TooltipAnchor } from '@librechat/client';
+import { getConfigDefaults } from 'librechat-data-provider';
 import type { ModelSelectorProps } from '~/common';
 import { useLocalize } from '~/hooks';
 import { useModelDescriptions } from '~/hooks/useModelDescriptions';
@@ -68,26 +70,32 @@ function ModelSelectorContent() {
   }, [localize, agentsMap, modelSpecs, selectedValues, mappedEndpoints, modelDescription]);
 
   const trigger = (
-    <button
-      className="my-1 flex h-10 w-full max-w-[70vw] items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-secondary px-3 py-2 text-sm text-text-primary hover:bg-surface-tertiary"
+    <TooltipAnchor
       aria-label={localize('com_ui_select_model')}
-    >
-      {selectedIcon && React.isValidElement(selectedIcon) && (
-        <div className="flex flex-shrink-0 items-center justify-center overflow-hidden">
-          {selectedIcon}
-        </div>
-      )}
-      <div className="flex-grow truncate text-left">
-        {modelDescription ? (
-          <div className="flex flex-col">
-            <span>{modelDescription.name}</span>
-            <span className="text-xs text-text-secondary">{modelDescription.shortUseCase}</span>
+      description={localize('com_ui_select_model')}
+      render={
+        <button
+          className="my-1 flex h-10 w-full max-w-[70vw] items-center justify-center gap-2 rounded-xl border border-border-light bg-presentation px-3 py-2 text-sm text-text-primary hover:bg-surface-active-alt"
+          aria-label={localize('com_ui_select_model')}
+        >
+          {selectedIcon && React.isValidElement(selectedIcon) && (
+            <div className="flex flex-shrink-0 items-center justify-center overflow-hidden">
+              {selectedIcon}
+            </div>
+          )}
+          <div className="flex-grow truncate text-left">
+            {modelDescription ? (
+              <div className="flex flex-col">
+                <span>{modelDescription.name}</span>
+                <span className="text-xs text-text-secondary">{modelDescription.shortUseCase}</span>
+              </div>
+            ) : (
+              <span>{selectedDisplayValue}</span>
+            )}
           </div>
-        ) : (
-          <span>{selectedDisplayValue}</span>
-        )}
-      </div>
-    </button>
+        </button>
+      }
+    />
   );
 
   return (
@@ -102,7 +110,8 @@ function ModelSelectorContent() {
           });
         }}
         onSearch={(value) => setSearchValue(value)}
-        combobox={<input placeholder={localize('com_endpoint_search_models')} />}
+        combobox={<input id="model-search" placeholder=" " />}
+        comboboxLabel={localize('com_endpoint_search_models')}
         trigger={trigger}
       >
         {searchResults ? (
@@ -132,6 +141,14 @@ function ModelSelectorContent() {
 }
 
 export default function ModelSelector({ startupConfig }: ModelSelectorProps) {
+  const interfaceConfig = startupConfig?.interface ?? getConfigDefaults().interface;
+  const modelSpecs = startupConfig?.modelSpecs?.list ?? [];
+
+  // Hide the selector when modelSelect is false and there are no model specs to show
+  if (interfaceConfig.modelSelect === false && modelSpecs.length === 0) {
+    return null;
+  }
+
   return (
     <ModelSelectorChatProvider>
       <ModelSelectorProvider startupConfig={startupConfig}>

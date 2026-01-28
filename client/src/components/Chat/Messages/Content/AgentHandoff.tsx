@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import { EModelEndpoint, Constants } from 'librechat-data-provider';
-import { ChevronDown } from 'lucide-react';
 import type { TMessage } from 'librechat-data-provider';
+import { Constants, EModelEndpoint } from 'librechat-data-provider';
+import { ChevronDown } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import MessageIcon from '~/components/Share/MessageIcon';
-import { useAgentsMapContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
+import { useAgentsMapContext } from '~/Providers';
 import { cn } from '~/utils';
 
 interface AgentHandoffProps {
@@ -74,6 +74,7 @@ const AgentHandoff: React.FC<AgentHandoffProps> = ({ name, args: _args = '' }) =
         {hasInfo && (
           <ChevronDown
             className={cn('ml-1 h-3 w-3 transition-transform', showInfo && 'rotate-180')}
+            aria-hidden="true"
           />
         )}
       </div>

@@ -74,6 +74,9 @@ const buildOptions = async (req, endpoint, parsedBody, endpointType) => {
     return undefined;
   });
 
+  /** @type {import('librechat-data-provider').TConversation | undefined} */
+  const addedConvo = req.body?.addedConvo;
+
   return removeNullishValues({
     spec,
     iconURL,

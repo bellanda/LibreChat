@@ -1,4 +1,8 @@
 import { ThemeProvider, Toast, ToastProvider } from '@librechat/client';
+
+
+
+
 import * as RadixToast from '@radix-ui/react-toast';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -18,6 +22,16 @@ const App = () => {
   const { setError } = useApiErrorBoundary();
 
   const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Always attempt network requests, even when navigator.onLine is false
+        // This is needed because localhost is reachable without WiFi
+        networkMode: 'always',
+      },
+      mutations: {
+        networkMode: 'always',
+      },
+    },
     queryCache: new QueryCache({
       onError: (error) => {
         if (error?.response?.status === 401) {

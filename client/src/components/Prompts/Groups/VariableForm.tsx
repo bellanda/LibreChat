@@ -9,7 +9,15 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
+import rehypeKatex from 'rehype-katex';
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
+import { replaceSpecialVars } from 'librechat-data-provider';
+import { TextareaAutosize, InputCombobox, Button } from '@librechat/client';
+import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
+import type { TPromptGroup } from 'librechat-data-provider';
 import { codeNoExecution } from '~/components/Chat/Messages/Content/MarkdownComponents';
+import { cn, wrapVariable, defaultTextProps, extractVariableInfo } from '~/utils';
 import { useAuthContext, useLocalize, useSubmitMessage } from '~/hooks';
 import { cn, defaultTextProps, extractVariableInfo, wrapVariable } from '~/utils';
 import { PromptVariableGfm } from '../Markdown';
@@ -138,9 +146,9 @@ export default function VariableForm({
   };
 
   return (
-    <div className="overflow-auto p-1 mx-auto md:container">
+    <div className="mx-auto p-1 md:container">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="mb-6 max-h-screen max-w-[90vw] overflow-auto rounded-md bg-surface-tertiary p-4 text-text-secondary dark:bg-surface-primary sm:max-w-full md:max-h-96">
+        <div className="mb-6 max-h-screen max-w-[80vw] overflow-auto rounded-md bg-surface-tertiary p-4 text-text-secondary dark:bg-surface-primary sm:max-w-full md:max-h-96">
           <ReactMarkdown
             /** @ts-ignore */
             remarkPlugins={[supersub, remarkGfm, [remarkMath, { singleDollarTextMath: false }]]}
@@ -159,7 +167,7 @@ export default function VariableForm({
         </div>
         <div className="space-y-4">
           {fields.map((field, index) => (
-            <div key={field.id} className="flex flex-col space-y-2">
+            <div key={field.id} className="relative flex flex-col space-y-2">
               <Controller
                 name={`fields.${index}.value`}
                 control={control}
@@ -171,7 +179,7 @@ export default function VariableForm({
                         placeholder={field.config.variable}
                         className={cn(
                           defaultTextProps,
-                          'px-3 py-2 rounded focus:bg-surface-tertiary',
+                          'mb-1 rounded px-3 py-2 focus:bg-surface-tertiary',
                         )}
                         value={value}
                         onChange={onChange}
@@ -181,20 +189,28 @@ export default function VariableForm({
                   }
 
                   return (
-                    <TextareaAutosize
-                      ref={ref}
-                      value={value}
-                      onChange={onChange}
-                      onBlur={onBlur}
-                      id={`fields.${index}.value`}
-                      className={cn(
-                        defaultTextProps,
-                        'px-3 py-2 rounded focus:bg-surface-tertiary',
-                      )}
-                      placeholder={field.config.variable}
-                      maxRows={8}
-                      aria-label={field.config.variable}
-                    />
+                    <>
+                      <TextareaAutosize
+                        ref={ref}
+                        value={value}
+                        onChange={onChange}
+                        onBlur={onBlur}
+                        id={`fields.${index}.value`}
+                        className={cn(
+                          defaultTextProps,
+                          'peer rounded px-3 py-2 focus:bg-surface-tertiary',
+                        )}
+                        placeholder=""
+                        maxRows={8}
+                        aria-label={field.config.variable}
+                      />
+                      <label
+                        htmlFor={`fields.${index}.value`}
+                        className="absolute left-3 top-0 text-sm text-text-secondary transition-all duration-200 peer-focus:-top-6 peer-focus:left-1 peer-focus:text-xs peer-focus:text-text-primary peer-[:not(:placeholder-shown)]:-top-6 peer-[:not(:placeholder-shown)]:left-1 peer-[:not(:placeholder-shown)]:text-xs"
+                      >
+                        {field.config.variable}
+                      </label>
+                    </>
                   );
                 }}
               />

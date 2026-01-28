@@ -57,14 +57,7 @@ const createFileFilter = (customFileConfig) => {
     }
 
     const endpoint = req.body.endpoint;
-    const tool_resource = req.body.tool_resource;
     const endpointType = req.body.endpointType;
-
-    // Allow any file type for file_search tool_resource (RAG API) as we can convert unsupported files to .txt
-    if (tool_resource === 'file_search') {
-      return cb(null, true);
-    }
-
     const endpointFileConfig = getEndpointFileConfig({
       fileConfig: customFileConfig,
       endpoint,
@@ -88,10 +81,7 @@ const createMulterInstance = async () => {
   return multer({
     storage,
     fileFilter,
-    limits: {
-      fileSize: fileConfig.serverFileSizeLimit,
-      fieldSize: 25 * 1024 * 1024, // 25MB field size limit
-    },
+    limits: { fileSize: fileConfig.serverFileSizeLimit },
   });
 };
 

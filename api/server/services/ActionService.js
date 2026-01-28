@@ -1,14 +1,13 @@
 const jwt = require('jsonwebtoken');
 const { nanoid } = require('nanoid');
 const { tool } = require('@langchain/core/tools');
-const { logger } = require('@librechat/data-schemas');
 const { GraphEvents, sleep } = require('@librechat/agents');
+const { logger, encryptV2, decryptV2 } = require('@librechat/data-schemas');
 const {
   sendEvent,
-  encryptV2,
-  decryptV2,
   logAxiosError,
   refreshAccessToken,
+  GenerationJobManager,
 } = require('@librechat/api');
 const {
   Time,
@@ -186,6 +185,7 @@ async function createActionTool({
   name,
   description,
   encrypted,
+  streamId = null,
 }) {
   /** @type {(toolInput: Object | string, config: GraphRunnableConfig) => Promise<unknown>} */
   const _call = async (toolInput, config) => {
@@ -409,16 +409,18 @@ async function createActionTool({
                     `${identifier}:oauth_login:${config.metadata.thread_id}:${config.metadata.run_id}`,
                     'oauth_login',
                     async () => {
-                      sendEvent(res, { event: GraphEvents.ON_RUN_STEP_DELTA, data });
+                    const eventData = { event: GraphEvents.ON_RUN_STEP_DELTA, data };
+                    if (streamId) {
+                      GenerationJobManager.emitChunk(streamId, eventData);
+                    } else {
+                      sendEvent(res, eventData);
+                    }
                       logger.debug('Sent OAuth login request to client', { action_id, identifier });
                       return true;
                     },
                     config?.signal,
                   );
-                  logger.debug('Waiting for OAuth Authorization response', {
-                    action_id,
-                    identifier,
-                  });
+                logger.debug('Waiting for OAuth Authorization response', { action_id, identifier });
                   const result = await flowManager.createFlow(
                     identifier,
                     'oauth',
@@ -437,7 +439,12 @@ async function createActionTool({
                   logger.debug('Received OAuth Authorization response', { action_id, identifier });
                   data.delta.auth = undefined;
                   data.delta.expires_at = undefined;
-                  sendEvent(res, { event: GraphEvents.ON_RUN_STEP_DELTA, data });
+                const successEventData = { event: GraphEvents.ON_RUN_STEP_DELTA, data };
+                if (streamId) {
+                  GenerationJobManager.emitChunk(streamId, successEventData);
+                } else {
+                  sendEvent(res, successEventData);
+                }
                   await sleep(3000);
                   metadata.oauth_access_token = result.access_token;
                   metadata.oauth_refresh_token = result.refresh_token;

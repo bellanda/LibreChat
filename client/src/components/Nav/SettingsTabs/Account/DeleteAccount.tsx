@@ -1,20 +1,20 @@
-import { LockIcon, Trash } from 'lucide-react';
-import React, { useState, useCallback } from 'react';
 import {
-  Label,
-  Input,
   Button,
-  Spinner,
+  Input,
+  Label,
   OGDialog,
   OGDialogContent,
-  OGDialogTrigger,
   OGDialogHeader,
   OGDialogTitle,
+  OGDialogTrigger,
+  Spinner,
 } from '@librechat/client';
-import { useDeleteUserMutation } from '~/data-provider';
-import { useAuthContext } from '~/hooks/AuthContext';
+import { LockIcon, Trash } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
 import { LocalizeFunction } from '~/common';
+import { useDeleteUserMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
+import { useAuthContext } from '~/hooks/AuthContext';
 import { cn } from '~/utils';
 
 const DeleteAccount = ({ disabled = false }: { title?: string; disabled?: boolean }) => {
@@ -123,12 +123,12 @@ const renderDeleteButton = (
       <>
         {isLocked ? (
           <>
-            <LockIcon className="size-5" />
+            <LockIcon className="size-5" aria-hidden="true" />
             <span className="ml-2">{localize('com_ui_locked')}</span>
           </>
         ) : (
           <>
-            <Trash className="size-5" />
+            <Trash className="size-5" aria-hidden="true" />
             <span className="ml-2">{localize('com_nav_delete_account_button')}</span>
           </>
         )}

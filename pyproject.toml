@@ -1,0 +1,12 @@
+[tool.uv]
+dev-dependencies = []
+
+[project]
+name = "review-diff"
+version = "0.1.0"
+description = "Script para revisar diffs um por um"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+review-diff = "review_diff:main"

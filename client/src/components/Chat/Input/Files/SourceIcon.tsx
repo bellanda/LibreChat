@@ -1,5 +1,5 @@
-import { Terminal, Type, Database } from 'lucide-react';
 import { EModelEndpoint, FileSources } from 'librechat-data-provider';
+import { Database, Terminal, Type } from 'lucide-react';
 import { MinimalIcon } from '~/components/Endpoints';
 import { cn } from '~/utils';
 
@@ -33,7 +33,7 @@ export default function SourceIcon({
     return (
       <div className={cn(className, sourceToClassname[FileSources.execute_code] ?? '')}>
         <span className="flex items-center justify-center">
-          <Terminal className="h-3 w-3" />
+          <Terminal className="h-3 w-3" aria-hidden="true" />
         </span>
       </div>
     );
@@ -43,7 +43,7 @@ export default function SourceIcon({
     return (
       <div className={cn(className, sourceToClassname[source] ?? '')}>
         <span className="flex items-center justify-center">
-          <Type className="h-3 w-3" />
+          <Type className="h-3 w-3" aria-hidden="true" />
         </span>
       </div>
     );
@@ -53,7 +53,7 @@ export default function SourceIcon({
     return (
       <div className={cn(className, sourceToClassname[source] ?? '')}>
         <span className="flex items-center justify-center">
-          <Database className="h-3 w-3" />
+          <Database className="h-3 w-3" aria-hidden="true" />
         </span>
       </div>
     );
