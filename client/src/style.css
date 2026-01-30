@@ -885,11 +885,11 @@ pre {
 }
 .prose :where(h1):not(:where([class~='not-prose'] *)) {
   color: var(--tw-prose-headings);
-  font-size: 1.8em;
+  font-size: 2.25em;
   font-weight: 800;
   line-height: 1;
-  margin-bottom: 0.8em;
-  margin-top: 1em;
+  margin-bottom: 0.4em;
+  margin-top: 0.6em;
 }
 .prose :where(h1 strong):not(:where([class~='not-prose'] *)) {
   color: inherit;
@@ -897,11 +897,11 @@ pre {
 }
 .prose :where(h2):not(:where([class~='not-prose'] *)) {
   color: var(--tw-prose-headings);
-  font-size: 1.35em;
+  font-size: 1.5em;
   font-weight: 700;
   line-height: 1.1;
-  margin-bottom: 0.6em;
-  margin-top: 1em;
+  margin-bottom: 0.4em;
+  margin-top: 0.8em;
 }
 .prose :where(h2 strong):not(:where([class~='not-prose'] *)) {
   color: inherit;
@@ -909,11 +909,11 @@ pre {
 }
 .prose :where(h3):not(:where([class~='not-prose'] *)) {
   color: var(--tw-prose-headings);
-  font-size: 1.15em;
+  font-size: 1.25em;
   font-weight: 600;
   line-height: 1.3;
-  margin-bottom: 0.5em;
-  margin-top: 0.8em;
+  margin-bottom: 0.3em;
+  margin-top: 0.6em;
 }
 .prose :where(h3 strong):not(:where([class~='not-prose'] *)) {
   color: inherit;
@@ -923,8 +923,8 @@ pre {
   color: var(--tw-prose-headings);
   font-weight: 600;
   line-height: 1.2;
-  margin-bottom: 0.4em;
-  margin-top: 0.6em;
+  margin-bottom: 0.3em;
+  margin-top: 0.5em;
 }
 .prose :where(h4 strong):not(:where([class~='not-prose'] *)) {
   color: inherit;
@@ -1492,6 +1492,26 @@ button {
   background-color: transparent;
 }
 
+/* Show scrollbar only on hover */
+.scrollbar-hover {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.scrollbar-hover:hover {
+  scrollbar-color: var(--border-medium) transparent;
+}
+
+.scrollbar-hover::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  transition: background-color 0.3s ease 0.5s;
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar-thumb {
+  background-color: var(--border-medium);
+  transition-delay: 0s;
+}
+
 body,
 html {
   height: 100%;
@@ -1517,36 +1537,38 @@ html {
 }
 
 .markdown h1 {
+  font-size: calc(var(--markdown-font-size) * 1.75);
+}
+.markdown h2 {
   font-size: calc(var(--markdown-font-size) * 1.5);
   margin-bottom: 1.2rem;
   margin-top: 1.5rem;
 }
 
 .markdown h2 {
-  font-size: calc(var(--markdown-font-size) * 1.3);
-  margin-bottom: 1rem;
-  margin-top: 1.2rem;
+  margin-bottom: 0.4rem;
+  margin-top: 0.8rem;
 }
 
 .markdown h3 {
   font-weight: 600;
-  font-size: calc(var(--markdown-font-size) * 1.15);
-  margin-bottom: 0.8rem;
-  margin-top: 1rem;
+  font-size: calc(var(--markdown-font-size) * 1.25);
+}
+
+.markdown h3,
+.markdown h4 {
+  margin-bottom: 0.3rem;
+  margin-top: 0.6rem;
 }
 
 .markdown h4 {
   font-weight: 400;
-  font-size: calc(var(--markdown-font-size) * 1.05);
-  margin-bottom: 0.6rem;
-  margin-top: 0.8rem;
+  font-size: calc(var(--markdown-font-size) * 1.1);
 }
 
 .markdown h5 {
   font-weight: 600;
   font-size: var(--markdown-font-size);
-  margin-bottom: 0.5rem;
-  margin-top: 0.7rem;
 }
 
 .markdown blockquote {
@@ -2546,7 +2568,7 @@ html {
 }
 
 .tooltip {
-  z-index: 50;
+  z-index: 150;
   cursor: pointer;
   border-radius: 0.275rem;
   background-color: var(--surface-primary);
@@ -2586,7 +2608,7 @@ html {
   flex-direction: column;
   overflow: auto;
   overscroll-behavior: contain;
-  border-radius: 1rem;
+  border-radius: 0.7rem;
   border-width: 1px;
   border-style: solid;
   border-color: var(--border-light);
@@ -2659,6 +2681,7 @@ html {
   translate: 0;
 }
 
+.animate-popover-top,
 .animate-popover {
   transform-origin: top;
   opacity: 0;
@@ -2667,12 +2690,13 @@ html {
     transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
   transform: scale(0.95) translateY(-0.5rem);
 }
-
+.animate-popover-top[data-enter],
 .animate-popover[data-enter] {
   opacity: 1;
   transform: scale(1) translateY(0);
 }
 
+/* Left (existing) */
 .animate-popover-left {
   transform-origin: left;
   opacity: 0;
@@ -2681,10 +2705,90 @@ html {
     transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
   transform: scale(0.95) translateX(-0.5rem);
 }
-
 .animate-popover-left[data-enter] {
   opacity: 1;
   transform: scale(1) translateX(0);
+}
+
+/* Right */
+.animate-popover-right {
+  transform-origin: right;
+  opacity: 0;
+  transition:
+    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0.95) translateX(0.5rem);
+}
+.animate-popover-right[data-enter] {
+  opacity: 1;
+  transform: scale(1) translateX(0);
+}
+
+/* Bottom */
+.animate-popover-bottom {
+  transform-origin: bottom;
+  opacity: 0;
+  transition:
+    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0.95) translateY(0.5rem);
+}
+.animate-popover-bottom[data-enter] {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* Corners */
+.animate-popover-top-left {
+  transform-origin: top left;
+  opacity: 0;
+  transition:
+    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0.95) translate(-0.5rem, -0.5rem);
+}
+.animate-popover-top-left[data-enter] {
+  opacity: 1;
+  transform: scale(1) translate(0, 0);
+}
+
+.animate-popover-top-right {
+  transform-origin: top right;
+  opacity: 0;
+  transition:
+    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0.95) translate(0.5rem, -0.5rem);
+}
+.animate-popover-top-right[data-enter] {
+  opacity: 1;
+  transform: scale(1) translate(0, 0);
+}
+
+.animate-popover-bottom-left {
+  transform-origin: bottom left;
+  opacity: 0;
+  transition:
+    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0.95) translate(-0.5rem, 0.5rem);
+}
+.animate-popover-bottom-left[data-enter] {
+  opacity: 1;
+  transform: scale(1) translate(0, 0);
+}
+
+.animate-popover-bottom-right {
+  transform-origin: bottom right;
+  opacity: 0;
+  transition:
+    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0.95) translate(0.5rem, 0.5rem);
+}
+.animate-popover-bottom-right[data-enter] {
+  opacity: 1;
+  transform: scale(1) translate(0, 0);
 }
 
 /** Note: ensure KaTeX can spread across visible space */
@@ -2814,10 +2918,10 @@ html {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
-.sharepoint-picker-bg{
-  background-color: #F5F5F5;
+.sharepoint-picker-bg {
+  background-color: #f5f5f5;
 }

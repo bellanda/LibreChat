@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useMediaQuery } from '@librechat/client';
 import type { ContextType } from '~/common';
 import { Banner } from '~/components/Banners';
-import { MobileNav, Nav } from '~/components/Nav';
+import { MobileNav, Nav, NAV_WIDTH } from '~/components/Nav';
 import TermsAndConditionsModal from '~/components/ui/TermsAndConditionsModal';
 import { useGetStartupConfig, useHealthCheck, useUserTermsQuery } from '~/data-provider';
 import {
@@ -16,7 +17,6 @@ import {
   AgentsMapContext,
   AssistantsMapContext,
   FileMapContext,
-  ModelDescriptionsProvider,
   PromptGroupsProvider,
   SetConvoProvider,
 } from '~/Providers';
@@ -30,6 +30,7 @@ export default function Root() {
   });
 
   const { isAuthenticated, logout } = useAuthContext();
+  const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
   // Global health check - runs once per authenticated session
   useHealthCheck(isAuthenticated);
@@ -66,36 +67,46 @@ export default function Root() {
 
   return (
     <SetConvoProvider>
-      <ModelDescriptionsProvider>
-        <FileMapContext.Provider value={fileMap}>
-          <AssistantsMapContext.Provider value={assistantsMap}>
-            <AgentsMapContext.Provider value={agentsMap}>
-              <PromptGroupsProvider>
-                <Banner onHeightChange={setBannerHeight} />
-                <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
-                  <div className="relative z-0 flex h-full w-full overflow-hidden">
-                    <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
-                    <div className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden">
-                      <MobileNav setNavVisible={setNavVisible} />
-                      <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
-                    </div>
+      <FileMapContext.Provider value={fileMap}>
+        <AssistantsMapContext.Provider value={assistantsMap}>
+          <AgentsMapContext.Provider value={agentsMap}>
+            <PromptGroupsProvider>
+              <Banner onHeightChange={setBannerHeight} />
+              <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
+                <div className="relative z-0 flex h-full w-full overflow-hidden">
+                  <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
+                  <div
+                    className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden"
+                    style={
+                      isSmallScreen
+                        ? {
+                          transform: navVisible
+                            ? `translateX(${NAV_WIDTH.MOBILE}px)`
+                            : 'translateX(0)',
+                          transition: 'transform 0.2s ease-out',
+                        }
+                        : undefined
+                    }
+                  >
+                    <MobileNav navVisible={navVisible} setNavVisible={setNavVisible} />
+                    <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
                   </div>
                 </div>
-                {config?.interface?.termsOfService?.modalAcceptance === true && (
-                  <TermsAndConditionsModal
-                    open={showTerms}
-                    onOpenChange={setShowTerms}
-                    onAccept={handleAcceptTerms}
-                    onDecline={handleDeclineTerms}
-                    title={config.interface.termsOfService.modalTitle}
-                    modalContent={config.interface.termsOfService.modalContent}
-                  />
-                )}
-              </PromptGroupsProvider>
-            </AgentsMapContext.Provider>
-          </AssistantsMapContext.Provider>
-        </FileMapContext.Provider>
-      </ModelDescriptionsProvider>
+              </div>
+            </PromptGroupsProvider>
+          </AgentsMapContext.Provider>
+          {config?.interface?.termsOfService?.modalAcceptance === true && (
+            <TermsAndConditionsModal
+              open={showTerms}
+              onOpenChange={setShowTerms}
+              onAccept={handleAcceptTerms}
+              onDecline={handleDeclineTerms}
+              title={config.interface.termsOfService.modalTitle}
+              modalContent={config.interface.termsOfService.modalContent}
+            />
+          )}
+        </AssistantsMapContext.Provider>
+      </FileMapContext.Provider>
     </SetConvoProvider>
   );
 }

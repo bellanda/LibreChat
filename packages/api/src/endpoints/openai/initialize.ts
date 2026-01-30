@@ -72,6 +72,7 @@ export const initializeOpenAI = async ({
 
   const isAzureOpenAI = endpoint === EModelEndpoint.azureOpenAI;
   const azureConfig = isAzureOpenAI && appConfig.endpoints?.[EModelEndpoint.azureOpenAI];
+  let isServerless = false;
 
   if (isAzureOpenAI && azureConfig) {
     const { modelGroupMap, groupMap } = azureConfig;
@@ -85,6 +86,7 @@ export const initializeOpenAI = async ({
       modelGroupMap,
       groupMap,
     });
+    isServerless = serverless === true;
 
     clientOptions.reverseProxyUrl = configBaseURL ?? clientOptions.reverseProxyUrl;
     clientOptions.headers = resolveHeaders({
@@ -99,9 +101,9 @@ export const initializeOpenAI = async ({
     }
 
     apiKey = azureOptions.azureOpenAIApiKey;
-    clientOptions.azure = !serverless ? azureOptions : undefined;
+    clientOptions.azure = !isServerless ? azureOptions : undefined;
 
-    if (serverless === true) {
+    if (isServerless) {
       clientOptions.defaultQuery = azureOptions.azureOpenAIApiVersion
         ? { 'api-version': azureOptions.azureOpenAIApiVersion }
         : undefined;
@@ -141,6 +143,11 @@ export const initializeOpenAI = async ({
   };
 
   const options = getOpenAIConfig(apiKey, finalClientOptions, endpoint);
+
+  /** Set useLegacyContent for Azure serverless deployments */
+  if (isServerless) {
+    (options as LLMConfigResult & { useLegacyContent?: boolean }).useLegacyContent = true;
+  }
 
   const openAIConfig = appConfig.endpoints?.[EModelEndpoint.openAI];
   const allConfig = appConfig.endpoints?.all;

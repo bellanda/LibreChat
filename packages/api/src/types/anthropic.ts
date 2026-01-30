@@ -1,10 +1,28 @@
 import { z } from 'zod';
 import { Dispatcher } from 'undici';
-import { anthropicSchema } from 'librechat-data-provider';
+import { AuthKeys, anthropicSchema } from 'librechat-data-provider';
 import type { AnthropicClientOptions } from '@librechat/agents';
 import type { LLMConfigResult } from './openai';
+import type { GoogleServiceKey } from '../utils/key';
 
 export type AnthropicParameters = z.infer<typeof anthropicSchema>;
+
+export type AnthropicCredentials = {
+  [AuthKeys.GOOGLE_SERVICE_KEY]?: GoogleServiceKey;
+  /** Anthropic API key (use key 'ANTHROPIC_API_KEY' when reading from credentials) */
+  ANTHROPIC_API_KEY?: string;
+};
+
+/**
+ * Vertex AI client options for configuring the Anthropic Vertex client.
+ * These options are typically loaded from the YAML config or environment variables.
+ */
+export interface VertexAIClientOptions {
+  /** Google Cloud region for Vertex AI (e.g., 'us-east5', 'europe-west1') */
+  region?: string;
+  /** Google Cloud Project ID */
+  projectId?: string;
+}
 
 export interface ThinkingConfigDisabled {
   type: 'disabled';
@@ -60,7 +78,17 @@ export interface AnthropicConfigOptions {
   addParams?: Record<string, unknown>;
   /** Parameters to drop/exclude from the configuration */
   dropParams?: string[];
+  /** Vertex AI specific options for Google Cloud configuration */
+  vertexOptions?: VertexAIClientOptions;
+  /** Full Vertex AI configuration including model mappings from YAML config */
+  vertexConfig?: TVertexAIConfig;
 }
+
+/**
+ * Vertex AI configuration (model mappings etc. from YAML).
+ * Upstream uses TVertexAISchema from librechat-data-provider when available.
+ */
+export type TVertexAIConfig = Record<string, unknown>;
 
 /**
  * Return type for getLLMConfig function

@@ -43,7 +43,7 @@ export function getTransactionsConfig(appConfig?: AppConfig): Partial<TTransacti
   if (balanceConfig?.enabled && !transactionsConfig.enabled) {
     logger.warn(
       'Configuration warning: transactions.enabled=false is incompatible with balance.enabled=true. ' +
-        'Transactions will be enabled to ensure balance tracking works correctly.',
+      'Transactions will be enabled to ensure balance tracking works correctly.',
     );
     return { ...transactionsConfig, enabled: true };
   }
@@ -63,11 +63,9 @@ export const getCustomEndpointConfig = ({
   }
 
   const customEndpoints = appConfig.endpoints?.[EModelEndpoint.custom] ?? [];
-  const endpointConfig = customEndpoints.find(
+  return customEndpoints.find(
     (endpointConfig) => normalizeEndpointName(endpointConfig.name) === endpoint,
   );
-
-  return endpointConfig;
 };
 
 export function hasCustomUserVars(appConfig?: AppConfig): boolean {

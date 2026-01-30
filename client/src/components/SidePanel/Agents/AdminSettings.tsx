@@ -19,6 +19,21 @@ import { useLocalize, useAuthContext } from '~/hooks';
 
 type FormValues = Record<Permissions, boolean>;
 
+const agentPermissionsConfig = [
+  {
+    permission: Permissions.USE,
+    labelKey: 'com_ui_agents_allow_use',
+  },
+  {
+    permission: Permissions.CREATE,
+    labelKey: 'com_ui_agents_allow_create',
+  },
+  {
+    permission: Permissions.SHARED_GLOBAL,
+    labelKey: 'com_ui_agents_allow_share',
+  },
+];
+
 type LabelControllerProps = {
   label: string;
   agentPerm: Permissions;
@@ -113,18 +128,10 @@ const AdminSettings = () => {
   }
 
   const labelControllerData = [
-    {
-      agentPerm: Permissions.SHARED_GLOBAL,
-      label: localize('com_ui_agents_allow_share'),
-    },
-    {
-      agentPerm: Permissions.CREATE,
-      label: localize('com_ui_agents_allow_create'),
-    },
-    {
-      agentPerm: Permissions.USE,
-      label: localize('com_ui_agents_allow_use'),
-    },
+    ...agentPermissionsConfig.map(({ permission, labelKey }) => ({
+      agentPerm: permission,
+      label: localize(labelKey),
+    })),
   ];
 
   const onSubmit = (data: FormValues) => {

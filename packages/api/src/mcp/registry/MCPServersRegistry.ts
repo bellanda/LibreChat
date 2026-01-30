@@ -1,8 +1,10 @@
+import { logger } from '@librechat/data-schemas';
 import type * as t from '~/mcp/types';
 import {
   ServerConfigsCacheFactory,
   type ServerConfigsCache,
 } from './cache/ServerConfigsCacheFactory';
+import { MCPServerInspector } from './MCPServerInspector';
 
 /**
  * Central registry for managing MCP server configurations across different scopes and users.
@@ -28,6 +30,29 @@ class MCPServersRegistry {
    */
   public setRawConfigs(configs: t.MCPServers): void {
     this.rawConfigs = configs;
+  }
+
+  /**
+   * Inspects a server and adds it to the appropriate cache (app or user).
+   * For 'CACHE': inspects then adds to sharedAppServers or sharedUserServers based on startup/requiresOAuth.
+   * 'DB' storage is not implemented in this registry (no mongoose/DB layer).
+   */
+  public async addServer(
+    serverName: string,
+    config: t.MCPOptions,
+    storageLocation: 'CACHE' | 'DB',
+    _userId?: string,
+  ): Promise<t.AddServerResult> {
+    if (storageLocation === 'DB') {
+      throw new Error(
+        'MCPServersRegistry: DB storage is not implemented. Use CACHE for startup initialization.',
+      );
+    }
+    const parsedConfig = await MCPServerInspector.inspect(serverName, config);
+    if (parsedConfig.startup === false || parsedConfig.requiresOAuth) {
+      return this.sharedUserServers.add(serverName, parsedConfig);
+    }
+    return this.sharedAppServers.add(serverName, parsedConfig);
   }
 
   public async addPrivateUserServer(

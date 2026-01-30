@@ -1,15 +1,37 @@
-import type * as t from 'librechat-data-provider';
 import {
   Constants,
   EModelEndpoint,
-  LocalStorageKeys,
   defaultEndpoints,
+  modularEndpoints,
+  LocalStorageKeys,
   getEndpointField,
   isAgentsEndpoint,
   isAssistantsEndpoint,
-  modularEndpoints,
 } from 'librechat-data-provider';
-import type { IconsRecord, LocalizeFunction } from '~/common';
+import type * as t from 'librechat-data-provider';
+import type { LocalizeFunction, IconsRecord } from '~/common';
+import { isEphemeralAgent } from '~/common';
+
+/**
+ * Clears model for non-ephemeral agent conversations.
+ * Agents use their configured model internally, so the conversation model should be undefined.
+ * Mutates the template in place.
+ */
+export function clearModelForNonEphemeralAgent<
+  T extends {
+    endpoint?: EModelEndpoint | string | null;
+    agent_id?: string | null;
+    model?: string | null;
+  },
+>(template: T): void {
+  if (
+    isAgentsEndpoint(template.endpoint) &&
+    template.agent_id &&
+    !isEphemeralAgent(template.agent_id)
+  ) {
+    template.model = undefined as T['model'];
+  }
+}
 
 export const getEntityName = ({
   name = '',
@@ -125,6 +147,18 @@ export function getConvoSwitchLogic(params: ConversationInitParams): InitiatedTe
     conversationId: 'new',
   };
 
+  // Reset agent_id if switching to a non-agents endpoint but template has a non-ephemeral agent_id
+  if (
+    !isAgentsEndpoint(newEndpoint) &&
+    template.agent_id &&
+    !isEphemeralAgent(template.agent_id)
+  ) {
+    template.agent_id = Constants.EPHEMERAL_AGENT_ID;
+  }
+
+  // Clear model for non-ephemeral agents - agents use their configured model internally
+  clearModelForNonEphemeralAgent(template);
+
   const isAssistantSwitch =
     isAssistantsEndpoint(newEndpoint) &&
     isAssistantsEndpoint(currentEndpoint) &&
@@ -200,9 +234,9 @@ export function applyModelSpecEphemeralAgent({
  */
 export function getDefaultModelSpec(startupConfig?: t.TStartupConfig):
   | {
-      default?: t.TModelSpec;
-      last?: t.TModelSpec;
-    }
+    default?: t.TModelSpec;
+    last?: t.TModelSpec;
+  }
   | undefined {
   const { modelSpecs, interface: interfaceConfig } = startupConfig ?? {};
   const { list, prioritize } = modelSpecs ?? {};

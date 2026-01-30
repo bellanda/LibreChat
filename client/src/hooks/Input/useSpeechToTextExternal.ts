@@ -17,9 +17,9 @@ const useSpeechToTextExternal = (
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
+  const audioChunksRef = useRef<Blob[]>([]);
   const [permission, setPermission] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [isRequestBeingMade, setIsRequestBeingMade] = useState(false);
   const [audioMimeType, setAudioMimeType] = useState<string>(() => getBestSupportedMimeType());
 
@@ -114,11 +114,11 @@ const useSpeechToTextExternal = (
   };
 
   const handleStop = () => {
-    if (audioChunks.length > 0) {
-      const audioBlob = new Blob(audioChunks, { type: audioMimeType });
+    if (audioChunksRef.current.length > 0) {
+      const audioBlob = new Blob(audioChunksRef.current, { type: audioMimeType });
       const fileExtension = getFileExtension(audioMimeType);
 
-      setAudioChunks([]);
+      audioChunksRef.current = [];
 
       const formData = new FormData();
       formData.append('audio', audioBlob, `audio.${fileExtension}`);
@@ -178,7 +178,7 @@ const useSpeechToTextExternal = (
 
     if (audioStream.current) {
       try {
-        setAudioChunks([]);
+        audioChunksRef.current = [];
         const bestMimeType = getBestSupportedMimeType();
         setAudioMimeType(bestMimeType);
 
@@ -186,7 +186,7 @@ const useSpeechToTextExternal = (
           mimeType: audioMimeType,
         });
         mediaRecorderRef.current.addEventListener('dataavailable', (event: BlobEvent) => {
-          audioChunks.push(event.data);
+          audioChunksRef.current.push(event.data);
         });
         mediaRecorderRef.current.addEventListener('stop', handleStop);
         mediaRecorderRef.current.start(100);

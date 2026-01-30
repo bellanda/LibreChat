@@ -96,9 +96,8 @@ export default function InputSection({
                 onFocus={
                   config.type === 'password' ? (e) => (e.target.readOnly = false) : undefined
                 }
-                className={`${index > 0 ? 'mb-2' : 'mb-2'} ${
-                  config.type === 'password' ? 'pr-10' : ''
-                }`}
+                className={`${index > 0 ? 'mb-2' : 'mb-2'} ${config.type === 'password' ? 'pr-10' : ''
+                  }`}
                 {...register(name as keyof SearchApiKeyFormData)}
               />
               {config.type === 'password' && (
@@ -114,9 +113,15 @@ export default function InputSection({
                 >
                   <div className="relative h-4 w-4">
                     {passwordVisibility[name] ? (
-                      <EyeOff className="absolute inset-0 h-4 w-4 duration-200 animate-in fade-in" />
+                      <EyeOff
+                        className="absolute inset-0 h-4 w-4 duration-200 animate-in fade-in"
+                        aria-hidden="true"
+                      />
                     ) : (
-                      <Eye className="absolute inset-0 h-4 w-4 duration-200 animate-in fade-in" />
+                      <Eye
+                        className="absolute inset-0 h-4 w-4 duration-200 animate-in fade-in"
+                        aria-hidden="true"
+                      />
                     )}
                   </div>
                 </button>

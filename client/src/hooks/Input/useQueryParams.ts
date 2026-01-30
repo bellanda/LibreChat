@@ -17,7 +17,7 @@ import type {
   AgentListResponse,
 } from 'librechat-data-provider';
 import type { ZodAny } from 'zod';
-import { getConvoSwitchLogic, getModelSpecIconURL, removeUnavailableTools, logger } from '~/utils';
+import { getConvoSwitchLogic, getModelSpecIconURL, removeUnavailableTools, logger, clearModelForNonEphemeralAgent } from '~/utils';
 import { useAuthContext, useAgentsMap, useDefaultConvo, useSubmitMessage } from '~/hooks';
 import { useChatContext, useChatFormContext } from '~/Providers';
 import { useGetAgentByIdQuery } from '~/data-provider';
@@ -193,6 +193,12 @@ export default function useQueryParams({
         resetParams = { spec: null, iconURL: null, modelLabel: null };
         newPreset = { ...newPreset, ...resetParams };
       }
+
+      // Sync agent_id from newPreset to template, then clear model if non-ephemeral agent
+      if (newPreset.agent_id) {
+        template.agent_id = newPreset.agent_id;
+      }
+      clearModelForNonEphemeralAgent(template);
 
       const isModular = isCurrentModular && isNewModular && shouldSwitch;
       if (isExistingConversation && isModular) {

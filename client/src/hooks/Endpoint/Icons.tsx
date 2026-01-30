@@ -3,14 +3,14 @@ import { EModelEndpoint } from 'librechat-data-provider';
 import {
   MinimalPlugin,
   GPTIcon,
+  Sparkles,
+  BedrockIcon,
+  AssistantIcon,
   AnthropicIcon,
   AzureMinimalIcon,
   GoogleMinimalIcon,
   CustomMinimalIcon,
-  AssistantIcon,
   LightningIcon,
-  BedrockIcon,
-  Sparkles,
 } from '@librechat/client';
 import type { IconMapProps, AgentIconMapProps, IconsRecord } from '~/common';
 import UnknownIcon from './UnknownIcon';

@@ -280,7 +280,13 @@ export function checkWebSearchConfig(webSearchConfig?: Partial<TCustomConfig['we
       if (varName) {
         // This is a proper environment variable reference
         const actualValue = process.env[varName];
-        // Web search config loaded silently
+        if (actualValue) {
+          logger.debug(`Web search ${key}: Using environment variable ${varName} with value set`);
+        } else {
+          logger.debug(
+            `Web search ${key}: Using environment variable ${varName} (not set in environment, user provided value)`,
+          );
+        }
       } else {
         // This is not an environment variable reference - warn user
         logger.warn(

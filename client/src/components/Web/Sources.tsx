@@ -84,7 +84,7 @@ function SourceItem({ source, expanded = false }: SourceItemProps) {
             <VisuallyHidden>
               {localize('com_citation_more_details', { label: domain })}
             </VisuallyHidden>
-            <ChevronDown className="icon-sm" />
+            <ChevronDown className="icon-sm" aria-hidden="true" />
           </Ariakit.HovercardDisclosure>
 
           <Ariakit.Hovercard
@@ -286,9 +286,8 @@ const FileItem = React.memo(function FileItem({
       <button
         onClick={isLocalFile ? undefined : handleDownload}
         disabled={isLoading}
-        className={`flex w-full flex-col rounded-lg bg-surface-primary-contrast px-3 py-2 text-sm transition-all duration-300 disabled:opacity-50 ${
-          isLocalFile ? 'cursor-default' : 'hover:bg-surface-tertiary'
-        }`}
+        className={`flex w-full flex-col rounded-lg bg-surface-primary-contrast px-3 py-2 text-sm transition-all duration-300 disabled:opacity-50 ${isLocalFile ? 'cursor-default' : 'hover:bg-surface-tertiary'
+          }`}
         aria-label={
           isLocalFile ? localize('com_sources_download_local_unavailable') : downloadAriaLabel
         }
@@ -298,7 +297,7 @@ const FileItem = React.memo(function FileItem({
           <span className="truncate text-xs font-medium text-text-secondary">
             {localize('com_sources_agent_file')}
           </span>
-          {!isLocalFile && <Download className="ml-auto h-3 w-3" />}
+          {!isLocalFile && <Download className="ml-auto h-3 w-3" aria-hidden="true" />}
         </div>
         <div className="mt-1 min-w-0">
           <span className="line-clamp-2 break-all text-left text-sm font-medium text-text-primary md:line-clamp-3">
@@ -325,9 +324,8 @@ const FileItem = React.memo(function FileItem({
     <button
       onClick={isLocalFile ? undefined : handleDownload}
       disabled={isLoading}
-      className={`flex h-full w-full flex-col rounded-lg bg-surface-primary-contrast px-3 py-2 text-sm transition-all duration-300 disabled:opacity-50 ${
-        isLocalFile ? 'cursor-default' : 'hover:bg-surface-tertiary'
-      }`}
+      className={`flex h-full w-full flex-col rounded-lg bg-surface-primary-contrast px-3 py-2 text-sm transition-all duration-300 disabled:opacity-50 ${isLocalFile ? 'cursor-default' : 'hover:bg-surface-tertiary'
+        }`}
       aria-label={
         isLocalFile ? localize('com_sources_download_local_unavailable') : downloadAriaLabel
       }
@@ -337,7 +335,7 @@ const FileItem = React.memo(function FileItem({
         <span className="truncate text-xs font-medium text-text-secondary">
           {localize('com_sources_agent_file')}
         </span>
-        {!isLocalFile && <Download className="ml-auto h-3 w-3" />}
+        {!isLocalFile && <Download className="ml-auto h-3 w-3" aria-hidden="true" />}
       </div>
       <div className="mt-1 min-w-0">
         <span className="line-clamp-2 break-all text-left text-sm font-medium text-text-primary md:line-clamp-3">
@@ -428,7 +426,7 @@ const SourcesGroup = React.memo(function SourcesGroup({
               className="rounded-full p-1 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary"
               aria-label={localize('com_ui_close')}
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </OGDialogClose>
           </div>
           <div className="flex-1 overflow-y-auto px-3 py-2">
@@ -524,7 +522,7 @@ function FilesGroup({ files, messageId, conversationId, limit = 3 }: FilesGroupP
               className="rounded-full p-1 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary"
               aria-label={localize('com_ui_close')}
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </OGDialogClose>
           </div>
           <div className="flex-1 overflow-y-auto px-3 py-2">
@@ -549,7 +547,7 @@ function FilesGroup({ files, messageId, conversationId, limit = 3 }: FilesGroupP
 function TabWithIcon({ label, icon }: { label: string; icon: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 rounded-md px-3 py-1 text-sm transition-colors hover:bg-surface-tertiary hover:text-text-primary">
-      {React.cloneElement(icon as React.ReactElement, { size: 14 })}
+      {React.cloneElement(icon as React.ReactElement, { size: 14, 'aria-hidden': true })}
       <span>{label}</span>
     </div>
   );

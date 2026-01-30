@@ -26,6 +26,8 @@ const plugins = [
   }),
   replace({
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    'process.env.VITE_ENABLE_LOGGER': JSON.stringify(process.env.VITE_ENABLE_LOGGER || 'false'),
+    'process.env.VITE_LOGGER_FILTER': JSON.stringify(process.env.VITE_LOGGER_FILTER || ''),
     preventAssignment: true,
   }),
   commonjs(),
@@ -51,19 +53,21 @@ const plugins = [
   }),
 ];
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 export default {
   input: 'src/index.ts',
   output: [
     {
       file: pkg.main,
       format: 'cjs',
-      sourcemap: true,
+      sourcemap: isDev ? 'inline' : true,
       exports: 'named',
     },
     {
       file: pkg.module,
       format: 'esm',
-      sourcemap: true,
+      sourcemap: isDev ? 'inline' : true,
       exports: 'named',
     },
   ],

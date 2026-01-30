@@ -1,8 +1,33 @@
 import { Dispatcher, ProxyAgent } from 'undici';
+import { logger } from '@librechat/data-schemas';
 import { AnthropicClientOptions } from '@librechat/agents';
 import { anthropicSettings, removeNullishValues } from 'librechat-data-provider';
 import type { AnthropicLLMConfigResult, AnthropicConfigOptions } from '~/types/anthropic';
 import { checkPromptCacheSupport, getClaudeHeaders, configureReasoning } from './helpers';
+
+/** Key used in credentials object for the Anthropic API key */
+const ANTHROPIC_API_KEY = 'ANTHROPIC_API_KEY';
+
+/**
+ * Parses credentials from string or object format
+ * - If a valid JSON string is passed, it parses and returns the object
+ * - If a plain API key string is passed, it wraps it in an object with ANTHROPIC_API_KEY
+ * - If an object is passed, it returns it directly
+ * - If undefined, returns an empty object
+ */
+function parseCredentials(
+  credentials: string | Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  if (typeof credentials === 'string') {
+    try {
+      return JSON.parse(credentials) as Record<string, unknown>;
+    } catch {
+      logger.debug('[Anthropic] Credentials not JSON, treating as API key');
+      return { [ANTHROPIC_API_KEY]: credentials };
+    }
+  }
+  return credentials && typeof credentials === 'object' ? credentials : {};
+}
 
 /** Known Anthropic parameters that map directly to the client config */
 export const knownAnthropicParams = new Set([
@@ -38,12 +63,12 @@ function applyDefaultParams(target: Record<string, unknown>, defaults: Record<st
 
 /**
  * Generates configuration options for creating an Anthropic language model (LLM) instance.
- * @param apiKey - The API key for authentication with Anthropic.
+ * @param credentials - The API key string, or credentials object (e.g. for Vertex AI), or undefined.
  * @param options={} - Additional options for configuring the LLM.
  * @returns Configuration options for creating an Anthropic LLM instance, with null and undefined values removed.
  */
 function getLLMConfig(
-  apiKey?: string,
+  credentials?: string | Record<string, unknown>,
   options: AnthropicConfigOptions = {} as AnthropicConfigOptions,
 ): AnthropicLLMConfigResult {
   const systemOptions = {
@@ -74,7 +99,6 @@ function getLLMConfig(
   let enableWebSearch = mergedOptions.web_search;
 
   let requestOptions: AnthropicClientOptions & { stream?: boolean } = {
-    apiKey,
     model: mergedOptions.model,
     stream: mergedOptions.stream,
     temperature: mergedOptions.temperature,
@@ -89,6 +113,17 @@ function getLLMConfig(
     },
   };
 
+  const creds = parseCredentials(credentials);
+  const apiKey = (creds[ANTHROPIC_API_KEY] as string | undefined) ?? null;
+
+  if (apiKey) {
+    requestOptions.apiKey = apiKey;
+  } else {
+    throw new Error(
+      'Invalid credentials provided. Please provide a valid Anthropic API key (or credentials object with ANTHROPIC_API_KEY).',
+    );
+  }
+
   requestOptions = configureReasoning(requestOptions, systemOptions);
 
   if (!/claude-3[-.]7/.test(mergedOptions.model)) {
@@ -101,6 +136,12 @@ function getLLMConfig(
 
   const supportsCacheControl =
     systemOptions.promptCache === true && checkPromptCacheSupport(requestOptions.model ?? '');
+
+  /** Pass promptCache boolean for downstream cache_control application */
+  if (supportsCacheControl) {
+    (requestOptions as Record<string, unknown>).promptCache = true;
+  }
+
   const headers = getClaudeHeaders(requestOptions.model ?? '', supportsCacheControl);
   if (headers && requestOptions.clientOptions) {
     requestOptions.clientOptions.defaultHeaders = headers;

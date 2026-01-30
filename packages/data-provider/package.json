@@ -1,6 +1,6 @@
 {
   "name": "librechat-data-provider",
-  "version": "0.8.020",
+  "version": "0.8.230",
   "description": "data services for librechat apps",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -23,14 +23,14 @@
     "build:watch": "rollup -c -w",
     "rollup:api": "npx rollup -c server-rollup.config.js --bundleConfigAsCjs",
     "test": "jest --coverage --watch",
-    "test:ci": "jest --coverage --ci",
+    "test:ci": "jest --coverage --ci --logHeapUsage",
     "verify": "npm run test:ci",
     "b:clean": "bun run rimraf dist",
     "b:build": "bun run b:clean && bun run rollup -c --silent --bundleConfigAsCjs"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danny-avila/LibreChat.git"
+    "url": "https://github.com/danny-avila/LibreChat"
   },
   "author": "",
   "license": "ISC",

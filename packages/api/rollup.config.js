@@ -1,4 +1,7 @@
 // rollup.config.js
+import { readFileSync } from 'fs';
+import json from '@rollup/plugin-json';
+import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
@@ -43,7 +46,7 @@ const plugins = [
      */
     inlineSources: true,
   }),
-  terser(),
+  json(),
 ];
 
 const cjsBuild = {

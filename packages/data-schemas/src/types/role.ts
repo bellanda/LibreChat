@@ -13,6 +13,8 @@ export interface IRole extends Document {
       [Permissions.SHARED_GLOBAL]?: boolean;
       [Permissions.USE]?: boolean;
       [Permissions.CREATE]?: boolean;
+      [Permissions.SHARE]?: boolean;
+      [Permissions.SHARE_PUBLIC]?: boolean;
     };
     [PermissionTypes.MEMORIES]?: {
       [Permissions.USE]?: boolean;
@@ -24,6 +26,8 @@ export interface IRole extends Document {
       [Permissions.SHARED_GLOBAL]?: boolean;
       [Permissions.USE]?: boolean;
       [Permissions.CREATE]?: boolean;
+      [Permissions.SHARE]?: boolean;
+      [Permissions.SHARE_PUBLIC]?: boolean;
     };
     [PermissionTypes.MULTI_CONVO]?: {
       [Permissions.USE]?: boolean;
@@ -50,6 +54,12 @@ export interface IRole extends Document {
     };
     [PermissionTypes.FILE_CITATIONS]?: {
       [Permissions.USE]?: boolean;
+    };
+    [PermissionTypes.MCP_SERVERS]?: {
+      [Permissions.USE]?: boolean;
+      [Permissions.CREATE]?: boolean;
+      [Permissions.SHARE]?: boolean;
+      [Permissions.SHARE_PUBLIC]?: boolean;
     };
   };
 }

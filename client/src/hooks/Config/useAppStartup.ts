@@ -36,10 +36,10 @@ export default function useAppStartup({
   });
 
   useSpeechSettingsInit(!!user);
-  useFontSizeInit();
+  const { data: loadedServers, isLoading: serversLoading } = useMCPServersQuery();
 
   useMCPToolsQuery({
-    enabled: !!startupConfig?.mcpServers && !!user,
+    enabled: !serversLoading && !!loadedServers && Object.keys(loadedServers).length > 0 && !!user,
   });
 
   /** Clean up old localStorage entries on startup */

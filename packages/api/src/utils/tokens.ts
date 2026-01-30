@@ -1,4 +1,7 @@
+import z from 'zod';
 import { EModelEndpoint } from 'librechat-data-provider';
+import type { EndpointTokenConfig, TokenConfig } from '~/types';
+
 import z from 'zod';
 
 /** Configuration object mapping model keys to their respective prompt, completion rates, and context limit
@@ -38,6 +41,8 @@ const openAIModels = {
   'gpt-4.1-mini': 1047576,
   'gpt-4.1-nano': 1047576,
   'gpt-5': 400000,
+  'gpt-5.1': 400000,
+  'gpt-5.2': 400000,
   'gpt-5-mini': 400000,
   'gpt-5-nano': 400000,
   'gpt-5-pro': 400000,
@@ -92,9 +97,11 @@ const googleModels = {
   'gemini-pro-vision': 12288,
   'gemini-exp': 2000000,
   'gemini-3': 1000000, // 1M input tokens, 64k output tokens
+  'gemini-3-pro-image': 1000000,
   'gemini-2.5': 1000000, // 1M input tokens, 64k output tokens
   'gemini-2.5-pro': 1000000,
   'gemini-2.5-flash': 1000000,
+  'gemini-2.5-flash-image': 1000000,
   'gemini-2.5-flash-lite': 1000000,
   'gemini-2.0': 2000000,
   'gemini-2.0-flash': 1000000,
@@ -133,12 +140,14 @@ const anthropicModels = {
   'claude-3.5-sonnet-latest': 200000,
   'claude-haiku-4-5': 200000,
   'claude-sonnet-4': 1000000,
-  'claude-opus-4': 200000,
   'claude-4': 200000,
+  'claude-opus-4': 200000,
+  'claude-opus-4-5': 200000,
 };
 
 const deepseekModels = {
   deepseek: 128000,
+  'deepseek-chat': 128000,
   'deepseek-reasoner': 128000,
   'deepseek-r1': 128000,
   'deepseek-v3': 128000,
@@ -279,6 +288,9 @@ const xAIModels = {
   'grok-3-mini': 131072,
   'grok-3-mini-fast': 131072,
   'grok-4': 256000, // 256K context
+  'grok-4-fast': 2000000, // 2M context
+  'grok-4-1-fast': 2000000, // 2M context (covers reasoning & non-reasoning variants)
+  'grok-code-fast': 256000, // 256K context
 };
 
 const aggregateModels = {
@@ -333,6 +345,8 @@ export const modelMaxOutputs = {
   'o1-mini': 65136, // -500 from max: 65,536
   'o1-preview': 32268, // -500 from max: 32,768
   'gpt-5': 128000,
+  'gpt-5.1': 128000,
+  'gpt-5.2': 128000,
   'gpt-5-mini': 128000,
   'gpt-5-nano': 128000,
   'gpt-5-pro': 128000,
@@ -362,6 +376,8 @@ const anthropicMaxOutputs = {
   'claude-haiku-4-5': 64000,
   'claude-opus-4': 32000,
   'claude-sonnet-4': 64000,
+  'claude-opus-4': 32000,
+  'claude-opus-4-5': 64000,
   'claude-3.5-sonnet': 8192,
   'claude-3-5-sonnet': 8192,
   'claude-3.7-sonnet': 128000,

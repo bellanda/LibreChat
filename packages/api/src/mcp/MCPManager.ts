@@ -40,8 +40,7 @@ export class MCPManager extends UserConnectionManager {
   /** Initializes the MCPManager by setting up server registry and app connections */
   public async initialize(configs: t.MCPServers) {
     await MCPServersInitializer.initialize(configs);
-    const appConfigs = await registry.sharedAppServers.getAll();
-    this.appConnections = new ConnectionsRepository(appConfigs);
+    this.appConnections = new ConnectionsRepository(undefined);
   }
 
   /** Retrieves an app-level or user-specific connection based on provided arguments */
@@ -53,16 +52,18 @@ export class MCPManager extends UserConnectionManager {
       flowManager?: FlowStateManager<MCPOAuthTokens | null>;
     } & Omit<t.OAuthConnectionOptions, 'useOAuth' | 'user' | 'flowManager'>,
   ): Promise<MCPConnection> {
-    if (this.appConnections!.has(args.serverName)) {
-      return this.appConnections!.get(args.serverName);
-    } else if (args.user?.id) {
-      return this.getUserConnection(args as Parameters<typeof this.getUserConnection>[0]);
-    } else {
-      throw new McpError(
-        ErrorCode.InvalidRequest,
-        `No connection found for server ${args.serverName}`,
-      );
+    // The get method checks if the config is still valid as app level
+    const existingAppConnection = await this.appConnections!.get(args.serverName);
+    if (existingAppConnection) {
+      return existingAppConnection;
     }
+    if (args.user?.id) {
+      return this.getUserConnection(args as Parameters<typeof this.getUserConnection>[0]);
+    }
+    throw new McpError(
+      ErrorCode.InvalidRequest,
+      `No connection found for server ${args.serverName}`,
+    );
   }
 
   /** Returns all available tool functions from app-level connections */
@@ -83,11 +84,10 @@ export class MCPManager extends UserConnectionManager {
     serverName: string,
   ): Promise<t.LCAvailableTools | null> {
     try {
-      if (this.appConnections?.has(serverName)) {
-        return MCPServerInspector.getToolFunctions(
-          serverName,
-          await this.appConnections.get(serverName),
-        );
+      // Try get the app connection (if the config is not in the app level anymore any existing connection will disconnect and get will return null)
+      const existingAppConnection = await this.appConnections?.get(serverName);
+      if (existingAppConnection) {
+        return MCPServerInspector.getToolFunctions(serverName, existingAppConnection);
       }
 
       const userConnections = this.getUserConnections(userId);

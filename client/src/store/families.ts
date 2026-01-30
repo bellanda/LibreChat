@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createSearchParams } from 'react-router-dom';
 import {
   atom,
   selector,
@@ -10,9 +11,15 @@ import {
   useSetRecoilState,
   useRecoilCallback,
 } from 'recoil';
-import { LocalStorageKeys, Constants } from 'librechat-data-provider';
+import { LocalStorageKeys, isEphemeralAgentId, Constants } from 'librechat-data-provider';
 import type { TMessage, TPreset, TConversation, TSubmission } from 'librechat-data-provider';
 import type { TOptionSettings, ExtendedFile } from '~/common';
+import {
+  clearModelForNonEphemeralAgent,
+  createChatSearchParams,
+  storeEndpointSettings,
+  logger,
+} from '~/utils';
 import { useSetConvoContext } from '~/Providers/SetConvoContext';
 import { storeEndpointSettings, logger, createChatSearchParams } from '~/utils';
 import { createSearchParams } from 'react-router-dom';
@@ -83,7 +90,7 @@ const conversationByIndex = atomFamily<TConversation | null, string | number>({
             newValue.assistant_id,
           );
         }
-        if (newValue?.agent_id != null && newValue.agent_id) {
+        if (newValue?.agent_id != null && !isEphemeralAgentId(newValue.agent_id)) {
           localStorage.setItem(`${LocalStorageKeys.AGENT_ID_PREFIX}${index}`, newValue.agent_id);
         }
         if (newValue?.spec != null && newValue.spec) {
@@ -101,9 +108,12 @@ const conversationByIndex = atomFamily<TConversation | null, string | number>({
         }
 
         storeEndpointSettings(newValue);
+
+        const convoToStore = { ...newValue };
+        clearModelForNonEphemeralAgent(convoToStore);
         localStorage.setItem(
           `${LocalStorageKeys.LAST_CONVO_SETUP}_${index}`,
-          JSON.stringify(newValue),
+          JSON.stringify(convoToStore),
         );
 
         const disableParams = newValue.disableParams === true;
@@ -310,10 +320,10 @@ const conversationByKeySelector = selectorFamily({
   key: 'conversationByKeySelector',
   get:
     (index: string | number) =>
-    ({ get }) => {
-      const conversation = get(conversationByIndex(index));
-      return conversation;
-    },
+      ({ get }) => {
+        const conversation = get(conversationByIndex(index));
+        return conversation;
+      },
 });
 
 function useClearSubmissionState() {
@@ -372,24 +382,24 @@ const updateConversationSelector = selectorFamily({
   get: () => () => null as Partial<TConversation> | null,
   set:
     (conversationId: string) =>
-    ({ set, get }, newPartialConversation) => {
-      if (newPartialConversation instanceof DefaultValue) {
-        return;
-      }
+      ({ set, get }, newPartialConversation) => {
+        if (newPartialConversation instanceof DefaultValue) {
+          return;
+        }
 
-      const keys = get(conversationKeysAtom);
-      keys.forEach((key) => {
-        set(conversationByIndex(key), (prevConversation) => {
-          if (prevConversation && prevConversation.conversationId === conversationId) {
-            return {
-              ...prevConversation,
-              ...newPartialConversation,
-            };
-          }
-          return prevConversation;
+        const keys = get(conversationKeysAtom);
+        keys.forEach((key) => {
+          set(conversationByIndex(key), (prevConversation) => {
+            if (prevConversation && prevConversation.conversationId === conversationId) {
+              return {
+                ...prevConversation,
+                ...newPartialConversation,
+              };
+            }
+            return prevConversation;
+          });
         });
-      });
-    },
+      },
 });
 
 export default {

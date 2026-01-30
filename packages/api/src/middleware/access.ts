@@ -2,12 +2,16 @@ import type { IRole, IUser } from '@librechat/data-schemas';
 import { logger } from '@librechat/data-schemas';
 import type { NextFunction, Request as ServerRequest, Response as ServerResponse } from 'express';
 import {
+  Permissions,
+  EndpointURLs,
   EModelEndpoint,
   EndpointURLs,
   PermissionTypes,
   Permissions,
   isAgentsEndpoint,
 } from 'librechat-data-provider';
+import type { NextFunction, Request as ServerRequest, Response as ServerResponse } from 'express';
+import type { IRole, IUser } from '@librechat/data-schemas';
 
 export function skipAgentCheck(req?: ServerRequest): boolean {
   if (!req || !req?.body?.endpoint) {
@@ -125,7 +129,7 @@ export const generateCheckAccess = ({
       }
 
       logger.warn(
-        `[${permissionType}] Forbidden: "${req.originalUrl}" - Insufficient permissions for User ${req.user?.id || req.user?._id}: ${permissions.join(', ')}`,
+        `[${permissionType}] Forbidden: "${req.originalUrl}" - Insufficient permissions for User ${(req.user as IUser)?.id}: ${permissions.join(', ')}`,
       );
       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
     } catch (error) {

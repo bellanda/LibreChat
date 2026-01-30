@@ -5,6 +5,7 @@ import { mcpServersRegistry as serversRegistry } from '~/mcp/registry/MCPServers
 import { MCPConnection } from './connection';
 import type * as t from './types';
 import { ConnectionsRepository } from '~/mcp/ConnectionsRepository';
+import { mcpConfig } from './mcpConfig';
 
 /**
  * Abstract base class for managing user-specific MCP connections with lifecycle management.
@@ -54,12 +55,14 @@ export abstract class UserConnectionManager {
       throw new McpError(ErrorCode.InvalidRequest, `[MCP] User object missing id property`);
     }
 
-    if (this.appConnections!.has(serverName)) {
+    if (await this.appConnections!.has(serverName)) {
       throw new McpError(
         ErrorCode.InvalidRequest,
         `[MCP][User: ${userId}] Trying to create user-specific connection for app-level server "${serverName}"`,
       );
     }
+
+    const config = await MCPServersRegistry.getInstance().getServerConfig(serverName, userId);
 
     const userServerMap = this.userConnections.get(userId);
     let connection = forceNew ? undefined : userServerMap?.get(serverName);
@@ -67,7 +70,7 @@ export abstract class UserConnectionManager {
 
     // Check if user is idle
     const lastActivity = this.userLastActivity.get(userId);
-    if (lastActivity && now - lastActivity > this.USER_CONNECTION_IDLE_TIMEOUT) {
+    if (lastActivity && now - lastActivity > mcpConfig.USER_CONNECTION_IDLE_TIMEOUT) {
       logger.info(`[MCP][User: ${userId}] User idle for too long. Disconnecting all connections.`);
       // Disconnect all user connections
       try {
@@ -77,7 +80,15 @@ export abstract class UserConnectionManager {
       }
       connection = undefined; // Force creation of a new connection
     } else if (connection) {
-      if (await connection.isConnected()) {
+      if (!config || (config.updatedAt && connection.isStale(config.updatedAt))) {
+        if (config) {
+          logger.info(
+            `[MCP][User: ${userId}][${serverName}] Config was updated, disconnecting stale connection`,
+          );
+        }
+        await this.disconnectUserConnection(userId, serverName);
+        connection = undefined;
+      } else if (await connection.isConnected()) {
         logger.debug(`[MCP][User: ${userId}][${serverName}] Reusing active connection`);
         this.updateUserLastActivity(userId);
         return connection;
@@ -103,6 +114,9 @@ export abstract class UserConnectionManager {
         `[MCP][User: ${userId}] Configuration for server "${serverName}" not found.`,
       );
     }
+
+    // If no valid connection exists, create a new one
+    logger.info(`[MCP][User: ${userId}][${serverName}] Establishing new connection`);
 
     try {
       connection = await MCPConnectionFactory.create(
@@ -217,7 +231,7 @@ export abstract class UserConnectionManager {
       if (currentUserId && currentUserId === userId) {
         continue;
       }
-      if (now - lastActivity > this.USER_CONNECTION_IDLE_TIMEOUT) {
+      if (now - lastActivity > mcpConfig.USER_CONNECTION_IDLE_TIMEOUT) {
         logger.info(
           `[MCP][User: ${userId}] User idle for too long. Disconnecting all connections...`,
         );

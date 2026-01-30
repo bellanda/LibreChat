@@ -1,6 +1,5 @@
 import {
   Button,
-  Input,
   Table,
   TableBody,
   TableCell,
@@ -8,6 +7,7 @@ import {
   TableHeader,
   TableRow,
   useToastContext,
+  FilterInput,
 } from '@librechat/client';
 import {
   flexRender,
@@ -144,9 +144,8 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
 
       if (fileData.bytes > (endpointFileConfig.fileSizeLimit ?? Number.MAX_SAFE_INTEGER)) {
         showToast({
-          message: `${localize('com_ui_attach_error_size')} ${
-            (endpointFileConfig.fileSizeLimit ?? 0) / megabyte
-          } MB (${endpoint})`,
+          message: `${localize('com_ui_attach_error_size')} ${(endpointFileConfig.fileSizeLimit ?? 0) / megabyte
+            } MB (${endpoint})`,
           status: 'error',
         });
         return;
@@ -188,14 +187,12 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
 
   return (
     <div role="region" aria-label={localize('com_files_table')} className="mt-2 space-y-2">
-      <div className="flex items-center gap-4">
-        <Input
-          placeholder={localize('com_files_filter')}
-          value={filenameFilter ?? ''}
-          onChange={(event) => table.getColumn('filename')?.setFilterValue(event.target.value)}
-          aria-label={localize('com_files_filter')}
-        />
-      </div>
+      <FilterInput
+        inputId="filename-filter"
+        label={localize('com_files_filter')}
+        value={filenameFilter ?? ''}
+        onChange={(event) => table.getColumn('filename')?.setFilterValue(event.target.value)}
+      />
 
       <div className="rounded-lg border border-border-light bg-transparent shadow-sm transition-colors">
         <div className="overflow-x-auto">
@@ -239,6 +236,11 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
                           }}
+                          className={
+                            isFilenameCell
+                              ? 'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-text-primary'
+                              : ''
+                          }
                           data-skip-refocus="true"
                           key={cell.id}
                           role={isFilenameCell ? 'button' : undefined}

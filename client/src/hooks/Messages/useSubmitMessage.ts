@@ -46,12 +46,17 @@ export default function useSubmitMessage() {
       const rootIndex = addedIndex - 1;
       const clientTimestamp = new Date().toISOString();
 
-      ask({
-        text: data.text,
-        overrideConvoId: appendIndex(rootIndex, overrideConvoId),
-        overrideUserMessageId: appendIndex(rootIndex, overrideUserMessageId),
-        clientTimestamp,
-      });
+      ask(
+        {
+          text: data.text,
+          overrideConvoId: appendIndex(rootIndex, overrideConvoId),
+          overrideUserMessageId: appendIndex(rootIndex, overrideUserMessageId),
+          clientTimestamp,
+        },
+        {
+          addedConvo: !hasAdded && addedConvo ? addedConvo : undefined,
+        },
+      );
 
       if (hasAdded) {
         askAdditional(
