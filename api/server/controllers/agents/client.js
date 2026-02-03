@@ -1411,7 +1411,11 @@ class AgentClient extends BaseClient {
           }),
       };
     } else {
-      endpointConfig = appConfig.endpoints?.all ?? appConfig.endpoints?.[endpoint];
+      // Merge so provider-specific (e.g. titleModel) overrides "all"; otherwise "all" alone hid google/anthropic/openAI titleModel
+      endpointConfig = {
+        ...appConfig.endpoints?.all,
+        ...appConfig.endpoints?.[endpoint],
+      };
     }
     if (!endpointConfig) {
       logger.debug(
