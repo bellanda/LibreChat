@@ -38,6 +38,7 @@ const openAIModels = {
   'gpt-4.1-mini': 1047576,
   'gpt-4.1-nano': 1047576,
   'gpt-5': 400000,
+  'gpt-5.2': 400000,
   'gpt-5-mini': 400000,
   'gpt-5-nano': 400000,
   'gpt-5-pro': 400000,
@@ -91,7 +92,11 @@ const googleModels = {
   gemini: 30720, // -2048 from max
   'gemini-pro-vision': 12288,
   'gemini-exp': 2000000,
-  'gemini-3': 1000000, // 1M input tokens, 64k output tokens
+  'gemini-3-flash-preview': 1000000, // 1M input tokens, 64k output tokens
+  'gemini-3-pro-preview': 1000000, // 1M input tokens, 64k output tokens
+  'gemini-3-flash': 1000000, // 1M input tokens, 64k output tokens
+  'gemini-3-pro': 1000000, // 1M input tokens, 64k output tokens
+  'gemini-3': 1000000,
   'gemini-2.5': 1000000, // 1M input tokens, 64k output tokens
   'gemini-2.5-pro': 1000000,
   'gemini-2.5-flash': 1000000,
@@ -336,6 +341,7 @@ export const modelMaxOutputs = {
   'gpt-5-mini': 128000,
   'gpt-5-nano': 128000,
   'gpt-5-pro': 128000,
+  'gpt-5.2': 128000,
   'gpt-oss-20b': 131000,
   'gpt-oss-120b': 131000,
   // Custom Fireworks models
@@ -359,13 +365,15 @@ const anthropicMaxOutputs = {
   'claude-3-haiku': 4096,
   'claude-3-sonnet': 4096,
   'claude-3-opus': 4096,
-  'claude-haiku-4-5': 64000,
   'claude-opus-4': 32000,
   'claude-sonnet-4': 64000,
   'claude-3.5-sonnet': 8192,
   'claude-3-5-sonnet': 8192,
   'claude-3.7-sonnet': 128000,
   'claude-3-7-sonnet': 128000,
+  'claude-opus-4-5': 64000,
+  'claude-sonnet-4-5': 64000,
+  'claude-haiku-4-5': 64000,
 };
 
 // Custom models output limits
