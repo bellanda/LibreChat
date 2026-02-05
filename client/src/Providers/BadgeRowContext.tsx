@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { Tools, Constants, LocalStorageKeys, AgentCapabilities } from 'librechat-data-provider';
+import { useSetRecoilState, useRecoilValue } from 'recoil';
+import { Tools, Constants, LocalStorageKeys, AgentCapabilities, ArtifactModes } from 'librechat-data-provider';
 import type { TAgentsEndpoint } from 'librechat-data-provider';
 import {
   useMCPServerManager,
@@ -10,7 +10,7 @@ import {
   useToolToggle,
 } from '~/hooks';
 import { getTimestampedValue, setTimestamp } from '~/utils/timestamps';
-import { ephemeralAgentByConvoId } from '~/store';
+import { ephemeralAgentByConvoId, autoModeByConvoId } from '~/store/agents';
 
 interface BadgeRowContextType {
   conversationId?: string | null;
@@ -51,6 +51,7 @@ export default function BadgeRowProvider({
   const key = conversationId ?? Constants.NEW_CONVO;
 
   const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(key));
+  const autoMode = useRecoilValue(autoModeByConvoId(key));
 
   /** Initialize ephemeralAgent from localStorage on mount and when conversation changes */
   useEffect(() => {
@@ -139,6 +140,51 @@ export default function BadgeRowProvider({
       });
     }
   }, [key, isSubmitting, setEphemeralAgent]);
+
+  /** Sincroniza autoMode com ephemeralAgent: quando autoMode está ativo, ativa todas as tools */
+  useEffect(() => {
+    if (isSubmitting) {
+      return;
+    }
+    setEphemeralAgent((prev) => {
+      const currentTools = {
+        execute_code: prev?.[Tools.execute_code] ?? false,
+        file_search: prev?.[Tools.file_search] ?? false,
+        web_search: prev?.[Tools.web_search] ?? false,
+        artifacts: prev?.[AgentCapabilities.artifacts] ?? false,
+      };
+
+      // Se autoMode está ativo, ativa todas as tools; artefatos com shadcn (backend exige string)
+      // Se autoMode está desativado, mantém o estado atual
+      const shouldEnableAll = autoMode === true;
+      const newTools = shouldEnableAll
+        ? {
+          execute_code: true,
+          file_search: true,
+          web_search: true,
+          artifacts: ArtifactModes.SHADCNUI,
+        }
+        : currentTools;
+
+      // Só atualiza se houver mudança
+      const hasChanged =
+        newTools.execute_code !== currentTools.execute_code ||
+        newTools.file_search !== currentTools.file_search ||
+        newTools.web_search !== currentTools.web_search ||
+        newTools.artifacts !== currentTools.artifacts;
+
+      if (!hasChanged) {
+        return prev;
+      }
+
+      return {
+        ...(prev || {}),
+        ...newTools,
+        // Preserva mcp e outros campos
+        mcp: prev?.mcp,
+      };
+    });
+  }, [autoMode, key, isSubmitting, setEphemeralAgent]);
 
   /** CodeInterpreter hooks */
   const codeApiKeyForm = useCodeApiKeyForm({});

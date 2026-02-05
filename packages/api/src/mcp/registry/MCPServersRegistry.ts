@@ -18,11 +18,36 @@ import { MCPServerInspector } from './MCPServerInspector';
  * Falls back to raw config when servers haven't been initialized yet or failed to initialize.
  * Handles server lifecycle operations including adding, removing, and querying configurations.
  */
-class MCPServersRegistry {
+export class MCPServersRegistry {
+  private static instance: MCPServersRegistry | null = null;
+
   public readonly sharedAppServers = ServerConfigsCacheFactory.create('App', false);
   public readonly sharedUserServers = ServerConfigsCacheFactory.create('User', false);
   private readonly privateUserServers: Map<string | undefined, ServerConfigsCache> = new Map();
   private rawConfigs: t.MCPServers = {};
+
+  /** Creates and returns the singleton instance (mongoose/allowedDomains accepted for API compatibility; DB not implemented). */
+  public static createInstance(
+    _mongoose?: unknown,
+    _allowedDomains?: string[] | null,
+  ): MCPServersRegistry {
+    if (MCPServersRegistry.instance) {
+      logger.debug('[MCPServersRegistry] Returning existing instance');
+      return MCPServersRegistry.instance;
+    }
+    logger.info('[MCPServersRegistry] Creating new instance');
+    const inst = new MCPServersRegistry();
+    MCPServersRegistry.instance = inst;
+    return inst;
+  }
+
+  /** Returns the singleton MCPServersRegistry instance. */
+  public static getInstance(): MCPServersRegistry {
+    if (!MCPServersRegistry.instance) {
+      throw new Error('MCPServersRegistry has not been initialized. Call createInstance first.');
+    }
+    return MCPServersRegistry.instance;
+  }
 
   /**
    * Stores the raw MCP configuration as a fallback when servers haven't been initialized yet.
@@ -140,4 +165,5 @@ class MCPServersRegistry {
   }
 }
 
-export const mcpServersRegistry = new MCPServersRegistry();
+// Singleton: mesma instância usada por createInstance/getInstance (api/config) e por imports diretos (packages/api).
+export const mcpServersRegistry = MCPServersRegistry.createInstance();

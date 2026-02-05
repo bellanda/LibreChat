@@ -81,7 +81,7 @@ const presetSchema: Schema<IPreset> = new Schema(
     },
     ...conversationPreset,
     agentOptions: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
       default: null,
     },
   },

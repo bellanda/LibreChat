@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "clean": "rimraf dist",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "npm run clean && rollup -c --bundleConfigAsCjs",
     "build:dev": "npm run clean && NODE_ENV=development rollup -c --bundleConfigAsCjs",
     "build:watch": "NODE_ENV=development rollup -c -w --bundleConfigAsCjs",
@@ -94,7 +94,7 @@
     "@smithy/node-http-handler": "^4.4.5",
     "axios": "^1.12.1",
     "connect-redis": "^8.1.0",
-    "diff": "^7.0.0",
+    "diff": "^8.0.3",
     "eventsource": "^3.0.2",
     "express": "^5.1.0",
     "express-session": "^1.18.2",

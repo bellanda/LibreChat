@@ -8,6 +8,7 @@ import supersub from 'remark-supersub';
 import type { PluggableList } from 'unified';
 import { ArtifactProvider, CodeBlockProvider } from '~/Providers';
 import { langSubset } from '~/utils';
+import { hasBrazilianCurrency } from '~/utils/latex';
 import { a, code, codeNoExecution, img, p } from './MarkdownComponents';
 import MarkdownErrorBoundary from './MarkdownErrorBoundary';
 

@@ -1,12 +1,12 @@
 import { useAtom } from 'jotai';
 import { ContentTypes } from 'librechat-data-provider';
 import type { MouseEvent } from 'react';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useMessageContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
 import { showThinkingAtom } from '~/store/showThinking';
 import { cn } from '~/utils';
-import { ThinkingButton, ThinkingContent } from './Thinking';
+import { FloatingThinkingBar, ThinkingButton, ThinkingContent } from './Thinking';
 
 type ReasoningProps = {
   reasoning: string;

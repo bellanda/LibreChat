@@ -39,7 +39,8 @@ export default function createPayload(submission: t.TSubmission) {
     editedContent,
     conversationId,
     isContinued: !!(isEdited && isContinued),
-    ephemeralAgent: s.isAssistantsEndpoint(endpoint) ? undefined : ephemeralAgent,
+    // Para endpoint agents: sempre enviar objeto (evita strip por removeNullishValues) e backend pode usar defaults
+    ephemeralAgent: s.isAssistantsEndpoint(endpoint) ? undefined : (ephemeralAgent ?? {}),
   };
 
   return { server, payload };

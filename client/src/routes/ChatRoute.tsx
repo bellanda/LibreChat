@@ -12,7 +12,6 @@ import { ToolCallsMapProvider } from '~/Providers';
 import ChatView from '~/components/Chat/ChatView';
 import useAuthRedirect from './useAuthRedirect';
 import temporaryStore from '~/store/temporary';
-import { useRecoilCallback } from 'recoil';
 import store from '~/store';
 
 export default function ChatRoute() {

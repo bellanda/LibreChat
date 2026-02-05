@@ -10,7 +10,8 @@ import {
   supportsFiles,
 } from 'librechat-data-provider';
 import { memo, useMemo } from 'react';
-import { useGetEndpointsQuery, useGetFileConfig } from '~/data-provider';
+import { useGetEndpointsQuery, useGetFileConfig, useGetAgentByIdQuery } from '~/data-provider';
+import { useAgentsMapContext } from '~/Providers';
 import AttachFile from './AttachFile';
 import AttachFileMenu from './AttachFileMenu';
 

@@ -1,6 +1,7 @@
 import {
   Button,
   OGDialog,
+  OGDialogClose,
   OGDialogContent,
   OGDialogHeader,
   OGDialogTitle,
@@ -11,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { TMessage } from 'librechat-data-provider';
 import { QueryKeys } from 'librechat-data-provider';
 import React, { useCallback } from 'react';
+import { Trans } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { NotificationSeverity } from '~/common';
 import { useDeleteConversationMutation } from '~/data-provider';

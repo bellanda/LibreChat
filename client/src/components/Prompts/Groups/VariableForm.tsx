@@ -9,17 +9,9 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
-import rehypeKatex from 'rehype-katex';
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import { replaceSpecialVars } from 'librechat-data-provider';
-import { TextareaAutosize, InputCombobox, Button } from '@librechat/client';
-import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
-import type { TPromptGroup } from 'librechat-data-provider';
 import { codeNoExecution } from '~/components/Chat/Messages/Content/MarkdownComponents';
 import { cn, wrapVariable, defaultTextProps, extractVariableInfo } from '~/utils';
 import { useAuthContext, useLocalize, useSubmitMessage } from '~/hooks';
-import { cn, defaultTextProps, extractVariableInfo, wrapVariable } from '~/utils';
 import { PromptVariableGfm } from '../Markdown';
 
 type FieldType = 'text' | 'select';

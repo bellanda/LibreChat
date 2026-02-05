@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Spinner, TooltipAnchor } from '@librechat/client';
 import { CheckCircle2, MousePointerClick, SettingsIcon } from 'lucide-react';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
@@ -141,12 +141,12 @@ export function EndpointItem({ endpoint, endpointIndex }: EndpointItemProps) {
   if (endpoint.hasModels) {
     const filteredModels = searchValue
       ? filterModels(
-          endpoint,
-          (endpoint.models || []).map((model) => model.name),
-          searchValue,
-          agentsMap,
-          assistantsMap,
-        )
+        endpoint,
+        (endpoint.models || []).map((model) => model.name),
+        searchValue,
+        agentsMap,
+        assistantsMap,
+      )
       : null;
     const placeholder =
       isAgentsEndpoint(endpoint.value) || isAssistantsEndpoint(endpoint.value)
@@ -188,20 +188,20 @@ export function EndpointItem({ endpoint, endpointIndex }: EndpointItemProps) {
             {/* Render endpoint models */}
             {filteredModels
               ? renderEndpointModels(
-                  endpoint,
-                  endpoint.models || [],
-                  selectedModel,
-                  filteredModels,
-                  endpointIndex,
-                )
+                endpoint,
+                endpoint.models || [],
+                selectedModel,
+                filteredModels,
+                endpointIndex,
+              )
               : endpoint.models &&
-                renderEndpointModels(
-                  endpoint,
-                  endpoint.models,
-                  selectedModel,
-                  undefined,
-                  endpointIndex,
-                )}
+              renderEndpointModels(
+                endpoint,
+                endpoint.models,
+                selectedModel,
+                undefined,
+                endpointIndex,
+              )}
           </>
         )}
       </Menu>
@@ -241,4 +241,46 @@ export function renderEndpoints(mappedEndpoints: Endpoint[]) {
       key={`endpoint-${endpoint.value}-${index}`}
     />
   ));
+}
+
+/**
+ * Renders all models from all endpoints in a single flat list (no provider grouping).
+ * Used when interface.groupModelsByEndpoint is false.
+ */
+export function FlatModelsList() {
+  const {
+    mappedEndpoints,
+    modelSpecs,
+    selectedValues: { model: selectedModel, modelSpec: selectedSpec },
+  } = useModelSelectorContext();
+
+  return (
+    <>
+      {mappedEndpoints?.map((endpoint, endpointIndex) => {
+        const endpointSpecs = (modelSpecs || []).filter(
+          (spec: TModelSpec) => spec.group === endpoint.value,
+        );
+        const models = endpoint.models ?? [];
+        return (
+          <React.Fragment key={`flat-${endpoint.value}-${endpointIndex}`}>
+            {endpointSpecs.map((spec: TModelSpec) => (
+              <ModelSpecItem
+                key={spec.name}
+                spec={spec}
+                isSelected={selectedSpec === spec.name}
+              />
+            ))}
+            {models.length > 0 &&
+              renderEndpointModels(
+                endpoint,
+                models,
+                selectedModel,
+                undefined,
+                endpointIndex,
+              )}
+          </React.Fragment>
+        );
+      })}
+    </>
+  );
 }

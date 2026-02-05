@@ -145,6 +145,19 @@ export const useMessagesInfiniteQuery = (
   });
 };
 
+/** Optional feature: AI-suggested starters from last 2 convos. Use when no entity starters. */
+export const suggestedStartersQueryKey = ['suggestedStarters'] as const;
+
+export const useSuggestedStartersQuery = (enabled: boolean) => {
+  return useQuery<string[] | null>({
+    queryKey: suggestedStartersQueryKey,
+    queryFn: async () => dataService.getSuggestedStarters().then((r) => r?.starters ?? null),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+};
+
 export const useSharedLinksQuery = (
   params: SharedLinksListParams,
   config?: UseInfiniteQueryOptions<SharedLinksResponse, unknown>,

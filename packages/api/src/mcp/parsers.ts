@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { Tools } from 'librechat-data-provider';
 import type { UIResource } from 'librechat-data-provider';
 import type * as t from './types';
@@ -65,12 +66,6 @@ function parseAsString(result: t.MCPToolCallResponse): string {
         }
         if (item.resource.uri) {
           resourceText.push(`Resource URI: ${item.resource.uri}`);
-        }
-        if (item.resource.name) {
-          resourceText.push(`Resource: ${item.resource.name}`);
-        }
-        if (item.resource.description) {
-          resourceText.push(`Description: ${item.resource.description}`);
         }
         if (item.resource.mimeType != null && item.resource.mimeType) {
           resourceText.push(`Type: ${item.resource.mimeType}`);
@@ -161,14 +156,15 @@ export function formatToolContent(
       } else if ('text' in item.resource && item.resource.text != null && item.resource.text) {
         resourceText.push(`Resource Text: ${item.resource.text}`);
       }
-      if (item.resource.uri.length) {
+      if (item.resource.uri?.length) {
         resourceText.push(`Resource URI: ${item.resource.uri}`);
       }
-      if (item.resource.name) {
-        resourceText.push(`Resource: ${item.resource.name}`);
+      const res = item.resource as { name?: string; description?: string };
+      if (res.name) {
+        resourceText.push(`Resource: ${res.name}`);
       }
-      if (item.resource.description) {
-        resourceText.push(`Resource Description: ${item.resource.description}`);
+      if (res.description) {
+        resourceText.push(`Resource Description: ${res.description}`);
       }
       if (item.resource.mimeType != null && item.resource.mimeType) {
         resourceText.push(`Resource MIME Type: ${item.resource.mimeType}`);

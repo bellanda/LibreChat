@@ -48,7 +48,7 @@ function ChatView({ index = 0 }: { index?: number }) {
   });
 
   const chatHelpers = useChatHelpers(index, conversationId);
-  const addedChatHelpers = useAddedResponse();
+  const addedChatHelpers = useAddedResponse({ rootIndex: index });
 
   useAdaptiveSSE(rootSubmission, chatHelpers, false, index);
 

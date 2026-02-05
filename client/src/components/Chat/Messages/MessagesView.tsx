@@ -1,6 +1,8 @@
 import { useAtomValue } from 'jotai';
 import type { TMessage } from 'librechat-data-provider';
+import { MessageSquare } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
 import { useRecoilValue } from 'recoil';
 import ScrollToBottom from '~/components/Messages/ScrollToBottom';
@@ -17,6 +19,7 @@ function MessagesViewContent({
   messagesTree?: TMessage[] | null;
 }) {
   const localize = useLocalize();
+  const navigate = useNavigate();
   const fontSize = useAtomValue(fontSizeAtom);
   const { screenshotTargetRef } = useScreenshot();
   const scrollButtonPreference = useRecoilValue(store.showScrollButton);
@@ -52,11 +55,23 @@ function MessagesViewContent({
               {(_messagesTree && _messagesTree.length == 0) || _messagesTree === null ? (
                 <div
                   className={cn(
-                    'flex w-full items-center justify-center p-3 text-text-secondary',
+                    'flex w-full flex-col items-center justify-center gap-4 p-6 text-text-secondary',
                     fontSize,
                   )}
+                  role="status"
                 >
-                  {localize('com_ui_nothing_found')}
+                  <MessageSquare
+                    className="h-12 w-12 opacity-40"
+                    aria-hidden
+                  />
+                  <p className="text-center">{localize('com_ui_nothing_found')}</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/c/new', { state: { focusChat: true } })}
+                    className="rounded-lg border border-border-medium bg-surface-secondary px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-surface-hover"
+                  >
+                    {localize('com_ui_empty_conversation_cta')}
+                  </button>
                 </div>
               ) : (
                 <>

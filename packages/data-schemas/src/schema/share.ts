@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import { Schema, Document, Types } from 'mongoose';
 
 export interface ISharedLink extends Document {
   conversationId: string;
@@ -26,7 +26,7 @@ const shareSchema: Schema<ISharedLink> = new Schema(
       type: String,
       index: true,
     },
-    messages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
+    messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],
     shareId: {
       type: String,
       index: true,

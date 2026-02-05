@@ -7,7 +7,6 @@ import { MCPConnectionFactory } from '~/mcp/MCPConnectionFactory';
 import { MCPDomainNotAllowedError } from '~/mcp/errors';
 import { detectOAuthRequirement } from '~/mcp/oauth';
 import { isEnabled } from '~/utils';
-import { MCPConnectionFactory } from '~/mcp/MCPConnectionFactory';
 
 /**
  * Inspects MCP servers to discover their metadata, capabilities, and tools.

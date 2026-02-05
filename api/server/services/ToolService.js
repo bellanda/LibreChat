@@ -468,13 +468,14 @@ async function loadAgentTools({
     imageOutputType: appConfig.imageOutputType,
   });
 
-  // Inject conversation ID into tool context if available
+  // Inject conversation ID into tool context if available (from request body when loadTools is invoked from chat)
+  const conversationId = req.body?.conversationId ?? null;
   if (conversationId && toolContextMap) {
     toolContextMap.conversation_id = `Conversation ID: ${conversationId}`;
     AgentLogger.logContextInjection(conversationId, 'toolContext', 'injected');
-  } else {
-    logger.warn(
-      `[loadAgentTools] conversationId or toolContextMap not available - conversationId: ${conversationId}, toolContextMap: ${!!toolContextMap}`,
+  } else if (!conversationId && toolContextMap) {
+    logger.debug(
+      `[loadAgentTools] conversationId not in request body - conversationId: ${conversationId}, toolContextMap: ${!!toolContextMap}`,
     );
   }
 

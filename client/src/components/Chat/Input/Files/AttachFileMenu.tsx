@@ -21,8 +21,9 @@ import {
   ImageUpIcon,
   TerminalSquareIcon,
 } from 'lucide-react';
-import React, { useMemo, useRef, useState } from 'react';
-import { useRecoilState } from 'recoil';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { useToastContext } from '@librechat/client';
 import type { MenuItemProps } from '~/common';
 import { SharePointPickerDialog } from '~/components/SharePoint';
 import { useGetStartupConfig } from '~/data-provider';
@@ -32,10 +33,12 @@ import {
   useFileHandling,
   useGetAgentsConfig,
   useLocalize,
+  useSmartUpload,
 } from '~/hooks';
 import useSharePointFileHandling from '~/hooks/Files/useSharePointFileHandling';
-import { ephemeralAgentByConvoId } from '~/store';
+import { ephemeralAgentByConvoId, autoModeByConvoId } from '~/store/agents';
 import { cn } from '~/utils';
+import { SmartUploadErrorModal } from './SmartUploadErrorModal';
 
 type FileUploadType = 'image' | 'document' | 'image_document' | 'image_document_video_audio';
 
@@ -66,6 +69,10 @@ const AttachFileMenu = ({
     ephemeralAgentByConvoId(conversationId),
   );
   const [toolResource, setToolResource] = useState<EToolResources | undefined>();
+  const [isAutoUpload, setIsAutoUpload] = useState(false);
+  const [errorFile, setErrorFile] = useState<File | null>(null);
+  const autoMode = useRecoilValue(autoModeByConvoId(conversationId));
+  const { showToast } = useToastContext();
   const { handleFileChange } = useFileHandling();
   const { handleSharePointFiles, isProcessing, downloadProgress } = useSharePointFileHandling({
     toolResource,
@@ -88,6 +95,12 @@ const AttachFileMenu = ({
     ephemeralAgent,
   );
 
+  const { detectUploadType } = useSmartUpload(
+    endpointType,
+    provider ?? endpoint ?? undefined,
+    endpointFileConfig,
+  );
+
   const handleUploadClick = (fileType?: FileUploadType) => {
     if (!inputRef.current) {
       return;
@@ -108,9 +121,62 @@ const AttachFileMenu = ({
     inputRef.current.accept = '';
   };
 
+  const onFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (autoMode && isAutoUpload && files?.length) {
+        const file = files[0];
+        const detection = detectUploadType(file);
+        if (!detection.validation.valid) {
+          setErrorFile(file);
+          e.target.value = '';
+          setIsAutoUpload(false);
+          return;
+        }
+        if (detection.validation.warning) {
+          showToast({
+            message: detection.validation.warning,
+            status: 'warning',
+            duration: 5000,
+          });
+        }
+        showToast({
+          message: detection.reason,
+          status: 'info',
+          duration: 4000,
+        });
+        setToolResource(detection.suggested);
+        setIsAutoUpload(false);
+        handleFileChange(e, detection.suggested);
+        return;
+      }
+      handleFileChange(e, toolResource);
+    },
+    [
+      autoMode,
+      isAutoUpload,
+      detectUploadType,
+      showToast,
+      handleFileChange,
+      toolResource,
+    ],
+  );
+
   const dropdownItems = useMemo(() => {
     const createMenuItems = (onAction: (fileType?: FileUploadType) => void) => {
       const items: MenuItemProps[] = [];
+
+      if (autoMode) {
+        items.push({
+          label: localize('com_ui_upload_auto'),
+          onClick: () => {
+            setIsAutoUpload(true);
+            setToolResource(undefined);
+            onAction();
+          },
+          icon: <ImageUpIcon className="icon-md" />,
+        });
+      }
 
       let currentProvider = provider || endpoint;
 
@@ -130,6 +196,7 @@ const AttachFileMenu = ({
         items.push({
           label: localize('com_ui_upload_provider'),
           onClick: () => {
+            setIsAutoUpload(false);
             setToolResource(undefined);
             let fileType: Exclude<FileUploadType, 'image' | 'document'> = 'image_document';
             if (currentProvider === Providers.GOOGLE || currentProvider === Providers.OPENROUTER) {
@@ -143,6 +210,7 @@ const AttachFileMenu = ({
         items.push({
           label: localize('com_ui_upload_image_input'),
           onClick: () => {
+            setIsAutoUpload(false);
             setToolResource(undefined);
             onAction('image');
           },
@@ -154,6 +222,7 @@ const AttachFileMenu = ({
         items.push({
           label: localize('com_ui_upload_ocr_text'),
           onClick: () => {
+            setIsAutoUpload(false);
             setToolResource(EToolResources.context);
             onAction();
           },
@@ -165,6 +234,7 @@ const AttachFileMenu = ({
         items.push({
           label: localize('com_ui_upload_file_search'),
           onClick: () => {
+            setIsAutoUpload(false);
             setToolResource(EToolResources.file_search);
             setEphemeralAgent((prev) => ({
               ...prev,
@@ -180,6 +250,7 @@ const AttachFileMenu = ({
         items.push({
           label: localize('com_ui_upload_code_files'),
           onClick: () => {
+            setIsAutoUpload(false);
             setToolResource(EToolResources.execute_code);
             setEphemeralAgent((prev) => ({
               ...prev,
@@ -212,6 +283,7 @@ const AttachFileMenu = ({
 
     return localItems;
   }, [
+    autoMode,
     localize,
     endpoint,
     provider,
@@ -224,6 +296,7 @@ const AttachFileMenu = ({
     codeAllowedByAgent,
     fileSearchAllowedByAgent,
     setIsSharePointDialogOpen,
+    setIsAutoUpload,
   ]);
 
   const menuTrigger = (
@@ -259,12 +332,7 @@ const AttachFileMenu = ({
 
   return (
     <>
-      <FileUpload
-        ref={inputRef}
-        handleFileChange={(e) => {
-          handleFileChange(e, toolResource);
-        }}
-      >
+      <FileUpload ref={inputRef} handleFileChange={onFileChange}>
         <DropdownPopup
           menuId="attach-file-menu"
           className="overflow-visible"
@@ -285,6 +353,13 @@ const AttachFileMenu = ({
         downloadProgress={downloadProgress}
         maxSelectionCount={endpointFileConfig?.fileLimit}
       />
+      {errorFile && (
+        <SmartUploadErrorModal
+          file={errorFile}
+          errorMessage={detectUploadType(errorFile).validation.error ?? ''}
+          onClose={() => setErrorFile(null)}
+        />
+      )}
     </>
   );
 };

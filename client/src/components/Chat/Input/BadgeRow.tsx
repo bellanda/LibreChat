@@ -13,9 +13,12 @@ import React, {
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import type { BadgeItem } from '~/common';
 import { useChatBadges } from '~/hooks';
+import { Constants } from 'librechat-data-provider';
 import { BadgeRowProvider } from '~/Providers';
 import store from '~/store';
+import { autoModeByConvoId } from '~/store/agents';
 import Artifacts from './Artifacts';
+import AutoModeBadge from './AutoModeBadge';
 import CodeInterpreter from './CodeInterpreter';
 import FileSearch from './FileSearch';
 import MCPSelect from './MCPSelect';
@@ -147,6 +150,8 @@ function BadgeRow({
   onToggle,
   isInChat,
 }: BadgeRowProps) {
+  const key = conversationId ?? Constants.NEW_CONVO;
+  const autoMode = useRecoilValue(autoModeByConvoId(key));
   const [orderedBadges, setOrderedBadges] = useState<BadgeItem[]>([]);
   const [dragState, dispatch] = useReducer(dragReducer, {
     draggedBadge: null,
@@ -364,11 +369,16 @@ function BadgeRow({
         )}
         {showEphemeralBadges === true && (
           <>
-            <WebSearch />
-            <CodeInterpreter />
-            <FileSearch />
-            <Artifacts />
-            <MCPSelect />
+            <AutoModeBadge />
+            {!autoMode && (
+              <>
+                <WebSearch />
+                <CodeInterpreter />
+                <FileSearch />
+                <Artifacts />
+                <MCPSelect />
+              </>
+            )}
           </>
         )}
         {ghostBadge && (

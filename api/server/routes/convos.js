@@ -10,6 +10,7 @@ const {
   configMiddleware,
 } = require('~/server/middleware');
 const { getConvosByCursor, deleteConvos, getConvo, saveConvo } = require('~/models/Conversation');
+const { getSuggestedStarters } = require('~/server/services/suggestedStarters');
 const { forkConversation, duplicateConversation } = require('~/server/utils/import/fork');
 const { storage, importFileFilter } = require('~/server/routes/files/multer');
 const { deleteAllSharedLinks, deleteConvoSharedLink } = require('~/models');
@@ -47,13 +48,27 @@ router.get('/', async (req, res) => {
       isArchived,
       tags,
       search,
-      order,
+      sortDirection: order,
       excludeTaggedConversations,
     });
     res.status(200).json(result);
   } catch (error) {
     logger.error('Error fetching conversations', error);
     res.status(500).json({ error: 'Error fetching conversations' });
+  }
+});
+
+// Isolated feature: suggested starters from last 2 convos via small LLM. Remove this block to disable.
+router.get('/suggested-starters', async (req, res) => {
+  try {
+    const result = await getSuggestedStarters(req);
+    if (!result?.starters?.length) {
+      return res.status(204).end();
+    }
+    return res.status(200).json(result);
+  } catch (err) {
+    logger.error('Error fetching suggested starters', err);
+    return res.status(500).json({ error: 'Error fetching suggested starters' });
   }
 });
 

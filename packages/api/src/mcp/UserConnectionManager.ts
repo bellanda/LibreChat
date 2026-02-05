@@ -1,7 +1,7 @@
 import { logger } from '@librechat/data-schemas';
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import { MCPConnectionFactory } from '~/mcp/MCPConnectionFactory';
-import { mcpServersRegistry as serversRegistry } from '~/mcp/registry/MCPServersRegistry';
+import { MCPServersRegistry } from '~/mcp/registry/MCPServersRegistry';
 import { MCPConnection } from './connection';
 import type * as t from './types';
 import { ConnectionsRepository } from '~/mcp/ConnectionsRepository';
@@ -62,7 +62,13 @@ export abstract class UserConnectionManager {
       );
     }
 
-    const config = await MCPServersRegistry.getInstance().getServerConfig(serverName, userId);
+    let config = await MCPServersRegistry.getInstance().getServerConfig(serverName, userId);
+    if (!config) {
+      throw new McpError(
+        ErrorCode.InvalidRequest,
+        `[MCP][User: ${userId}] Configuration for server "${serverName}" not found.`,
+      );
+    }
 
     const userServerMap = this.userConnections.get(userId);
     let connection = forceNew ? undefined : userServerMap?.get(serverName);
@@ -106,17 +112,6 @@ export abstract class UserConnectionManager {
     if (!connection) {
       logger.info(`[MCP][User: ${userId}][${serverName}] Establishing new connection`);
     }
-
-    const config = await serversRegistry.getServerConfig(serverName, userId);
-    if (!config) {
-      throw new McpError(
-        ErrorCode.InvalidRequest,
-        `[MCP][User: ${userId}] Configuration for server "${serverName}" not found.`,
-      );
-    }
-
-    // If no valid connection exists, create a new one
-    logger.info(`[MCP][User: ${userId}][${serverName}] Establishing new connection`);
 
     try {
       connection = await MCPConnectionFactory.create(

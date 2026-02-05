@@ -681,15 +681,6 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
       !shouldExcludeFromOCR && // Excluir tipos específicos do OCR
       fileConfig.checkType(file.mimetype, fileConfig.ocr?.supportedMimeTypes || []);
 
-    // Log para debug
-    console.log(`🔍 File processing debug:`, {
-      filename: file.originalname,
-      mimetype: file.mimetype,
-      shouldExcludeFromOCR,
-      shouldUseOCR,
-      ocrEnabled: appConfig?.ocr != null,
-    });
-
     if (shouldUseOCR && !(await checkCapability(req, AgentCapabilities.ocr))) {
       throw new Error('OCR capability is not enabled for Agents');
     } else if (shouldUseOCR) {

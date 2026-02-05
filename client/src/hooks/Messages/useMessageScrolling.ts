@@ -27,42 +27,37 @@ export default function useMessageScrolling(messagesTree?: TMessage[] | null) {
     }, debounceRate);
   }, []);
 
-  useEffect(() => {
-    if (!messagesEndRef.current || !scrollableRef.current) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        debouncedSetShowScrollButton(!entry.isIntersecting);
-      },
-      { root: scrollableRef.current, threshold },
-    );
-
-    observer.observe(messagesEndRef.current);
-
-    return () => {
-      observer.disconnect();
-      clearTimeout(timeoutIdRef.current);
-    };
-  }, [messagesEndRef, scrollableRef, debouncedSetShowScrollButton]);
+  // When user scrolls up (end not in view), stop auto-scroll until they click "scroll to bottom"
+  const debouncedSetShowScrollButtonWithAbort = useCallback(
+    (value: boolean) => {
+      debouncedSetShowScrollButton(value);
+      if (value) {
+        setAbortScroll(true);
+      }
+    },
+    [debouncedSetShowScrollButton, setAbortScroll],
+  );
 
   const debouncedHandleScroll = useCallback(() => {
     if (messagesEndRef.current && scrollableRef.current) {
       const observer = new IntersectionObserver(
         ([entry]) => {
-          debouncedSetShowScrollButton(!entry.isIntersecting);
+          debouncedSetShowScrollButtonWithAbort(!entry.isIntersecting);
         },
         { root: scrollableRef.current, threshold },
       );
       observer.observe(messagesEndRef.current);
       return () => observer.disconnect();
     }
-  }, [debouncedSetShowScrollButton]);
+  }, [debouncedSetShowScrollButtonWithAbort]);
 
   const scrollCallback = () => debouncedSetShowScrollButton(false);
 
-  const { scrollToRef: scrollToBottom, handleSmoothToRef } = useScrollToRef({
+  const {
+    scrollToRef: scrollToBottom,
+    scrollToRefSmoothStreaming: scrollToBottomStreaming,
+    handleSmoothToRef,
+  } = useScrollToRef({
     targetRef: messagesEndRef,
     callback: scrollCallback,
     smoothCallback: () => {
@@ -72,24 +67,47 @@ export default function useMessageScrolling(messagesTree?: TMessage[] | null) {
   });
 
   useEffect(() => {
-    if (!messagesTree || messagesTree.length === 0) {
-      return;
-    }
-
     if (!messagesEndRef.current || !scrollableRef.current) {
       return;
     }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        debouncedSetShowScrollButtonWithAbort(!entry.isIntersecting);
+      },
+      { root: scrollableRef.current, threshold },
+    );
+    observer.observe(messagesEndRef.current);
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeoutIdRef.current);
+    };
+  }, [messagesEndRef, scrollableRef, debouncedSetShowScrollButtonWithAbort]);
 
-    if (isSubmitting && scrollToBottom && abortScroll !== true) {
-      scrollToBottom();
+  // During streaming: smooth scroll so the view doesn't jump on each chunk
+  useEffect(() => {
+    if (!messagesTree || messagesTree.length === 0) {
+      return;
     }
-
+    if (!messagesEndRef.current || !scrollableRef.current) {
+      return;
+    }
+    if (isSubmitting && abortScroll !== true) {
+      const scrollFn = scrollToBottomStreaming ?? scrollToBottom;
+      scrollFn?.();
+    }
     return () => {
       if (abortScroll === true) {
-        scrollToBottom && scrollToBottom.cancel();
+        scrollToBottom?.cancel();
+        scrollToBottomStreaming?.cancel();
       }
     };
-  }, [isSubmitting, messagesTree, scrollToBottom, abortScroll]);
+  }, [
+    isSubmitting,
+    messagesTree,
+    scrollToBottom,
+    scrollToBottomStreaming,
+    abortScroll,
+  ]);
 
   useEffect(() => {
     if (!messagesEndRef.current || !scrollableRef.current) {

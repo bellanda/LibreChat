@@ -66,19 +66,27 @@ const startServer = async () => {
   await updateInterfacePermissions(appConfig);
 
   const indexPath = path.join(appConfig.paths.dist, 'index.html');
-  let indexHTML = fs.readFileSync(indexPath, 'utf8');
-
-  // In order to provide support to serving the application in a sub-directory
-  // We need to update the base href if the DOMAIN_CLIENT is specified and not the root path
-  if (process.env.DOMAIN_CLIENT) {
-    const clientUrl = new URL(process.env.DOMAIN_CLIENT);
-    const baseHref = clientUrl.pathname.endsWith('/')
-      ? clientUrl.pathname
-      : `${clientUrl.pathname}/`;
-    if (baseHref !== '/') {
-      logger.info(`Setting base href to ${baseHref}`);
-      indexHTML = indexHTML.replace(/base href="\/"/, `base href="${baseHref}"`);
+  let indexHTML;
+  if (fs.existsSync(indexPath)) {
+    indexHTML = fs.readFileSync(indexPath, 'utf8');
+    // In order to provide support to serving the application in a sub-directory
+    // We need to update the base href if the DOMAIN_CLIENT is specified and not the root path
+    if (process.env.DOMAIN_CLIENT) {
+      const clientUrl = new URL(process.env.DOMAIN_CLIENT);
+      const baseHref = clientUrl.pathname.endsWith('/')
+        ? clientUrl.pathname
+        : `${clientUrl.pathname}/`;
+      if (baseHref !== '/') {
+        logger.info(`Setting base href to ${baseHref}`);
+        indexHTML = indexHTML.replace(/base href="\/"/, `base href="${baseHref}"`);
+      }
     }
+  } else {
+    logger.warn(
+      `Frontend build not found at ${indexPath}. Run "npm run build:client" for production, or use "npm run frontend:dev" for development.`,
+    );
+    const clientPort = process.env.VITE_DEV_PORT || 3090;
+    indexHTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>LibreChat</title></head><body style="font-family:sans-serif;padding:2rem;max-width:600px;margin:0 auto;"><h1>Frontend not built</h1><p>The backend is running but <code>client/dist/index.html</code> was not found.</p><ul><li><strong>Development:</strong> Run <code>npm run frontend:dev</code> and open <a href="http://localhost:${clientPort}">http://localhost:${clientPort}</a></li><li><strong>Production:</strong> Run <code>npm run build:client</code> then restart the backend</li></ul><p><a href="/health">Health check</a></p></body></html>`;
   }
 
   app.get('/health', (_req, res) => res.status(200).send('OK'));

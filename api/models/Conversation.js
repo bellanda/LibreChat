@@ -183,6 +183,7 @@ module.exports = {
       search,
       sortBy = 'updatedAt',
       sortDirection = 'desc',
+      excludeTaggedConversations = false,
     } = {},
   ) => {
     const filters = [{ user }];
@@ -367,14 +368,25 @@ module.exports = {
   deleteConvos: async (user, filter) => {
     try {
       const userFilter = { ...filter, user };
-      const conversations = await Conversation.find(userFilter).select('conversationId');
+      // Buscar documento completo para ter title, user, etc. no histórico de auditoria
+      const conversations = await Conversation.find(userFilter);
       const conversationIds = conversations.map((c) => c.conversationId);
 
       if (!conversationIds.length) {
         throw new Error('Conversation not found or already deleted.');
       }
 
-      // Salvar conversas no histórico antes de excluir
+      // [LOCAL CUSTOMIZATION - AUDITORIA] Antes de excluir, gravar em conversationhistories
+      // para auditoria. Não remover ao fazer merge da upstream; ver LOCAL_CUSTOMIZATIONS.md
+      if (!ConversationHistory) {
+        logger.error(
+          '[deleteConvos] ConversationHistory model not available. Run: npm run build:data-schemas',
+        );
+        throw new Error(
+          'ConversationHistory model not available. Rebuild packages/data-schemas.',
+        );
+      }
+
       const historyPromises = conversations.map(async (conversation) => {
         try {
           const conversationObj = conversation.toObject();
@@ -388,9 +400,10 @@ module.exports = {
             ...conversationObj,
             originalConversationId: conversationObj.conversationId,
             conversationId: `${conversationObj.conversationId}_deleted_${Date.now()}`,
-            fullMessages: conversationMessages, // Salvar mensagens completas
+            fullMessages: conversationMessages,
             deletedAt: new Date(),
             deletedBy: user,
+            user: conversationObj.user ?? user, // garante user no histórico
           };
 
           // Remove o _id original para criar um novo documento
@@ -412,7 +425,6 @@ module.exports = {
       // Aguarda todas as operações de histórico completarem
       await Promise.allSettled(historyPromises);
 
-      const conversationIds = conversations.map((c) => c.conversationId);
       const deleteConvoResult = await Conversation.deleteMany(userFilter);
 
       const deleteMessagesResult = await deleteMessages({

@@ -54,18 +54,15 @@ const useFileHandling = (params?: UseFileHandling) => {
   const agent_id = params?.additionalMetadata?.agent_id ?? '';
   const assistant_id = params?.additionalMetadata?.assistant_id ?? '';
   const endpointType = useMemo(() => conversation?.endpointType, [conversation?.endpointType]);
-  const endpoint = useMemo(() => conversation?.endpoint ?? 'default', [conversation?.endpoint]);
-
-  const { data: fileConfig = null } = useGetFileConfig({
-    select: (data) => mergeFileConfig(data),
-  });
-
-  // Override endpoint if provided in params
   const endpoint = useMemo(
     () =>
       params?.overrideEndpoint ?? conversation?.endpointType ?? conversation?.endpoint ?? 'default',
     [params?.overrideEndpoint, conversation?.endpointType, conversation?.endpoint],
   );
+
+  const { data: fileConfig = null } = useGetFileConfig({
+    select: (data) => mergeFileConfig(data),
+  });
 
   // Check if current model supports image attachments
   const currentModel = conversation?.model ?? null;

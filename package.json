@@ -162,6 +162,8 @@
     ]
   },
   "dependencies": {
-    "gpt-tokenizer": "^3.4.0"
+    "diff": "8.0.3",
+    "gpt-tokenizer": "^3.4.0",
+    "vite-plugin-node-polyfills": "^0.2.0"
   }
 }

@@ -5,7 +5,6 @@ const { logger } = require('@librechat/data-schemas');
 const {
   agentCreateSchema,
   agentUpdateSchema,
-  refreshListAvatars,
   mergeAgentOcrConversion,
   MAX_AVATAR_REFRESH_AGENTS,
   convertOcrToContextInPlace,

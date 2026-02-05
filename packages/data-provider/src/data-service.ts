@@ -11,6 +11,7 @@ import * as a from './types/assistants';
 import * as f from './types/files';
 import * as m from './types/mutations';
 import * as q from './types/queries';
+import * as mcp from './types/mcpServers';
 
 export function revokeUserKey(name: string): Promise<unknown> {
   return request.delete(endpoints.revokeUserKey(name));
@@ -724,6 +725,17 @@ export function archiveConversation(
 
 export function genTitle(payload: m.TGenTitleRequest): Promise<m.TGenTitleResponse> {
   return request.get(endpoints.genTitle(payload.conversationId));
+}
+
+/** Suggested conversation starters (optional feature). Returns null on 204 or error. */
+export function getSuggestedStarters(): Promise<{ starters: string[] } | null> {
+  return request
+    .get(endpoints.suggestedStarters())
+    .then((res: unknown) => {
+      const data = res as { starters?: string[] };
+      return data?.starters?.length ? { starters: data.starters } : null;
+    })
+    .catch(() => null);
 }
 
 export const listMessages = (params?: q.MessagesListParams): Promise<q.MessagesListResponse> => {

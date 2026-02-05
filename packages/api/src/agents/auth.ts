@@ -1,4 +1,4 @@
-import { logger, decrypt } from '@librechat/data-schemas';
+import { logger } from '@librechat/data-schemas';
 import type { IPluginAuth, PluginAuthMethods } from '@librechat/data-schemas';
 import { decrypt } from '../crypto/encryption';
 

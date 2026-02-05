@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const fetch = require('node-fetch');
 const { logger } = require('@librechat/data-schemas');
 const {
-  countTokens,
   getBalanceConfig,
   extractFileContext,
   encodeAndFormatAudios,
@@ -25,6 +24,7 @@ const { getMessages, saveMessage, updateMessage, saveConvo, getConvo } = require
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { checkBalance } = require('~/models/balanceMethods');
 const { truncateToolCallOutputs } = require('./prompts');
+/** Contagem de tokens local (não usar @librechat/api) */
 const countTokens = require('~/server/utils/countTokens');
 const { getFiles } = require('~/models/File');
 const TextStream = require('./TextStream');
@@ -1067,6 +1067,7 @@ class BaseClient {
    * @param {TMessage[]} options.messages - An array of message objects. Each object should have either an 'id' or 'messageId' property, and may have a 'parentMessageId' property.
    * @param {string} options.parentMessageId - The ID of the parent message to start the traversal from.
    * @param {Function} [options.mapMethod] - An optional function to map over the ordered messages. If provided, it will be applied to each message in the resulting array.
+   * @param {Function} [options.mapCondition=null] - Optional predicate; when provided with mapMethod, mapMethod is applied only to messages for which mapCondition(message) is true.
    * @param {boolean} [options.summary=false] - If set to true, the traversal modifies messages with 'summary' and 'summaryTokenCount' properties and stops at the message with a 'summary' property.
    * @returns {TMessage[]} An array containing the messages in the order they should be displayed, starting with the most recent message with a 'summary' property if the 'summary' option is true, and ending with the message identified by 'parentMessageId'.
    */
@@ -1074,6 +1075,7 @@ class BaseClient {
     messages,
     parentMessageId,
     mapMethod = null,
+    mapCondition = null,
     summary = false,
   }) {
     if (!messages || messages.length === 0) {

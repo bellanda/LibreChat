@@ -105,6 +105,8 @@ export const conversationById = (id: string) => `${conversationsRoot}/${id}`;
 export const genTitle = (conversationId: string) =>
   `${conversationsRoot}/gen_title/${encodeURIComponent(conversationId)}`;
 
+export const suggestedStarters = () => `${conversationsRoot}/suggested-starters`;
+
 export const updateConversation = () => `${conversationsRoot}/update`;
 
 export const archiveConversation = () => `${conversationsRoot}/archive`;

@@ -38,7 +38,6 @@ const defaultServerInitState: MCPServerInitState = {
   isCancellable: false,
   oauthUrl: null,
   oauthStartTime: null,
-  isCancellable: false,
 };
 
 /**

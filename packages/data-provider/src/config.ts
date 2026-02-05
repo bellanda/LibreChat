@@ -612,6 +612,8 @@ export const interfaceSchema = z
     mcpServers: mcpServersSchema.optional(),
     endpointsMenu: z.boolean().optional(),
     modelSelect: z.boolean().optional(),
+    /** When false, the model selector shows a flat list of models instead of grouping by provider (endpoint). Default true. */
+    groupModelsByEndpoint: z.boolean().optional(),
     parameters: z.boolean().optional(),
     sidePanel: z.boolean().optional(),
     multiConvo: z.boolean().optional(),
@@ -660,6 +662,7 @@ export const interfaceSchema = z
   .default({
     endpointsMenu: true,
     modelSelect: true,
+    groupModelsByEndpoint: true,
     parameters: true,
     sidePanel: true,
     presets: true,

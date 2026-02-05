@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLocalize, useNewConvo } from '~/hooks';
 import store from '~/store';
 import { clearMessagesCache } from '~/utils';
+import { CLOSE_SIDEBAR_ID } from '~/components/Chat/Menus/OpenSidebar';
 
 export default function NewChat({
   index = 0,
@@ -31,7 +32,7 @@ export default function NewChat({
     toggleNav();
     // Delay focus until after the sidebar animation completes (200ms)
     setTimeout(() => {
-      document.getElementById(OPEN_SIDEBAR_ID)?.focus();
+      document.getElementById('open-sidebar-button')?.focus();
     }, 250);
   }, [toggleNav]);
 

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import { Schema, Document, Types } from 'mongoose';
 
 // @ts-ignore
 export interface ITransaction extends Document {
@@ -21,7 +21,7 @@ export interface ITransaction extends Document {
 const transactionSchema: Schema<ITransaction> = new Schema(
   {
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'User',
       index: true,
       required: true,

@@ -4,7 +4,7 @@ import { useAvailablePluginsQuery } from 'librechat-data-provider/react-query';
 import { useEffect } from 'react';
 import TagManager from 'react-gtm-module';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { useMCPToolsQuery } from '~/data-provider';
+import { useMCPToolsQuery, useMCPServersQuery } from '~/data-provider';
 import store from '~/store';
 import { mapPlugins, processPlugins, selectPlugins } from '~/utils';
 import { cleanupTimestampedStorage } from '~/utils/timestamps';

@@ -167,10 +167,10 @@ export const getTextKey = (message?: TMessage | null, convoId?: string | null) =
   return `${(message.messageId as string | null) ?? ''}${TEXT_KEY_DIVIDER}${contentKey}${TEXT_KEY_DIVIDER}${message.conversationId ?? convoId}`;
 };
 
-export const scrollToEnd = (callback?: () => void) => {
+export const scrollToEnd = (callback?: () => void, behavior: 'smooth' | 'instant' = 'instant') => {
   const messagesEndElement = document.getElementById('messages-end');
   if (messagesEndElement) {
-    messagesEndElement.scrollIntoView({ behavior: 'instant' });
+    messagesEndElement.scrollIntoView({ behavior });
     if (callback) {
       callback();
     }

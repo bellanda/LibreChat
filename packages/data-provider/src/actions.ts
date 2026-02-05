@@ -2,7 +2,6 @@ import _axios from 'axios';
 import crypto from 'crypto';
 import { load } from 'js-yaml';
 import type { OpenAPIV3 } from 'openapi-types';
-import { URL } from 'url';
 import { z } from 'zod';
 import type { ActionMetadata, ActionMetadataRuntime } from './types/agents';
 import { AuthTypeEnum, AuthorizationTypeEnum } from './types/agents';
@@ -50,11 +49,13 @@ export function sha1(input: string) {
   return crypto.createHash('sha1').update(input).digest('hex');
 }
 
+// Upstream: import { URL } from 'url'; new URL(fullURL).toString()
+// Aqui: globalThis.URL para compatibilidade com o bundle Vite (alias 'url' → polyfill que não exporta URL)
 export function createURL(domain: string, path: string) {
   const cleanDomain = domain.replace(/\/$/, '');
   const cleanPath = path.replace(/^\//, '');
   const fullURL = `${cleanDomain}/${cleanPath}`;
-  return new URL(fullURL).toString();
+  return new (globalThis.URL)(fullURL).toString();
 }
 
 const schemaTypeHandlers: Record<string, (schema: OpenAPISchema) => z.ZodTypeAny> = {

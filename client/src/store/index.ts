@@ -14,6 +14,7 @@ import toast from './toast';
 import user from './user';
 export * from './agents';
 export * from './mcp';
+export * from './favorites';
 
 const store = {
   ...artifacts,

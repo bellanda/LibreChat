@@ -417,7 +417,7 @@ export default function useEventHandlers({
         logger.log('latest_message', 'createdHandler: resetting latest message');
         resetLatestMessage();
       }
-      scrollToEnd(() => setAbortScroll(false));
+      scrollToEnd(() => setAbortScroll(false), 'smooth');
     },
     [
       setMessages,

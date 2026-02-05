@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const { sendEvent } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
 const { Constants, ViolationTypes } = require('librechat-data-provider');
 const {

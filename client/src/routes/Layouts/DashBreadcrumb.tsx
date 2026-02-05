@@ -1,5 +1,4 @@
 import { useMemo, useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
 import { Sidebar } from '@librechat/client';
 import { useLocation } from 'react-router-dom';
 import { SystemRoles } from 'librechat-data-provider';

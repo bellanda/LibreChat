@@ -9,6 +9,7 @@ import DialogManager from './DialogManager';
 import { ModelSelectorChatProvider } from './ModelSelectorChatContext';
 import { ModelSelectorProvider, useModelSelectorContext } from './ModelSelectorContext';
 import {
+  FlatModelsList,
   renderCustomGroups,
   renderEndpoints,
   renderModelSpecs,
@@ -25,6 +26,7 @@ function ModelSelectorContent() {
     modelSpecs,
     mappedEndpoints,
     endpointsConfig,
+    groupModelsByEndpoint,
     // State
     searchValue,
     searchResults,
@@ -123,8 +125,10 @@ function ModelSelectorContent() {
               modelSpecs?.filter((spec) => !spec.group) || [],
               selectedValues.modelSpec || '',
             )}
-            {/* Render endpoints (will include grouped specs matching endpoint names) */}
-            {renderEndpoints(mappedEndpoints ?? [])}
+            {/* Render endpoints (grouped by provider) or flat list of models */}
+            {groupModelsByEndpoint
+              ? renderEndpoints(mappedEndpoints ?? [])
+              : <FlatModelsList />}
             {/* Render custom groups (specs with group field not matching any endpoint) */}
             {renderCustomGroups(modelSpecs || [], mappedEndpoints ?? [])}
           </>

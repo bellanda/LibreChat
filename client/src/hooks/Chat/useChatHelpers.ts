@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { QueryKeys } from 'librechat-data-provider';
+import { QueryKeys, isAssistantsEndpoint } from 'librechat-data-provider';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
 import type { TMessage } from 'librechat-data-provider';

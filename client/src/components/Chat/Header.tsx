@@ -41,21 +41,18 @@ export default function Header() {
       <div className="flex overflow-x-auto gap-2 justify-between items-center w-full hide-scrollbar">
         <div className="flex gap-2 items-center mx-1">
           <div
-            className={`flex items-center gap-2 ${
-              !isSmallScreen ? 'transition-all duration-200 ease-in-out' : ''
-            } ${
-              !navVisible
+            className={`flex items-center gap-2 ${!isSmallScreen ? 'transition-all duration-200 ease-in-out' : ''
+              } ${!navVisible
                 ? 'opacity-100 translate-x-0'
                 : 'opacity-0 pointer-events-none translate-x-[-100px]'
-            }`}
+              }`}
           >
             <OpenSidebar setNavVisible={setNavVisible} className="max-md:hidden" />
             <HeaderNewChat />
           </div>
           <div
-            className={`flex items-center gap-2 ${
-              !isSmallScreen ? 'transition-all duration-200 ease-in-out' : ''
-            } ${!navVisible ? 'translate-x-0' : 'translate-x-[-100px]'}`}
+            className={`flex items-center gap-2 ${!isSmallScreen ? 'transition-all duration-200 ease-in-out' : ''
+              } ${!navVisible ? 'translate-x-0' : 'translate-x-[-100px]'}`}
           >
             <ModelSelector startupConfig={startupConfig} />
             {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
@@ -74,7 +71,7 @@ export default function Header() {
                 isThemeDark ? '/assets/hpe-ia-neural-dark-mode.png' : '/assets/hpe-ia-neural.png'
               }
               alt="logo"
-              className="ml-[18vw] mt-6 h-[70px] rounded-[10px] bg-white"
+              className="ml-[18vw] h-8 w-auto max-h-10 object-contain rounded-md bg-white shrink-0"
             />
           </div>
         </div>

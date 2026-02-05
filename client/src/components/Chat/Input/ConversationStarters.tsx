@@ -1,11 +1,32 @@
 import { Constants, EModelEndpoint } from 'librechat-data-provider';
 import { useCallback, useMemo } from 'react';
-import { useAgentsMapContext, useAssistantsMapContext, useChatContext } from '~/Providers';
-import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
-import { useSubmitMessage } from '~/hooks';
+import {
+  useAgentsMapContext,
+  useAssistantsMapContext,
+  useChatContext,
+  useChatFormContext,
+} from '~/Providers';
+import {
+  useGetAssistantDocsQuery,
+  useGetEndpointsQuery,
+  useSuggestedStartersQuery,
+} from '~/data-provider';
+import { mainTextareaId } from '~/common';
+import { useLocalize } from '~/hooks';
 import { getEntity, getIconEndpoint } from '~/utils';
 
+const GENERIC_STARTER_KEYS = [
+  'com_ui_starter_generic_1',
+  'com_ui_starter_generic_2',
+  'com_ui_starter_generic_3',
+  'com_ui_starter_generic_4',
+] as const;
+
+const GENERIC_EMOJIS = ['💡', '📋', '🌐', '✨'] as const;
+const FALLBACK_EMOJIS = ['💬', '✏️', '🎯', '🚀'] as const;
+
 const ConversationStarters = () => {
+  const localize = useLocalize();
   const { conversation } = useChatContext();
   const agentsMap = useAgentsMapContext();
   const assistantMap = useAssistantsMapContext();
@@ -35,22 +56,45 @@ const ConversationStarters = () => {
     assistant_id: conversation?.assistant_id,
   });
 
+  const fromDocs = useMemo(
+    () => documentsMap.get(entity?.id ?? '')?.conversation_starters ?? [],
+    [documentsMap, entity?.id],
+  );
+  const useGenericOrSuggested = !entity?.conversation_starters?.length && !isAgent && !fromDocs.length;
+
+  const { data: suggestedStarters } = useSuggestedStartersQuery(useGenericOrSuggested);
+
   const conversation_starters = useMemo(() => {
     if (entity?.conversation_starters?.length) {
       return entity.conversation_starters;
     }
-
     if (isAgent) {
       return [];
     }
+    if (fromDocs.length) {
+      return fromDocs;
+    }
+    if (suggestedStarters?.length) {
+      return suggestedStarters;
+    }
+    return GENERIC_STARTER_KEYS.map((key) => localize(key));
+  }, [documentsMap, isAgent, entity, fromDocs, suggestedStarters, localize]);
 
-    return documentsMap.get(entity?.id ?? '')?.conversation_starters ?? [];
-  }, [documentsMap, isAgent, entity]);
+  const methods = useChatFormContext();
+  const isGeneric =
+    !entity?.conversation_starters?.length &&
+    !fromDocs.length &&
+    !(suggestedStarters?.length);
+  const emojis = isGeneric ? GENERIC_EMOJIS : FALLBACK_EMOJIS;
 
-  const { submitMessage } = useSubmitMessage();
-  const sendConversationStarter = useCallback(
-    (text: string) => submitMessage({ text }),
-    [submitMessage],
+  /** Puts the suggestion into the chat input so the user can edit before sending. */
+  const fillInputWithStarter = useCallback(
+    (text: string) => {
+      methods.setValue('text', text + ' ', { shouldValidate: true });
+      const textarea = document.getElementById(mainTextareaId) as HTMLTextAreaElement | null;
+      textarea?.focus();
+    },
+    [methods],
   );
 
   if (!conversation_starters.length) {
@@ -58,20 +102,30 @@ const ConversationStarters = () => {
   }
 
   return (
-    <div className="mt-8 flex flex-wrap justify-center gap-3 px-4">
-      {conversation_starters
-        .slice(0, Constants.MAX_CONVO_STARTERS)
-        .map((text: string, index: number) => (
-          <button
-            key={index}
-            onClick={() => sendConversationStarter(text)}
-            className="relative flex w-40 cursor-pointer flex-col gap-2 rounded-2xl border border-border-medium px-3 pb-4 pt-3 text-start align-top text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition-colors duration-300 ease-in-out fade-in hover:bg-surface-tertiary"
-          >
-            <p className="break-word line-clamp-3 overflow-hidden text-balance break-all text-text-secondary">
-              {text}
-            </p>
-          </button>
-        ))}
+    <div className="mt-8 flex flex-col items-center gap-4 px-4">
+      <p className="text-center text-sm text-text-secondary" role="status">
+        {localize('com_ui_welcome_message')}
+      </p>
+      <div className="flex flex-wrap justify-center gap-3">
+        {conversation_starters
+          .slice(0, Constants.MAX_CONVO_STARTERS)
+          .map((text: string, index: number) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => fillInputWithStarter(text)}
+              title={text}
+              className="relative flex h-12 w-44 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-border-medium px-3 text-center text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition-colors duration-300 ease-in-out fade-in hover:bg-surface-tertiary"
+            >
+              <span className="flex flex-shrink-0 items-center justify-center text-base">
+                {emojis[index % emojis.length]}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-center text-text-secondary">
+                {text}
+              </span>
+            </button>
+          ))}
+      </div>
     </div>
   );
 };

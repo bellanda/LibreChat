@@ -1,11 +1,11 @@
-import mongoose, { Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import { FileSources } from 'librechat-data-provider';
 import type { IMongoFile } from '~/types';
 
 const file: Schema<IMongoFile> = new Schema(
   {
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'User',
       index: true,
       required: true,
