@@ -8,6 +8,7 @@ import {
   EModelEndpoint,
   EToolResources,
   getEndpointFileConfig,
+  inferMimeType,
   isAssistantsEndpoint,
   mergeFileConfig,
   QueryKeys,
@@ -22,6 +23,7 @@ import { isEphemeralAgent } from '~/common';
 import store, { ephemeralAgentByConvoId } from '~/store';
 import useLocalize from '../useLocalize';
 import useFileHandling from './useFileHandling';
+import { useSmartUpload } from './useSmartUpload';
 
 export default function useDragHelpers() {
   const queryClient = useQueryClient();
@@ -41,6 +43,23 @@ export default function useDragHelpers() {
 
   const { handleFiles } = useFileHandling();
 
+  // Use smartUpload to detect file types and suggest tools
+  const { detectUploadType } = useSmartUpload(
+    conversation?.endpointType,
+    conversation?.endpoint,
+    undefined,
+    conversation?.model,
+  );
+
+  /** Use refs to avoid re-creating the drop handler */
+  const handleFilesRef = useRef(handleFiles);
+  const conversationRef = useRef(conversation);
+  const detectUploadTypeRef = useRef(detectUploadType);
+
+  handleFilesRef.current = handleFiles;
+  conversationRef.current = conversation;
+  detectUploadTypeRef.current = detectUploadType;
+
   const handleOptionSelect = useCallback(
     (toolResource: EToolResources | undefined) => {
       /** File search is not automatically enabled to simulate legacy behavior */
@@ -56,13 +75,6 @@ export default function useDragHelpers() {
     },
     [draggedFiles, handleFiles, setEphemeralAgent],
   );
-
-  /** Use refs to avoid re-creating the drop handler */
-  const handleFilesRef = useRef(handleFiles);
-  const conversationRef = useRef(conversation);
-
-  handleFilesRef.current = handleFiles;
-  conversationRef.current = conversation;
 
   const handleDrop = useCallback(
     (item: { files: File[] }) => {
@@ -91,6 +103,42 @@ export default function useDragHelpers() {
         return;
       }
 
+      // Use smartUpload to detect file types and get suggested tool
+      const firstFile = item.files[0];
+      if (firstFile) {
+        const detection = detectUploadTypeRef.current(firstFile);
+
+        // If validation fails, show error
+        if (!detection.validation.valid) {
+          showToast({
+            message: detection.validation.error || localize('com_ui_attach_error'),
+            status: 'error',
+          });
+          return;
+        }
+
+        // If there's a clear suggestion and only one file, use it automatically
+        // For multiple files, show modal to let user choose
+        if (item.files.length === 1 && detection.suggested !== undefined) {
+          // Set tool resource and handle files directly
+          if (detection.suggested !== EToolResources.file_search) {
+            setEphemeralAgent((prev) => ({
+              ...prev,
+              [detection.suggested!]: true,
+            }));
+          }
+          handleFilesRef.current(item.files, detection.suggested);
+          return;
+        }
+
+        // If no tool suggested (goes directly to provider), handle immediately
+        if (detection.suggested === undefined) {
+          handleFilesRef.current(item.files);
+          return;
+        }
+      }
+
+      // Show modal for multiple files or when user needs to choose
       const endpointsConfig = queryClient.getQueryData<t.TEndpointsConfig>([QueryKeys.endpoints]);
       const agentsConfig = endpointsConfig?.[EModelEndpoint.agents];
       const capabilities = agentsConfig?.capabilities ?? defaultAgentCapabilities;
@@ -136,7 +184,7 @@ export default function useDragHelpers() {
       setDraggedFiles(item.files);
       setShowModal(true);
     },
-    [isAssistants, queryClient, showToast, localize],
+    [isAssistants, queryClient, showToast, localize, setEphemeralAgent],
   );
 
   const [{ canDrop, isOver }, drop] = useDrop(

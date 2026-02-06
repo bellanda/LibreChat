@@ -58,10 +58,13 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Isolated feature: suggested starters from last 2 convos via small LLM. Remove this block to disable.
-router.get('/suggested-starters', async (req, res) => {
+// Isolated feature: suggested starters from last 2 convos via same OpenAI client as the app.
+router.get('/suggested-starters', configMiddleware, async (req, res) => {
+  if (process.env.DEBUG_LOGGING === 'true') {
+    logger.debug('[suggested-starters] GET request received');
+  }
   try {
-    const result = await getSuggestedStarters(req);
+    const result = await getSuggestedStarters(req, res);
     if (!result?.starters?.length) {
       return res.status(204).end();
     }

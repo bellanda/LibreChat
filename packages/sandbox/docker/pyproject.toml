@@ -1,0 +1,23 @@
+[project]
+name = "sandbox-executor"
+version = "0.1.0"
+description = "Python environment for sandbox code execution"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "pandas",
+    "polars",
+    "pyarrow",
+    "matplotlib",
+    "seaborn",
+    "scipy",
+    "pillow",
+    "openpyxl",
+    "xlrd",
+    "python-pptx",
+    "scikit-learn",
+    "tabulate",
+    "pyyaml",
+    "pypdf>=6.0.0",
+    "pdfplumber>=0.11.0",
+]

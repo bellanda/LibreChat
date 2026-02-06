@@ -267,9 +267,9 @@ const loadTools = async ({
       requestedTools[tool] = async () => {
         const authValues = await loadAuthValues({
           userId: user,
-          authFields: [EnvVar.CODE_API_KEY],
+          authFields: [`${EnvVar.CODE_API_KEY}||SANDBOX_API_KEY`],
         });
-        const codeApiKey = authValues[EnvVar.CODE_API_KEY];
+        const codeApiKey = authValues[EnvVar.CODE_API_KEY] ?? authValues.SANDBOX_API_KEY;
         const { files, toolContext } = await primeCodeFiles(
           {
             ...options,

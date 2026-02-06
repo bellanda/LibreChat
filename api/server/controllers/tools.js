@@ -194,7 +194,15 @@ const callTool = async (req, res) => {
 
     const artifactPromises = [];
     for (const file of artifact.files) {
-      const { id, name } = file;
+      const id = file.id ?? file.fileId;
+      const name = file.name ?? file.filename ?? file.id ?? file.fileId;
+      if (!id || typeof id !== 'string') {
+        logger.warn('[execute_code] Skipping file with missing id/fileId:', {
+          fileKeys: Object.keys(file || {}),
+          session_id: artifact.session_id,
+        });
+        continue;
+      }
       artifactPromises.push(
         (async () => {
           const fileMetadata = await processCodeOutput({

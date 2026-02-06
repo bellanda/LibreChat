@@ -92,6 +92,7 @@ function AttachFileChat({
         agentId={conversation?.agent_id}
         endpointFileConfig={endpointFileConfig}
         useResponsesApi={useResponsesApi}
+        currentModel={conversation?.model}
       />
     );
   }

@@ -1,0 +1,20 @@
+# Sandbox HTTP server - runs the code.librechat-compatible API
+# Needs Docker socket to spawn executor containers
+
+FROM node:20-slim
+
+WORKDIR /app
+
+COPY package.json ./
+RUN npm install --omit=dev
+
+COPY src ./src
+
+RUN mkdir -p /app/storage
+
+ENV SANDBOX_PORT=3081
+ENV SANDBOX_STORAGE_PATH=/app/storage
+
+EXPOSE 3081
+
+CMD ["node", "src/server.js"]

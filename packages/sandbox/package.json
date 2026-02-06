@@ -1,0 +1,30 @@
+{
+  "name": "@librechat/sandbox",
+  "version": "1.0.0",
+  "description": "Self-hosted Code Interpreter sandbox compatible with code.librechat API",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "bin": {
+    "sandbox-server": "src/server.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test src/storage.test.js"
+  },
+  "keywords": [
+    "librechat",
+    "code-interpreter",
+    "sandbox"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "mongoose": "^8.12.1",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.0.0",
+    "winston": "^3.11.0"
+  }
+}

@@ -285,12 +285,17 @@ router.get('/code/download/:session_id/:fileId', async (req, res) => {
       return res.status(501).send('Not Implemented');
     }
 
-    const result = await loadAuthValues({ userId: req.user.id, authFields: [EnvVar.CODE_API_KEY] });
+    const result = await loadAuthValues({
+      userId: req.user.id,
+      authFields: [`${EnvVar.CODE_API_KEY}||SANDBOX_API_KEY`],
+    });
+    const codeApiKey = result[EnvVar.CODE_API_KEY] ?? result.SANDBOX_API_KEY;
 
     /** @type {AxiosResponse<ReadableStream> | undefined} */
     const response = await getDownloadStream(
       `${session_id}/${fileId}`,
-      result[EnvVar.CODE_API_KEY],
+      codeApiKey,
+      req.user?.id,
     );
     res.set(response.headers);
     response.data.pipe(res);

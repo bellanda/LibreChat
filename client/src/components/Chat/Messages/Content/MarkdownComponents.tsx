@@ -3,7 +3,7 @@ import { PermissionTypes, Permissions, apiBaseUrl } from 'librechat-data-provide
 import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
 import CodeBlock from '~/components/Messages/Content/CodeBlock';
-import { useFileDownload } from '~/data-provider';
+import { useCodeOutputDownload, useFileDownload } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import useHasAccess from '~/hooks/Roles/useHasAccess';
 import { useCodeBlockContext } from '~/Providers';
@@ -91,6 +91,11 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
   const { showToast } = useToastContext();
   const localize = useLocalize();
 
+  const isCodeDownloadLink = useMemo(
+    () => href.includes('/api/files/code/download/'),
+    [href],
+  );
+
   const {
     file_id = '',
     filename = '',
@@ -109,11 +114,52 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
   }, [user?.id, href]);
 
   const { refetch: downloadFile } = useFileDownload(user?.id ?? '', file_id);
-  const props: { target?: string; onClick?: React.MouseEventHandler } = { target: '_new' };
+  const { refetch: downloadCodeOutput } = useCodeOutputDownload(isCodeDownloadLink ? href : '');
+  const linkClasses =
+    'text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150 underline-offset-2 hover:underline';
 
   if (!file_id || !filename) {
+    if (!isCodeDownloadLink) {
+      return (
+        <a href={href} className={linkClasses} target="_blank" rel="noopener noreferrer">
+          {children}
+        </a>
+      );
+    }
+
+    const handleCodeDownload = async (event: React.MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+      try {
+        const stream = await downloadCodeOutput();
+        if (stream.data == null || stream.data === '') {
+          console.error('Error downloading file: No data found');
+          showToast({
+            status: 'error',
+            message: localize('com_ui_download_error'),
+          });
+          return;
+        }
+        const downloadName = href.split('/').pop() || 'download';
+        const link = document.createElement('a');
+        link.href = stream.data;
+        link.setAttribute('download', downloadName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(stream.data);
+      } catch (error) {
+        console.error('Error downloading code output file:', error);
+      }
+    };
+
     return (
-      <a href={href} {...props}>
+      <a
+        href={href}
+        onClick={handleCodeDownload}
+        className={linkClasses}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         {children}
       </a>
     );
@@ -143,9 +189,6 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
     }
   };
 
-  props.onClick = handleDownload;
-  props.target = '_blank';
-
   const domainServerBaseUrl = `${apiBaseUrl()}/api`;
 
   return (
@@ -155,7 +198,10 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
           ? `${domainServerBaseUrl}/${filepath}`
           : `${domainServerBaseUrl}/files/${filepath}`
       }
-      {...props}
+      onClick={handleDownload}
+      className={linkClasses}
+      target="_blank"
+      rel="noopener noreferrer"
     >
       {children}
     </a>
@@ -167,7 +213,7 @@ type TParagraphProps = {
 };
 
 export const p: React.ElementType = memo(({ children }: TParagraphProps) => {
-  return <p className="mb-2 whitespace-pre-wrap">{children}</p>;
+  return <p className="mb-4 leading-7 whitespace-pre-wrap">{children}</p>;
 });
 
 type TImageProps = {

@@ -611,13 +611,22 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
       throw new Error('Code execution is not enabled for Agents');
     }
     const { handleFileUpload: uploadCodeEnvFile } = getStrategyFunctions(FileSources.execute_code);
-    const result = await loadAuthValues({ userId: req.user.id, authFields: [EnvVar.CODE_API_KEY] });
+    const result = await loadAuthValues({
+      userId: req.user.id,
+      authFields: [`${EnvVar.CODE_API_KEY}||SANDBOX_API_KEY`],
+    });
+    const codeApiKey = result[EnvVar.CODE_API_KEY] ?? result.SANDBOX_API_KEY;
+    if (!codeApiKey) {
+      throw new Error(
+        'Code Interpreter API key not configured. Set SANDBOX_API_KEY or LIBRECHAT_CODE_API_KEY in .env, or configure the Code Interpreter key in your profile settings.',
+      );
+    }
     const stream = fs.createReadStream(file.path);
     const fileIdentifier = await uploadCodeEnvFile({
       req,
       stream,
       filename: file.originalname,
-      apiKey: result[EnvVar.CODE_API_KEY],
+      apiKey: codeApiKey,
       entity_id,
     });
     fileInfoMetadata = { fileIdentifier };
@@ -777,13 +786,15 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
     });
   }
 
-  let { bytes, filename, filepath: _filepath, height, width } = storageResult;
+  let { bytes: storageBytes, filename, filepath: _filepath, height, width } = storageResult;
   // For RAG files, use embedding result; for others, use storage result
   let embedded = storageResult.embedded;
   if (tool_resource === EToolResources.file_search) {
     embedded = embeddingResult?.embedded;
     filename = embeddingResult?.filename || filename;
   }
+  
+  let bytes = storageBytes;
 
   let filepath = _filepath;
 

@@ -1,0 +1,36 @@
+# Self-hosted Code Interpreter Sandbox
+# Use with: docker compose -f docker-compose.yml -f docker-compose.sandbox.yml up -d
+#
+# First build the executor: docker build -t librechat/sandbox-executor:latest -f packages/sandbox/docker/Dockerfile.executor packages/sandbox/docker/
+#
+# Configure .env:
+#   LIBRECHAT_CODE_BASEURL=http://sandbox:3082
+#   SANDBOX_API_KEY=your-key
+#   LIBRECHAT_CODE_API_KEY=your-key
+
+services:
+  api:
+    environment:
+      - LIBRECHAT_CODE_BASEURL=http://sandbox:3082
+    depends_on:
+      - mongodb
+      - rag_api
+      - sandbox
+
+  sandbox:
+    build:
+      context: ./packages/sandbox
+      dockerfile: docker/Dockerfile.server
+    container_name: librechat-sandbox
+    ports:
+      - "${SANDBOX_PORT:-3081}:3081"
+    environment:
+      - SANDBOX_PORT=3081
+      - SANDBOX_STORAGE_PATH=/app/storage
+      - SANDBOX_API_KEY=${SANDBOX_API_KEY}
+      - LIBRECHAT_CODE_API_KEY=${LIBRECHAT_CODE_API_KEY}
+      - SANDBOX_DOCKER_IMAGE=librechat/sandbox-executor:latest
+    volumes:
+      - ./packages/sandbox/storage:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

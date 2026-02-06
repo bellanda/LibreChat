@@ -38,6 +38,14 @@ const processCodeOutput = async ({
   messageId,
   session_id,
 }) => {
+  if (!id || typeof id !== 'string') {
+    logger.warn('[processCodeOutput] Called with invalid id:', { id, session_id });
+    return null;
+  }
+  if (!session_id || typeof session_id !== 'string') {
+    logger.warn('[processCodeOutput] Called with invalid session_id:', { session_id, id });
+    return null;
+  }
   const appConfig = req.config;
   const currentDate = new Date();
   const baseURL = getCodeBaseURL();

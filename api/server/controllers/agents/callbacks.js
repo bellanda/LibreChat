@@ -462,18 +462,27 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
     }
 
     for (const file of output.artifact.files) {
-      const { id, name } = file;
+      const id = file.id ?? file.fileId;
+      const name = file.name ?? file.filename ?? file.id ?? file.fileId;
+      if (!id || typeof id !== 'string') {
+        logger.warn('[execute_code] Skipping file with missing id/fileId:', {
+          fileKeys: Object.keys(file || {}),
+          session_id: output.artifact.session_id,
+        });
+        continue;
+      }
       artifactPromises.push(
         (async () => {
           const result = await loadAuthValues({
             userId: req.user.id,
-            authFields: [EnvVar.CODE_API_KEY],
+            authFields: [`${EnvVar.CODE_API_KEY}||SANDBOX_API_KEY`],
           });
+          const codeApiKey = result[EnvVar.CODE_API_KEY] ?? result.SANDBOX_API_KEY;
           const fileMetadata = await processCodeOutput({
             req,
             id,
             name,
-            apiKey: result[EnvVar.CODE_API_KEY],
+            apiKey: codeApiKey,
             messageId: metadata.run_id,
             toolCallId: output.tool_call_id,
             conversationId: metadata.thread_id,

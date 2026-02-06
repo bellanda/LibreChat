@@ -1,0 +1,38 @@
+# Sandbox executor - Python (uv) + JavaScript (bun) for code.librechat compatible execution
+# Non-root user, minimal image, no network at runtime
+
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    unzip \
+    python3 \
+    python3-dev \
+    gcc \
+    g++ \
+    libjpeg-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -u 1000 sandbox
+
+# Install uv for Python
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+
+# Install Bun for JavaScript (system-wide)
+ENV BUN_INSTALL=/usr/local
+RUN curl -fsSL https://bun.sh/install | bash
+
+# Python project with whitelist deps via uv (no pip install at runtime)
+WORKDIR /opt/sandbox
+COPY pyproject.toml ./
+RUN uv sync --no-dev --no-install-project \
+    && chown -R sandbox:sandbox /opt/sandbox
+
+WORKDIR /mnt/data
+RUN chown -R sandbox:sandbox /mnt/data
+
+USER sandbox
+
+# Default: run python via uv (can be overridden by docker run)
+CMD ["uv", "run", "--project", "/opt/sandbox", "python", "--version"]

@@ -107,24 +107,24 @@ const ConversationStarters = () => {
         {localize('com_ui_welcome_message')}
       </p>
       <div className="flex flex-wrap justify-center gap-3">
-        {conversation_starters
-          .slice(0, Constants.MAX_CONVO_STARTERS)
-          .map((text: string, index: number) => (
+        {(suggestedStarters?.length ? conversation_starters.slice(0, 6) : conversation_starters.slice(0, Constants.MAX_CONVO_STARTERS)).map(
+          (text: string, index: number) => (
             <button
               key={index}
               type="button"
               onClick={() => fillInputWithStarter(text)}
               title={text}
-              className="relative flex h-12 w-44 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-border-medium px-3 text-center text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition-colors duration-300 ease-in-out fade-in hover:bg-surface-tertiary"
+              className="relative flex h-12 min-w-0 max-w-[30ch] cursor-pointer items-center justify-center gap-2 rounded-2xl border border-border-medium px-4 py-2 text-center text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition-colors duration-300 ease-in-out fade-in hover:bg-surface-tertiary w-fit"
             >
               <span className="flex flex-shrink-0 items-center justify-center text-base">
                 {emojis[index % emojis.length]}
               </span>
-              <span className="min-w-0 flex-1 truncate text-center text-text-secondary">
+              <span className="min-w-0 truncate text-center text-text-secondary">
                 {text}
               </span>
             </button>
-          ))}
+          ),
+        )}
       </div>
     </div>
   );

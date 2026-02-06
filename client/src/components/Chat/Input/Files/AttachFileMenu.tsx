@@ -19,6 +19,7 @@ import {
   FileSearch,
   FileType2Icon,
   ImageUpIcon,
+  Plus,
   TerminalSquareIcon,
 } from 'lucide-react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -50,6 +51,7 @@ interface AttachFileMenuProps {
   endpointType?: EModelEndpoint;
   endpointFileConfig?: EndpointFileConfig;
   useResponsesApi?: boolean;
+  currentModel?: string | null;
 }
 
 const AttachFileMenu = ({
@@ -60,6 +62,7 @@ const AttachFileMenu = ({
   conversationId,
   endpointFileConfig,
   useResponsesApi,
+  currentModel,
 }: AttachFileMenuProps) => {
   const localize = useLocalize();
   const isUploadDisabled = disabled ?? false;
@@ -99,6 +102,7 @@ const AttachFileMenu = ({
     endpointType,
     provider ?? endpoint ?? undefined,
     endpointFileConfig,
+    currentModel,
   );
 
   const handleUploadClick = (fileType?: FileUploadType) => {
@@ -145,9 +149,16 @@ const AttachFileMenu = ({
           status: 'info',
           duration: 4000,
         });
-        setToolResource(detection.suggested);
+        const suggested = detection.suggested;
+        setToolResource(suggested);
+        if (suggested === EToolResources.execute_code || suggested === EToolResources.file_search) {
+          setEphemeralAgent((prev) => ({
+            ...prev,
+            [suggested]: true,
+          }));
+        }
         setIsAutoUpload(false);
-        handleFileChange(e, detection.suggested);
+        handleFileChange(e, suggested);
         return;
       }
       handleFileChange(e, toolResource);
@@ -159,6 +170,7 @@ const AttachFileMenu = ({
       showToast,
       handleFileChange,
       toolResource,
+      setEphemeralAgent,
     ],
   );
 
@@ -299,6 +311,18 @@ const AttachFileMenu = ({
     setIsAutoUpload,
   ]);
 
+  const handleAutoUploadClick = useCallback(() => {
+    if (!inputRef.current || isUploadDisabled) {
+      return;
+    }
+    setIsAutoUpload(true);
+    setToolResource(undefined);
+    inputRef.current.value = '';
+    inputRef.current.accept = 'image/*,.heif,.heic,.pdf,application/pdf,video/*,audio/*';
+    inputRef.current.click();
+    inputRef.current.accept = '';
+  }, [isUploadDisabled]);
+
   const menuTrigger = (
     <TooltipAnchor
       render={
@@ -321,6 +345,30 @@ const AttachFileMenu = ({
       disabled={isUploadDisabled}
     />
   );
+
+  const autoModeTrigger = (
+    <TooltipAnchor
+      render={
+        <button
+          type="button"
+          disabled={isUploadDisabled}
+          aria-label={localize('com_ui_upload_auto')}
+          onClick={handleAutoUploadClick}
+          className={cn(
+            'flex size-9 items-center justify-center rounded-full p-1 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-50',
+          )}
+        >
+          <div className="flex w-full items-center justify-center gap-2">
+            <Plus className="size-5" aria-hidden="true" />
+          </div>
+        </button>
+      }
+      id="attach-file-auto-button"
+      description={localize('com_ui_upload_auto')}
+      disabled={isUploadDisabled}
+    />
+  );
+
   const handleSharePointFilesSelected = async (sharePointFiles: any[]) => {
     try {
       await handleSharePointFiles(sharePointFiles);
@@ -333,17 +381,21 @@ const AttachFileMenu = ({
   return (
     <>
       <FileUpload ref={inputRef} handleFileChange={onFileChange}>
-        <DropdownPopup
-          menuId="attach-file-menu"
-          className="overflow-visible"
-          isOpen={isPopoverActive}
-          setIsOpen={setIsPopoverActive}
-          modal={true}
-          unmountOnHide={true}
-          trigger={menuTrigger}
-          items={dropdownItems}
-          iconClassName="mr-0"
-        />
+        {autoMode ? (
+          autoModeTrigger
+        ) : (
+          <DropdownPopup
+            menuId="attach-file-menu"
+            className="overflow-visible"
+            isOpen={isPopoverActive}
+            setIsOpen={setIsPopoverActive}
+            modal={true}
+            unmountOnHide={true}
+            trigger={menuTrigger}
+            items={dropdownItems}
+            iconClassName="mr-0"
+          />
+        )}
       </FileUpload>
       <SharePointPickerDialog
         isOpen={isSharePointDialogOpen}

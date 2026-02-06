@@ -1,4 +1,11 @@
 require('dotenv').config();
+
+// Auto-config: use self-hosted sandbox when SANDBOX_PORT is set and LIBRECHAT_CODE_BASEURL is not
+if (process.env.SANDBOX_PORT && !process.env.LIBRECHAT_CODE_BASEURL) {
+  const host = process.env.SANDBOX_HOST || 'localhost';
+  process.env.LIBRECHAT_CODE_BASEURL = `http://${host}:${process.env.SANDBOX_PORT}`;
+}
+
 const fs = require('fs');
 const path = require('path');
 require('module-alias')({ base: path.resolve(__dirname, '..') });
