@@ -123,6 +123,14 @@ export async function initializeAgent(
     throw new Error('initializeAgent requires db methods to be passed');
   }
 
+  /**
+   * Garante que appConfig nunca seja undefined durante a inicialização do agente.
+   * Isso evita erros do tipo
+   * "Cannot read properties of undefined (reading 'endpoints')"
+   * em chamadas internas que esperam um objeto de configuração.
+   */
+  const appConfig = (req as unknown as { config?: unknown })?.config ?? {};
+
   if (
     isAgentsEndpoint(endpointOption?.endpoint) &&
     allowedProviders.size > 0 &&
@@ -188,7 +196,7 @@ export async function initializeAgent(
   const { attachments: primedAttachments, tool_resources } = await primeResources({
     req: req as never,
     getFiles: db.getFiles as never,
-    appConfig: req.config,
+    appConfig: appConfig as never,
     agentId: agent.id,
     attachments: currentFiles
       ? (Promise.resolve(currentFiles) as unknown as Promise<TFile[]>)
@@ -213,7 +221,7 @@ export async function initializeAgent(
 
   const { getOptions, overrideProvider } = getProviderConfig({
     provider,
-    appConfig: req.config,
+    appConfig: appConfig as never,
   });
   if (overrideProvider !== agent.provider) {
     agent.provider = overrideProvider;

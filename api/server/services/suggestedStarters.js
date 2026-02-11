@@ -1,7 +1,12 @@
 /**
  * Suggested conversation starters based on the user's last conversations.
  * Uses only custom endpoints (same as chat) – no fallback to OpenAI API.
- * Enable with SUGGESTED_STARTERS_ENABLED=true.
+ *
+ * Configuração:
+ * - SUGGESTED_STARTERS_DISABLED=true: desabilita completamente (retorna null, sem sugestões)
+ * - SUGGESTED_STARTERS_ENABLED=false: retorna apenas sugestões pré-definidas (sem IA)
+ * - SUGGESTED_STARTERS_ENABLED=true: retorna sugestões da IA baseadas no histórico + pré-definidas
+ * - SUGGESTED_STARTERS_MODEL=<nome_do_modelo>: (opcional) força o modelo usado para IA
  *
  * Tokens: esta rota chama o LLM diretamente (sem conversationId). O fluxo normal de
  * spendTokens do chat não é usado aqui, então o consumo não é debitado da cota do usuário.
@@ -14,13 +19,13 @@ const { EModelEndpoint, normalizeEndpointName } = require('librechat-data-provid
 const { getConvosByCursor } = require('~/models/Conversation');
 const custom = require('~/server/services/Endpoints/custom');
 
-const MAX_STARTERS = 6;
-const MAX_STARTERS_FROM_CONTEXT = 4;
-const MAX_STARTERS_ORGANIZATIONAL = 2;
-const MAX_CHARS_PER_STARTER = 30;
+const MAX_STARTERS_FROM_CONTEXT = process.env.MAX_STARTERS_FROM_CONTEXT || 4;
+const MAX_STARTERS_ORGANIZATIONAL = process.env.MAX_STARTERS_ORGANIZATIONAL || 2;
+const MAX_CHARS_PER_STARTER = process.env.MAX_CHARS_PER_STARTER || 30;
 /** Limit context size to avoid burning tokens (titles only, trimmed). */
-const MAX_CHARS_PER_TITLE = 40;
-const MAX_TOTAL_CONTEXT_CHARS = 150;
+const MAX_CHARS_PER_TITLE = process.env.MAX_CHARS_PER_TITLE || 40;
+const MAX_TOTAL_CONTEXT_CHARS = process.env.MAX_TOTAL_CONTEXT_CHARS || 150;
+const ENV_SUGGESTED_STARTERS_MODEL = process.env.SUGGESTED_STARTERS_MODEL?.trim?.() || '';
 
 /** Duas últimas sugestões sempre de ambiente organizacional (não vêm do LLM). */
 const ORGANIZATIONAL_STARTERS = [
@@ -49,6 +54,15 @@ function shuffle(arr) {
 }
 
 /**
+ * Returns only predefined organizational starters (no AI).
+ * @returns {string[]} Array of predefined starters
+ */
+function getPredefinedStarters() {
+  const count = parseInt(process.env.MAX_STARTERS_ORGANIZATIONAL || MAX_STARTERS_ORGANIZATIONAL, 10);
+  return shuffle([...ORGANIZATIONAL_STARTERS]).slice(0, count);
+}
+
+/**
  * Resolves endpoint + model only from custom endpoints (same as chat). No openAI fallback.
  * Prefers suggestedStartersModel / titleModel from config if that model exists in a custom endpoint;
  * otherwise uses the first custom endpoint's titleModel or first model.
@@ -62,6 +76,7 @@ function getSuggestedStartersEndpointAndModel(appConfig) {
   }
 
   const preferredModel =
+    ENV_SUGGESTED_STARTERS_MODEL ||
     appConfig?.endpoints?.all?.suggestedStartersModel?.trim() ||
     appConfig?.endpoints?.all?.titleModel?.trim();
 
@@ -179,13 +194,24 @@ async function fetchSuggestedStartersFromLLM({ context, req, res }) {
  * @returns {Promise<{ starters: string[] } | null>} starters array or null when disabled/failure
  */
 async function getSuggestedStarters(req, res) {
-  if (!isEnabled(process.env.SUGGESTED_STARTERS_ENABLED)) {
+  // Se SUGGESTED_STARTERS_DISABLED=true, desabilita completamente (sem sugestões)
+  if (isEnabled(process.env.SUGGESTED_STARTERS_DISABLED)) {
     if (process.env.DEBUG_LOGGING === 'true') {
-      logger.debug('[suggestedStarters] Disabled (SUGGESTED_STARTERS_ENABLED not true)');
+      logger.debug('[suggestedStarters] Completely disabled (SUGGESTED_STARTERS_DISABLED=true)');
     }
     return null;
   }
 
+  // Se SUGGESTED_STARTERS_ENABLED=false, retorna apenas as pré-definidas (sem IA)
+  if (!isEnabled(process.env.SUGGESTED_STARTERS_ENABLED)) {
+    const predefinedStarters = getPredefinedStarters();
+    if (process.env.DEBUG_LOGGING === 'true') {
+      logger.debug('[suggestedStarters] Using predefined starters only', { count: predefinedStarters.length });
+    }
+    return { starters: predefinedStarters };
+  }
+
+  // Se SUGGESTED_STARTERS_ENABLED=true, tenta usar IA baseada no histórico + pré-definidas
   try {
     const { conversations } = await getConvosByCursor(req.user.id, {
       limit: 2,
@@ -195,9 +221,10 @@ async function getSuggestedStarters(req, res) {
 
     if (!conversations?.length) {
       if (process.env.DEBUG_LOGGING === 'true') {
-        logger.debug('[suggestedStarters] No recent conversations, skipping');
+        logger.debug('[suggestedStarters] No recent conversations, falling back to predefined starters');
       }
-      return null;
+      // Se não há conversas recentes, retorna apenas as pré-definidas
+      return { starters: getPredefinedStarters() };
     }
 
     let context = conversations
@@ -215,18 +242,20 @@ async function getSuggestedStarters(req, res) {
 
     if (!starters?.length) {
       if (process.env.DEBUG_LOGGING === 'true') {
-        logger.debug('[suggestedStarters] LLM returned no starters');
+        logger.debug('[suggestedStarters] LLM returned no starters, falling back to predefined starters');
       }
-      return null;
+      // Se a IA falhar, retorna apenas as pré-definidas
+      return { starters: getPredefinedStarters() };
     }
 
     if (process.env.DEBUG_LOGGING === 'true') {
-      logger.debug('[suggestedStarters] Returning starters', { count: starters.length });
+      logger.debug('[suggestedStarters] Returning AI-generated starters', { count: starters.length });
     }
     return { starters };
   } catch (err) {
-    logger.error('[suggestedStarters] Error', err);
-    return null;
+    logger.error('[suggestedStarters] Error, falling back to predefined starters', err);
+    // Em caso de erro, retorna apenas as pré-definidas
+    return { starters: getPredefinedStarters() };
   }
 }
 

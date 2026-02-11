@@ -77,7 +77,15 @@ export function useSmartUpload(
   const detectUploadType = useCallback(
     (file: File): SmartUploadDetection => {
       const { endpointCfg, capabilities } = config;
-      const { fileSizeLimit, supportedMimeTypes, disabled } = endpointCfg ?? fileConfig.endpoints.default;
+      const baseFileConfig =
+        endpointCfg ?? fileConfig?.endpoints?.default ?? {
+          fileLimit: 10,
+          fileSizeLimit: megabyte * 20,
+          totalSizeLimit: megabyte * 20,
+          supportedMimeTypes,
+          disabled: false,
+        };
+      const { fileSizeLimit, supportedMimeTypes, disabled } = baseFileConfig;
 
       if (disabled === true) {
         return {

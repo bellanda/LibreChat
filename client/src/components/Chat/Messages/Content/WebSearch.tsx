@@ -16,12 +16,14 @@ export default function WebSearch({
   isSubmitting,
   isLast,
   output,
+  hideProgressIndicator = false,
 }: {
   isLast?: boolean;
   isSubmitting: boolean;
   output?: string | null;
   initialProgress: number;
   attachments?: TAttachment[];
+  hideProgressIndicator?: boolean;
 }) {
   const localize = useLocalize();
   const { searchResults } = useSearchContext();
@@ -66,7 +68,7 @@ export default function WebSearch({
     return localize(text);
   }, [turns, localize, showSources, finalizing]);
 
-  if (complete || cancelled) {
+  if (complete || cancelled || hideProgressIndicator) {
     return null;
   }
   return (

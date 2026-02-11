@@ -69,7 +69,12 @@ const initializeClient = async ({ req, res, signal, endpointOption }) => {
   if (!endpointOption) {
     throw new Error('Endpoint option not provided');
   }
-  const appConfig = req.config;
+  /**
+   * Garante que appConfig seja sempre um objeto,
+   * evitando erros do tipo "Cannot read properties of undefined (reading 'endpoints')"
+   * caso req.config ainda não esteja definido.
+   */
+  const appConfig = req.config ?? {};
 
   /** @type {string | null} */
   const streamId = req._resumableStreamId || null;

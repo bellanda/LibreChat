@@ -159,19 +159,21 @@ export default function BadgeRowProvider({
       const shouldEnableAll = autoMode === true;
       const newTools = shouldEnableAll
         ? {
+          auto_mode: true,
           execute_code: true,
           file_search: true,
           web_search: true,
           artifacts: ArtifactModes.SHADCNUI,
         }
-        : currentTools;
+        : { auto_mode: false, ...currentTools };
 
       // Só atualiza se houver mudança
       const hasChanged =
         newTools.execute_code !== currentTools.execute_code ||
         newTools.file_search !== currentTools.file_search ||
         newTools.web_search !== currentTools.web_search ||
-        newTools.artifacts !== currentTools.artifacts;
+        newTools.artifacts !== currentTools.artifacts ||
+        (prev?.auto_mode ?? false) !== (newTools as any).auto_mode;
 
       if (!hasChanged) {
         return prev;

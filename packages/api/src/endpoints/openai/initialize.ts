@@ -27,6 +27,12 @@ export const initializeOpenAI = async ({
   getUserKeyValues,
   checkUserKeyExpiry,
 }: InitializeOpenAIOptionsParams): Promise<LLMConfigResult> => {
+  /**
+   * Garante que sempre exista um objeto de configuração,
+   * mesmo que appConfig ou req.config venham indefinidos em algum fluxo.
+   * Evita erros do tipo "Cannot read properties of undefined (reading 'endpoints')".
+   */
+  const safeAppConfig = (appConfig ?? (req as any)?.config ?? {}) as typeof appConfig;
   const { PROXY, OPENAI_API_KEY, AZURE_API_KEY, OPENAI_REVERSE_PROXY, AZURE_OPENAI_BASEURL } =
     process.env;
 
@@ -71,7 +77,7 @@ export const initializeOpenAI = async ({
   };
 
   const isAzureOpenAI = endpoint === EModelEndpoint.azureOpenAI;
-  const azureConfig = isAzureOpenAI && appConfig.endpoints?.[EModelEndpoint.azureOpenAI];
+  const azureConfig = isAzureOpenAI && safeAppConfig.endpoints?.[EModelEndpoint.azureOpenAI];
   let isServerless = false;
 
   if (isAzureOpenAI && azureConfig) {
@@ -131,8 +137,16 @@ export const initializeOpenAI = async ({
     throw new Error(`${endpoint} API Key not provided.`);
   }
 
+  /**
+   * Garante que endpointOption e seus model_parameters existam,
+   * mesmo em fluxos (como agents) onde endpointOption não é passado.
+   * Evita erros do tipo:
+   * "Cannot read properties of undefined (reading 'model_parameters')".
+   */
+  const safeEndpointOption = endpointOption ?? { model_parameters: {} as Record<string, unknown> };
+
   const modelOptions = {
-    ...endpointOption.model_parameters,
+    ...(safeEndpointOption.model_parameters ?? {}),
     model: modelName,
     user: req.user.id,
   };
@@ -149,8 +163,8 @@ export const initializeOpenAI = async ({
     (options as LLMConfigResult & { useLegacyContent?: boolean }).useLegacyContent = true;
   }
 
-  const openAIConfig = appConfig.endpoints?.[EModelEndpoint.openAI];
-  const allConfig = appConfig.endpoints?.all;
+  const openAIConfig = safeAppConfig.endpoints?.[EModelEndpoint.openAI];
+  const allConfig = safeAppConfig.endpoints?.all;
   const azureRate = modelName?.includes('gpt-4') ? 30 : 17;
 
   let streamRate: number | undefined;

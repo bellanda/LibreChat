@@ -26,10 +26,20 @@ type PartProps = {
   showCursor: boolean;
   isCreatedByUser: boolean;
   attachments?: TAttachment[];
+  /** Quando true, a barra unificada já mostra "Pensando..." / "Analisando..."; esconde o indicador desta part */
+  hideProgressIndicator?: boolean;
 };
 
 const Part = memo(
-  ({ part, isSubmitting, attachments, isLast, showCursor, isCreatedByUser }: PartProps) => {
+  ({
+    part,
+    isSubmitting,
+    attachments,
+    isLast,
+    showCursor,
+    isCreatedByUser,
+    hideProgressIndicator = false,
+  }: PartProps) => {
     if (!part) {
       return null;
     }
@@ -81,8 +91,27 @@ const Part = memo(
       if (typeof reasoning !== 'string') {
         return null;
       }
-      return <Reasoning reasoning={reasoning} isLast={isLast ?? false} />;
+      return (
+        <Reasoning
+          reasoning={reasoning}
+          isLast={isLast ?? false}
+          hideProgressIndicator={hideProgressIndicator}
+        />
+      );
     } else if (part.type === ContentTypes.TOOL_CALL) {
+      /**
+       * Quando `hideProgressIndicator` é true, significa que esta TOOL_CALL
+       * já está sendo representada pela `UnifiedStatusBar` (barra unificada).
+       *
+       * Para evitar duplicar a visualização (como no fluxo antigo da imagem 2),
+       * não renderizamos mais o bloco de execução aqui. O usuário vê:
+       * - Pensamentos + ações na barra unificada (imagem 1)
+       * - Resposta final no Markdown principal
+       */
+      if (hideProgressIndicator) {
+        return null;
+      }
+
       const toolCall = part[ContentTypes.TOOL_CALL];
 
       if (!toolCall) {
@@ -99,6 +128,7 @@ const Part = memo(
             output={toolCall.output ?? ''}
             initialProgress={toolCall.progress ?? 0.1}
             args={typeof toolCall.args === 'string' ? toolCall.args : ''}
+            hideProgressIndicator={hideProgressIndicator}
           />
         );
       } else if (
@@ -125,6 +155,7 @@ const Part = memo(
             isSubmitting={isSubmitting}
             attachments={attachments}
             isLast={isLast}
+            hideProgressIndicator={hideProgressIndicator}
           />
         );
       } else if (isToolCall && toolCall.name?.startsWith(Constants.LC_TRANSFER_TO_)) {
@@ -147,6 +178,7 @@ const Part = memo(
             auth={toolCall.auth}
             expires_at={toolCall.expires_at}
             isLast={isLast}
+            hideProgressIndicator={hideProgressIndicator}
           />
         );
       } else if (toolCall.type === ToolCallTypes.CODE_INTERPRETER) {
@@ -156,6 +188,7 @@ const Part = memo(
             initialProgress={toolCall.progress ?? 0.1}
             code={code_interpreter.input}
             outputs={code_interpreter.outputs ?? []}
+            hideProgressIndicator={hideProgressIndicator}
           />
         );
       } else if (
@@ -163,7 +196,11 @@ const Part = memo(
         toolCall.type === ToolCallTypes.FILE_SEARCH
       ) {
         return (
-          <RetrievalCall initialProgress={toolCall.progress ?? 0.1} isSubmitting={isSubmitting} />
+          <RetrievalCall
+            initialProgress={toolCall.progress ?? 0.1}
+            isSubmitting={isSubmitting}
+            hideProgressIndicator={hideProgressIndicator}
+          />
         );
       } else if (
         toolCall.type === ToolCallTypes.FUNCTION &&

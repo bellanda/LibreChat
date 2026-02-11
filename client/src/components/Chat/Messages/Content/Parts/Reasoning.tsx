@@ -11,6 +11,8 @@ import { FloatingThinkingBar, ThinkingButton, ThinkingContent } from './Thinking
 type ReasoningProps = {
   reasoning: string;
   isLast: boolean;
+  /** Quando true, a barra unificada já mostra "Pensando..."; não mostrar esta linha */
+  hideProgressIndicator?: boolean;
 };
 
 /**
@@ -35,7 +37,7 @@ type ReasoningProps = {
  *
  * For legacy text-based messages, see Thinking.tsx component.
  */
-const Reasoning = memo(({ reasoning, isLast }: ReasoningProps) => {
+const Reasoning = memo(({ reasoning, isLast, hideProgressIndicator = false }: ReasoningProps) => {
   const localize = useLocalize();
   const [showThinking] = useAtom(showThinkingAtom);
   const [isExpanded, setIsExpanded] = useState(showThinking);
@@ -85,6 +87,12 @@ const Reasoning = memo(({ reasoning, isLast }: ReasoningProps) => {
   );
 
   if (!reasoningText) {
+    return null;
+  }
+
+  // Quando hideProgressIndicator é true, a barra unificada cuida de mostrar
+  // o conteúdo do pensamento. Este componente não renderiza nada.
+  if (hideProgressIndicator) {
     return null;
   }
 

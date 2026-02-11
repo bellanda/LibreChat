@@ -53,7 +53,12 @@ const initializeAgent = async ({
   allowedProviders,
   isInitialAgent = false,
 }) => {
-  const appConfig = req.config;
+  /**
+   * Garante que appConfig seja sempre um objeto,
+   * evitando erros do tipo "Cannot read properties of undefined (reading 'endpoints')"
+   * em quaisquer chamadas subsequentes que dependam de configuração (ex.: getProviderConfig).
+   */
+  const appConfig = req.config ?? {};
   if (
     isAgentsEndpoint(endpointOption?.endpoint) &&
     allowedProviders.size > 0 &&

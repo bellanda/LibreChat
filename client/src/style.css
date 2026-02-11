@@ -2889,6 +2889,28 @@ html {
   animation: shimmer 4s linear infinite;
 }
 
+@keyframes unifiedStatusDots {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.unified-status-dots span {
+  animation: unifiedStatusDots 1.2s ease-in-out infinite;
+}
+
+.unified-status-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.unified-status-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
 .custom-style-2 {
   padding: 12px;
 }

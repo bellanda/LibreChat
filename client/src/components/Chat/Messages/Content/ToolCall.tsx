@@ -18,6 +18,7 @@ export default function ToolCall({
   output,
   attachments,
   auth,
+  hideProgressIndicator = false,
 }: {
   initialProgress: number;
   isLast?: boolean;
@@ -28,6 +29,7 @@ export default function ToolCall({
   attachments?: TAttachment[];
   auth?: string;
   expires_at?: number;
+  hideProgressIndicator?: boolean;
 }) {
   const localize = useLocalize();
   const [showInfo, setShowInfo] = useState(false);
@@ -163,24 +165,26 @@ export default function ToolCall({
 
   return (
     <>
-      <div className="relative my-2.5 flex h-5 shrink-0 items-center gap-2.5">
-        <ProgressText
-          progress={progress}
-          onClick={() => setShowInfo((prev) => !prev)}
-          inProgressText={
-            function_name
-              ? localize('com_assistants_running_var', { 0: function_name })
-              : localize('com_assistants_running_action')
-          }
-          authText={
-            !cancelled && authDomain.length > 0 ? localize('com_ui_requires_auth') : undefined
-          }
-          finishedText={getFinishedText()}
-          hasInput={hasInfo}
-          isExpanded={showInfo}
-          error={cancelled}
-        />
-      </div>
+      {!hideProgressIndicator && (
+        <div className="relative my-2.5 flex h-5 shrink-0 items-center gap-2.5">
+          <ProgressText
+            progress={progress}
+            onClick={() => setShowInfo((prev) => !prev)}
+            inProgressText={
+              function_name
+                ? localize('com_assistants_running_var', { 0: function_name })
+                : localize('com_assistants_running_action')
+            }
+            authText={
+              !cancelled && authDomain.length > 0 ? localize('com_ui_requires_auth') : undefined
+            }
+            finishedText={getFinishedText()}
+            hasInput={hasInfo}
+            isExpanded={showInfo}
+            error={cancelled}
+          />
+        </div>
+      )}
       <div
         className="relative"
         style={{

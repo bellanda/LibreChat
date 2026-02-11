@@ -391,7 +391,12 @@ async function loadAgentTools({
     return {};
   }
 
-  const appConfig = req.config;
+  /**
+   * Garante que appConfig seja sempre um objeto,
+   * evitando erros do tipo "Cannot read properties of undefined (reading 'endpoints')"
+   * caso req.config ainda não esteja definido em algum fluxo de agents.
+   */
+  const appConfig = req.config ?? {};
   const endpointsConfig = await getEndpointsConfig(req);
   let enabledCapabilities = new Set(endpointsConfig?.[EModelEndpoint.agents]?.capabilities ?? []);
   /** Edge case: use defined/fallback capabilities when the "agents" endpoint is not enabled */

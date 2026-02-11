@@ -24,6 +24,7 @@ function AutoModeBadge() {
       // Backend exige artifacts como string ('default'|'shadcnui'|'custom') para injetar o prompt
       setEphemeralAgent((prev) => ({
         ...(prev || {}),
+        auto_mode: newAutoMode,
         execute_code: newAutoMode,
         file_search: newAutoMode,
         web_search: newAutoMode,

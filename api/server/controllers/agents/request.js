@@ -360,6 +360,10 @@ const ResumableAgentController = async (req, res, next, initializeClient, addTit
     });
   } catch (error) {
     logger.error('[ResumableAgentController] Initialization error:', error);
+    // Log stack trace explicitly to localizar a origem exata do erro
+    if (error && error.stack) {
+      logger.error('[ResumableAgentController] Initialization error stack:', error.stack);
+    }
     if (!res.headersSent) {
       res.status(500).json({ error: error.message || 'Failed to start generation' });
     } else {
