@@ -52,6 +52,7 @@ export const columns: ColumnDef<TFile>[] = [
       );
     },
     cell: ({ row }) => {
+      const localize = useLocalize();
       return (
         <Checkbox
           checked={row.getIsSelected()}

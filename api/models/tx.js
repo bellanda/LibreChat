@@ -151,6 +151,7 @@ const tokenValues = Object.assign(
     'claude-sonnet-4': { prompt: 3, completion: 15 },
     'claude-sonnet-4-5-20250929': { prompt: 3, completion: 15 },
     'claude-haiku-4-5': { prompt: 1, completion: 5 },
+    'claude-opus-4-5': { prompt: 15, completion: 25 },
     'claude-opus-4': { prompt: 15, completion: 75 },
     'claude-sonnet-4': { prompt: 3, completion: 15 },
     'command-r': { prompt: 0.5, completion: 1.5 },
@@ -392,7 +393,14 @@ const getCacheMultiplier = ({ valueKey, cacheType, model, endpoint, endpointToke
     return null;
   }
 
+  // Try direct lookup first (exact match) before using getValueKey
+  // This ensures more specific models like 'claude-opus-4-5' are found before 'claude-opus-4'
+  if (cacheTokenValues[model]?.[cacheType] !== undefined) {
+    return cacheTokenValues[model][cacheType];
+  }
+
   valueKey = getValueKey(model, endpoint);
+  
   if (!valueKey) {
     return null;
   }

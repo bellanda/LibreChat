@@ -218,7 +218,8 @@ class AnthropicClient extends BaseClient {
   getStreamUsage() {
     const inputUsage = this.message_start?.message?.usage ?? {};
     const outputUsage = this.message_delta?.usage ?? {};
-    return Object.assign({}, inputUsage, outputUsage);
+    const usage = Object.assign({}, inputUsage, outputUsage);
+    return usage;
   }
 
   /**
@@ -244,10 +245,11 @@ class AnthropicClient extends BaseClient {
       const numCount = Number(count);
       return sum + (isNaN(numCount) ? 0 : numCount);
     }, 0);
-    const totalInputTokens =
-      (usage.input_tokens ?? 0) +
-      (usage.cache_creation_input_tokens ?? 0) +
-      (usage.cache_read_input_tokens ?? 0);
+    // IMPORTANT: input_tokens represents actual input tokens used.
+    // cache_creation_input_tokens and cache_read_input_tokens are separate metrics
+    // with different rates and should not be added to input_tokens for calculation purposes.
+    // The API returns them separately, and we handle them separately in spendStructuredTokens.
+    const totalInputTokens = usage.input_tokens ?? 0;
 
     const currentMessageTokens = totalInputTokens - totalTokensFromMap;
     return currentMessageTokens > 0 ? currentMessageTokens : originalEstimate;

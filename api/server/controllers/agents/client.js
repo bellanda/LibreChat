@@ -815,14 +815,13 @@ class AgentClient extends BaseClient {
     // Use first entry's input_tokens as the base input (represents initial user message context)
     // Support both OpenAI format (input_token_details) and Anthropic format (cache_*_input_tokens)
     const firstUsage = collectedUsage[0];
-    const input_tokens =
-      (firstUsage?.input_tokens || 0) +
-      (Number(firstUsage?.input_token_details?.cache_creation) ||
-        Number(firstUsage?.cache_creation_input_tokens) ||
-        0) +
-      (Number(firstUsage?.input_token_details?.cache_read) ||
-        Number(firstUsage?.cache_read_input_tokens) ||
-        0);
+    
+    // IMPORTANT: input_tokens represents the actual input tokens used.
+    // cache_creation and cache_read are separate metrics with different rates.
+    // When cache exists, we use spendStructuredTokens with separate input/write/read values.
+    // For the usage summary, we only track the base input_tokens (without cache),
+    // as cache tokens are tracked separately in spendStructuredTokens.
+    const input_tokens = firstUsage?.input_tokens || 0;
 
     // Sum output_tokens directly from all entries - works for both sequential and parallel execution
     // This avoids the incremental calculation that produced negative values for parallel agents
@@ -908,6 +907,7 @@ class AgentClient extends BaseClient {
         });
         continue;
       }
+      
       spendTokens(txMetadata, {
         promptTokens: input_tokens,
         completionTokens: output_tokens,
@@ -1475,7 +1475,35 @@ class AgentClient extends BaseClient {
   }
 
   getEncoding() {
-    return 'o200k_base';
+    const model = this.modelOptions?.model || this.model;
+    if (!model) {
+      return 'cl100k_base';
+    }
+
+    // Modelos exatos que usam o200k_base (baseado em tiktoken/model.py)
+    const exactO200kModels = ['o1', 'o3', 'o4-mini', 'gpt-5', 'gpt-4.1', 'gpt-4o'];
+    if (exactO200kModels.includes(model)) {
+      return 'o200k_base';
+    }
+
+    // Prefixos que usam o200k_base (baseado em tiktoken/model.py MODEL_PREFIX_TO_ENCODING)
+    const o200kPrefixes = [
+      /^o1-/,
+      /^o3-/,
+      /^o4-mini-/,
+      /^gpt-5-/,
+      /^gpt-4\.5-/,
+      /^gpt-4\.1-/,
+      /^chatgpt-4o-/,
+      /^gpt-4o-/,
+      /^ft:gpt-4o/,
+    ];
+
+    // Verifica se o modelo corresponde a algum prefixo o200k_base ou é um modelo OpenAI moderno
+    const usesO200k = o200kPrefixes.some((prefix) => prefix.test(model)) || /^gpt-4[^-\s]/.test(model);
+    const encoding = usesO200k ? 'o200k_base' : 'cl100k_base';
+
+    return encoding;
   }
 
   /**

@@ -281,10 +281,10 @@ function calculateStructuredTokenValue(txn) {
       read: readMultiplier,
     };
 
-    const totalPromptTokens =
-      Math.abs(txn.inputTokens || 0) +
-      Math.abs(txn.writeTokens || 0) +
-      Math.abs(txn.readTokens || 0);
+    const inputTokensAbs = Math.abs(txn.inputTokens || 0);
+    const writeTokensAbs = Math.abs(txn.writeTokens || 0);
+    const readTokensAbs = Math.abs(txn.readTokens || 0);
+    const totalPromptTokens = inputTokensAbs + writeTokensAbs + readTokensAbs;
 
     if (totalPromptTokens > 0) {
       txn.rate =

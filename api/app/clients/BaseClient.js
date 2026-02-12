@@ -612,11 +612,35 @@ class BaseClient {
       }, {});
     }
 
-    const promptTokens = this.maxContextTokens - remainingContextTokens;
+    // Calculate actual prompt tokens used by summing tokenCount of messages in context
+    // Instead of using maxContextTokens - remainingContextTokens which can be incorrect
+    let calculatedPromptTokens = 0;
+    if (buildTokenMap && tokenCountMap) {
+      calculatedPromptTokens = Object.values(tokenCountMap).reduce((sum, count) => {
+        const numCount = Number(count);
+        return sum + (isNaN(numCount) ? 0 : numCount);
+      }, 0);
+    }
+    
+    // Always add instructions token count if present (not dependent on buildTokenMap)
+    if (instructions?.tokenCount) {
+      calculatedPromptTokens += instructions.tokenCount;
+    }
+    // Always add summary token count if present (not dependent on buildTokenMap)
+    if (summaryTokenCount) {
+      calculatedPromptTokens += summaryTokenCount;
+    }
+    
+    // Use calculated value if available, otherwise fall back to the difference calculation
+    // Note: The difference calculation can be incorrect when maxContextTokens is large
+    const promptTokens = calculatedPromptTokens > 0 
+      ? calculatedPromptTokens 
+      : this.maxContextTokens - remainingContextTokens;
 
     logger.debug('[BaseClient] tokenCountMap:', tokenCountMap);
     logger.debug('[BaseClient]', {
       promptTokens,
+      calculatedPromptTokens,
       remainingContextTokens,
       payloadSize: payload.length,
       maxContextTokens: this.maxContextTokens,
