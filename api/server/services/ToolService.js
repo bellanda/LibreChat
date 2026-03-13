@@ -2,6 +2,7 @@ const { sleep } = require('@librechat/agents');
 const { logger } = require('@librechat/data-schemas');
 const AgentLogger = require('~/server/services/AgentLogger');
 const { tool: toolFn, DynamicStructuredTool } = require('@langchain/core/tools');
+const { z } = require('zod');
 const {
   getToolkitKey,
   hasCustomUserVars,
@@ -484,11 +485,35 @@ async function loadAgentTools({
     );
   }
 
+  const isAutoMode = req.body?.ephemeralAgent?.auto_mode === true;
+  const {
+    liteToolDescriptions,
+    optimizeToolInPlace,
+    optimizeDescription,
+  } = require('./Tools/optimizeTools');
+
   const agentTools = [];
+  const toolsOptimized = [];
   for (let i = 0; i < loadedTools.length; i++) {
     const tool = loadedTools[i];
+    const useLiteDescription = isAutoMode && tool.name && liteToolDescriptions[tool.name];
+
     if (tool.name && (tool.name === Tools.execute_code || tool.name === Tools.file_search)) {
-      agentTools.push(tool);
+      if (useLiteDescription) {
+        const originalDescLen = String(tool.description || '').length;
+        const liteDescLen = String(liteToolDescriptions[tool.name] || '').length;
+        // Optimize in-place to preserve LangChain internals (especially important for execute_code)
+        const optimizedTool = optimizeToolInPlace(tool, true);
+        agentTools.push(optimizedTool);
+        toolsOptimized.push({
+          name: tool.name,
+          originalDescLen,
+          liteDescLen,
+          optimized: true,
+        });
+      } else {
+        agentTools.push(tool);
+      }
       continue;
     }
 
@@ -496,31 +521,101 @@ async function loadAgentTools({
       continue;
     }
 
+    // Optimize MCP tools in auto mode
     if (tool.mcp === true) {
-      agentTools.push(tool);
+      if (isAutoMode) {
+        const originalDescLen = String(tool.description || '').length;
+        const optimizedDesc = optimizeDescription(tool.name, tool.description, true);
+        // Optimize in-place to preserve MCP-specific properties
+        const optimizedTool = optimizeToolInPlace(tool, true);
+        agentTools.push(optimizedTool);
+        toolsOptimized.push({
+          name: tool.name,
+          originalDescLen,
+          liteDescLen: optimizedDesc.length,
+          optimized: true,
+          type: 'MCP',
+        });
+      } else {
+        agentTools.push(tool);
+      }
       continue;
     }
 
+    // Optimize DynamicStructuredTool in auto mode
     if (tool instanceof DynamicStructuredTool) {
-      agentTools.push(tool);
+      if (isAutoMode) {
+        const originalDescLen = String(tool.description || '').length;
+        const optimizedDesc = optimizeDescription(tool.name, tool.description, true);
+        // Optimize in-place to preserve DynamicStructuredTool internals
+        const optimizedTool = optimizeToolInPlace(tool, true);
+        agentTools.push(optimizedTool);
+        toolsOptimized.push({
+          name: tool.name,
+          originalDescLen,
+          liteDescLen: optimizedDesc.length,
+          optimized: true,
+          type: 'DynamicStructuredTool',
+        });
+      } else {
+        agentTools.push(tool);
+      }
       continue;
     }
 
-    const toolDefinition = {
-      name: tool.name,
-      schema: tool.schema,
-      description: tool.description,
-    };
-
-    if (imageGenTools.has(tool.name)) {
-      toolDefinition.responseFormat = 'content_and_artifact';
+    // Optimize other tools in auto mode
+    if (useLiteDescription) {
+      const originalDescLen = String(tool.description || '').length;
+      // Optimize in-place to preserve tool internals
+      const optimizedTool = optimizeToolInPlace(tool, true);
+      agentTools.push(optimizedTool);
+      toolsOptimized.push({
+        name: tool.name,
+        originalDescLen,
+        liteDescLen: String(liteToolDescriptions[tool.name] || '').length,
+        optimized: true,
+      });
+    } else {
+      // Still optimize schema/description even if not a core tool
+      if (isAutoMode) {
+        const optimizedTool = optimizeToolInPlace(tool, true);
+        agentTools.push(optimizedTool);
+      } else {
+        agentTools.push(tool);
+      }
     }
+  }
 
-    const toolInstance = toolFn(async (...args) => {
-      return tool['_call'](...args);
-    }, toolDefinition);
-
-    agentTools.push(toolInstance);
+  // Log tools optimization in auto mode
+  if (isAutoMode && process.env.NODE_ENV === 'development') {
+    const { zodToJsonSchema } = require('zod-to-json-schema');
+    const toolsSize = agentTools.map((tool) => {
+      let jsonSchemaSize = 0;
+      let descriptionLen = 0;
+      try {
+        if (tool?.schema) {
+          const jsonSchema = zodToJsonSchema(tool.schema);
+          const jsonSchemaStr = JSON.stringify(jsonSchema);
+          jsonSchemaSize = jsonSchemaStr.length;
+        }
+        if (tool?.description) {
+          descriptionLen = String(tool.description).length;
+        }
+      } catch (_) {}
+      return {
+        name: tool?.name || 'unknown',
+        jsonSchemaSize,
+        descriptionLen,
+      };
+    });
+    const totalJsonSchemaSize = toolsSize.reduce((sum, t) => sum + t.jsonSchemaSize, 0);
+    const totalDescriptionSize = toolsSize.reduce((sum, t) => sum + t.descriptionLen, 0);
+    
+    logger.debug('[ToolService] Tools optimized for auto mode', {
+      toolsOptimized,
+      totalOptimized: toolsOptimized.length,
+      totalJsonSchemaSizeKB: (totalJsonSchemaSize / 1024).toFixed(2),
+    });
   }
 
   const ToolMap = loadedTools.reduce((map, tool) => {

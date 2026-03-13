@@ -91,6 +91,45 @@ storage/
         └── .session.json
 ```
 
+## Python Package Management
+
+**Important**: The sandbox uses `uv` as the Python package manager, **not `pip`**. The `pip` command is not available in the sandbox environment.
+
+### Using uv in Code
+
+When executing Python code in the sandbox, packages are managed via `uv`. The sandbox comes with a pre-configured set of common packages (see `docker/pyproject.toml`). 
+
+**Note**: You cannot install packages at runtime using `pip install` or `uv pip install`. All packages must be added to `docker/pyproject.toml` and the Docker image must be rebuilt.
+
+### Available Packages
+
+The sandbox includes these pre-installed packages:
+- numpy, pandas, polars, pyarrow
+- matplotlib, seaborn, scipy
+- pillow, openpyxl, xlrd, python-pptx
+- scikit-learn, tabulate, pyyaml
+- pypdf, pdfplumber
+
+### Adding New Packages
+
+To add a new Python package to the sandbox:
+
+1. Edit `packages/sandbox/docker/pyproject.toml` and add the package to the `dependencies` list
+2. Rebuild the Docker image:
+   ```bash
+   cd packages/sandbox
+   docker build -t librechat/sandbox-executor:latest -f docker/Dockerfile.executor docker/
+   ```
+
+### Code Execution
+
+Python code is executed using:
+```bash
+uv run --project /opt/sandbox python script.py
+```
+
+This ensures all code runs with the sandbox's managed Python environment and dependencies.
+
 ## Security
 
 - Path traversal and symlink escape prevention

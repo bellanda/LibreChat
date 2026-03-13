@@ -32,10 +32,29 @@ export default function useAttachmentHandler(queryClient?: QueryClient) {
     setAttachmentsMap((prevMap) => {
       const messageAttachments =
         (prevMap as Record<string, TAttachment[] | undefined>)[messageId] || [];
-      return {
+      console.debug('[useAttachmentHandler] Adding attachment:', {
+        filename: data.filename,
+        toolCallId: data.toolCallId,
+        messageId: data.messageId,
+        filepath: data.filepath,
+        existingAttachmentsCount: messageAttachments.length,
+      });
+      
+      // Store attachment by both messageId and toolCallId (if available)
+      // This ensures attachments can be found by either key
+      const updatedMap: Record<string, TAttachment[] | undefined> = {
         ...prevMap,
         [messageId]: [...messageAttachments, data],
       };
+      
+      // Also store by toolCallId if available for easier lookup
+      if (data.toolCallId) {
+        const toolCallAttachments =
+          (prevMap as Record<string, TAttachment[] | undefined>)[data.toolCallId] || [];
+        updatedMap[data.toolCallId] = [...toolCallAttachments, data];
+      }
+      
+      return updatedMap;
     });
   };
 }

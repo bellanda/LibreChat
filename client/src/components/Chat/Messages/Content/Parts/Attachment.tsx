@@ -109,7 +109,22 @@ export function AttachmentGroup({ attachments }: { attachments?: TAttachment[] }
   const fileAttachments: TAttachment[] = [];
   const imageAttachments: TAttachment[] = [];
 
+  // Regra simples:
+  // - Se houver pelo menos um PPTX nesta lista de anexos, priorizamos o PPTX
+  //   e escondemos as imagens geradas na mesma execução, para não poluir a UI.
+  const hasPresentation = attachments.some((attachment) =>
+    (attachment.filename ?? '').toLowerCase().endsWith('.pptx'),
+  );
+
+  const seen = new Set<string>();
+
   attachments.forEach((attachment) => {
+    const key = `${attachment.filepath ?? ''}:${attachment.filename ?? ''}`;
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+
     const { width, height, filepath = null } = attachment as TFile & TAttachmentMetadata;
     const isImage = attachment.filename
       ? imageExtRegex.test(attachment.filename) &&
@@ -118,6 +133,12 @@ export function AttachmentGroup({ attachments }: { attachments?: TAttachment[] }
         filepath != null
       : false;
 
+    // Quando há PPTX, ignoramos imagens geradas nessa execução e deixamos
+    // apenas arquivos de documento (como a apresentação final).
+    if (hasPresentation && isImage) {
+      return;
+    }
+
     if (isImage) {
       imageAttachments.push(attachment);
     } else if (attachment.type !== Tools.web_search) {
@@ -125,11 +146,54 @@ export function AttachmentGroup({ attachments }: { attachments?: TAttachment[] }
     }
   });
 
+  // Normalização simples de nome de arquivo:
+  // - Caso especial: se existir uma apresentação (hasPresentation) e houver
+  //   exatamente um arquivo "genérico" sem extensão visível, adicionamos ".pptx"
+  //   para evitar que o usuário receba um arquivo sem extensão.
+  const normalizedFileAttachments: TAttachment[] = (() => {
+    if (!hasPresentation) {
+      return fileAttachments;
+    }
+
+    // Quando há apresentação, pode vir duplicada:
+    // - uma entrada "genérica" (sem extensão ou com nome simples)
+    // - outra com o nome final correto (ex.: Dashboard_Vendas_2026_02_03.pptx)
+    // Mantemos apenas 1 PPTX por nome e priorizamos o que já estiver com extensão.
+    const byName = new Map<string, TAttachment>();
+
+    for (const attachment of fileAttachments) {
+      const rawName = attachment.filename ?? '';
+      const lower = rawName.toLowerCase();
+      const isPptx = lower.endsWith('.pptx');
+
+      if (!isPptx) {
+        // Arquivos não-PPTX seguem intactos
+        byName.set(`${rawName}:${attachment.filepath ?? ''}`, attachment);
+        continue;
+      }
+
+      // Para PPTX, deduplicamos apenas por filename (case-insensitive)
+      const key = lower;
+      if (!byName.has(key)) {
+        byName.set(key, attachment);
+        continue;
+      }
+
+      const existing = byName.get(key);
+      // Se o existente não tem extensão (caso extremo) e o novo tem, preferimos o novo
+      if (existing && !(existing.filename ?? '').includes('.') && rawName.includes('.')) {
+        byName.set(key, attachment);
+      }
+    }
+
+    return Array.from(byName.values());
+  })();
+
   return (
     <>
-      {fileAttachments.length > 0 && (
+      {normalizedFileAttachments.length > 0 && (
         <div className="my-2 flex flex-wrap items-center gap-2.5">
-          {fileAttachments.map((attachment, index) =>
+          {normalizedFileAttachments.map((attachment, index) =>
             attachment.filepath ? (
               <FileAttachment attachment={attachment} key={`file-${index}`} />
             ) : null,

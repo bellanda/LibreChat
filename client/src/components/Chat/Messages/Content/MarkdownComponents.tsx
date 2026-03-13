@@ -88,12 +88,61 @@ type TAnchorProps = {
 
 export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
   const user = useRecoilValue(store.user);
+  const messageAttachmentsMap = useRecoilValue(store.messageAttachmentsMap);
   const { showToast } = useToastContext();
   const localize = useLocalize();
 
+  const resolvedHref = useMemo(() => {
+    // 1) Handle AI generating raw sandbox paths like /mnt/data/filename.ext
+    const mntDataMatch = href.match(/^\/?mnt\/data\/(.+)$/);
+    if (mntDataMatch && mntDataMatch[1]) {
+      const filenameMatch = mntDataMatch[1];
+      for (const key in messageAttachmentsMap) {
+        const attachments = messageAttachmentsMap[key];
+        if (!attachments) continue;
+        const file = attachments.find(
+          (a) => a.filename === filenameMatch || a.filename?.includes(filenameMatch)
+        );
+        if (file && file.filepath) {
+          return file.filepath;
+        }
+      }
+    }
+
+    // 2) Caso o modelo gere apenas o nome do arquivo (ex.: "Dashboard_Vendas_2026_02_03.pptx"
+    //    ou sem extensão), tentamos resolver pelo mapa de anexos para transformar isso
+    //    em um link de download.
+    const isRelative = !href.startsWith('http') && !href.startsWith('/');
+    if (isRelative) {
+      for (const key in messageAttachmentsMap) {
+        const attachments = messageAttachmentsMap[key];
+        if (!attachments) continue;
+        // Tenta match exato com filename
+        let file =
+          attachments.find(
+            (a) => a.filename === href || a.filename?.toLowerCase() === href.toLowerCase(),
+          ) ?? null;
+
+        // Se não achou e o href não tem extensão, procura um attachment cujo filename
+        // comece igual e termine com alguma extensão conhecida (ex.: .pptx)
+        if (!file && !href.includes('.')) {
+          file =
+            attachments.find((a) =>
+              (a.filename ?? '').toLowerCase().startsWith(href.toLowerCase()),
+            ) ?? null;
+        }
+
+        if (file && file.filepath) {
+          return file.filepath;
+        }
+      }
+    }
+    return href;
+  }, [href, messageAttachmentsMap]);
+
   const isCodeDownloadLink = useMemo(
-    () => href.includes('/api/files/code/download/'),
-    [href],
+    () => resolvedHref.includes('/api/files/code/download/'),
+    [resolvedHref],
   );
 
   const {
@@ -102,7 +151,7 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
     filepath,
   } = useMemo(() => {
     const pattern = new RegExp(`(?:files|outputs)/${user?.id}/([^\\s]+)`);
-    const match = href.match(pattern);
+    const match = resolvedHref.match(pattern);
     if (match && match[0]) {
       const path = match[0];
       const parts = path.split('/');
@@ -111,17 +160,17 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
       return { file_id, filename: name, filepath: path };
     }
     return { file_id: '', filename: '', filepath: '' };
-  }, [user?.id, href]);
+  }, [user?.id, resolvedHref]);
 
   const { refetch: downloadFile } = useFileDownload(user?.id ?? '', file_id);
-  const { refetch: downloadCodeOutput } = useCodeOutputDownload(isCodeDownloadLink ? href : '');
+  const { refetch: downloadCodeOutput } = useCodeOutputDownload(isCodeDownloadLink ? resolvedHref : '');
   const linkClasses =
     'text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150 underline-offset-2 hover:underline';
 
   if (!file_id || !filename) {
     if (!isCodeDownloadLink) {
       return (
-        <a href={href} className={linkClasses} target="_blank" rel="noopener noreferrer">
+        <a href={resolvedHref} className={linkClasses} target="_blank" rel="noopener noreferrer">
           {children}
         </a>
       );
@@ -139,7 +188,7 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
           });
           return;
         }
-        const downloadName = href.split('/').pop() || 'download';
+        const downloadName = resolvedHref.split('/').pop() || 'download';
         const link = document.createElement('a');
         link.href = stream.data;
         link.setAttribute('download', downloadName);
@@ -154,7 +203,7 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
 
     return (
       <a
-        href={href}
+        href={resolvedHref}
         onClick={handleCodeDownload}
         className={linkClasses}
         target="_blank"

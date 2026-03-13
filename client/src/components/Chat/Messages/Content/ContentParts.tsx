@@ -10,11 +10,12 @@ import { MessageContext, SearchContext } from '~/Providers';
 import MemoryArtifacts from './MemoryArtifacts';
 import Sources from '~/components/Web/Sources';
 import { mapAttachments } from '~/utils/map';
-import { EditTextPart, EmptyText } from './Parts';
+import { AttachmentGroup, EditTextPart, EmptyText } from './Parts';
 import Container from './Container';
 import Part from './Part';
 import type { UnifiedPhase, ToolCallEntry } from './UnifiedStatusBar';
 import UnifiedStatusBar from './UnifiedStatusBar';
+import SequentialPreview from './SequentialPreview';
 
 type ContentPartsProps = {
   content: Array<TMessageContentParts | undefined> | undefined;
@@ -118,12 +119,16 @@ const ContentParts = memo(function ContentParts({
               let lang = '';
               let code = '';
               try {
-                const parsed = JSON.parse((tc.args as string) || '{}');
+                // Handle both string and object args
+                const argsStr = typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args || {});
+                const parsed = JSON.parse(argsStr);
                 lang = parsed.lang ?? '';
                 code = parsed.code ?? '';
               } catch {
-                const langMatch = (tc.args as string)?.match(/"lang"\s*:\s*"(\w+)"/);
-                const codeMatch = (tc.args as string)?.match(/"code"\s*:\s*"(.+?)"/s);
+                // Fallback: try to extract from string representation
+                const argsStr = typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args || {});
+                const langMatch = argsStr?.match(/"lang"\s*:\s*"(\w+)"/);
+                const codeMatch = argsStr?.match(/"code"\s*:\s*"(.+?)"/s);
                 lang = langMatch?.[1] ?? '';
                 code = codeMatch?.[1]?.replace(/\\n/g, '\n').replace(/\\"/g, '"') ?? '';
               }
@@ -179,17 +184,95 @@ const ContentParts = memo(function ContentParts({
   }, [content, effectiveIsSubmitting]);
 
   /**
+   * Coleta itens para preview sequencial (pensamentos e execuções de código)
+   * Apenas quando a mensagem ESTÁ SENDO submetida (durante o streaming)
+   */
+  const previewItems = useMemo(() => {
+    // Mostrar preview apenas durante o streaming, não após completar
+    if (!effectiveIsSubmitting || !content?.length) {
+      return [];
+    }
+
+    const items: Array<{ type: 'thinking' | 'execute_code'; content: string; lang?: string; output?: string }> = [];
+
+    for (const part of content) {
+      if (!part) {
+        continue;
+      }
+
+      // Pensamentos (THINK)
+      if (part.type === ContentTypes.THINK) {
+        const raw =
+          typeof (part as { think?: string }).think === 'string'
+            ? (part as { think: string }).think
+            : (part as { think?: { value?: string } }).think?.value;
+        if (typeof raw === 'string') {
+          const cleaned = raw.replace(/^<think>\s*/, '').replace(/\s*<\/think>$/, '').trim();
+          if (cleaned) {
+            items.push({
+              type: 'thinking',
+              content: cleaned,
+            });
+          }
+        }
+      }
+      // Execuções de código (execute_code)
+      else if (part.type === ContentTypes.TOOL_CALL) {
+        const tc = part[ContentTypes.TOOL_CALL] as Agents.ToolCall | undefined;
+        if (tc) {
+          const isAgentToolCall =
+            'args' in tc && (!tc.type || tc.type === ToolCallTypes.TOOL_CALL);
+
+          if (isAgentToolCall && tc.name === Tools.execute_code) {
+            let lang = '';
+            let code = '';
+            try {
+              // Handle both string and object args
+              const argsStr = typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args || {});
+              const parsed = JSON.parse(argsStr);
+              lang = parsed.lang ?? '';
+              code = parsed.code ?? '';
+            } catch {
+              // Fallback: try to extract from string representation
+              const argsStr = typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args || {});
+              const langMatch = argsStr?.match(/"lang"\s*:\s*"(\w+)"/);
+              const codeMatch = argsStr?.match(/"code"\s*:\s*"(.+?)"/s);
+              lang = langMatch?.[1] ?? '';
+              code = codeMatch?.[1]?.replace(/\\n/g, '\n').replace(/\\"/g, '"') ?? '';
+            }
+            if (code) {
+              items.push({
+                type: 'execute_code',
+                content: code,
+                lang,
+                output: (tc.output as string) || '',
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return items;
+  }, [content, effectiveIsSubmitting]);
+
+  /**
    * Esconde indicadores de TODAS as parts THINK e TOOL_CALL.
-   * Tudo é representado pela barra unificada.
+   * Tudo é representado pela barra unificada OU pelo preview sequencial.
    */
   const shouldHideProgress = useCallback(
     (part: TMessageContentParts) => {
-      if (!unifiedData) {
-        return false;
+      // Se há preview sequencial (durante streaming), esconder os componentes originais
+      if (previewItems.length > 0 && effectiveIsSubmitting) {
+        return part.type === ContentTypes.THINK || part.type === ContentTypes.TOOL_CALL;
       }
-      return part.type === ContentTypes.THINK || part.type === ContentTypes.TOOL_CALL;
+      // Se há barra unificada, esconder também
+      if (unifiedData) {
+        return part.type === ContentTypes.THINK || part.type === ContentTypes.TOOL_CALL;
+      }
+      return false;
     },
-    [unifiedData],
+    [unifiedData, previewItems.length, effectiveIsSubmitting],
   );
 
   /**
@@ -198,7 +281,38 @@ const ContentParts = memo(function ContentParts({
   const renderPart = useCallback(
     (part: TMessageContentParts, idx: number, isLastPart: boolean) => {
       const toolCallId = (part?.[ContentTypes.TOOL_CALL] as Agents.ToolCall | undefined)?.id ?? '';
-      const partAttachments = attachmentMap[toolCallId];
+      // Try to get attachments by toolCallId first
+      let partAttachments = attachmentMap[toolCallId];
+      
+      // If no attachments found by toolCallId, try messageId as fallback
+      // This handles cases where toolCallId doesn't match or is missing
+      if (!partAttachments?.length && attachmentMap[messageId]?.length) {
+        // Filter attachments by toolCallId if available, otherwise use all attachments for this messageId
+        const messageAttachments = attachmentMap[messageId] || [];
+        if (toolCallId) {
+          // Try to find attachments with matching toolCallId
+          partAttachments = messageAttachments.filter(a => a.toolCallId === toolCallId);
+          // If still no match, use all attachments for this messageId (fallback)
+          if (!partAttachments.length) {
+            partAttachments = messageAttachments;
+          }
+        } else {
+          // If toolCallId is empty, use all attachments for this messageId
+          partAttachments = messageAttachments;
+        }
+      }
+      
+      // Debug logging to help diagnose attachment mapping issues
+      if (part?.[ContentTypes.TOOL_CALL] && !partAttachments?.length && attachmentMap[messageId]?.length) {
+        console.debug('[ContentParts] Tool call without attachments by toolCallId:', {
+          toolCallId,
+          messageId,
+          toolCallName: (part[ContentTypes.TOOL_CALL] as Agents.ToolCall)?.name,
+          attachmentsByMessageId: attachmentMap[messageId]?.map(a => ({ filename: a.filename, toolCallId: a.toolCallId })),
+          allAttachmentKeys: Object.keys(attachmentMap),
+        });
+      }
+      
       const hideProgressIndicator = shouldHideProgress(part);
 
       return (
@@ -212,7 +326,7 @@ const ContentParts = memo(function ContentParts({
             nextType: content?.[idx + 1]?.type,
             isSubmitting: effectiveIsSubmitting,
             isLatestMessage,
-            hideThinkingIndicator: !!unifiedData,
+            hideThinkingIndicator: !!unifiedData || (previewItems.length > 0 && effectiveIsSubmitting),
           }}
         >
           <Part
@@ -314,6 +428,14 @@ const ContentParts = memo(function ContentParts({
           toolCalls={unifiedData.toolCalls}
         />
       )}
+      {/* Preview sequencial de pensamentos e execuções de código */}
+      {previewItems.length > 0 && (
+        <SequentialPreview items={previewItems} previewDuration={4000} />
+      )}
+      {/* Anexos (arquivos gerados, imagens, etc.) são renderizados uma única vez por mensagem,
+          evitando duplicações quando há múltiplos tool calls. A própria AttachmentGroup
+          já aplica regras para esconder imagens quando há PPTX, etc. */}
+      {attachments && attachments.length > 0 && <AttachmentGroup attachments={attachments} />}
       {sequentialParts.map(({ part, idx }) => renderPart(part, idx, idx === lastContentIdx))}
     </SearchContext.Provider>
   );

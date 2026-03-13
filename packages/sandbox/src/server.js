@@ -209,8 +209,11 @@ app.post('/exec', requireApiKey, express.json({ limit: '1mb' }), async (req, res
       return res.status(400).json({ message: 'lang and code are required' });
     }
 
-    // Determine userId and sessionId from first file or generate
-    sessionId = uuidv4().replace(/-/g, '').slice(0, 21);
+    // Determine userId and sessionId from first file, entity_id, or generate
+    // Priority: files[0].session_id > entity_id > new UUID
+    // This ensures the same conversation uses the same session for file persistence
+    const entityId = req.body?.entity_id || '';
+    sessionId = getOrCreateSessionId(entityId);
     if (files && Array.isArray(files) && files.length > 0) {
       sessionId = files[0].session_id || sessionId;
     }

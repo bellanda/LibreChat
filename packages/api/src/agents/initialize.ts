@@ -300,9 +300,14 @@ export async function initializeAgent(
   }
 
   if (typeof agent.artifacts === 'string' && agent.artifacts !== '') {
+    const reqBody = (req as unknown as { body?: { ephemeralAgent?: { auto_mode?: boolean } } })?.body;
+    const ephemeralAgent = reqBody?.ephemeralAgent;
+    const isAutoMode = Boolean(ephemeralAgent?.auto_mode === true);
+
     const artifactsPromptResult = generateArtifactsPrompt({
       endpoint: agent.provider,
       artifacts: agent.artifacts as never,
+      isAutoMode,
     });
     agent.additional_instructions = artifactsPromptResult ?? undefined;
   }

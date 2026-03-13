@@ -245,7 +245,8 @@ export default function ToolCall({
           </p>
         </div>
       )}
-      {attachments && attachments.length > 0 && <AttachmentGroup attachments={attachments} />}
+      {/* Anexos de tool calls genéricos são exibidos em nível de mensagem
+          (AttachmentGroup em ContentParts / Message), para evitar duplicações. */}
     </>
   );
 }

@@ -52,15 +52,41 @@ const processCodeOutput = async ({
   const basePath = getBasePath();
   const fileExt = path.extname(name);
   if (!fileExt || !imageExtRegex.test(name)) {
-    return {
+    // Ensure filepath always starts with /api/ for proper routing
+    const filepath = `${basePath}/api/files/code/download/${session_id}/${id}`;
+    
+    // Validate that filepath is correct (should start with /api/)
+    if (!filepath.startsWith('/api/')) {
+      logger.error('[processCodeOutput] Invalid filepath generated:', {
+        filepath,
+        basePath,
+        session_id,
+        id,
+        name,
+      });
+      // Fallback to a valid path
+      const fallbackPath = `/api/files/code/download/${session_id}/${id}`;
+      logger.warn('[processCodeOutput] Using fallback filepath:', fallbackPath);
+    }
+    
+    const fileMetadata = {
       filename: name,
-      filepath: `${basePath}/api/files/code/download/${session_id}/${id}`,
+      filepath: filepath.startsWith('/api/') ? filepath : `/api/files/code/download/${session_id}/${id}`,
       /** Note: expires 24 hours after creation */
       expiresAt: currentDate.getTime() + 86400000,
       conversationId,
       toolCallId,
       messageId,
+      type: Tools.execute_code,
     };
+    logger.debug('[processCodeOutput] Returning non-image file metadata:', {
+      filename: fileMetadata.filename,
+      filepath: fileMetadata.filepath,
+      toolCallId: fileMetadata.toolCallId,
+      messageId: fileMetadata.messageId,
+      conversationId: fileMetadata.conversationId,
+    });
+    return fileMetadata;
   }
 
   try {
@@ -210,7 +236,20 @@ const primeFiles = async (options, apiKey) => {
 
       const pushFile = () => {
         if (!toolContext) {
-          toolContext = `- Note: The following files are available in the "${Tools.execute_code}" tool environment:`;
+          toolContext = `# ${Tools.execute_code} Tool Environment
+
+**Important**: This sandbox uses \`uv\` as the Python package manager, **not \`pip\`**. The \`pip\` command is not available in this environment.
+
+**Pre-installed Python packages available** (no installation needed):
+- Data processing: numpy, pandas, polars, pyarrow
+- Visualization: matplotlib, seaborn, scipy
+- File handling: pillow, openpyxl, xlrd, **python-pptx** (for creating PowerPoint files)
+- Machine learning: scikit-learn
+- Utilities: tabulate, pyyaml, pypdf, pdfplumber
+
+**You can use these packages directly** - just import them (e.g., \`from pptx import Presentation\`). Do NOT try to install packages using \`pip install\` or \`uv pip install\` as this will fail.
+
+The following files are available in the "${Tools.execute_code}" tool environment:`;
         }
         toolContext += `\n\t- /mnt/data/${file.filename}${
           agentResourceIds.has(file.file_id) ? '' : ' (just attached by user)'

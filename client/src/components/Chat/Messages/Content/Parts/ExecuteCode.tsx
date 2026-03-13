@@ -223,7 +223,8 @@ export default function ExecuteCode({
           )}
         </div>
       </div>
-      {attachments && attachments.length > 0 && <AttachmentGroup attachments={attachments} />}
+      {/* Anexos de execute_code são renderizados globalmente por mensagem (AttachmentGroup),
+          para evitar duplicações quando há múltiplos tool calls na mesma resposta. */}
     </>
   );
 }

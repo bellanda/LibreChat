@@ -14,7 +14,15 @@ import Container from './Container';
 import Image from './Image';
 import ImageGen from './ImageGen';
 import { ErrorMessage } from './MessageContent';
-import { AgentUpdate, EmptyText, ExecuteCode, OpenAIImageGen, Reasoning, Text } from './Parts';
+import {
+  AgentUpdate,
+  AttachmentGroup,
+  EmptyText,
+  ExecuteCode,
+  OpenAIImageGen,
+  Reasoning,
+  Text,
+} from './Parts';
 import RetrievalCall from './RetrievalCall';
 import ToolCall from './ToolCall';
 import WebSearch from './WebSearch';
@@ -87,6 +95,11 @@ const Part = memo(
         </Container>
       );
     } else if (part.type === ContentTypes.THINK) {
+      // Quando hideProgressIndicator é true, significa que está sendo representado
+      // pela barra unificada ou pelo preview sequencial - não renderizar
+      if (hideProgressIndicator) {
+        return null;
+      }
       const reasoning = typeof part.think === 'string' ? part.think : part.think?.value;
       if (typeof reasoning !== 'string') {
         return null;
@@ -99,19 +112,9 @@ const Part = memo(
         />
       );
     } else if (part.type === ContentTypes.TOOL_CALL) {
-      /**
-       * Quando `hideProgressIndicator` é true, significa que esta TOOL_CALL
-       * já está sendo representada pela `UnifiedStatusBar` (barra unificada).
-       *
-       * Para evitar duplicar a visualização (como no fluxo antigo da imagem 2),
-       * não renderizamos mais o bloco de execução aqui. O usuário vê:
-       * - Pensamentos + ações na barra unificada (imagem 1)
-       * - Resposta final no Markdown principal
-       */
       if (hideProgressIndicator) {
         return null;
       }
-
       const toolCall = part[ContentTypes.TOOL_CALL];
 
       if (!toolCall) {

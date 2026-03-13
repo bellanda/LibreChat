@@ -457,11 +457,29 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
       }
     }
 
-    if (!output.artifact.files) {
+    // Support both artifact.files and alternative shapes (e.g. some providers use file_list or raw files array)
+    const sessionId = output.artifact?.session_id;
+    let filesList = output.artifact?.files;
+    if (!filesList && Array.isArray(output.artifact?.file_list)) {
+      filesList = output.artifact.file_list;
+    }
+    if (!filesList && Array.isArray(output.artifact?.output_files)) {
+      filesList = output.artifact.output_files;
+    }
+    if (!filesList && sessionId) {
+      logger.warn('[execute_code] Missing artifact.files for execute_code - check provider artifact shape', {
+        provider: metadata?.provider,
+        artifactKeys: output.artifact ? Object.keys(output.artifact) : [],
+        hasSessionId: !!sessionId,
+        messageId: metadata?.run_id,
+      });
+      return;
+    }
+    if (!filesList) {
       return;
     }
 
-    for (const file of output.artifact.files) {
+    for (const file of filesList) {
       const id = file.id ?? file.fileId;
       const name = file.name ?? file.filename ?? file.id ?? file.fileId;
       if (!id || typeof id !== 'string') {
@@ -478,13 +496,21 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
             authFields: [`${EnvVar.CODE_API_KEY}||SANDBOX_API_KEY`],
           });
           const codeApiKey = result[EnvVar.CODE_API_KEY] ?? result.SANDBOX_API_KEY;
+          const toolCallId = output.tool_call_id;
+          if (!toolCallId) {
+            logger.warn('[execute_code] Missing tool_call_id in output:', {
+              outputKeys: Object.keys(output || {}),
+              messageId: metadata.run_id,
+              fileName: name,
+            });
+          }
           const fileMetadata = await processCodeOutput({
             req,
             id,
             name,
             apiKey: codeApiKey,
             messageId: metadata.run_id,
-            toolCallId: output.tool_call_id,
+            toolCallId: toolCallId || '',
             conversationId: metadata.thread_id,
             session_id: output.artifact.session_id,
           });
@@ -493,9 +519,28 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
           }
 
           if (!fileMetadata) {
+            logger.warn('[execute_code] processCodeOutput returned null:', {
+              id,
+              name,
+              session_id: output.artifact.session_id,
+            });
             return null;
           }
 
+          // Ensure toolCallId is set even if it was missing in output
+          if (!fileMetadata.toolCallId && toolCallId) {
+            fileMetadata.toolCallId = toolCallId;
+          }
+          
+          logger.debug('[execute_code] Sending attachment:', {
+            filename: fileMetadata.filename,
+            filepath: fileMetadata.filepath,
+            toolCallId: fileMetadata.toolCallId,
+            messageId: fileMetadata.messageId,
+            hasStreamId: !!streamId,
+            headersSent: res.headersSent,
+          });
+          
           writeAttachment(res, streamId, fileMetadata);
           return fileMetadata;
         })().catch((error) => {

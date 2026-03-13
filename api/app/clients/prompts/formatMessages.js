@@ -200,12 +200,19 @@ const formatAgentMessages = (payload) => {
         tool_call.args = args;
         lastAIMessage.tool_calls.push(tool_call);
 
+        // Limita o output do execute_code para evitar consumo excessivo de créditos
+        const { Tools } = require('librechat-data-provider');
+        const { limitCodeOutput } = require('~/server/utils/limitCodeOutput');
+        const limitedOutput = tool_call.name === Tools.execute_code && output
+          ? limitCodeOutput(output, 10000)
+          : output || '';
+        
         // Add the corresponding ToolMessage
         messages.push(
           new ToolMessage({
             tool_call_id: tool_call.id,
             name: tool_call.name,
-            content: output || '',
+            content: limitedOutput,
           }),
         );
       } else if (part.type === ContentTypes.THINK) {

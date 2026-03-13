@@ -112,6 +112,7 @@ export async function createRun({
       .join('\n')
       .trim();
 
+
     /**
      * Resolve request-based headers for Custom Endpoints. Note: if this is added to
      *  non-custom endpoints, needs consideration of varying provider header configs.
@@ -136,6 +137,7 @@ export async function createRun({
     }
 
     const reasoningKey = getReasoningKey(provider, llmConfig, agent.endpoint);
+    
     const agentInput: AgentInputs = {
       provider,
       reasoningKey,

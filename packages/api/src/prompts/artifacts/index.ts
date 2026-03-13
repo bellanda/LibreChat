@@ -194,6 +194,20 @@ Here are some examples of correct usage of artifacts:
   </example>
 </examples>`;
 
+const artifactsPromptLite = dedent`You can create artifacts for substantial, reusable content (code, documents, diagrams, UI components) that users will modify or reuse.
+
+Format: :::artifact{identifier="kebab-case-id" type="mime-type" title="Title"}
+\`\`\`
+full content here
+\`\`\`
+:::
+
+Use artifacts when content is substantial (>15 lines) and self-contained. Avoid for short snippets or explanatory examples.
+
+Types: "text/html", "text/markdown", "application/vnd.mermaid", "application/vnd.react", "image/svg+xml"
+
+Rules: Reuse the same identifier when updating. Always include complete content (no truncation or placeholders). Prefer normal chat answers when artifacts aren't clearly needed.`;
+
 const artifactsOpenAIPrompt = dedent`The assistant can create and reference artifacts during conversations.
   
 Artifacts are for substantial, self-contained content that users might modify or reuse, displayed in a separate UI window for clarity.
@@ -397,28 +411,36 @@ Here are some examples of correct usage of artifacts:
 ---`;
 
 /**
- * Generates an artifacts prompt based on the endpoint and artifact mode
+ * Generates an artifacts prompt based on the endpoint, artifact mode, and optional auto mode.
  * @param params - Configuration parameters
  * @param params.endpoint - The current endpoint
  * @param params.artifacts - The current artifact mode
+ * @param params.isAutoMode - When true (e.g. agents endpoint with auto mode), use minimal prompt to reduce tokens
  * @returns The artifacts prompt, or null if mode is CUSTOM
  */
 export function generateArtifactsPrompt(params: {
   endpoint: EModelEndpoint | string;
   artifacts: ArtifactModes;
+  isAutoMode?: boolean;
 }): string | null {
-  const { endpoint, artifacts } = params;
+  const { endpoint, artifacts, isAutoMode = false } = params;
 
   if (artifacts === ArtifactModes.CUSTOM) {
     return null;
   }
 
-  let prompt = artifactsPrompt;
-  if (endpoint !== EModelEndpoint.anthropic) {
+  let prompt: string;
+  if (isAutoMode) {
+    prompt = artifactsPromptLite;
+  } else if (endpoint === EModelEndpoint.anthropic) {
+    prompt = artifactsPromptLite;
+  } else {
     prompt = artifactsOpenAIPrompt;
   }
 
-  if (artifacts === ArtifactModes.SHADCNUI) {
+  // AUTO mode should send only the smallest prompt possible.
+  // Avoid appending large shadcn instructions when auto_mode is enabled.
+  if (!isAutoMode && artifacts === ArtifactModes.SHADCNUI) {
     prompt += generateShadcnPrompt({ components, useXML: endpoint === EModelEndpoint.anthropic });
   }
 

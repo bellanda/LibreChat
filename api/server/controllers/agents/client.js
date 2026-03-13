@@ -494,6 +494,7 @@ class AgentClient extends BaseClient {
 
     if (systemContent) {
       this.options.agent.instructions = systemContent;
+      this.options.agent.additional_instructions = null;
     }
 
     /** @type {Record<string, number> | undefined} */
@@ -528,6 +529,9 @@ class AgentClient extends BaseClient {
 
     if (systemContent) {
       this.options.agent.instructions = systemContent;
+      // Prevent additional_instructions from being concatenated again
+      // by AgentContext on subsequent turns (it is already merged into systemContent above)
+      this.options.agent.additional_instructions = null;
     }
 
     return result;
@@ -1011,7 +1015,15 @@ class AgentClient extends BaseClient {
           },
           user: createSafeUser(this.options.req.user),
         },
-        recursionLimit: agentsEConfig?.recursionLimit ?? 25,
+        recursionLimit: (() => {
+          // Reduce recursion limit in auto mode to prevent expensive loops
+          const isAutoMode = this.options.req?.body?.ephemeralAgent?.auto_mode === true;
+          const baseLimit = agentsEConfig?.recursionLimit ?? 25;
+          // In auto mode, limit to 15 steps max to prevent expensive loops
+          // Increased from 5 to 15 to allow complex tasks like creating presentations
+          // while still preventing infinite loops
+          return isAutoMode ? Math.min(baseLimit, 15) : baseLimit;
+        })(),
         signal: abortController.signal,
         streamMode: 'values',
         version: 'v2',
@@ -1038,6 +1050,20 @@ class AgentClient extends BaseClient {
 
         if (agents[0].recursion_limit && typeof agents[0].recursion_limit === 'number') {
           config.recursionLimit = agents[0].recursion_limit;
+        }
+
+        // Reduce recursion limit in auto mode to prevent expensive loops
+        // Increased from 5 to 15 to allow complex tasks like creating presentations
+        // while still preventing infinite loops
+        const isAutoMode = this.options.req?.body?.ephemeralAgent?.auto_mode === true;
+        if (isAutoMode && config.recursionLimit > 15) {
+          config.recursionLimit = 15;
+          if (process.env.NODE_ENV === 'development') {
+            const { logger } = require('@librechat/data-schemas');
+            logger.debug('[AgentClient] Reduced recursionLimit to 15 for auto mode', {
+              originalLimit: agents[0].recursion_limit ?? agentsEConfig?.recursionLimit ?? 25,
+            });
+          }
         }
 
         if (

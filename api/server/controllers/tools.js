@@ -16,6 +16,7 @@ const { loadAuthValues } = require('~/server/services/Tools/credentials');
 const { loadTools } = require('~/app/clients/tools/util');
 const { getRoleByName } = require('~/models/Role');
 const { getMessage } = require('~/models/Message');
+const { limitCodeOutput } = require('~/server/utils/limitCodeOutput');
 
 const fieldsMap = {
   [Tools.execute_code]: [EnvVar.CODE_API_KEY],
@@ -173,13 +174,19 @@ const callTool = async (req, res) => {
     });
 
     const { content, artifact } = result;
+    
+    // Limita o output do code interpreter para evitar consumo excessivo de créditos
+    const limitedContent = toolId === Tools.execute_code 
+      ? limitCodeOutput(content, 10000) 
+      : content;
+    
     const toolCallData = {
       toolId,
       messageId,
       partIndex,
       blockIndex,
       conversationId,
-      result: content,
+      result: limitedContent,
       user: req.user.id,
     };
 
@@ -188,7 +195,7 @@ const callTool = async (req, res) => {
         logger.error(`Error creating tool call: ${error.message}`);
       });
       return res.status(200).json({
-        result: content,
+        result: limitedContent,
       });
     }
 
@@ -233,7 +240,7 @@ const callTool = async (req, res) => {
       logger.error(`Error creating tool call: ${error.message}`);
     });
     res.status(200).json({
-      result: content,
+      result: limitedContent,
       attachments,
     });
   } catch (error) {

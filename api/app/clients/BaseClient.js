@@ -717,6 +717,25 @@ class BaseClient {
       opts,
     );
 
+    const promptPayloadInfo = {
+      type: Array.isArray(payload) ? 'array' : typeof payload,
+      length: Array.isArray(payload)
+        ? payload.length
+        : typeof payload === 'string'
+          ? payload.length
+          : null,
+    };
+
+    const payloadFull = Array.isArray(payload)
+      ? payload.map((m) => ({
+          role: m.role ?? m.author,
+          content: m.content,
+          text: m.text,
+        }))
+      : typeof payload === 'string'
+        ? payload
+        : null;
+
     if (tokenCountMap) {
       if (tokenCountMap[userMessage.messageId]) {
         userMessage.tokenCount = tokenCountMap[userMessage.messageId];

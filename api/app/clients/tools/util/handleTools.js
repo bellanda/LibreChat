@@ -330,10 +330,13 @@ const loadTools = async ({
         webSearchConfig: webSearch,
       });
       const { onSearchResults, onGetHighlights } = options?.[Tools.web_search] ?? {};
+      const isAutoMode = options.req?.body?.ephemeralAgent?.auto_mode === true;
 
-      // Set toolContextMap immediately, not inside the async function
-      toolContextMap[tool] = `# \`${tool}\`:
-Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
+      // Set toolContextMap immediately, not inside the async function. Use short context in auto mode to reduce tokens.
+      toolContextMap[tool] = isAutoMode
+        ? `# \`${tool}\`: Current Date: ${replaceSpecialVars({ text: '{{current_date}}' })}. Use once per question; summarize results clearly.`
+        : `# \`${tool}\`:
+Current Date: ${replaceSpecialVars({ text: '{{current_date}}' })}
 1. **Execute immediately without preface** when using \`${tool}\`.
 2. **Perform ONLY ONE search per user question** - do not search multiple times before responding to the user.
 3. **After the search, begin with a brief summary** that directly addresses the query without headers or explaining your process.

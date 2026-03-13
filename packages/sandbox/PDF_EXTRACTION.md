@@ -116,11 +116,11 @@ O executor Docker já inclui as bibliotecas necessárias:
 - `pypdf` - Extração básica de PDF
 - `pdfplumber` - Extração avançada (melhor para tabelas)
 
-Essas bibliotecas são instaladas automaticamente quando você reconstrói a imagem Docker do executor.
+**Nota**: O sandbox usa `uv` como gerenciador de pacotes Python (não `pip`). Essas bibliotecas são gerenciadas via `uv` e estão definidas em `docker/pyproject.toml`.
 
 ## Rebuild do Executor
 
-Após adicionar as dependências, você precisa reconstruir a imagem Docker:
+Após adicionar novas dependências ao `docker/pyproject.toml`, você precisa reconstruir a imagem Docker:
 
 ```bash
 cd packages/sandbox
