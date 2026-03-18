@@ -18,8 +18,9 @@ COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
 RUN uv --version
 
 COPY pyproject.toml .
+COPY uv.lock .
 COPY .python-version .
-RUN uv sync
+RUN uv sync --frozen
 
 # Download NLTK with certificate handling
 RUN uv run python -c "import ssl; import nltk; nltk.download('punkt_tab', download_dir='/app/nltk_data'); nltk.download('averaged_perceptron_tagger', download_dir='/app/nltk_data')"

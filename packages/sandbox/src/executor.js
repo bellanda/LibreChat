@@ -43,7 +43,10 @@ async function resolveFileRefs(uploadsPath, files) {
  * @param {Array<{ id: string; name: string }>} files
  */
 async function prepareExecDir(uploadsPath, execDir, files) {
-  await fs.promises.mkdir(execDir, { recursive: true, mode: 0o750 });
+  // Executor container may run with a different UID/GID.
+  // Keep this execution folder writable so generated artifacts can be saved to /mnt/data.
+  await fs.promises.mkdir(execDir, { recursive: true, mode: 0o777 });
+  await fs.promises.chmod(execDir, 0o777).catch(() => {});
   const refs = await resolveFileRefs(uploadsPath, files);
 
   for (const { src, destName } of refs) {
@@ -51,6 +54,7 @@ async function prepareExecDir(uploadsPath, execDir, files) {
     // Avoid path traversal in destName
     if (path.basename(dest) !== destName) continue;
     await fs.promises.copyFile(src, dest);
+    await fs.promises.chmod(dest, 0o666).catch(() => {});
   }
 }
 
@@ -94,7 +98,8 @@ async function execute(options) {
   const ext =
     lang === 'py' || lang === 'python' ? '.py' : lang === 'js' || lang === 'ts' ? '.js' : '.txt';
   const scriptPath = path.join(execDir, `script${ext}`);
-  await fs.promises.writeFile(scriptPath, code, { mode: 0o640 });
+  // Script must be writable/readable inside executor regardless of UID/GID mismatch.
+  await fs.promises.writeFile(scriptPath, code, { mode: 0o666 });
 
   return new Promise((resolve, reject) => {
     const dockerArgs = [

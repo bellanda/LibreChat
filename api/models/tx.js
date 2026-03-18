@@ -150,7 +150,9 @@ const tokenValues = Object.assign(
     'claude-3-haiku': { prompt: 0.25, completion: 1.25 },
     'claude-sonnet-4': { prompt: 3, completion: 15 },
     'claude-sonnet-4-5-20250929': { prompt: 3, completion: 15 },
+    'claude-sonnet-4-6': { prompt: 3, completion: 15 },
     'claude-haiku-4-5': { prompt: 1, completion: 5 },
+    'claude-opus-4-6': { prompt: 5, completion: 25 },
     'claude-opus-4-5': { prompt: 15, completion: 25 },
     'claude-opus-4': { prompt: 15, completion: 75 },
     'claude-sonnet-4': { prompt: 3, completion: 15 },
@@ -176,6 +178,8 @@ const tokenValues = Object.assign(
     'gemini-2.5-flash-image': { prompt: 0.15, completion: 30 },
     'gemini-3': { prompt: 2, completion: 12 },
     'gemini-3-pro-image': { prompt: 2, completion: 120 },
+    'gemini-3.1': { prompt: 2, completion: 12 },
+    'gemini-3.1-flash-lite': { prompt: 0.25, completion: 1.5 },
     'gemini-pro-vision': { prompt: 0.5, completion: 1.5 },
     grok: { prompt: 2.0, completion: 10.0 }, // Base pattern defaults to grok-2
     'grok-beta': { prompt: 5.0, completion: 15.0 },
@@ -280,12 +284,16 @@ const cacheTokenValues = {
   'claude-3-haiku': { write: 0.3, read: 0.03 },
   'claude-haiku-4-5': { write: 1.25, read: 0.1 },
   'claude-sonnet-4': { write: 3.75, read: 0.3 },
+  'claude-sonnet-4-6': { write: 3.75, read: 0.3 },
   'claude-opus-4': { write: 18.75, read: 1.5 },
   'claude-opus-4-5': { write: 6.25, read: 0.5 },
+  'claude-opus-4-6': { write: 6.25, read: 0.5 },
   // DeepSeek models - cache hit: $0.028/1M, cache miss: $0.28/1M
   deepseek: { write: 0.28, read: 0.028 },
   'deepseek-chat': { write: 0.28, read: 0.028 },
   'deepseek-reasoner': { write: 0.28, read: 0.028 },
+  'gemini-3.1': { write: 2, read: 0.2 },
+  'gemini-3.1-flash-lite': { write: 0.25, read: 0.025 },
 };
 
 /**
@@ -400,7 +408,7 @@ const getCacheMultiplier = ({ valueKey, cacheType, model, endpoint, endpointToke
   }
 
   valueKey = getValueKey(model, endpoint);
-  
+
   if (!valueKey) {
     return null;
   }

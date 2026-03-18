@@ -325,6 +325,9 @@ app.get('/download/:session_id/:fileId', requireApiKey, async (req, res) => {
 
     const filePath = await storage.getFilePath(STORAGE_ROOT, userId, session_id, fileId);
     const stat = await fs.promises.stat(filePath);
+    const { uploads } = storage.getSessionPaths(STORAGE_ROOT, userId, session_id);
+    const manifest = await storage.loadManifest(uploads);
+    const originalName = manifest[fileId] || path.basename(filePath);
 
     // Audit successful download
     await audit.recordDownload(userId, session_id, fileId, req.clientIp, req.userAgent, 'success');
@@ -334,8 +337,11 @@ app.get('/download/:session_id/:fileId', requireApiKey, async (req, res) => {
       sessionId: session_id,
       fileId,
       size: stat.size,
+      filename: originalName,
     });
 
+    // Ensure browser downloads with a stable filename and extension.
+    res.attachment(originalName);
     res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Content-Length', stat.size);
     fs.createReadStream(filePath).pipe(res);
