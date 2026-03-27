@@ -966,6 +966,10 @@ export const alternateName = {
 };
 
 const sharedOpenAIModels = [
+  'gpt-5.4',
+  'gpt-5.4-pro',
+  'gpt-5.4-mini',
+  'gpt-5.4-nano',
   'gpt-5.1',
   'gpt-5.1-chat-latest',
   'gpt-5.1-codex',
@@ -999,6 +1003,8 @@ const sharedOpenAIModels = [
 ];
 
 const sharedAnthropicModels = [
+  'claude-sonnet-4-6',
+  'claude-opus-4-6',
   'claude-sonnet-4-5',
   'claude-sonnet-4-5-20250929',
   'claude-haiku-4-5',
@@ -1069,6 +1075,10 @@ export const defaultModels = {
   [EModelEndpoint.assistants]: [...sharedOpenAIModels, 'chatgpt-4o-latest'],
   [EModelEndpoint.agents]: sharedOpenAIModels, // TODO: Add agent models (agentsModels)
   [EModelEndpoint.google]: [
+    // Gemini 3.1 Models
+    'gemini-3.1-pro-preview',
+    'gemini-3.1-pro-preview-customtools',
+    'gemini-3.1-flash-lite-preview',
     // Gemini 2.5 Models
     'gemini-2.5-pro',
     'gemini-2.5-flash',
@@ -1126,6 +1136,7 @@ export const modularEndpoints = new Set<EModelEndpoint | string>([
 
 export const supportsBalanceCheck = {
   [EModelEndpoint.custom]: true,
+  [EModelEndpoint.google]: true,
   [EModelEndpoint.openAI]: true,
   [EModelEndpoint.anthropic]: true,
   [EModelEndpoint.gptPlugins]: true,
