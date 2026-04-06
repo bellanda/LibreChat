@@ -23,7 +23,7 @@ dependencies = [
     # ---------- Infraestrutura ----------
     "boto3>=1.39.7",
     "sqlalchemy==2.0.41",
-    "python-dotenv==1.1.1",
+    "python-dotenv>=1.2.1",
     "fastapi==0.115.12",
     "psycopg2-binary==2.9.9",
     "pgvector==0.2.5",
@@ -70,3 +70,6 @@ dependencies = [
     "tiktoken>=0.5.0", # Para contagem precisa de tokens
     "ipykernel>=6.30.1",
 ]
+
+[tool.uv.sources]
+markdown-html-pdf = { git = "https://github.com/bellanda/markdown-html-pdf", rev = "260135ae24a4a71b92480a2919d6b71a44f30682" }
