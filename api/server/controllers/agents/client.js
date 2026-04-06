@@ -211,7 +211,7 @@ function createMultiAgentMapper(primaryAgent, agentConfigs) {
           filteredContent.push(cleanPart);
           if (agentId && hasMultipleAgents) {
             agentIdMap[newIndex] = agentId;
-      }
+          }
         }
       }
 
@@ -620,15 +620,15 @@ class AgentClient extends BaseClient {
 
     const agent = await initializeAgent(
       {
-      req: this.options.req,
-      res: this.options.res,
-      agent: prelimAgent,
-      allowedProviders,
-      endpointOption: {
+        req: this.options.req,
+        res: this.options.res,
+        agent: prelimAgent,
+        allowedProviders,
+        endpointOption: {
           endpoint: !isEphemeralAgentId(prelimAgent.id)
             ? EModelEndpoint.agents
             : memoryConfig.agent?.provider,
-      },
+        },
       },
       {
         getConvoFiles,
@@ -788,7 +788,7 @@ class AgentClient extends BaseClient {
     if (!collectedUsage || !collectedUsage.length) {
       return;
     }
-    
+
     // Helper function to extract response text and count tokens (from upstream fix)
     const getResponseTextInfo = () => {
       let responseText = '';
@@ -819,7 +819,7 @@ class AgentClient extends BaseClient {
     // Use first entry's input_tokens as the base input (represents initial user message context)
     // Support both OpenAI format (input_token_details) and Anthropic format (cache_*_input_tokens)
     const firstUsage = collectedUsage[0];
-    
+
     // IMPORTANT: input_tokens represents the actual input tokens used.
     // cache_creation and cache_read are separate metrics with different rates.
     // When cache exists, we use spendStructuredTokens with separate input/write/read values.
@@ -838,7 +838,7 @@ class AgentClient extends BaseClient {
       }
       return responseDetails;
     };
-    
+
     for (let index = 0; index < collectedUsage.length; index++) {
       const usage = collectedUsage[index];
       if (!usage) {
@@ -855,32 +855,37 @@ class AgentClient extends BaseClient {
 
       let input_tokens = Number(usage.input_tokens) || 0;
       let output_tokens = Number(usage.output_tokens) || 0;
-      
+
       // Fallback for xAI/Grok: calculate actual tokens from response when reported as zero
       // This handles known limitation where xAI via LangGraph doesn't report usage during streaming
-      const isZeroUsage = (input_tokens === 0 || input_tokens == null) && (output_tokens === 0 || output_tokens == null);
+      const isZeroUsage =
+        (input_tokens === 0 || input_tokens == null) &&
+        (output_tokens === 0 || output_tokens == null);
       if (isZeroUsage && this.options.agent?.provider === 'xai') {
         const { responseText, tokenCount: actualOutputTokens } = ensureResponseDetails();
-        
+
         if (actualOutputTokens > 0) {
           output_tokens = actualOutputTokens;
           // Rough estimate for input tokens (typically 20-40% of output for agents)
           input_tokens = Math.max(Math.floor(output_tokens * 0.3), 100);
-          
-          logger.warn('[AgentClient] xAI usage not reported - using token calculation from response', {
-            provider: this.options.agent?.provider,
-            model: usage.model ?? model ?? this.model,
-            calculatedInputTokens: input_tokens,
-            calculatedOutputTokens: output_tokens,
-            context,
-          });
-          
+
+          logger.warn(
+            '[AgentClient] xAI usage not reported - using token calculation from response',
+            {
+              provider: this.options.agent?.provider,
+              model: usage.model ?? model ?? this.model,
+              calculatedInputTokens: input_tokens,
+              calculatedOutputTokens: output_tokens,
+              context,
+            },
+          );
+
           // Update usage object
           usage.input_tokens = input_tokens;
           usage.output_tokens = output_tokens;
         }
       }
-      
+
       // Accumulate output tokens for the usage summary
       total_output_tokens += output_tokens;
 
@@ -893,7 +898,6 @@ class AgentClient extends BaseClient {
         endpointTokenConfig: this.options.endpointTokenConfig,
         model: usage.model ?? model ?? this.model ?? this.options.agent.model_parameters.model,
       };
-
 
       if (cache_creation > 0 || cache_read > 0) {
         spendStructuredTokens(txMetadata, {
@@ -911,15 +915,15 @@ class AgentClient extends BaseClient {
         });
         continue;
       }
-      
+
       spendTokens(txMetadata, {
         promptTokens: input_tokens,
         completionTokens: output_tokens,
       }).catch((err) => {
-      logger.error(
-        '[api/server/controllers/agents/client.js #recordCollectedUsage] Error spending tokens',
-        err,
-      );
+        logger.error(
+          '[api/server/controllers/agents/client.js #recordCollectedUsage] Error spending tokens',
+          err,
+        );
       });
     }
 
@@ -1104,7 +1108,7 @@ class AgentClient extends BaseClient {
 
         // Create metadata aggregator to capture usage via handleLLMEnd
         const { handleLLMEnd: captureUsage, collected: llmMetadata } = createMetadataAggregator();
-        
+
         // Merge custom handlers with handleLLMEnd callback
         const mergedHandlers = {
           ...this.options.eventHandlers,
@@ -1139,25 +1143,27 @@ class AgentClient extends BaseClient {
 
         /** @deprecated Agent Chain */
         config.configurable.last_agent_id = agents[agents.length - 1].id;
-        
+
         await run.processStream({ messages }, config, {
           callbacks: {
             [Callback.TOOL_ERROR]: logToolError,
           },
         });
-        
+
         // Merge handleLLMEnd usage into collectedUsage if CHAT_MODEL_END didn't capture it
         if (llmMetadata.length > 0) {
           for (const item of llmMetadata) {
             let input_tokens, output_tokens;
             if (item.usage) {
-              input_tokens = item.usage.prompt_tokens || item.usage.input_tokens || item.usage.inputTokens;
-              output_tokens = item.usage.completion_tokens || item.usage.output_tokens || item.usage.outputTokens;
+              input_tokens =
+                item.usage.prompt_tokens || item.usage.input_tokens || item.usage.inputTokens;
+              output_tokens =
+                item.usage.completion_tokens || item.usage.output_tokens || item.usage.outputTokens;
             } else if (item.tokenUsage) {
               input_tokens = item.tokenUsage.promptTokens;
               output_tokens = item.tokenUsage.completionTokens;
             }
-            
+
             if (input_tokens != null || output_tokens != null) {
               this.collectedUsage.push({
                 input_tokens: input_tokens || 0,
@@ -1245,7 +1251,7 @@ class AgentClient extends BaseClient {
       return;
     }
 
-    /** 
+    /**
      * Garante que appConfig seja sempre um objeto,
      * evitando erros do tipo "Cannot read properties of undefined (reading 'endpoints')"
      * caso req.config ainda não esteja definido.
@@ -1526,7 +1532,8 @@ class AgentClient extends BaseClient {
     ];
 
     // Verifica se o modelo corresponde a algum prefixo o200k_base ou é um modelo OpenAI moderno
-    const usesO200k = o200kPrefixes.some((prefix) => prefix.test(model)) || /^gpt-4[^-\s]/.test(model);
+    const usesO200k =
+      o200kPrefixes.some((prefix) => prefix.test(model)) || /^gpt-4[^-\s]/.test(model);
     const encoding = usesO200k ? 'o200k_base' : 'cl100k_base';
 
     return encoding;

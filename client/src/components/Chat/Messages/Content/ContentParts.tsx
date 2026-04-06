@@ -320,6 +320,7 @@ const ContentParts = memo(function ContentParts({
           key={`provider-${messageId}-${idx}`}
           value={{
             messageId,
+            attachments: partAttachments ?? attachments ?? [],
             isExpanded: true,
             conversationId,
             partIndex: idx,

@@ -16,6 +16,34 @@ const { processCodeOutput } = require('~/server/services/Files/Code/process');
 const { loadAuthValues } = require('~/server/services/Tools/credentials');
 const { saveBase64Image } = require('~/server/services/Files/process');
 
+const imageOutputExtRegex = /\.(png|jpe?g|gif|webp|bmp|svg)$/i;
+const finalDownloadExtRegex = /\.(pptx|ppt|xlsx|xls|pdf|docx|doc|zip|csv)$/i;
+
+/**
+ * Hide intermediate chart/image files when a final downloadable file exists.
+ * This keeps execute_code outputs cleaner for users requesting a single deliverable.
+ * @param {Array<{ id?: string; fileId?: string; name?: string; filename?: string }>} files
+ */
+function filterCodeOutputFiles(files = []) {
+  if (!Array.isArray(files) || files.length === 0) {
+    return [];
+  }
+
+  const hasFinalDownload = files.some((file) => {
+    const name = String(file?.name ?? file?.filename ?? '');
+    return finalDownloadExtRegex.test(name);
+  });
+
+  if (!hasFinalDownload) {
+    return files;
+  }
+
+  return files.filter((file) => {
+    const name = String(file?.name ?? file?.filename ?? '');
+    return !imageOutputExtRegex.test(name);
+  });
+}
+
 class ModelEndHandler {
   /**
    * @param {Array<UsageMetadata>} collectedUsage
@@ -479,7 +507,16 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
       return;
     }
 
-    for (const file of filesList) {
+    const filteredFiles = filterCodeOutputFiles(filesList);
+    if (filteredFiles.length !== filesList.length) {
+      logger.debug('[execute_code] Filtered intermediate image outputs from artifacts', {
+        originalCount: filesList.length,
+        filteredCount: filteredFiles.length,
+        session_id: output.artifact.session_id,
+      });
+    }
+
+    for (const file of filteredFiles) {
       const id = file.id ?? file.fileId;
       const name = file.name ?? file.filename ?? file.id ?? file.fileId;
       if (!id || typeof id !== 'string') {

@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     libjpeg-dev \
     zlib1g-dev \
+    libcairo2-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -u 1000 sandbox
 
@@ -25,12 +27,21 @@ RUN curl -fsSL https://bun.sh/install | bash
 
 # Python project with whitelist deps via uv (no pip install at runtime)
 WORKDIR /opt/sandbox
-COPY pyproject.toml ./
+COPY docker/pyproject.toml ./pyproject.toml
 RUN uv sync --no-dev --no-install-project \
     && chown -R sandbox:sandbox /opt/sandbox
 
+# Centralized corporate templates available to all sandbox executions
+COPY templates /opt/templates
+WORKDIR /opt/templates/js
+RUN bun install --production
+WORKDIR /opt/sandbox
+RUN chown -R sandbox:sandbox /opt/templates
+
 WORKDIR /mnt/data
 RUN chown -R sandbox:sandbox /mnt/data
+
+ENV PYTHONPATH=/opt/templates:${PYTHONPATH}
 
 USER sandbox
 

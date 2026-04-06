@@ -74,6 +74,7 @@ export default function Message(props: TMessageProps) {
                   <MessageContext.Provider
                     value={{
                       messageId,
+                      attachments,
                       isExpanded: false,
                       conversationId: conversation?.conversationId,
                       isSubmitting: false, // Share view is always read-only

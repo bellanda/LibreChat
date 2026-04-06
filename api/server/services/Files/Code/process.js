@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const { v4 } = require('uuid');
 const axios = require('axios');
 const { logger } = require('@librechat/data-schemas');
@@ -54,7 +55,7 @@ const processCodeOutput = async ({
   if (!fileExt || !imageExtRegex.test(name)) {
     // Ensure filepath always starts with /api/ for proper routing
     const filepath = `${basePath}/api/files/code/download/${session_id}/${id}`;
-    
+
     // Validate that filepath is correct (should start with /api/)
     if (!filepath.startsWith('/api/')) {
       logger.error('[processCodeOutput] Invalid filepath generated:', {
@@ -68,10 +69,12 @@ const processCodeOutput = async ({
       const fallbackPath = `/api/files/code/download/${session_id}/${id}`;
       logger.warn('[processCodeOutput] Using fallback filepath:', fallbackPath);
     }
-    
+
     const fileMetadata = {
       filename: name,
-      filepath: filepath.startsWith('/api/') ? filepath : `/api/files/code/download/${session_id}/${id}`,
+      filepath: filepath.startsWith('/api/')
+        ? filepath
+        : `/api/files/code/download/${session_id}/${id}`,
       /** Note: expires 24 hours after creation */
       expiresAt: currentDate.getTime() + 86400000,
       conversationId,
@@ -185,6 +188,35 @@ async function getSessionInfo(fileIdentifier, apiKey) {
 }
 
 /**
+ * Try to load and inject the AI usage guide from the sandbox templates directory.
+ * @returns {string} The usage guide content if found, or empty string if not.
+ */
+function loadSandboxUsageGuide() {
+  try {
+    // Try multiple possible locations
+    const possiblePaths = [
+      path.join(__dirname, '../../../packages/sandbox/templates/ai_usage_guide_ptbr.md'),
+      '/opt/templates/ai_usage_guide_ptbr.md',
+      path.join(process.cwd(), 'packages/sandbox/templates/ai_usage_guide_ptbr.md'),
+    ];
+
+    for (const filepath of possiblePaths) {
+      if (fs.existsSync(filepath)) {
+        const content = fs.readFileSync(filepath, 'utf-8');
+        logger.debug(`[primeFiles] Loaded usage guide from ${filepath}`);
+        return content;
+      }
+    }
+
+    logger.debug('[primeFiles] Usage guide not found in standard locations');
+    return '';
+  } catch (error) {
+    logger.warn(`[primeFiles] Error loading usage guide: ${error.message}`);
+    return '';
+  }
+}
+
+/**
  *
  * @param {Object} options
  * @param {ServerRequest} options.req
@@ -222,7 +254,48 @@ const primeFiles = async (options, apiKey) => {
 
   const files = [];
   const sessions = new Map();
-  let toolContext = '';
+
+  // toolContext is always generated when execute_code is active,
+  // regardless of whether files are attached.
+  const toolContext = `# ${Tools.execute_code} Tool Environment
+
+**Important**: This sandbox uses \`uv\` as the Python package manager, **not \`pip\`**. The \`pip\` command is not available in this environment.
+
+**Pre-installed Python packages available** (no installation needed):
+- Data processing: numpy, pandas, polars, pyarrow
+- Visualization: matplotlib, seaborn, scipy
+- File handling: pillow, openpyxl, xlrd, python-pptx, python-docx, reportlab, xhtml2pdf
+- Machine learning: scikit-learn
+- Utilities: tabulate, pyyaml, jinja2, pypdf, pdfplumber
+
+**You can use these packages directly** — just import them (e.g., \`from pptx import Presentation\`). Do NOT try to install packages using \`pip install\` or \`uv pip install\` as this will fail.
+
+**Pre-installed JavaScript packages for document generation**:
+- pptxgenjs, exceljs, docx, pdf-lib
+- JS builders are available in \`/opt/templates/js/corporate_builders.mjs\`
+
+**Reusable layout system available**: use \`/opt/templates\` for standardized enterprise-clean outputs:
+- Python builders: \`/opt/templates/corporate_builders.py\`
+- JavaScript builders: \`/opt/templates/js/corporate_builders.mjs\`
+- Themes: \`executivo\`, \`operacional\`, \`board\`, \`tecnico\`
+- Usage guide (with full examples): \`/opt/templates/ai_usage_guide_ptbr.md\`
+- **Always use the builders** — never use raw canvas.Canvas, raw pptx without builder, or raw openpyxl without builder.
+- PDF template names: \`executivo\` | \`operacional\` | \`tecnico\`
+
+**Chart workflow**: generate with matplotlib → save PNG to \`/mnt/data/\` → pass path to builder as \`chart_path\`.
+
+**When calling \`${Tools.execute_code}\`, follow this payload shape exactly**:
+- Required: \`code\` (string)
+- Optional: \`lang\` (use \`py\` or \`js\`; default to \`py\` when omitted)
+
+**Important UI behavior**: when files are generated, the chat UI already shows the downloadable file card automatically.
+- Do NOT include manual download links in your answer.
+- Do NOT invent localhost links or file URLs.
+- Just confirm the file was generated and briefly summarize what it contains.
+- Prefer a single final artifact unless the user explicitly asks for multiple files.`;
+
+  const fileListHeader = `\n\nThe following files are available in the "${Tools.execute_code}" tool environment:`;
+  let fileListContext = '';
 
   for (let i = 0; i < dbFiles.length; i++) {
     const file = dbFiles[i];
@@ -235,23 +308,7 @@ const primeFiles = async (options, apiKey) => {
       const [session_id, id] = path.split('/');
 
       const pushFile = () => {
-        if (!toolContext) {
-          toolContext = `# ${Tools.execute_code} Tool Environment
-
-**Important**: This sandbox uses \`uv\` as the Python package manager, **not \`pip\`**. The \`pip\` command is not available in this environment.
-
-**Pre-installed Python packages available** (no installation needed):
-- Data processing: numpy, pandas, polars, pyarrow
-- Visualization: matplotlib, seaborn, scipy
-- File handling: pillow, openpyxl, xlrd, **python-pptx** (for creating PowerPoint files)
-- Machine learning: scikit-learn
-- Utilities: tabulate, pyyaml, pypdf, pdfplumber
-
-**You can use these packages directly** - just import them (e.g., \`from pptx import Presentation\`). Do NOT try to install packages using \`pip install\` or \`uv pip install\` as this will fail.
-
-The following files are available in the "${Tools.execute_code}" tool environment:`;
-        }
-        toolContext += `\n\t- /mnt/data/${file.filename}${
+        fileListContext += `\n\t- /mnt/data/${file.filename}${
           agentResourceIds.has(file.file_id) ? '' : ' (just attached by user)'
         }`;
         files.push({
@@ -320,7 +377,15 @@ The following files are available in the "${Tools.execute_code}" tool environmen
     }
   }
 
-  return { files, toolContext };
+  // Load and inject the AI usage guide for builders
+  const usageGuide = loadSandboxUsageGuide();
+  const guideSection = usageGuide
+    ? `\n\n## Corporate Document Builders Guide\n\n${usageGuide}`
+    : '';
+
+  const finalToolContext = toolContext + (fileListContext ? fileListHeader + fileListContext : '') + guideSection;
+
+  return { files, toolContext: finalToolContext };
 };
 
 module.exports = {

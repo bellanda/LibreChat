@@ -143,11 +143,7 @@ async function saveUpload(storageRoot, userId, sessionId, content, originalFilen
     meta.userId = meta.userId || userId;
     await fs.promises.writeFile(sessionMetaPath, JSON.stringify(meta), { mode: 0o640 });
   } catch {
-    await fs.promises.writeFile(
-      sessionMetaPath,
-      JSON.stringify({ userId }),
-      { mode: 0o640 },
-    );
+    await fs.promises.writeFile(sessionMetaPath, JSON.stringify({ userId }), { mode: 0o640 });
   }
 
   // Root-level session index for O(1) userId lookup
@@ -218,6 +214,46 @@ async function loadSessionUserId(storageRoot, sessionId) {
     return index[sessionId] || 'anonymous';
   } catch {
     return 'anonymous';
+  }
+}
+
+/**
+ * Returns exact owner userId for a session, or null if session is unknown.
+ * @param {string} storageRoot
+ * @param {string} sessionId
+ * @returns {Promise<string | null>}
+ */
+async function loadSessionOwnerId(storageRoot, sessionId) {
+  const indexPath = path.join(path.resolve(storageRoot), '.sessions.json');
+  try {
+    const index = JSON.parse(await fs.promises.readFile(indexPath, 'utf8'));
+    return index[sessionId] || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Bind owner userId to a session in root index.
+ * Keeps ownership stable for sessions created without uploads.
+ * @param {string} storageRoot
+ * @param {string} sessionId
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+async function bindSessionOwnerId(storageRoot, sessionId, userId) {
+  const indexPath = path.join(path.resolve(storageRoot), '.sessions.json');
+  let index = {};
+  try {
+    index = JSON.parse(await fs.promises.readFile(indexPath, 'utf8'));
+  } catch {
+    index = {};
+  }
+
+  if (!index[sessionId]) {
+    index[sessionId] = userId;
+    await fs.promises.mkdir(path.dirname(indexPath), { recursive: true });
+    await fs.promises.writeFile(indexPath, JSON.stringify(index), { mode: 0o640 });
   }
 }
 
@@ -303,4 +339,6 @@ module.exports = {
   prepareWorkspaceForExec,
   loadManifest,
   loadSessionUserId,
+  loadSessionOwnerId,
+  bindSessionOwnerId,
 };

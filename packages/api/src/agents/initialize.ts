@@ -1,28 +1,28 @@
+import type { GenericTool } from '@librechat/agents';
 import { Providers } from '@librechat/agents';
-import {
-  ErrorTypes,
-  EModelEndpoint,
-  EToolResources,
-  paramEndpoints,
-  isAgentsEndpoint,
-  replaceSpecialVars,
-  providerEndpointMap,
-} from 'librechat-data-provider';
+import type { IMongoFile } from '@librechat/data-schemas';
+import type { Response as ServerResponse } from 'express';
 import type {
+  Agent,
   AgentToolResources,
   TEndpointOption,
   TFile,
-  Agent,
   TUser,
 } from 'librechat-data-provider';
-import type { Response as ServerResponse } from 'express';
-import type { IMongoFile } from '@librechat/data-schemas';
-import type { GenericTool } from '@librechat/agents';
-import type { InitializeResultBase, ServerRequest, EndpointDbMethods } from '~/types';
-import { getModelMaxTokens, extractLibreChatParams, optionalChainWithEmptyCheck } from '~/utils';
+import {
+  EModelEndpoint,
+  ErrorTypes,
+  EToolResources,
+  isAgentsEndpoint,
+  paramEndpoints,
+  providerEndpointMap,
+  replaceSpecialVars,
+} from 'librechat-data-provider';
+import { getProviderConfig } from '~/endpoints';
 import { filterFilesByEndpointConfig } from '~/files';
 import { generateArtifactsPrompt } from '~/prompts';
-import { getProviderConfig } from '~/endpoints';
+import type { EndpointDbMethods, InitializeResultBase, ServerRequest } from '~/types';
+import { extractLibreChatParams, getModelMaxTokens, optionalChainWithEmptyCheck } from '~/utils';
 import { primeResources } from './resources';
 
 /**
@@ -300,7 +300,8 @@ export async function initializeAgent(
   }
 
   if (typeof agent.artifacts === 'string' && agent.artifacts !== '') {
-    const reqBody = (req as unknown as { body?: { ephemeralAgent?: { auto_mode?: boolean } } })?.body;
+    const reqBody = (req as unknown as { body?: { ephemeralAgent?: { auto_mode?: boolean } } })
+      ?.body;
     const ephemeralAgent = reqBody?.ephemeralAgent;
     const isAutoMode = Boolean(ephemeralAgent?.auto_mode === true);
 

@@ -1,10 +1,9 @@
 import react from '@vitejs/plugin-react';
 // @ts-ignore
 import path from 'path';
-import { loadEnv } from 'vite';
 import rollupNodePolyFill from 'rollup-plugin-node-polyfills';
 import type { Plugin } from 'vite';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -43,17 +42,26 @@ const nodePolyfillAliases = {
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   const isProd = command === 'build';
-  const env = loadEnv(mode, path.resolve(__dirname, '../'), ['VITE_', 'SCRIPT_', 'DOMAIN_', 'ALLOW_', 'PORT', 'BACKEND_PORT', 'HOST']);
-  const backendPort = env.BACKEND_PORT && Number(env.BACKEND_PORT) || 3081;
-  const host = env.HOST === '0.0.0.0' ? '127.0.0.1' : (env.HOST || '127.0.0.1');
+  const env = loadEnv(mode, path.resolve(__dirname, '../'), [
+    'VITE_',
+    'SCRIPT_',
+    'DOMAIN_',
+    'ALLOW_',
+    'PORT',
+    'BACKEND_PORT',
+    'HOST',
+  ]);
+  const backendPort = (env.BACKEND_PORT && Number(env.BACKEND_PORT)) || 3080;
+  const host = env.HOST === '0.0.0.0' ? '127.0.0.1' : env.HOST || '127.0.0.1';
   const backendURL = `http://${host}:${backendPort}`;
 
   return {
     base: '',
     server: {
-      allowedHosts: process.env.VITE_ALLOWED_HOSTS && process.env.VITE_ALLOWED_HOSTS.split(',') || [],
+      allowedHosts:
+        (process.env.VITE_ALLOWED_HOSTS && process.env.VITE_ALLOWED_HOSTS.split(',')) || [],
       host: process.env.HOST || 'localhost',
-      port: process.env.PORT && Number(process.env.PORT) || 3090,
+      port: (process.env.PORT && Number(process.env.PORT)) || 3090,
       strictPort: false,
       proxy: {
         '/api': {
@@ -193,7 +201,10 @@ export default defineConfig(({ command, mode }) => {
               if (normalizedId.includes('@dicebear')) {
                 return 'avatars';
               }
-              if (normalizedId.includes('react-dnd') || normalizedId.includes('react-flip-toolkit')) {
+              if (
+                normalizedId.includes('react-dnd') ||
+                normalizedId.includes('react-flip-toolkit')
+              ) {
                 return 'react-interactions';
               }
               if (normalizedId.includes('react-hook-form')) {
@@ -229,7 +240,10 @@ export default defineConfig(({ command, mode }) => {
               ) {
                 return 'markdown-processing';
               }
-              if (normalizedId.includes('monaco-editor') || normalizedId.includes('@monaco-editor')) {
+              if (
+                normalizedId.includes('monaco-editor') ||
+                normalizedId.includes('@monaco-editor')
+              ) {
                 return 'code-editor';
               }
               if (normalizedId.includes('react-window') || normalizedId.includes('react-virtual')) {
@@ -346,4 +360,3 @@ export function sourcemapExclude(opts?: SourcemapExclude): Plugin {
     },
   };
 }
-

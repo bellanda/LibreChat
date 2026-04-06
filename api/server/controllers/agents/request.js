@@ -392,7 +392,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
  * @deprecated Use ResumableAgentController instead
  */
 const _LegacyAgentController = async (req, res, next, initializeClient, addTitle) => {
-  const {
+  let {
     text,
     isRegenerate,
     endpointOption,
@@ -406,9 +406,9 @@ const _LegacyAgentController = async (req, res, next, initializeClient, addTitle
 
   // Generate conversationId upfront if not provided - streamId === conversationId always
   // Treat "new" as a placeholder that needs a real UUID (frontend may send "new" for new convos)
-  const conversationId =
+  let conversationId =
     !reqConversationId || reqConversationId === 'new' ? crypto.randomUUID() : reqConversationId;
-  const streamId = conversationId;
+  let streamId = conversationId;
 
   let userMessage;
   let userMessageId;
@@ -422,8 +422,9 @@ const _LegacyAgentController = async (req, res, next, initializeClient, addTitle
   const userId = req.user.id;
 
   // Generate conversationId if it's a new conversation
-  if (newConvo) {
+  if (isNewConvo) {
     conversationId = crypto.randomUUID();
+    streamId = conversationId;
   }
 
   // Create handler to avoid capturing the entire parent scope
@@ -477,7 +478,7 @@ const _LegacyAgentController = async (req, res, next, initializeClient, addTitle
     getReqData = null;
     userMessage = null;
     getAbortData = null;
-    endpointOption.agent = null;
+    if (endpointOption) endpointOption.agent = null;
     endpointOption = null;
     cleanupHandlers = null;
     userMessagePromise = null;

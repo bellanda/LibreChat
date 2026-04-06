@@ -230,7 +230,7 @@ const initializeAgent = async ({
   if (typeof agent.artifacts === 'string' && agent.artifacts !== '') {
     const ephemeralAgent = req.body?.ephemeralAgent ?? req?.body?.ephemeralAgent;
     const isAutoMode = Boolean(ephemeralAgent?.auto_mode === true);
-    
+
     agent.additional_instructions = generateArtifactsPrompt({
       endpoint: agent.provider,
       artifacts: agent.artifacts,

@@ -18,7 +18,7 @@ Self-hosted Code Interpreter sandbox compatible with the [code.librechat](https:
 
 ```bash
 cd packages/sandbox
-docker build -t librechat/sandbox-executor:latest -f docker/Dockerfile.executor docker/
+docker build -t librechat/sandbox-executor:latest -f docker/Dockerfile.executor .
 ```
 
 ### 2. Install dependencies and start the server
@@ -62,20 +62,20 @@ services:
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SANDBOX_PORT` | 3081 | HTTP server port |
-| `SANDBOX_STORAGE_PATH` | `./storage` | Base path for user/session storage |
-| `SANDBOX_API_KEY` | - | API key for auth (or use `LIBRECHAT_CODE_API_KEY`) |
-| `SANDBOX_DOCKER_IMAGE` | `librechat/sandbox-executor:latest` | Docker image for code execution |
-| `SANDBOX_TIMEOUT_MS` | 30000 | Execution timeout |
-| `SANDBOX_MEMORY_MB` | 512 | Memory limit per execution |
-| `SANDBOX_MAX_CONCURRENT_EXECUTIONS` | 5 | Maximum number of simultaneous code executions (queue limit) |
-| `MONGO_URI` | - | MongoDB connection string for audit logging (optional) |
-| `SANDBOX_LOG_LEVEL` | `info` | Logging level (error, warn, info, debug, verbose) |
-| `SANDBOX_AUDIT_TTL_DAYS` | - | TTL in days for audit logs (auto-delete after expiration, optional) |
-| `MONGO_MAX_POOL_SIZE` | 10 | MongoDB connection pool max size |
-| `MONGO_MIN_POOL_SIZE` | 2 | MongoDB connection pool min size |
+| Variable                            | Default                             | Description                                                         |
+| ----------------------------------- | ----------------------------------- | ------------------------------------------------------------------- |
+| `SANDBOX_PORT`                      | 3081                                | HTTP server port                                                    |
+| `SANDBOX_STORAGE_PATH`              | `./storage`                         | Base path for user/session storage                                  |
+| `SANDBOX_API_KEY`                   | -                                   | API key for auth (or use `LIBRECHAT_CODE_API_KEY`)                  |
+| `SANDBOX_DOCKER_IMAGE`              | `librechat/sandbox-executor:latest` | Docker image for code execution                                     |
+| `SANDBOX_TIMEOUT_MS`                | 30000                               | Execution timeout                                                   |
+| `SANDBOX_MEMORY_MB`                 | 512                                 | Memory limit per execution                                          |
+| `SANDBOX_MAX_CONCURRENT_EXECUTIONS` | 5                                   | Maximum number of simultaneous code executions (queue limit)        |
+| `MONGO_URI`                         | -                                   | MongoDB connection string for audit logging (optional)              |
+| `SANDBOX_LOG_LEVEL`                 | `info`                              | Logging level (error, warn, info, debug, verbose)                   |
+| `SANDBOX_AUDIT_TTL_DAYS`            | -                                   | TTL in days for audit logs (auto-delete after expiration, optional) |
+| `MONGO_MAX_POOL_SIZE`               | 10                                  | MongoDB connection pool max size                                    |
+| `MONGO_MIN_POOL_SIZE`               | 2                                   | MongoDB connection pool min size                                    |
 
 ## Storage Layout
 
@@ -97,18 +97,21 @@ storage/
 
 ### Using uv in Code
 
-When executing Python code in the sandbox, packages are managed via `uv`. The sandbox comes with a pre-configured set of common packages (see `docker/pyproject.toml`). 
+When executing Python code in the sandbox, packages are managed via `uv`. The sandbox comes with a pre-configured set of common packages (see `docker/pyproject.toml`).
 
 **Note**: You cannot install packages at runtime using `pip install` or `uv pip install`. All packages must be added to `docker/pyproject.toml` and the Docker image must be rebuilt.
 
 ### Available Packages
 
 The sandbox includes these pre-installed packages:
+
 - numpy, pandas, polars, pyarrow
 - matplotlib, seaborn, scipy
 - pillow, openpyxl, xlrd, python-pptx
 - scikit-learn, tabulate, pyyaml
 - pypdf, pdfplumber
+- docxtpl, python-docx
+- xlsxwriter, reportlab, jinja2
 
 ### Adding New Packages
 
@@ -118,17 +121,41 @@ To add a new Python package to the sandbox:
 2. Rebuild the Docker image:
    ```bash
    cd packages/sandbox
-   docker build -t librechat/sandbox-executor:latest -f docker/Dockerfile.executor docker/
+   docker build -t librechat/sandbox-executor:latest -f docker/Dockerfile.executor .
    ```
+
+## Centralized Corporate Templates
+
+The executor image includes a centralized template catalog at `/opt/templates`:
+
+- `/opt/templates/style.py` (themes/tokens)
+- `/opt/templates/corporate_builders.py` (Python builders)
+- `/opt/templates/ai_usage_guide_ptbr.md` (AI usage and guardrails)
+- `/opt/templates/js/corporate_builders.mjs` (JavaScript builders)
+
+Generated outputs should be written to `/mnt/data` and appear as downloadable files in the chat UI.
 
 ### Code Execution
 
 Python code is executed using:
+
 ```bash
 uv run --project /opt/sandbox python script.py
 ```
 
 This ensures all code runs with the sandbox's managed Python environment and dependencies.
+
+## JavaScript Package Management
+
+JavaScript runs with Bun and the executor image already includes document-oriented packages:
+
+- `pptxgenjs`
+- `exceljs`
+- `docx`
+- `pdf-lib`
+
+As with Python, avoid runtime package installs. Add/update dependencies in `templates/js/package.json`
+and rebuild the executor image when needed.
 
 ## Security
 
@@ -193,17 +220,17 @@ Example MongoDB queries:
 
 ```javascript
 // All executions by a user
-db.sandbox_audit_logs.find({ userId: 'user123', action: 'exec' })
+db.sandbox_audit_logs.find({ userId: 'user123', action: 'exec' });
 
 // Failed executions in last 24 hours
 db.sandbox_audit_logs.find({
   action: 'exec',
   status: 'error',
-  createdAt: { $gte: new Date(Date.now() - 24*60*60*1000) }
-})
+  createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+});
 
 // Authentication failures
-db.sandbox_audit_logs.find({ action: 'auth_failure' })
+db.sandbox_audit_logs.find({ action: 'auth_failure' });
 ```
 
 #### Automatic Cleanup

@@ -793,7 +793,7 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
     embedded = embeddingResult?.embedded;
     filename = embeddingResult?.filename || filename;
   }
-  
+
   let bytes = storageBytes;
 
   let filepath = _filepath;

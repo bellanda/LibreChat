@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * HTTP server compatible with code.librechat API.
- * Endpoints: 
+ * Endpoints:
  *   POST /upload - Upload files
  *   POST /exec - Execute code
  *   POST /extract-pdf - Extract text from PDF (free alternative to RAG API)
@@ -40,12 +40,18 @@ if (!process.env.SANDBOX_PORT && process.env.NODE_ENV !== 'production') {
     envExists: fs.existsSync(rootEnv),
   });
 }
-const STORAGE_ROOT = path.resolve(process.env.SANDBOX_STORAGE_PATH || path.join(process.cwd(), 'storage'));
+const STORAGE_ROOT = path.resolve(
+  process.env.SANDBOX_STORAGE_PATH || path.join(process.cwd(), 'storage'),
+);
 const API_KEY = process.env.SANDBOX_API_KEY || process.env.LIBRECHAT_CODE_API_KEY || '';
 
 // Middleware to capture client IP and User-Agent
 app.use((req, res, next) => {
-  req.clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+  req.clientIp =
+    req.ip ||
+    req.connection.remoteAddress ||
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    'unknown';
   req.userAgent = req.headers['user-agent'] || 'unknown';
   next();
 });
@@ -58,17 +64,46 @@ const upload = multer({
 async function requireApiKey(req, res, next) {
   const key = req.headers['x-api-key'] || req.headers['X-API-Key'];
   if (!API_KEY || key === API_KEY) return next();
-  
+
   // Log authentication failure
   await audit.recordAuthFailure(req.clientIp, req.userAgent, 'Invalid or missing API key');
   res.status(401).json({ message: 'Invalid or missing API key' });
 }
 
+function createOwnershipError(message = 'Session ownership mismatch') {
+  const err = new Error(message);
+  err.code = 'SESSION_OWNERSHIP_MISMATCH';
+  return err;
+}
+
+function extractRequesterUserId(req) {
+  const fromHeader =
+    req.headers['user-id'] ||
+    req.headers['User-Id'] ||
+    req.headers['x-user-id'] ||
+    req.headers['X-User-Id'];
+  const fromBody = req.body?.user_id || req.body?.userId;
+  const fromQuery = req.query?.user_id || req.query?.userId;
+  const userId = fromHeader || fromBody || fromQuery;
+  return typeof userId === 'string' && userId.trim().length > 0 ? userId.trim() : null;
+}
+
 async function getUserId(req, sessionId = null) {
-  const fromHeader = req.headers['user-id'] || req.headers['User-Id'];
-  if (fromHeader) return fromHeader;
-  if (sessionId) return await storage.loadSessionUserId(STORAGE_ROOT, sessionId);
-  return 'anonymous';
+  const requesterUserId = extractRequesterUserId(req);
+  if (!sessionId) {
+    return requesterUserId || 'anonymous';
+  }
+
+  const ownerId = await storage.loadSessionOwnerId(STORAGE_ROOT, sessionId);
+  if (ownerId) {
+    if (requesterUserId && requesterUserId !== ownerId) {
+      throw createOwnershipError();
+    }
+    return ownerId;
+  }
+
+  // New session: bind to requester identity when present, otherwise fallback.
+  return requesterUserId || 'anonymous';
 }
 
 /**
@@ -104,9 +139,9 @@ app.post('/upload', requireApiKey, upload.single('file'), async (req, res) => {
       return res.status(400).json({ message: 'No file provided' });
     }
 
-    userId = await getUserId(req);
     const entityId = req.body?.entity_id || '';
     sessionId = getOrCreateSessionId(entityId);
+    userId = await getUserId(req, sessionId);
 
     const result = await storage.saveUpload(
       STORAGE_ROOT,
@@ -167,6 +202,9 @@ app.post('/upload', requireApiKey, upload.single('file'), async (req, res) => {
       err.message,
     );
 
+    if (err.code === 'SESSION_OWNERSHIP_MISMATCH') {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(500).json({ message: err.message || 'Upload failed' });
   }
 });
@@ -218,6 +256,7 @@ app.post('/exec', requireApiKey, express.json({ limit: '1mb' }), async (req, res
       sessionId = files[0].session_id || sessionId;
     }
     userId = await getUserId(req, sessionId);
+    await storage.bindSessionOwnerId(STORAGE_ROOT, sessionId, userId);
 
     const execStartTime = Date.now();
 
@@ -300,6 +339,9 @@ app.post('/exec', requireApiKey, express.json({ limit: '1mb' }), async (req, res
       err.message,
     );
 
+    if (err.code === 'SESSION_OWNERSHIP_MISMATCH') {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(500).json({
       session_id: sessionId || req.body?.files?.[0]?.session_id || '',
       stdout: '',
@@ -358,8 +400,19 @@ app.get('/download/:session_id/:fileId', requireApiKey, async (req, res) => {
     });
 
     const status = err.message?.includes('not found') ? 'error' : 'error';
-    await audit.recordDownload(userId, session_id, fileId, req.clientIp, req.userAgent, status, err.message);
+    await audit.recordDownload(
+      userId,
+      session_id,
+      fileId,
+      req.clientIp,
+      req.userAgent,
+      status,
+      err.message,
+    );
 
+    if (err.code === 'SESSION_OWNERSHIP_MISMATCH') {
+      return res.status(403).json({ message: err.message });
+    }
     if (err.message?.includes('not found')) return res.status(404).json({ message: err.message });
     res.status(500).json({ message: err.message || 'Download failed' });
   }
@@ -382,7 +435,14 @@ app.get('/files/:session_id', requireApiKey, async (req, res) => {
     const files = await storage.listSessionFiles(STORAGE_ROOT, userId, session_id);
 
     // Audit successful files list
-    await audit.recordFilesList(userId, session_id, req.clientIp, req.userAgent, files.length, 'success');
+    await audit.recordFilesList(
+      userId,
+      session_id,
+      req.clientIp,
+      req.userAgent,
+      files.length,
+      'success',
+    );
 
     logger.info('Files list successful', {
       userId,
@@ -405,8 +465,19 @@ app.get('/files/:session_id', requireApiKey, async (req, res) => {
       ip: req.clientIp,
     });
 
-    await audit.recordFilesList(userId, session_id, req.clientIp, req.userAgent, 0, 'error', err.message);
+    await audit.recordFilesList(
+      userId,
+      session_id,
+      req.clientIp,
+      req.userAgent,
+      0,
+      'error',
+      err.message,
+    );
 
+    if (err.code === 'SESSION_OWNERSHIP_MISMATCH') {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(500).json({ message: err.message || 'List failed' });
   }
 });
@@ -434,7 +505,7 @@ app.post('/extract-pdf', requireApiKey, express.json({ limit: '10mb' }), async (
     // Get file info from storage
     const filePath = await storage.getFilePath(STORAGE_ROOT, userId, sessionId, file_id);
     const stat = await fs.promises.stat(filePath);
-    
+
     // Get original filename from manifest
     const { getSessionPaths } = require('./storage');
     const { uploads } = getSessionPaths(STORAGE_ROOT, userId, sessionId);
@@ -517,6 +588,12 @@ app.post('/extract-pdf', requireApiKey, express.json({ limit: '10mb' }), async (
       ip: req.clientIp,
     });
 
+    if (err.code === 'SESSION_OWNERSHIP_MISMATCH') {
+      return res.status(403).json({
+        success: false,
+        message: err.message,
+      });
+    }
     const statusCode = err.message.includes('not found') ? 404 : 500;
     res.status(statusCode).json({
       success: false,

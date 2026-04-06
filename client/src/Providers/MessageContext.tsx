@@ -1,7 +1,9 @@
 import { createContext, useContext } from 'react';
+import type { TAttachment } from 'librechat-data-provider';
 
 type MessageContext = {
   messageId: string;
+  attachments?: TAttachment[];
   nextType?: string;
   partIndex?: number;
   isExpanded: boolean;

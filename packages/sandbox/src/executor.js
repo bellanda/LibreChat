@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const { v4: uuidv4 } = require('uuid');
-const { getSessionPaths, resolveWithin } = require('./storage');
+const { getSessionPaths, resolveWithin, loadManifest } = require('./storage');
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MEMORY_MB = 512;
@@ -37,6 +37,30 @@ async function resolveFileRefs(uploadsPath, files) {
 }
 
 /**
+ * Fallback: make uploaded files available when refs fail to resolve.
+ * @param {string} uploadsPath
+ * @returns {Promise<Array<{ src: string; destName: string }>>}
+ */
+async function listUploadedFilesForFallback(uploadsPath) {
+  const entries = await fs.promises.readdir(uploadsPath, { withFileTypes: true }).catch(() => []);
+  const manifest = await loadManifest(uploadsPath);
+  const fallbackFiles = [];
+
+  for (const e of entries) {
+    if (!e.isFile() || e.name.startsWith('.')) {
+      continue;
+    }
+    const fileId = path.basename(e.name, path.extname(e.name));
+    const originalName = manifest[fileId] || e.name;
+    fallbackFiles.push({
+      src: path.join(uploadsPath, e.name),
+      destName: path.basename(originalName),
+    });
+  }
+  return fallbackFiles;
+}
+
+/**
  * Prepare exec directory: copy uploads (with original names) to execDir for /mnt/data.
  * @param {string} uploadsPath
  * @param {string} execDir - will create execDir as /mnt/data
@@ -47,7 +71,10 @@ async function prepareExecDir(uploadsPath, execDir, files) {
   // Keep this execution folder writable so generated artifacts can be saved to /mnt/data.
   await fs.promises.mkdir(execDir, { recursive: true, mode: 0o777 });
   await fs.promises.chmod(execDir, 0o777).catch(() => {});
-  const refs = await resolveFileRefs(uploadsPath, files);
+  let refs = await resolveFileRefs(uploadsPath, files);
+  if (files.length > 0 && refs.length === 0) {
+    refs = await listUploadedFilesForFallback(uploadsPath);
+  }
 
   for (const { src, destName } of refs) {
     const dest = path.join(execDir, destName);

@@ -150,7 +150,7 @@ function optimizeToolInPlace(tool, isAutoMode = false) {
   if (optimizedSchema && tool.schema) {
     tool.schema = optimizedSchema;
   }
-  
+
   if (optimizedDescription) {
     tool.description = optimizedDescription;
   }
@@ -172,9 +172,10 @@ function optimizeToolInPlace(tool, isAutoMode = false) {
  */
 function createOptimizedTool({ toolCall, name, schema, description, isAutoMode, extraProps = {} }) {
   // Use lite schema for core tools, or optimize existing schema
-  const optimizedSchema = isAutoMode && createLiteSchema(name)
-    ? createLiteSchema(name)
-    : optimizeSchema(schema, isAutoMode);
+  const optimizedSchema =
+    isAutoMode && createLiteSchema(name)
+      ? createLiteSchema(name)
+      : optimizeSchema(schema, isAutoMode);
 
   const optimizedDescription = optimizeDescription(name, description, isAutoMode);
 

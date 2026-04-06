@@ -6,7 +6,7 @@ import CodeBlock from '~/components/Messages/Content/CodeBlock';
 import { useCodeOutputDownload, useFileDownload } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import useHasAccess from '~/hooks/Roles/useHasAccess';
-import { useCodeBlockContext } from '~/Providers';
+import { useCodeBlockContext, useMessageContext } from '~/Providers';
 import store from '~/store';
 import { handleDoubleClick } from '~/utils';
 
@@ -86,26 +86,230 @@ type TAnchorProps = {
   children: React.ReactNode;
 };
 
+type AttachmentCandidate = {
+  filename?: string | null;
+  filepath?: string | null;
+  expiresAt?: number;
+};
+
+function hasExtension(value: string) {
+  return /\.[a-z0-9]{2,8}$/i.test(value);
+}
+
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function isImageFilename(filename: string) {
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename);
+}
+
+function isLikelyHomeLink(href: string) {
+  if (!href) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(href, typeof window !== 'undefined' ? window.location.origin : undefined);
+    if (!parsed.pathname || parsed.pathname === '/') {
+      return !parsed.search && !parsed.hash;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function isLikelyInternalChatLink(href: string) {
+  if (!href) {
+    return false;
+  }
+  try {
+    const parsed = new URL(href, typeof window !== 'undefined' ? window.location.origin : undefined);
+    const pathname = parsed.pathname || '';
+    return /^\/(c|chat|conversations)(\/|$)/i.test(pathname);
+  } catch {
+    return /^\/(c|chat|conversations)(\/|$)/i.test(href);
+  }
+}
+
+function extractTextFromChildren(children: React.ReactNode): string {
+  if (typeof children === 'string' || typeof children === 'number') {
+    return String(children);
+  }
+  if (Array.isArray(children)) {
+    return children.map((c) => extractTextFromChildren(c)).join(' ');
+  }
+  if (React.isValidElement(children)) {
+    return extractTextFromChildren(children.props?.children);
+  }
+  return '';
+}
+
+function looksLikeDownloadAnchorText(text: string) {
+  const normalized = text.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  if (normalized.includes('baixar') || normalized.includes('download')) {
+    return true;
+  }
+  return /\.(pptx|ppt|xlsx|xls|pdf|docx|doc|zip|csv)\b/i.test(normalized);
+}
+
+function isLikelyDownloadHref(href: string) {
+  if (!href) {
+    return false;
+  }
+
+  const raw = href.trim().toLowerCase();
+  if (
+    raw.startsWith('/mnt/data/') ||
+    raw.includes('/api/files/code/download/') ||
+    isLikelyHomeLink(raw) ||
+    isLikelyInternalChatLink(raw)
+  ) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(href, typeof window !== 'undefined' ? window.location.origin : undefined);
+    const pathname = (parsed.pathname || '').toLowerCase();
+    return (
+      pathname.includes('/download/') ||
+      /\.(pptx|ppt|xlsx|xls|pdf|docx|doc|zip|csv)$/i.test(pathname)
+    );
+  } catch {
+    return /\.(pptx|ppt|xlsx|xls|pdf|docx|doc|zip|csv)$/i.test(raw);
+  }
+}
+
+function filenameWithoutExtension(value: string) {
+  const trimmed = value.trim();
+  const lastDot = trimmed.lastIndexOf('.');
+  if (lastDot <= 0) {
+    return trimmed;
+  }
+  return trimmed.slice(0, lastDot);
+}
+
+function findBestAttachmentByRef(
+  ref: string,
+  attachments: AttachmentCandidate[],
+): AttachmentCandidate | null {
+  if (!ref) {
+    return null;
+  }
+
+  const target = normalize(ref);
+  const mntDataMatch = target.match(/^\/?mnt\/data\/(.+)$/);
+  const mntFilename = mntDataMatch?.[1] ?? '';
+
+  let best: AttachmentCandidate | null = null;
+  let bestScore = -1;
+
+  for (const attachment of attachments) {
+    const filename = normalize(String(attachment.filename ?? ''));
+    const filepath = normalize(String(attachment.filepath ?? ''));
+    if (!filename && !filepath) {
+      continue;
+    }
+
+    let score = 0;
+    if (filepath && filepath === target) {
+      score = 100;
+    } else if (filename && filename === target) {
+      score = 95;
+    } else if (mntFilename && filename && filename === mntFilename) {
+      score = 90;
+    } else if (!hasExtension(target) && filename && filenameWithoutExtension(filename) === target) {
+      score = 80;
+    }
+
+    if (score === 0) {
+      continue;
+    }
+
+    if (!best || score > bestScore) {
+      best = attachment;
+      bestScore = score;
+      continue;
+    }
+
+    if (score === bestScore) {
+      const bestExpires = typeof best.expiresAt === 'number' ? best.expiresAt : 0;
+      const currentExpires = typeof attachment.expiresAt === 'number' ? attachment.expiresAt : 0;
+      if (currentExpires > bestExpires) {
+        best = attachment;
+      }
+    }
+  }
+
+  return best;
+}
+
 export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
   const user = useRecoilValue(store.user);
   const messageAttachmentsMap = useRecoilValue(store.messageAttachmentsMap);
+  const { messageId, attachments: contextAttachments } = useMessageContext();
   const { showToast } = useToastContext();
   const localize = useLocalize();
+
+  const scopedAttachments = useMemo(() => {
+    const contextCandidates = (contextAttachments ?? []).filter((a) => a?.filepath || a?.filename);
+    if (contextCandidates.length > 0) {
+      return contextCandidates.map((attachment) => ({
+        filename: attachment.filename,
+        filepath: attachment.filepath,
+        expiresAt:
+          'expiresAt' in attachment && typeof attachment.expiresAt === 'number'
+            ? attachment.expiresAt
+            : 0,
+      }));
+    }
+
+    const currentMessageAttachments = messageAttachmentsMap[messageId ?? ''] ?? [];
+    const source = currentMessageAttachments.length
+      ? currentMessageAttachments
+      : Object.values(messageAttachmentsMap ?? {}).flatMap((attachments) => attachments ?? []);
+
+    return source.map((attachment) => ({
+      filename: attachment.filename,
+      filepath: attachment.filepath,
+      expiresAt:
+        'expiresAt' in attachment && typeof attachment.expiresAt === 'number'
+          ? attachment.expiresAt
+          : 0,
+    }));
+  }, [contextAttachments, messageAttachmentsMap, messageId]);
+
+  const preferredDownloadAttachment = useMemo(() => {
+    const withFilepath = scopedAttachments.filter((a) => !!a.filepath);
+    const nonImageFiles = withFilepath.filter((a) => !isImageFilename(String(a.filename ?? '')));
+    const source = nonImageFiles.length > 0 ? nonImageFiles : withFilepath;
+    if (source.length === 0) {
+      return null;
+    }
+
+    return source.reduce((latest, current) => {
+      const latestTs = typeof latest.expiresAt === 'number' ? latest.expiresAt : 0;
+      const currentTs = typeof current.expiresAt === 'number' ? current.expiresAt : 0;
+      return currentTs > latestTs ? current : latest;
+    });
+  }, [scopedAttachments]);
+  const anchorText = useMemo(() => extractTextFromChildren(children), [children]);
+  const hasDownloadableAttachment = useMemo(
+    () => scopedAttachments.some((a) => !isImageFilename(String(a.filename ?? ''))),
+    [scopedAttachments],
+  );
 
   const resolvedHref = useMemo(() => {
     // 1) Handle AI generating raw sandbox paths like /mnt/data/filename.ext
     const mntDataMatch = href.match(/^\/?mnt\/data\/(.+)$/);
-    if (mntDataMatch && mntDataMatch[1]) {
-      const filenameMatch = mntDataMatch[1];
-      for (const key in messageAttachmentsMap) {
-        const attachments = messageAttachmentsMap[key];
-        if (!attachments) continue;
-        const file = attachments.find(
-          (a) => a.filename === filenameMatch || a.filename?.includes(filenameMatch)
-        );
-        if (file && file.filepath) {
-          return file.filepath;
-        }
+    if (mntDataMatch?.[1]) {
+      const file = findBestAttachmentByRef(href, scopedAttachments);
+      if (file?.filepath) {
+        return file.filepath;
       }
     }
 
@@ -114,36 +318,55 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
     //    em um link de download.
     const isRelative = !href.startsWith('http') && !href.startsWith('/');
     if (isRelative) {
-      for (const key in messageAttachmentsMap) {
-        const attachments = messageAttachmentsMap[key];
-        if (!attachments) continue;
-        // Tenta match exato com filename
-        let file =
-          attachments.find(
-            (a) => a.filename === href || a.filename?.toLowerCase() === href.toLowerCase(),
-          ) ?? null;
-
-        // Se não achou e o href não tem extensão, procura um attachment cujo filename
-        // comece igual e termine com alguma extensão conhecida (ex.: .pptx)
-        if (!file && !href.includes('.')) {
-          file =
-            attachments.find((a) =>
-              (a.filename ?? '').toLowerCase().startsWith(href.toLowerCase()),
-            ) ?? null;
-        }
-
-        if (file && file.filepath) {
-          return file.filepath;
-        }
+      const file = findBestAttachmentByRef(href, scopedAttachments);
+      if (file?.filepath) {
+        return file.filepath;
       }
     }
+
+    // Some models output a placeholder link to platform home (e.g. localhost root)
+    // instead of the real artifact URL. If we have a generated attachment in this
+    // same message, prefer it over opening the home page.
+    if (isLikelyHomeLink(href) && preferredDownloadAttachment?.filepath) {
+      return preferredDownloadAttachment.filepath;
+    }
+
+    // Prevent model hallucinated links to old chats when this message already
+    // contains a generated file attachment for download.
+    if (
+      isLikelyInternalChatLink(href) &&
+      preferredDownloadAttachment?.filepath &&
+      looksLikeDownloadAnchorText(anchorText)
+    ) {
+      return preferredDownloadAttachment.filepath;
+    }
     return href;
-  }, [href, messageAttachmentsMap]);
+  }, [href, scopedAttachments, preferredDownloadAttachment, anchorText]);
+  const shouldDisableUnsafeLink = useMemo(
+    () =>
+      (isLikelyHomeLink(href) || isLikelyInternalChatLink(href)) &&
+      looksLikeDownloadAnchorText(anchorText) &&
+      !preferredDownloadAttachment?.filepath,
+    [href, anchorText, preferredDownloadAttachment],
+  );
+  const shouldDisableModelDownloadLink = useMemo(
+    () =>
+      hasDownloadableAttachment &&
+      (looksLikeDownloadAnchorText(anchorText) || isLikelyDownloadHref(href)),
+    [hasDownloadableAttachment, anchorText, href],
+  );
 
   const isCodeDownloadLink = useMemo(
     () => resolvedHref.includes('/api/files/code/download/'),
     [resolvedHref],
   );
+  const codeOutputFilename = useMemo(() => {
+    if (!isCodeDownloadLink) {
+      return '';
+    }
+    const matched = findBestAttachmentByRef(resolvedHref, scopedAttachments);
+    return matched?.filename ? String(matched.filename) : '';
+  }, [isCodeDownloadLink, scopedAttachments, resolvedHref]);
 
   const {
     file_id = '',
@@ -168,6 +391,14 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
     'text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150 underline-offset-2 hover:underline';
 
   if (!file_id || !filename) {
+    // Canonical download flow for generated files must be the attachment card,
+    // not markdown links authored by the model.
+    if (shouldDisableModelDownloadLink) {
+      return <span>{children}</span>;
+    }
+    if (shouldDisableUnsafeLink) {
+      return <span>{children}</span>;
+    }
     if (!isCodeDownloadLink) {
       return (
         <a href={resolvedHref} className={linkClasses} target="_blank" rel="noopener noreferrer">
@@ -188,7 +419,7 @@ export const a: React.ElementType = memo(({ href, children }: TAnchorProps) => {
           });
           return;
         }
-        const downloadName = resolvedHref.split('/').pop() || 'download';
+        const downloadName = codeOutputFilename || resolvedHref.split('/').pop() || 'download';
         const link = document.createElement('a');
         link.href = stream.data;
         link.setAttribute('download', downloadName);

@@ -188,6 +188,7 @@ const MessageRender = memo(
               <MessageContext.Provider
                 value={{
                   messageId: msg.messageId,
+                  attachments: msg.attachments ?? [],
                   conversationId: conversation?.conversationId,
                   isExpanded: false,
                   isSubmitting: effectiveIsSubmitting,
