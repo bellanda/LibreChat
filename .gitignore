@@ -183,3 +183,8 @@ hive-mind-prompt-*.txt
 
 # SANDBOX
 packages/sandbox/storage/
+*.pyc
+storage/
+**pycache**
+docs/superpowers
+.superpowers/
