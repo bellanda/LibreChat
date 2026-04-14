@@ -1,6 +1,6 @@
 import { Button, OGDialog, OGDialogTemplate, Spinner, useToastContext } from '@librechat/client';
 import { TConversationTag } from 'librechat-data-provider';
-import React, { Dispatch, SetStateAction, useRef } from 'react';
+import { Dispatch, SetStateAction, useRef } from 'react';
 import { NotificationSeverity } from '~/common';
 import { useConversationTagMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
@@ -48,7 +48,6 @@ const BookmarkEditDialog = ({
             : localize('com_ui_bookmarks_create_success'),
         });
         setOpen(false);
-        onSuccess?.(); // Call the onSuccess callback to reset editingBookmark
         logger.log('tag_mutation', 'tags before setting', tags);
 
         if (setTags && vars.addToConversation === true) {
@@ -95,7 +94,7 @@ const BookmarkEditDialog = ({
       <OGDialogTemplate
         title={bookmark ? localize('com_ui_bookmarks_edit') : localize('com_ui_bookmarks_new')}
         showCloseButton={false}
-        className="w-11/12 md:max-w-2xl"
+        className="w-11/12 md:max-w-lg"
         main={
           <BookmarkForm
             tags={tags}

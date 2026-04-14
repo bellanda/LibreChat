@@ -10,7 +10,9 @@ const {
   createSafeUser,
   mcpToolPattern,
   loadWebSearchAuth,
+  buildImageToolContext,
 } = require('@librechat/api');
+const { getMCPServersRegistry } = require('~/config');
 const {
   Tools,
   Constants,
@@ -34,6 +36,7 @@ const {
   StructuredWolfram,
   createYouTubeTools,
   TavilySearchResults,
+  createGeminiImageTool,
   createOpenAIImageTools,
 } = require('../');
 const { primeFiles: primeCodeFiles } = require('~/server/services/Files/Code/process');
@@ -191,21 +194,11 @@ const loadTools = async ({
       const authFields = getAuthFields('image_gen_oai');
       const authValues = await loadAuthValues({ userId: user, authFields });
       const imageFiles = options.tool_resources?.[EToolResources.image_edit]?.files ?? [];
-      let toolContext = '';
-      for (let i = 0; i < imageFiles.length; i++) {
-        const file = imageFiles[i];
-        if (!file) {
-          continue;
-        }
-        if (i === 0) {
-          toolContext =
-            'Image files provided in this request (their image IDs listed in order of appearance) available for image editing:';
-        }
-        toolContext += `\n\t- ${file.file_id}`;
-        if (i === imageFiles.length - 1) {
-          toolContext += `\n\nInclude any you need in the \`image_ids\` array when calling \`${EToolResources.image_edit}_oai\`. You may also include previously referenced or generated image IDs.`;
-        }
-      }
+      const toolContext = buildImageToolContext({
+        imageFiles,
+        toolName: `${EToolResources.image_edit}_oai`,
+        contextDescription: 'image editing',
+      });
       if (toolContext) {
         toolContextMap.image_edit_oai = toolContext;
       }
@@ -216,6 +209,28 @@ const loadTools = async ({
         imageOutputType,
         fileStrategy,
         imageFiles,
+      });
+    },
+    gemini_image_gen: async (toolContextMap) => {
+      const authFields = getAuthFields('gemini_image_gen');
+      const authValues = await loadAuthValues({ userId: user, authFields });
+      const imageFiles = options.tool_resources?.[EToolResources.image_edit]?.files ?? [];
+      const toolContext = buildImageToolContext({
+        imageFiles,
+        toolName: 'gemini_image_gen',
+        contextDescription: 'image context',
+      });
+      if (toolContext) {
+        toolContextMap.gemini_image_gen = toolContext;
+      }
+      return createGeminiImageTool({
+        ...authValues,
+        isAgent: !!agent,
+        req: options.req,
+        imageFiles,
+        processFileURL: options.processFileURL,
+        userId: user,
+        fileStrategy,
       });
     },
   };
@@ -240,6 +255,7 @@ const loadTools = async ({
     flux: imageGenOptions,
     dalle: imageGenOptions,
     'stable-diffusion': imageGenOptions,
+    gemini_image_gen: imageGenOptions,
   };
 
   /** @type {Record<string, string>} */
@@ -251,9 +267,9 @@ const loadTools = async ({
       requestedTools[tool] = async () => {
         const authValues = await loadAuthValues({
           userId: user,
-          authFields: [EnvVar.CODE_API_KEY],
+          authFields: [`${EnvVar.CODE_API_KEY}||SANDBOX_API_KEY`],
         });
-        const codeApiKey = authValues[EnvVar.CODE_API_KEY];
+        const codeApiKey = authValues[EnvVar.CODE_API_KEY] ?? authValues.SANDBOX_API_KEY;
         const { files, toolContext } = await primeCodeFiles(
           {
             ...options,
@@ -314,10 +330,13 @@ const loadTools = async ({
         webSearchConfig: webSearch,
       });
       const { onSearchResults, onGetHighlights } = options?.[Tools.web_search] ?? {};
+      const isAutoMode = options.req?.body?.ephemeralAgent?.auto_mode === true;
 
-      // Set toolContextMap immediately, not inside the async function
-      toolContextMap[tool] = `# \`${tool}\`:
-Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
+      // Set toolContextMap immediately, not inside the async function. Use short context in auto mode to reduce tokens.
+      toolContextMap[tool] = isAutoMode
+        ? `# \`${tool}\`: Current Date: ${replaceSpecialVars({ text: '{{current_date}}' })}. Use once per question; summarize results clearly.`
+        : `# \`${tool}\`:
+Current Date: ${replaceSpecialVars({ text: '{{current_date}}' })}
 1. **Execute immediately without preface** when using \`${tool}\`.
 2. **Perform ONLY ONE search per user question** - do not search multiple times before responding to the user.
 3. **After the search, begin with a brief summary** that directly addresses the query without headers or explaining your process.
@@ -344,7 +363,10 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
         /** Placeholder used for UI purposes */
         continue;
       }
-      if (serverName && options.req?.config?.mcpConfig?.[serverName] == null) {
+      const serverConfig = serverName
+        ? await getMCPServersRegistry().getServerConfig(serverName, user)
+        : null;
+      if (!serverConfig) {
         logger.warn(
           `MCP server "${serverName}" for "${toolName}" tool is not configured${agent?.id != null && agent.id ? ` but attached to "${agent.id}"` : ''}`,
         );
@@ -355,6 +377,7 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
           {
             type: 'all',
             serverName,
+            config: serverConfig,
           },
         ];
         continue;
@@ -365,6 +388,7 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
         type: 'single',
         toolKey: tool,
         serverName,
+        config: serverConfig,
       });
       continue;
     }
@@ -425,9 +449,11 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
           user: safeUser,
           userMCPAuthMap,
           res: options.res,
+          streamId: options.req?._resumableStreamId || null,
           model: agent?.model ?? model,
           serverName: config.serverName,
           provider: agent?.provider ?? endpoint,
+          config: config.config,
         };
 
         if (config.type === 'all' && toolConfigs.length === 1) {

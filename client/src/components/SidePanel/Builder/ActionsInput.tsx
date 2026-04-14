@@ -131,12 +131,12 @@ export default function ActionsInput({
     const action_id = action?.action_id;
     metadata.raw_spec = inputValue;
     const parsedUrl = new URL(data[0].domain);
-    const domain = parsedUrl.hostname;
-    if (!domain) {
+    if (!parsedUrl.hostname) {
       // alert user?
       return;
     }
-    metadata.domain = domain;
+    // Send protocol + hostname for proper SSRF validation (e.g., "http://192.168.1.1")
+    metadata.domain = `${parsedUrl.protocol}//${parsedUrl.hostname}`;
 
     const { type, saved_auth_fields } = authFormData;
 

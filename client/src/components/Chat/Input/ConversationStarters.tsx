@@ -1,11 +1,32 @@
-import { useMemo, useCallback } from 'react';
-import { EModelEndpoint, Constants } from 'librechat-data-provider';
-import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
-import { useGetAssistantDocsQuery, useGetEndpointsQuery } from '~/data-provider';
-import { getIconEndpoint, getEntity } from '~/utils';
-import { useSubmitMessage } from '~/hooks';
+import { Constants, EModelEndpoint } from 'librechat-data-provider';
+import { useCallback, useMemo } from 'react';
+import {
+  useAgentsMapContext,
+  useAssistantsMapContext,
+  useChatContext,
+  useChatFormContext,
+} from '~/Providers';
+import {
+  useGetAssistantDocsQuery,
+  useGetEndpointsQuery,
+  useSuggestedStartersQuery,
+} from '~/data-provider';
+import { mainTextareaId } from '~/common';
+import { useLocalize } from '~/hooks';
+import { getEntity, getIconEndpoint } from '~/utils';
+
+const GENERIC_STARTER_KEYS = [
+  'com_ui_starter_generic_1',
+  'com_ui_starter_generic_2',
+  'com_ui_starter_generic_3',
+  'com_ui_starter_generic_4',
+] as const;
+
+const GENERIC_EMOJIS = ['💡', '📋', '🌐', '✨'] as const;
+const FALLBACK_EMOJIS = ['💬', '✏️', '🎯', '🚀'] as const;
 
 const ConversationStarters = () => {
+  const localize = useLocalize();
   const { conversation } = useChatContext();
   const agentsMap = useAgentsMapContext();
   const assistantMap = useAssistantsMapContext();
@@ -13,13 +34,7 @@ const ConversationStarters = () => {
 
   const endpointType = useMemo(() => {
     let ep = conversation?.endpoint ?? '';
-    if (
-      [
-        EModelEndpoint.chatGPTBrowser,
-        EModelEndpoint.azureOpenAI,
-        EModelEndpoint.gptPlugins,
-      ].includes(ep as EModelEndpoint)
-    ) {
+    if (ep === EModelEndpoint.azureOpenAI) {
       ep = EModelEndpoint.openAI;
     }
     return getIconEndpoint({
@@ -41,22 +56,45 @@ const ConversationStarters = () => {
     assistant_id: conversation?.assistant_id,
   });
 
+  const fromDocs = useMemo(
+    () => documentsMap.get(entity?.id ?? '')?.conversation_starters ?? [],
+    [documentsMap, entity?.id],
+  );
+  const useGenericOrSuggested = !entity?.conversation_starters?.length && !isAgent && !fromDocs.length;
+
+  const { data: suggestedStarters } = useSuggestedStartersQuery(useGenericOrSuggested);
+
   const conversation_starters = useMemo(() => {
     if (entity?.conversation_starters?.length) {
       return entity.conversation_starters;
     }
-
     if (isAgent) {
       return [];
     }
+    if (fromDocs.length) {
+      return fromDocs;
+    }
+    if (suggestedStarters?.length) {
+      return suggestedStarters;
+    }
+    return GENERIC_STARTER_KEYS.map((key) => localize(key));
+  }, [documentsMap, isAgent, entity, fromDocs, suggestedStarters, localize]);
 
-    return documentsMap.get(entity?.id ?? '')?.conversation_starters ?? [];
-  }, [documentsMap, isAgent, entity]);
+  const methods = useChatFormContext();
+  const isGeneric =
+    !entity?.conversation_starters?.length &&
+    !fromDocs.length &&
+    !(suggestedStarters?.length);
+  const emojis = isGeneric ? GENERIC_EMOJIS : FALLBACK_EMOJIS;
 
-  const { submitMessage } = useSubmitMessage();
-  const sendConversationStarter = useCallback(
-    (text: string) => submitMessage({ text }),
-    [submitMessage],
+  /** Puts the suggestion into the chat input so the user can edit before sending. */
+  const fillInputWithStarter = useCallback(
+    (text: string) => {
+      methods.setValue('text', text + ' ', { shouldValidate: true });
+      const textarea = document.getElementById(mainTextareaId) as HTMLTextAreaElement | null;
+      textarea?.focus();
+    },
+    [methods],
   );
 
   if (!conversation_starters.length) {
@@ -64,20 +102,30 @@ const ConversationStarters = () => {
   }
 
   return (
-    <div className="mt-8 flex flex-wrap justify-center gap-3 px-4">
-      {conversation_starters
-        .slice(0, Constants.MAX_CONVO_STARTERS)
-        .map((text: string, index: number) => (
-          <button
-            key={index}
-            onClick={() => sendConversationStarter(text)}
-            className="relative flex w-40 cursor-pointer flex-col gap-2 rounded-2xl border border-border-medium px-3 pb-4 pt-3 text-start align-top text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition-colors duration-300 ease-in-out fade-in hover:bg-surface-tertiary"
-          >
-            <p className="break-word line-clamp-3 overflow-hidden text-balance break-all text-text-secondary">
-              {text}
-            </p>
-          </button>
-        ))}
+    <div className="mt-8 flex flex-col items-center gap-4 px-4">
+      <p className="text-center text-sm text-text-secondary" role="status">
+        {localize('com_ui_welcome_message')}
+      </p>
+      <div className="flex flex-wrap justify-center gap-3">
+        {(suggestedStarters?.length ? conversation_starters.slice(0, 6) : conversation_starters.slice(0, Constants.MAX_CONVO_STARTERS)).map(
+          (text: string, index: number) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => fillInputWithStarter(text)}
+              title={text}
+              className="relative flex h-12 min-w-0 max-w-[30ch] cursor-pointer items-center justify-center gap-2 rounded-2xl border border-border-medium px-4 py-2 text-center text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition-colors duration-300 ease-in-out fade-in hover:bg-surface-tertiary w-fit"
+            >
+              <span className="flex flex-shrink-0 items-center justify-center text-base">
+                {emojis[index % emojis.length]}
+              </span>
+              <span className="min-w-0 truncate text-center text-text-secondary">
+                {text}
+              </span>
+            </button>
+          ),
+        )}
+      </div>
     </div>
   );
 };

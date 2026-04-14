@@ -8,6 +8,7 @@ const {
   requireJwtAuth,
   checkBan,
   uaParser,
+  configMiddleware,
 } = require('~/server/middleware');
 const anthropic = require('./anthropic');
 const express = require('express');
@@ -22,6 +23,7 @@ const router = express.Router();
 router.use(requireJwtAuth);
 router.use(checkBan);
 router.use(uaParser);
+router.use(configMiddleware);
 
 if (isEnabled(LIMIT_CONCURRENT_MESSAGES)) {
   router.use(concurrentLimiter);

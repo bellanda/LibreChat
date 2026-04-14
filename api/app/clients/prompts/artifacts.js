@@ -308,6 +308,20 @@ Here are some examples of correct usage of artifacts:
   </example>
 </examples>`;
 
+const artifactsPromptLite = dedent`You can create artifacts for substantial, reusable content (code, documents, diagrams, UI components) that users will modify or reuse.
+
+Format: :::artifact{identifier="kebab-case-id" type="mime-type" title="Title"}
+\`\`\`
+full content here
+\`\`\`
+:::
+
+Use artifacts when content is substantial (>15 lines) and self-contained. Avoid for short snippets or explanatory examples.
+
+Types: "text/html", "text/markdown", "application/vnd.mermaid", "application/vnd.react", "image/svg+xml"
+
+Rules: Reuse the same identifier when updating. Always include complete content (no truncation or placeholders). Prefer normal chat answers when artifacts aren't clearly needed.`;
+
 const artifactsOpenAIPrompt = dedent`The assistant can create and reference artifacts during conversations.
   
 Artifacts are for substantial, self-contained content that users might modify or reuse, displayed in a separate UI window for clarity.
@@ -401,14 +415,16 @@ Artifacts are for substantial, self-contained content that users might modify or
 Here are some examples of correct usage of artifacts:
 
 ## Examples
-
-### Example 1
+##
 
     This example demonstrates how to create a Mermaid artifact for a simple flow chart.
+##
 
     User: Can you create a simple flow chart showing the process of making tea using Mermaid?
+##
 
     Assistant: Sure! Here's a simple flow chart depicting the process of making tea using Mermaid syntax:
+##
 
       :::artifact{identifier="tea-making-flowchart" type="application/vnd.mermaid" title="Flow chart: Making Tea"}
       \`\`\`mermaid
@@ -427,6 +443,7 @@ Here are some examples of correct usage of artifacts:
       :::
 
       This flow chart uses Mermaid syntax to visualize the steps involved in making a cup of tea. Here's a brief explanation of the process:
+##
 
       1. Start
       2. Check if water is boiled
@@ -515,20 +532,25 @@ Here are some examples of correct usage of artifacts:
  * @param {Object} params
  * @param {EModelEndpoint | string} params.endpoint - The current endpoint
  * @param {ArtifactModes} params.artifacts - The current artifact mode
+ * @param {boolean} [params.isAutoMode] - Whether we're in AUTO mode (agents endpoint)
  * @returns
  */
-const generateArtifactsPrompt = ({ endpoint, artifacts }) => {
+const generateArtifactsPrompt = ({ endpoint, artifacts, isAutoMode = false }) => {
   if (artifacts === ArtifactModes.CUSTOM) {
     return null;
   }
 
-  let prompt = artifactsPrompt;
-  if (endpoint !== EModelEndpoint.anthropic) {
+  let prompt;
+  // Use minimal prompt when in AUTO mode (agents endpoint) to reduce token usage
+  if (isAutoMode) {
+    prompt = artifactsPromptLite;
+  } else {
     prompt = artifactsOpenAIPrompt;
   }
 
-  if (artifacts === ArtifactModes.SHADCNUI) {
-    prompt += generateShadcnPrompt({ components, useXML: endpoint === EModelEndpoint.anthropic });
+  if (!isAutoMode && artifacts === ArtifactModes.SHADCNUI) {
+    const shadcnPrompt = generateShadcnPrompt({ components, useXML: endpoint === EModelEndpoint.anthropic });
+    prompt += shadcnPrompt;
   }
 
   return prompt;

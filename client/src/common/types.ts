@@ -1,15 +1,16 @@
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
 import type * as t from 'librechat-data-provider';
-import { Constants, EModelEndpoint, FileSources } from 'librechat-data-provider';
+import { EModelEndpoint, FileSources, isEphemeralAgentId } from 'librechat-data-provider';
 import type { LucideIcon } from 'lucide-react';
 import type * as InputNumberPrimitive from 'rc-input-number';
 import { RefObject } from 'react';
 import type { RecoilState, SetterOrUpdater } from 'recoil';
 import type { TranslationKeys } from '~/hooks';
+import { MCPServerDefinition } from '~/hooks/MCP/useMCPServerManager';
 
 export function isEphemeralAgent(agentId: string | null | undefined): boolean {
-  return agentId == null || agentId === '' || agentId === Constants.EPHEMERAL_AGENT_ID;
+  return isEphemeralAgentId(agentId);
 }
 
 export interface ConfigFieldDetail {
@@ -140,10 +141,10 @@ export interface NavProps {
 
 export interface DataColumnMeta {
   meta:
-    | {
-        size: number | string;
-      }
-    | undefined;
+  | {
+    size: number | string;
+  }
+  | undefined;
 }
 
 export enum Panel {
@@ -170,9 +171,9 @@ export type ActionAuthForm = {
   /* OAuth */
   oauth_client_id: string; // not nested
   oauth_client_secret: string; // not nested
-  authorization_url?: string; // Optional for Client Credentials Flow
+  authorization_url: string;
   client_url: string;
-  scope?: string; // Optional for Client Credentials Flow
+  scope: string;
   token_exchange_method: t.TokenExchangeMethodEnum;
 };
 
@@ -225,6 +226,7 @@ export interface MCPServerInfo {
   tools: t.AgentToolType[];
   isConfigured: boolean;
   isConnected: boolean;
+  consumeOnly?: boolean;
   metadata: t.TPlugin;
 }
 
@@ -246,6 +248,8 @@ export type AgentPanelContextType = {
   endpointsConfig?: t.TEndpointsConfig | null;
   /** Pre-computed MCP server information indexed by server key */
   mcpServersMap: Map<string, MCPServerInfo>;
+  availableMCPServers: MCPServerDefinition[];
+  availableMCPServersMap: t.MCPServersListResponse | undefined;
 };
 
 export type AgentModelPanelProps = {
@@ -366,6 +370,8 @@ export type TOptions = {
   isResubmission?: boolean;
   /** Currently only utilized when `isResubmission === true`, uses that message's currently attached files */
   overrideFiles?: t.TMessage['files'];
+  /** Added conversation for multi-convo feature - sent to server as part of submission payload */
+  addedConvo?: t.TConversation;
 };
 
 export type TAskFunction = (props: TAskProps, options?: TOptions) => void;
@@ -447,7 +453,7 @@ export type TDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export type TPluginStoreDialogProps = {
+export type ToolDialogProps = {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
 };

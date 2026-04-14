@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import type { IMessage } from '~/types/message';
 
 const messageSchema: Schema<IMessage> = new Schema(
@@ -83,7 +83,7 @@ const messageSchema: Schema<IMessage> = new Schema(
           required: true,
         },
         tag: {
-          type: mongoose.Schema.Types.Mixed,
+          type: Schema.Types.Mixed,
           required: false,
         },
         text: {
@@ -100,7 +100,7 @@ const messageSchema: Schema<IMessage> = new Schema(
       select: false,
       default: false,
     },
-    files: { type: [{ type: mongoose.Schema.Types.Mixed }], default: undefined },
+    files: { type: [{ type: Schema.Types.Mixed }], default: undefined },
     plugin: {
       type: {
         latest: {
@@ -108,7 +108,7 @@ const messageSchema: Schema<IMessage> = new Schema(
           required: false,
         },
         inputs: {
-          type: [mongoose.Schema.Types.Mixed],
+          type: [Schema.Types.Mixed],
           required: false,
           default: undefined,
         },
@@ -119,9 +119,9 @@ const messageSchema: Schema<IMessage> = new Schema(
       },
       default: undefined,
     },
-    plugins: { type: [{ type: mongoose.Schema.Types.Mixed }], default: undefined },
+    plugins: { type: [{ type: Schema.Types.Mixed }], default: undefined },
     content: {
-      type: [{ type: mongoose.Schema.Types.Mixed }],
+      type: [{ type: Schema.Types.Mixed }],
       default: undefined,
       meiliIndex: true,
     },
@@ -132,8 +132,8 @@ const messageSchema: Schema<IMessage> = new Schema(
     iconURL: {
       type: String,
     },
-    metadata: { type: mongoose.Schema.Types.Mixed },
-    attachments: { type: [{ type: mongoose.Schema.Types.Mixed }], default: undefined },
+    metadata: { type: Schema.Types.Mixed },
+    attachments: { type: [{ type: Schema.Types.Mixed }], default: undefined },
     /*
     attachments: {
       type: [
@@ -159,6 +159,10 @@ const messageSchema: Schema<IMessage> = new Schema(
     expiredAt: {
       type: Date,
     },
+    addedConvo: {
+      type: Boolean,
+      default: undefined,
+    },
   },
   { timestamps: true },
 );
@@ -166,5 +170,8 @@ const messageSchema: Schema<IMessage> = new Schema(
 messageSchema.index({ expiredAt: 1 }, { expireAfterSeconds: 0 });
 messageSchema.index({ createdAt: 1 });
 messageSchema.index({ messageId: 1, user: 1 }, { unique: true });
+
+// index for MeiliSearch sync operations
+messageSchema.index({ _meiliIndex: 1, expiredAt: 1 });
 
 export default messageSchema;

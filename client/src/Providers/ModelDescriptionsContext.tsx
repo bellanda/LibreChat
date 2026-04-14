@@ -40,12 +40,14 @@ export const ModelDescriptionsProvider = ({ children }: ModelDescriptionsProvide
 
         if (response.ok) {
           const data = await response.json();
-          console.log(
-            '✅ Model descriptions loaded successfully:',
-            Object.keys(data).length,
-            'models',
-          );
-          setDescriptions(data);
+          if (data != null && typeof data === 'object' && !Array.isArray(data)) {
+            const { _id, __v, ...descriptionsMap } = data;
+            const count = Object.keys(descriptionsMap).length;
+            console.log('✅ Model descriptions loaded successfully:', count, 'models');
+            setDescriptions(descriptionsMap);
+          } else {
+            setDescriptions({});
+          }
         } else {
           console.warn('❌ Could not load models descriptions from API, status:', response.status);
           console.warn('Response headers:', [...response.headers.entries()]);

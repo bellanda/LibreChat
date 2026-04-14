@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import { Schema, Document, Types } from 'mongoose';
 import type { TAttachment } from 'librechat-data-provider';
 
 export interface IToolCallData extends Document {
@@ -29,15 +29,15 @@ const toolCallSchema: Schema<IToolCallData> = new Schema(
       required: true,
     },
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
     result: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
     },
     attachments: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
     },
     blockIndex: {
       type: Number,

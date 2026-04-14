@@ -5,6 +5,7 @@ import * as s from './schemas';
 export default function createPayload(submission: t.TSubmission) {
   const {
     isEdited,
+    addedConvo,
     userMessage,
     isContinued,
     isTemporary,
@@ -32,12 +33,14 @@ export default function createPayload(submission: t.TSubmission) {
     ...userMessage,
     ...endpointOption,
     endpoint,
+    addedConvo,
     isTemporary,
     isRegenerate,
     editedContent,
     conversationId,
     isContinued: !!(isEdited && isContinued),
-    ephemeralAgent: s.isAssistantsEndpoint(endpoint) ? undefined : ephemeralAgent,
+    // Para endpoint agents: sempre enviar objeto (evita strip por removeNullishValues) e backend pode usar defaults
+    ephemeralAgent: s.isAssistantsEndpoint(endpoint) ? undefined : (ephemeralAgent ?? {}),
   };
 
   return { server, payload };

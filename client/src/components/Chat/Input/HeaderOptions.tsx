@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { Settings2 } from 'lucide-react';
 import { TooltipAnchor } from '@librechat/client';
-import { Root, Anchor } from '@radix-ui/react-popover';
-import { isParamEndpoint, getEndpointField, tConvoUpdateSchema } from 'librechat-data-provider';
-import type { TPreset, TInterfaceConfig } from 'librechat-data-provider';
-import { EndpointSettings, SaveAsPresetDialog, AlternativeSettings } from '~/components/Endpoints';
-import { useSetIndexOptions, useLocalize } from '~/hooks';
+import { Anchor, Root } from '@radix-ui/react-popover';
+import type { TInterfaceConfig, TPreset } from 'librechat-data-provider';
+import { getEndpointField, isParamEndpoint, tConvoUpdateSchema } from 'librechat-data-provider';
+import { Settings2 } from 'lucide-react';
+import { useState } from 'react';
+import { AlternativeSettings, EndpointSettings, SaveAsPresetDialog } from '~/components/Endpoints';
 import { useGetEndpointsQuery } from '~/data-provider';
+import { useLocalize, useSetIndexOptions } from '~/hooks';
+import { useChatContext } from '~/Providers';
 import OptionsPopover from './OptionsPopover';
 import PopoverButtons from './PopoverButtons';
-import { useChatContext } from '~/Providers';
 
 export default function HeaderOptions({
   interfaceConfig,
@@ -41,7 +41,7 @@ export default function HeaderOptions({
   return (
     <Root
       open={showPopover}
-      // onOpenChange={} //  called when the open state of the popover changes.
+    // onOpenChange={} //  called when the open state of the popover changes.
     >
       <Anchor>
         <div className="my-auto lg:max-w-2xl xl:max-w-3xl">
@@ -58,7 +58,7 @@ export default function HeaderOptions({
                   data-testid="parameters-button"
                   className="inline-flex size-10 items-center justify-center rounded-lg border border-border-light bg-transparent text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
                 >
-                  <Settings2 size={16} aria-label="Settings/Parameters Icon" />
+                  <Settings2 size={16} aria-hidden="true" />
                 </TooltipAnchor>
               )}
             </div>

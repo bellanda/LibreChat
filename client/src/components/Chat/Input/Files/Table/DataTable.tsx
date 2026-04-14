@@ -1,6 +1,26 @@
-import { useState } from 'react';
-import { ListFilter } from 'lucide-react';
-import { useSetRecoilState } from 'recoil';
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  Input,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TrashIcon,
+  useMediaQuery,
+} from '@librechat/client';
+import type {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+} from '@tanstack/react-table';
 import {
   flexRender,
   getCoreRowModel,
@@ -9,43 +29,22 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import type {
-  ColumnDef,
-  SortingState,
-  VisibilityState,
-  ColumnFiltersState,
-} from '@tanstack/react-table';
-import { FileContext } from 'librechat-data-provider';
-import {
-  Button,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  TrashIcon,
-  Spinner,
-  useMediaQuery,
-} from '@librechat/client';
 import type { TFile } from 'librechat-data-provider';
-import type { AugmentedColumnDef } from '~/common';
+import { FileContext } from 'librechat-data-provider';
+import { ListFilter } from 'lucide-react';
+import { useState } from 'react';
+import { useSetRecoilState } from 'recoil';
+import { TranslationKeys, useLocalize } from '~/hooks';
 import { useDeleteFilesFromTable } from '~/hooks/Files';
-import { useLocalize } from '~/hooks';
-import { cn } from '~/utils';
 import store from '~/store';
+import { cn } from '~/utils';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-const contextMap = {
+const contextMap: Record<string, TranslationKeys> = {
   [FileContext.filename]: 'com_ui_name',
   [FileContext.updatedAt]: 'com_ui_date',
   [FileContext.filterSource]: 'com_ui_storage',
@@ -75,6 +74,11 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
   const table = useReactTable({
     data,
     columns,
+    defaultColumn: {
+      minSize: 0,
+      size: Number.MAX_SAFE_INTEGER,
+      maxSize: Number.MAX_SAFE_INTEGER,
+    },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -120,51 +124,48 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
           onChange={(event) => table.getColumn('filename')?.setFilterValue(event.target.value)}
           className="flex-1 text-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              aria-label={localize('com_files_filter_by')}
-              className={cn('min-w-[40px]', isSmallScreen && 'px-2 py-1')}
+        <div className="relative focus-within:z-[100]">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                aria-label={localize('com_files_filter_by')}
+                className={cn('min-w-[40px]', isSmallScreen && 'px-2 py-1')}
+              >
+                <ListFilter className="size-3.5 sm:size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="max-h-[300px] overflow-y-auto dark:border-gray-700 dark:bg-gray-850"
             >
-              <ListFilter className="size-3.5 sm:size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="max-h-[300px] overflow-y-auto dark:border-gray-700 dark:bg-gray-850"
-          >
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  className="cursor-pointer text-sm capitalize dark:text-white dark:hover:bg-gray-800"
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
-                >
-                  {localize(contextMap[column.id])}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="cursor-pointer text-sm capitalize dark:text-white dark:hover:bg-gray-800"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
+                  >
+                    {localize(contextMap[column.id])}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-      <div className="relative grid h-full max-h-[calc(100vh-20rem)] w-full flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-md border border-black/10 dark:border-white/10">
+      <div className="relative grid h-full max-h-[calc(100vh-20rem)] min-h-[calc(100vh-20rem)] w-full flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-md border border-black/10 dark:border-white/10">
         <Table className="w-full min-w-[300px] border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-50">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-b border-border-light">
-                {headerGroup.headers.map((header, index) => {
-                  const style: Style = {};
-                  if (index === 0 && header.id === 'select') {
-                    style.width = '35px';
-                    style.minWidth = '35px';
-                  } else if (header.id === 'filename') {
-                    style.width = isSmallScreen ? '60%' : '40%';
-                  } else {
-                    style.width = isSmallScreen ? '20%' : '15%';
-                  }
+                {headerGroup.headers.map((header, _index) => {
+                  const size = header.getSize();
+                  const style: Style = {
+                    width: size === Number.MAX_SAFE_INTEGER ? 'auto' : size,
+                  };
 
                   return (
                     <TableHead
@@ -189,22 +190,19 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                   data-state={row.getIsSelected() && 'selected'}
                   className="border-b border-border-light transition-colors hover:bg-surface-secondary [tr:last-child_&]:border-b-0"
                 >
-                  {row.getVisibleCells().map((cell, index) => {
-                    const maxWidth =
-                      (cell.column.columnDef as AugmentedColumnDef<TData, TValue>).meta?.size ??
-                      'auto';
-
-                    const style: Style = {};
-                    if (cell.column.id === 'filename') {
-                      style.maxWidth = maxWidth;
-                    } else if (index === 0) {
-                      style.maxWidth = '20px';
-                    }
+                  {row.getVisibleCells().map((cell, _index) => {
+                    const size = cell.column.getSize();
+                    const style: Style = {
+                      width: size === Number.MAX_SAFE_INTEGER ? 'auto' : size,
+                    };
 
                     return (
                       <TableCell
                         key={cell.id}
-                        className="align-start overflow-x-auto px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm [tr[data-disabled=true]_&]:opacity-50"
+                        className={cn(
+                          'align-start px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm [tr[data-disabled=true]_&]:opacity-50',
+                          cell.column.id === 'select' ? 'overflow-visible' : 'overflow-x-auto',
+                        )}
                         style={style}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -233,16 +231,15 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
             })}
           </span>
           <span className="sm:hidden">
-            {`${table.getFilteredSelectedRowModel().rows.length}/${
-              table.getFilteredRowModel().rows.length
-            }`}
+            {`${table.getFilteredSelectedRowModel().rows.length}/${table.getFilteredRowModel().rows.length
+              }`}
           </span>
         </div>
         <div className="flex items-center space-x-1 pr-2 text-xs font-bold text-text-primary sm:text-sm">
           <span className="hidden sm:inline">{localize('com_ui_page')}</span>
           <span>{table.getState().pagination.pageIndex + 1}</span>
           <span>/</span>
-          <span>{table.getPageCount()}</span>
+          <span>{Math.max(table.getPageCount(), 1)}</span>
         </div>
         <Button
           className="select-none"

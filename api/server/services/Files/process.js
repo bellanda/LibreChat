@@ -29,8 +29,8 @@ const {
 const { addResourceFileId, deleteResourceFileId } = require('~/server/controllers/assistants/v2');
 const { addAgentResourceFile, removeAgentResourceFiles } = require('~/models/Agent');
 const { getOpenAIClient } = require('~/server/controllers/assistants/helpers');
-const { createFile, updateFileUsage, deleteFiles } = require('~/models/File');
 const { loadAuthValues } = require('~/server/services/Tools/credentials');
+const { createFile, updateFileUsage, deleteFiles } = require('~/models');
 const { getFileStrategy } = require('~/server/utils/getFileStrategy');
 const { checkCapability } = require('~/server/services/Config');
 const { LB_QueueAsyncCall } = require('~/server/utils/queue');
@@ -611,22 +611,28 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
       throw new Error('Code execution is not enabled for Agents');
     }
     const { handleFileUpload: uploadCodeEnvFile } = getStrategyFunctions(FileSources.execute_code);
-    const result = await loadAuthValues({ userId: req.user.id, authFields: [EnvVar.CODE_API_KEY] });
+    const result = await loadAuthValues({
+      userId: req.user.id,
+      authFields: [`${EnvVar.CODE_API_KEY}||SANDBOX_API_KEY`],
+    });
+    const codeApiKey = result[EnvVar.CODE_API_KEY] ?? result.SANDBOX_API_KEY;
+    if (!codeApiKey) {
+      throw new Error(
+        'Code Interpreter API key not configured. Set SANDBOX_API_KEY or LIBRECHAT_CODE_API_KEY in .env, or configure the Code Interpreter key in your profile settings.',
+      );
+    }
     const stream = fs.createReadStream(file.path);
     const fileIdentifier = await uploadCodeEnvFile({
       req,
       stream,
       filename: file.originalname,
-      apiKey: result[EnvVar.CODE_API_KEY],
+      apiKey: codeApiKey,
       entity_id,
     });
     fileInfoMetadata = { fileIdentifier };
   } else if (tool_resource === EToolResources.file_search) {
     const isFileSearchEnabled = await checkCapability(req, AgentCapabilities.file_search);
-    // Allow file_search for ephemeral agents even if not explicitly enabled in endpoint config
-    // since we've added file_search to ephemeral agent tools by default
-    const isEphemeralAgent = agent_id === Constants.EPHEMERAL_AGENT_ID || messageAttachment;
-    if (!isFileSearchEnabled && !isEphemeralAgent) {
+    if (!isFileSearchEnabled) {
       throw new Error('File search is not enabled for Agents');
     }
     // Note: File search processing continues to dual storage logic below
@@ -683,15 +689,6 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
       appConfig?.ocr != null &&
       !shouldExcludeFromOCR && // Excluir tipos específicos do OCR
       fileConfig.checkType(file.mimetype, fileConfig.ocr?.supportedMimeTypes || []);
-
-    // Log para debug
-    console.log(`🔍 File processing debug:`, {
-      filename: file.originalname,
-      mimetype: file.mimetype,
-      shouldExcludeFromOCR,
-      shouldUseOCR,
-      ocrEnabled: appConfig?.ocr != null,
-    });
 
     if (shouldUseOCR && !(await checkCapability(req, AgentCapabilities.ocr))) {
       throw new Error('OCR capability is not enabled for Agents');
@@ -789,13 +786,15 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
     });
   }
 
-  let { bytes, filename, filepath: _filepath, height, width } = storageResult;
+  let { bytes: storageBytes, filename, filepath: _filepath, height, width } = storageResult;
   // For RAG files, use embedding result; for others, use storage result
   let embedded = storageResult.embedded;
   if (tool_resource === EToolResources.file_search) {
     embedded = embeddingResult?.embedded;
     filename = embeddingResult?.filename || filename;
   }
+
+  let bytes = storageBytes;
 
   let filepath = _filepath;
 

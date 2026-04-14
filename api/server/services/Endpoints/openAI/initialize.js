@@ -17,7 +17,12 @@ const initializeClient = async ({
   overrideEndpoint,
   overrideModel,
 }) => {
-  const appConfig = req.config;
+  /** 
+   * Garantir que appConfig seja sempre um objeto,
+   * mesmo se o middleware de config ainda não tiver rodado.
+   * Evita erros do tipo "Cannot read properties of undefined (reading 'endpoints')".
+   */
+  const appConfig = req.config ?? {};
   const {
     PROXY,
     OPENAI_API_KEY,

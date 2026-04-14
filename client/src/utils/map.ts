@@ -1,7 +1,7 @@
 import type * as t from 'librechat-data-provider';
 import type { TPluginMap } from '~/common';
 
-/** Maps Attachments by `toolCallId` for quick lookup */
+/** Maps Attachments by `toolCallId` and `messageId` for quick lookup */
 export function mapAttachments(attachments: Array<t.TAttachment | null | undefined>) {
   const attachmentMap: Record<string, t.TAttachment[] | undefined> = {};
 
@@ -9,16 +9,27 @@ export function mapAttachments(attachments: Array<t.TAttachment | null | undefin
     if (attachment === null || attachment === undefined) {
       continue;
     }
-    const key = attachment.toolCallId || '';
-    if (key.length === 0) {
-      continue;
+    
+    // Create entries for both toolCallId and messageId to ensure attachments can be found by either key
+    const toolCallId = attachment.toolCallId || '';
+    const messageId = attachment.messageId || '';
+    
+    if (toolCallId.length > 0) {
+      if (!attachmentMap[toolCallId]) {
+        attachmentMap[toolCallId] = [];
+      }
+      attachmentMap[toolCallId]?.push(attachment);
     }
-
-    if (!attachmentMap[key]) {
-      attachmentMap[key] = [];
+    
+    if (messageId.length > 0) {
+      if (!attachmentMap[messageId]) {
+        attachmentMap[messageId] = [];
+      }
+      // Avoid duplicating if toolCallId === messageId
+      if (toolCallId !== messageId) {
+        attachmentMap[messageId]?.push(attachment);
+      }
     }
-
-    attachmentMap[key]?.push(attachment);
   }
 
   return attachmentMap;

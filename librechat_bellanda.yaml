@@ -1,0 +1,842 @@
+# For more information, see the Configuration Guide:
+# https://www.librechat.ai/docs/configuration/librechat_yaml
+
+# Configuration version (required)
+version: 1.2.1
+
+# Cache settings: Set to true to enable caching
+cache: true
+
+# File strategy s3/firebase
+# fileStrategy: "s3"
+
+# Custom interface configuration
+interface:
+  customWelcome: 'Bem vindos à plataforma HPE-IA 🧠'
+  # Privacy policy settings
+  privacyPolicy:
+    externalUrl: 'https://ia.hpeautos.com.br/documentation/politica-de-uso-de-ia'
+    openNewTab: true
+
+  # Terms of service
+  termsOfService:
+    externalUrl: 'https://ia.hpeautos.com.br/documentation/politica-de-uso-de-ia'
+    openNewTab: true
+    modalAcceptance: true
+    modalTitle: 'Política de Uso de IA para HPE IA Core'
+    modalContent: |
+      **ATUALIZAÇÃO!!!**
+
+      *31/10/2025*
+
+      # 📜 **Política Interna de Uso de Inteligência Artificial**  
+
+      ## 📄 **Documentação**  
+
+      | 📄 **Código** | 📑 **Revisão** | 🗂️ **Categoria** |
+      |---------------|----------------|-------------------|
+      | **POL‑CORP‑COMPL‑0005** | **01** | **POLÍTICA** |
+
+      ---  
+
+      ## 📑 **Sumário**  
+
+      | # | Seção | 📄 Página |
+      |---|-------|-----------|
+      | 1️⃣ | 🎯 **Objetivo** | 2 |
+      | 2️⃣ | 🌍 **Abrangência** | 2 |
+      | 3️⃣ | 📚 **Definições** | 2 |
+      | 4️⃣ | 🤖 **Inteligência Artificial** | 3 |
+      | 5️⃣ | ⚖️ **Princípios Orientadores do Uso Ético de Ferramentas de IA** | 3 |
+      | 6️⃣ | 👥 **Comitê de IA** | 4 |
+      | 7️⃣ | 🔧 **Plataformas de IA Autorizadas para Uso** | 4 |
+      | 7.1 | 🛠️ **HPE‑IA** | 4 |
+      | 7.2 | 🛠️ **Outras Plataformas Homologadas** | 4 |
+      | 8️⃣ | 🛠️ **Diretrizes de Uso** | 5 |
+      | 8.1 | ✅ **Responsabilidade dos Usuários** | 6 |
+      | 9️⃣ | 🔐 **Segurança da Informação** | 6 |
+      | 🔟 | 💾 **Armazenamento e Retenção de Dados** | 6 |
+      | 1️⃣1️⃣ | 📈 **Monitoramento, Auditoria e Penalidades** | 7 |
+      | 1️⃣2️⃣ | 📖 **Referências** | 7 |
+      | 1️⃣3️⃣ | 🔄 **Atualizações** | 7 |
+      | 1️⃣4️⃣ | 📂 **Controle do Documento** | 7 |
+      | 1️⃣5️⃣ | 📋 **Níveis de Aprovação** | 7 |
+
+      ---  
+
+      ## 🎯 1. **Objetivo**  
+
+      Esta política (**“Política de IA”**) tem como objetivo estabelecer diretrizes claras e abrangentes para o uso **seguro, transparente e responsável** de ferramentas de Inteligência Artificial no âmbito organizacional.
+
+      - O uso responsável da IA permite ganhos significativos em **produtividade, criatividade** e **suporte à tomada de decisão**, atuando como ferramenta estratégica de apoio aos processos internos.  
+      - Esse uso deverá estar sempre alinhado aos **valores da HPE** – conforme constam no nosso **Código de Ética e Conduta dos Colaboradores** – ou seja, em estrita conformidade com os princípios éticos e demais políticas internas.  
+
+      ---  
+
+      ## 🌍 2. **Abrangência**  
+
+      Esta política se aplica a **todos os colaboradores da HPE Automotores do Brasil Ltda. (“HPE”)** e das demais empresas do Grupo. Também se estende, quando aplicável, a **terceiros, prestadores de serviço e parceiros** que utilizem, direta ou indiretamente, as ferramentas de IA fornecidas ou autorizadas pela HPE, identificados nesta política como **“Usuários”**.  
+
+      ---  
+
+      ## 📚 3. **Definições**  
+
+      | **Termo** | **Definição** |
+      |-----------|---------------|
+      | **Agentes de IA** | Programas ou sistemas que utilizam Inteligência Artificial para executar atividades de forma autônoma ou semiautônoma. Podem interagir com pessoas, outros sistemas ou até com outros agentes de IA (ex.: chatbots, assistentes virtuais, softwares de monitoramento automático). |
+      | **Agentes Autônomos** | Modelos de IA que podem realizar tarefas complexas sem supervisão humana constante, aprendendo com o ambiente e tomando decisões baseadas em seus objetivos. |
+      | **Algoritmos** | Conjuntos de instruções lógicas e matemáticas que orientam como um dispositivo ou sistema deve processar informações para alcançar determinado resultado. |
+      | **Alucinações** | Geração de conteúdo **falso, incoerente ou inventado** por um modelo de IA, ainda que pareça plausível. Ocorrem quando o modelo “preenche lacunas” de conhecimento com padrões aprendidos, não baseados em dados reais. |
+      | **Ataques Cibernéticos** | Ações maliciosas realizadas por indivíduos ou grupos com o objetivo de comprometer sistemas, redes ou dados (ex.: roubo de informações, interrupção de serviços, fraude, espionagem). |
+      | **Backup** | Cópia de segurança das informações, realizada para evitar perdas em caso de falhas técnicas, exclusão acidental, ataques cibernéticos ou desastres. |
+      | **Criptografia** | Técnica de proteção que transforma informações em um código indecifrável para quem não possui a chave correta de leitura. |
+      | **Dados Pessoais** | Informações que identificam ou permitem identificar uma pessoa, direta ou indiretamente (nome, CPF, RG, e‑mail, telefone, endereço, geolocalização, identificadores digitais etc.). |
+      | **IA Generativa** | Tipo de IA projetada para desenvolver conteúdo a partir de grandes volumes de dados já existentes (texto, imagens, músicas, vídeos, código). |
+      | **Identificadores Digitais** | Informações eletrônicas que permitem reconhecer ou diferenciar um usuário, dispositivo ou conexão na internet. |
+      | **Incidentes de Segurança** | Eventos que afetam a **confidencialidade, integridade ou disponibilidade** de informações e sistemas. |
+      | **Modelos de IA** | Estruturas matemáticas e computacionais treinadas com grandes volumes de dados para reconhecer padrões, tomar decisões ou gerar resultados de forma automática. |
+      | **Prompt** | Comando, pergunta ou instrução fornecida a um sistema de IA para direcionar sua resposta ou ação. Quanto mais claro e detalhado for o prompt, maior a chance de gerar um resultado útil e adequado. |
+
+      ---  
+
+      ## 🤖 4. **Inteligência Artificial**  
+
+      Inteligência Artificial (**IA**) é um ramo da ciência da computação voltado ao desenvolvimento de sistemas capazes de executar tarefas que tradicionalmente requerem a **inteligência humana**, tais como raciocínio, aprendizado, percepção e tomada de decisão.
+
+      No contexto corporativo, a IA generativa pode ser utilizada para diversas finalidades, como, por exemplo:
+
+      - Apoio à redação de documentos;  
+      - Elaboração de relatórios;  
+      - Criação de apresentações;  
+      - Personalização de campanhas de marketing;  
+      - Automação de atendimento ao cliente;  
+      - Geração de insights estratégicos a partir de padrões aprendidos em grandes volumes de dados.  
+
+      ---  
+
+      ## ⚖️ 5. **Princípios Orientadores do Uso Ético de Ferramentas de IA**  
+
+      O uso da IA deverá estar sempre alinhado aos seguintes princípios orientadores:
+
+      - **Diversidade, Equidade e Não Discriminação** – garantir que os resultados não reforcem preconceitos ou discriminações contra indivíduos ou grupos, respeitando dignidade, igualdade e diversidade.  
+      - **Melhoria Contínua** – garantir que os sistemas de IA sejam revisados e aprimorados regularmente, ajustando‑os às novas necessidades de negócio e aos desafios éticos/tecnológicos.  
+      - **Privacidade e Governança dos Dados** – garantir que os dados pessoais sejam tratados com respeito à privacidade dos indivíduos, em conformidade com a legislação de proteção de dados.  
+      - **Responsabilidade** – garantir supervisão humana adequada em toda decisão relevante, especialmente aquelas que possam impactar pessoas, processos ou resultados críticos.  
+      - **Segurança e Confiabilidade** – proteger dados sensíveis e sigilosos, evitando a exposição de informações pessoais de clientes e colaboradores; utilizar IA apenas em dispositivos e redes corporativas seguras e homologadas.  
+      - **Transparência** – garantir definição clara dos modelos utilizados e a finalidade de sua utilização, assegurando rastreabilidade, documentação e atribuição clara de responsabilidade ao longo de todo o ciclo de uso da IA.  
+
+      ---  
+
+      ## 👥 6. **Comitê de IA**  
+
+      O **Comitê de Inteligência Artificial** será responsável por coordenar e supervisionar o uso das tecnologias de IA na organização, assegurando que sua aplicação esteja alinhada aos princípios éticos, à proteção de dados pessoais, às exigências legais e às diretrizes estratégicas da empresa.
+
+      ### 👥 **Composição**  
+      - **Compliance e Privacidade de Dados**  
+      - **Tecnologia da Informação**  
+      - **Gente & Gestão**  
+      - **Gestão de Riscos** (quando necessário)
+
+      ### 📌 **Atribuições**  
+
+      1. **Orientar e treinar** os colaboradores no uso de IA, promovendo conscientização sobre riscos, responsabilidades e limitações.  
+      2. **Definir critérios de homologação** para plataformas de IA autorizadas, avaliando riscos técnicos e regulatórios.  
+      3. **Validar o ambiente de uso** das ferramentas de IA (infraestrutura segura, controle de acesso, criptografia, backup, etc.).  
+      4. **Monitorar o uso** das ferramentas de IA, assegurando rastreabilidade, prevenção de incidentes e conformidade com os controles estabelecidos.  
+      5. **Avaliar impactos** em segurança e privacidade decorrentes da adoção da IA em projetos, produtos, processos ou iniciativas estratégicas.  
+
+      ---  
+
+      ## 🔧 7. **Plataformas de IA Autorizadas para Uso**  
+
+      Os colaboradores da HPE devem utilizar **exclusivamente** as plataformas e sistemas oficialmente autorizados nesta política. É **expressamente proibido** utilizar modelos de IA que não sejam a **HPE‑IA** ou que não estejam homologados.
+
+      ### 🛠️ 7.1 **HPE‑IA**  
+
+      Este é o modelo oficial para uso de IA generativa da HPE, criado como solução interna. A plataforma disponibiliza acesso a diversos modelos de IA de alto nível encontrados no mercado (ex.: ChatGPT, Gemini, etc.), todos integrados em um ambiente seguro e fácil de usar, garantindo maior segurança e integridade na governança dos dados corporativos, além de alta capacidade de auditoria e transparência.  
+
+      ### 🛠️ 7.2 **Outras Plataformas Homologadas**  
+
+      Caso surja necessidade de utilização de outras plataformas e sistemas que não sejam a HPE‑IA, devem ser analisados os seguintes critérios:
+
+      - **Critério 1** – O sistema utiliza IA em sua totalidade e não pode ser contemplado na plataforma HPE‑IA.  
+      - **Critério 2** – O sistema não utiliza IA em sua totalidade, mas possui recursos de IA significativos.  
+      - **Critério 3** – O fornecedor da HPE não foi contratado originalmente para fornecer produtos ou serviços que utilizam IA.
+
+      #### 📄 **Requerimento de Homologação**  
+
+      O requerimento deve ser enviado para **ia.comite@hpeautos.com.br** contendo, de forma detalhada:
+
+      1. **Aprovação prévia** do gestor (quando aplicável).  
+      2. **Finalidade do uso** da plataforma ou sistema.  
+      3. **Detalhamento dos dados** que serão utilizados:  
+        - (i) Dados pessoais (sensíveis ou não) – ex.: e‑mail, nome, CPF, etc.;  
+        - (ii) Informações da empresa (confidenciais ou não) – ex.: tabelas, manuais, relatórios, contratos, planilhas;  
+        - (iii) Tipo de modelo de treinamento ou agente autônomo;  
+        - (iv) Tempo de utilização (temporária ou permanente);  
+        - (v) Colaboradores que terão acesso à ferramenta.  
+
+      #### ⏱️ **SLA de Homologação**  
+
+      - **15 (quinze) dias úteis** para plataformas que **não** necessitem de testes de uso;  
+      - **30 (trinta) dias úteis** para plataformas que **exijam** testes de uso.  
+
+      > **Importante:** O uso de plataformas não homologadas é **vedado** e pode ser configurado como atitude antiética, nos termos do item 7.2.9 do Código de Ética e Conduta da HPE, sujeitando o responsável a medidas disciplinares.  
+
+      ---  
+
+      ## 🛠️ 8. **Diretrizes de Uso**  
+
+      O uso da plataforma **HPE‑IA** e demais sistemas homologados deve estar em conformidade com o **Código de Ética e Conduta dos Colaboradores**, a **Política de Privacidade e Proteção de Dados Pessoais**, a **Política de Segurança da Informação**, bem como demais políticas internas da HPE.
+
+      ### ✅ **É permitido utilizar a IA para:**  
+
+      - Apoiar a criação de conteúdos (e‑mails, relatórios, apresentações, documentos técnicos etc.).  
+      - Otimizar tarefas administrativas, revisão textual, traduções e análise de dados.  
+      - Explorar soluções e conceitos inovadores relacionados ao setor automotivo.  
+      - Desenvolver ideias e realizar simulações a fim de obter melhorias em processos.  
+      - Apoiar capacitação interna, mediante uso da IA para simulação de cenários e aprendizado.  
+      - Auxiliar na tomada de decisões, **desde que** haja validação humana e supervisão técnica apropriada.  
+
+      ### ❌ **É expressamente proibido:**  
+
+      - Utilizar IA que viole leis de direitos autorais ou a Lei da Propriedade Industrial (Lei nº 9.279/1996).  
+      - Tomar decisões automatizadas com impacto financeiro, jurídico, regulatório ou operacional **sem** revisão humana.  
+
+      ---  
+
+      ## ✅ 8.1 **Responsabilidade dos Usuários**  
+
+      O uso de ferramentas de IA generativa exige que o usuário atue com responsabilidade e integridade. Cabe ao usuário interpretar criticamente as informações geradas, revisar seu conteúdo e garantir sua precisão, relevância e conformidade com as diretrizes institucionais.
+
+      - **Explicar e justificar** qualquer resultado impreciso, validando criticamente o conteúdo antes de utilizá‑lo, mitigando “alucinações”.  
+      - **Validar criticamente** o conteúdo gerado antes de utilizá‑lo.  
+      - **Revisar o conteúdo** para garantir que não contenha elementos discriminatórios (raça, cor, religião, sexo, nacionalidade, idade, deficiência, estado civil, filiação política, orientação sexual ou qualquer forma de discriminação vedada por lei).  
+      - **Reportar** incidentes de segurança, dúvidas, usos indevidos ou vazamento de informações à área de Segurança da Informação **imediatamente** via **incidentes@hpeautos.com.br**.  
+
+      ---  
+
+      ## 🔐 9. **Segurança da Informação**  
+
+      A área de **Segurança da Informação** da HPE atuará na proteção dos sistemas e dados corporativos, além de gerenciar incidentes de segurança da informação e garantir controles adequados para a cibersegurança.  
+
+      ---  
+
+      ## 💾 10. **Armazenamento e Retenção de Dados**  
+
+      Com o objetivo de garantir a segurança da informação, a privacidade e a conformidade com legislações aplicáveis, todas as interações realizadas com as ferramentas de Inteligência Artificial generativa, por meio dos sistemas homologados pelo Comitê de IA, estarão sujeitas às seguintes diretrizes de **temporalidade e retenção de dados**:
+
+      - **Retenção de Dados** – As informações inseridas e geradas durante o uso das plataformas de IA serão armazenadas **temporariamente**, apenas pelo tempo estritamente necessário para cumprir a finalidade da interação.  
+      - **Prazo de Retenção** – O prazo pode variar conforme a arquitetura, configuração e política de armazenamento adotada por cada modelo ou sistema. Quando possível, a HPE adotará medidas para limitar a retenção ao mínimo necessário, promovendo a eliminação automática dos registros após seu uso.  
+      - **Exceções e Auditoria** – Em casos de auditoria, análise de segurança ou investigação formal, os dados poderão ser preservados por período superior, conforme determinação legal ou regulatória, sempre mediante **autorização expressa** das diretorias envolvidas no Comitê de IA.  
+
+      ---  
+
+      ## 📈 11. **Monitoramento, Auditoria e Penalidades**  
+
+      A HPE poderá **monitorar** o uso das ferramentas de IA com fins de auditoria, segurança e conformidade com normas e políticas internas.  
+
+      > **Sanções**  
+      > Violação desta política pode acarretar **advertências, suspensão do contrato de trabalho, demissão** (com ou sem justa causa) e/ou responsabilização **civil, administrativa e/ou criminal**, conforme a gravidade do caso.  
+
+      ---  
+
+      ## 📖 12. **Referências**  
+
+      - ISO/IEC 27001:2022 – Sistema de Gestão de Segurança da Informação  
+      - ISO/IEC 42001:2023 – Sistema de Gestão de IA  
+      - Lei Geral de Proteção de Dados (LGPD – Lei nº 13.709/2018)  
+      - Regulamento (EU) 224/1689, (“IA Act”), de 13 de junho 2024  
+
+      ---  
+
+      ## 🔄 13. **Atualizações**  
+
+      Esta política poderá ser **atualizada** sempre que houver mudanças em regulamentações, avanços tecnológicos ou alterações nas necessidades e diretrizes da organização.  
+
+      ---  
+
+      ## 📂 14. **Controle do Documento**  
+
+      | 📄 **Revisão** | 📅 **Data de Publicação** | 🛠️ **Alterações** |
+      |----------------|---------------------------|-------------------|
+      | 00 | 16/09/2025 | Publicação |
+      | 01 | 06/10/2025 | Atualização |
+
+      ---  
+
+      ## 📋 15. **Níveis de Aprovação**  
+
+      | 🏷️ **Nível de Aprovação** | 👤 **Nome** | 📂 **Área / Função** |
+      |----------------------------|-------------|----------------------|
+      | **Elaborador(es)** | Camila Reis Ferreira | Compliance e Privacidade de Dados |
+      |  | Everton da Silva Barbosa | Compliance e Privacidade de Dados |
+      |  | Janaina Selvino G. Siqueira | Compliance e Privacidade de Dados |
+      |  | João Emmanuel L. de Oliveira | Compliance e Privacidade de Dados |
+      |  | Gustavo Casadei Bellanda | Tecnologia e Inovação |
+      |  | Victor Hugo Silvino C. da Silva | Tecnologia e Inovação |
+      | **Aprovador(es)** | Ailton Coimbra Bonfim | Jurídico |
+      |  | Eduardo Mauricio Zalamena | Tecnologia e Inovação |
+      |  | Felipe Frota. de A. Koury | Jurídico |
+      |  | Letícia Gonçalves Borges | Gente & Gestão |
+      |  | Mauro Luís Correia | Presidência |
+      |  | Naasson Carlos de Almeida | Gente & Gestão |
+      | **Homologadora** | Fabiola Fernandes Barbosa | Sistema de Gestão Lean |
+
+      ---  
+
+      *Esta política entra em vigor a partir da data de sua publicação e deverá ser divulgada a todos os usuários e partes interessadas.*
+
+  endpointsMenu: true
+  modelSelect: true
+  # Lista plana de modelos (sem agrupar por provedor). Use true para agrupar por OpenAI, Google, etc.
+  groupModelsByEndpoint: false
+  parameters: true
+  sidePanel: true
+  presets: true
+  prompts: true
+  bookmarks: true
+  multiConvo: true
+  peoplePicker:
+    users: true
+    groups: true
+    roles: true
+  marketplace:
+    use: true
+  fileCitations: true
+
+# Example Balance settings
+balance:
+  enabled: true
+  startBalance: 1000000
+  autoRefillEnabled: false
+  refillIntervalValue: 1
+  refillIntervalUnit: 'days'
+  refillAmount: 20000
+
+# Example Actions Object Structure
+actions:
+  allowedDomains:
+    - 'http://localhost:3080'
+    - 'https://ia.hpeautos.com.br'
+    - 'http://ascatorg115:8080'
+    - 'http://host.docker.internal:8000'
+    - 'http://host.docker.internal:15785'
+    - 'https://brasilapi.com.br'
+    - 'https://hpeautos.my.salesforce.com'
+    - 'swapi.dev'
+    - 'librechat.ai'
+    - 'google.com'
+    - 'https://wscoredev.mmcb.com.br'
+    - 'https://wscore.mmcb.com.br'
+    - 'https://dpo.privacytools.com.br'
+
+# mcpServers:
+#   ask_polars:
+#     command: npx
+#     args:
+#       - mcp-remote
+#       - 'https://mcp.polars.workers.dev/sse'
+
+fileConfig:
+  # Global file size limit
+  serverFileSizeLimit: 256 # 256MB maximum per file
+
+  # Avatar specific
+  avatarSizeLimit: 2 # 2MB for avatars
+
+  endpoints:
+    assistants:
+      fileLimit: 5 # Maximum 5 files per upload
+      fileSizeLimit: 256 # Each file up to 256MB
+      totalSizeLimit: 512 # Total maximum 512MB per upload
+
+    default:
+      fileLimit: 5 # Maximum 5 files per upload
+      fileSizeLimit: 256 # Each file up to 256MB
+      totalSizeLimit: 512 # Total maximum 512MB per upload
+
+# OCR Configuration (para "Upload as Text")
+# Explicitamente excluindo Excel do OCR para usar processamento normal
+ocr:
+  mistralModel: 'mistral-ocr-latest'
+  apiKey: '${MISTRAL_API_KEY}'
+  baseURL: 'https://api.mistral.ai/v1'
+  strategy: 'mistral_ocr'
+
+# Definition of custom endpoints
+endpoints:
+  all:
+    promptPrefix: |
+      📚 Prompt de Estilo Padrão
+      Emojis: Normalmente, use‑os apenas nos cabeçalhos e talvez subitítulos (ex.: # 🚀 Título).
+      Markdown: aplique listas, tabelas ou blocos de código somente quando melhorar a clareza da resposta.
+      Concisão: Sua concisão padrão, com a qual foi treinado.
+      Prioridade: memórias ou preferências do usuário sempre prevalecem sobre estas instruções.
+      Fallback: se não houver preferência explícita, siga este padrão ou o que achar melhor para o prompt do usuário.
+
+  openAI:
+    titleConvo: true
+    titleModel: 'gpt-5-nano-no-reasoning'
+
+  google:
+    titleConvo: true
+    titleModel: 'gemini-2.5-flash-lite'
+
+  anthropic:
+    titleConvo: true
+    titleModel: 'claude-haiku-4-5'
+
+  azureOpenAI:
+    titleModel: 'gpt-5-nano-no-reasoning'
+    titleConvo: true
+
+    groups:
+      # GPT-5.2 Medium
+      - group: 'gpt-5.2-medium'
+        apiKey: '${AZURE_API_KEY}'
+        instanceName: 'ai-foundry-hpe-resource'
+        deploymentName: 'gpt-5.2'
+        version: '2025-01-01-preview'
+        models:
+          'gpt-5.2-medium': true
+        addParams:
+          useResponsesApi: true
+          reasoning:
+            effort: 'medium'
+            summary: 'detailed'
+
+      # GPT-5.2 XHigh
+      - group: 'gpt-5.2-xhigh'
+        apiKey: '${AZURE_API_KEY}'
+        instanceName: 'ai-foundry-hpe-resource'
+        deploymentName: 'gpt-5.2'
+        version: '2025-01-01-preview'
+        models:
+          'gpt-5.2-xhigh': true
+        addParams:
+          useResponsesApi: true
+          reasoning:
+            effort: 'xhigh'
+            summary: 'detailed'
+
+      # GPT-5.2 Codex
+      - group: 'gpt-5.2-codex-xhigh'
+        apiKey: '${AZURE_API_KEY}'
+        instanceName: 'ai-foundry-hpe-resource'
+        deploymentName: 'gpt-5.2-codex'
+        version: '2025-01-01-preview'
+        models:
+          'gpt-5.2-codex-xhigh': true
+        addParams:
+          useResponsesApi: true
+          reasoning:
+            effort: 'xhigh'
+            summary: 'detailed'
+
+  agents:
+    # LibreChat Interface Creation Agents
+    recursionLimit: 20
+    maxRecursionLimit: 50
+    disableBuilder: false
+    maxCitations: 20 # Maximum total citations in responses (1-50)
+    maxCitationsPerFile: 10 # Maximum citations from each file (1-10)
+    capabilities:
+      [
+        'execute_code',
+        'file_search',
+        'actions',
+        'tools',
+        'artifacts',
+        'context',
+        'ocr',
+        'chain',
+        'web_search',
+      ]
+
+  custom:
+    - name: 'OpenAI (Open Source Models)'
+      apiKey: '${GROQ_API_KEY}'
+      baseURL: 'https://api.groq.com/openai/v1/'
+      iconURL: '/assets/openai.svg'
+      addParams:
+        include_reasoning: true
+        reasoning_effort: 'high'
+        temperature: 1.0
+        top_p: 1.0
+        max_completion_tokens: 32768
+
+      models:
+        default: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b']
+        fetch: false
+
+      titleConvo: true
+      titleModel: 'openai/gpt-oss-20b'
+
+      tokenConfig:
+        'openai/gpt-oss-120b':
+          context: 131072
+          prompt: 0.15
+          completion: 0.75
+        'openai/gpt-oss-20b':
+          context: 131072
+          prompt: 0.1
+          completion: 0.5
+
+    # - name: 'Meta'
+    #   apiKey: '${GROQ_API_KEY}'
+    #   baseURL: 'https://api.groq.com/openai/v1/'
+    #   iconURL: '/assets/meta.png'
+    #   addParams:
+    #     temperature: 0.1
+    #     top_p: 0.9
+    #     frequency_penalty: 0.1
+    #     presence_penalty: 0.05
+    #     maxTokens: 8192
+    #   models:
+    #     default:
+    #       [
+    #         'meta-llama/llama-4-maverick-17b-128e-instruct',
+    #         'meta-llama/llama-4-scout-17b-16e-instruct',
+    #       ]
+    #     fetch: false
+    #   titleConvo: true
+    #   titleModel: 'meta-llama/llama-4-maverick-17b-128e-instruct'
+    #   tokenConfig:
+    #     'meta-llama/llama-4-maverick-17b-128e-instruct':
+    #       context: 131072
+    #       prompt: 0.2
+    #       completion: 0.6
+    #     'meta-llama/llama-4-scout-17b-16e-instruct':
+    #       context: 131072
+    #       prompt: 0.11
+    #       completion: 0.34
+
+    - name: 'xai'
+      apiKey: '${XAI_API_KEY}'
+      baseURL: 'https://api.x.ai/v1'
+      models:
+        # Modelos padrão (pode ser ajustado conforme a necessidade)
+        default:
+          - 'grok-4-1-fast-reasoning' # Raciocínio avançado a baixo custo
+          - 'grok-code-fast-1' # Código rápido e barato
+        fetch: false # Não buscar modelos dinamicamente
+      titleConvo: true # Usa título da conversa como sugestão de modelo
+      titleModel: 'grok-4-1-fast-reasoning' # Modelo usado para gerar títulos de conversa
+      modelDisplayLabel: 'Grok' # Rótulo genérico exibido na UI
+      tokenConfig:
+        'grok-4-1-fast-reasoning':
+          context: 2000000 # Janela de contexto de 2 M tokens
+          prompt: 0.2
+          completion: 0.5
+        'grok-code-fast-1':
+          context: 1000000 # Janela de contexto de 256 K tokens
+          prompt: 0.2
+          completion: 1.5
+
+    # # Custom langchain Agents, google-adk Agents and openai-agents Agents
+    # - name: 'HPEAgents'
+    #   apiKey: 'not-required'
+    #   baseURL: 'http://localhost:8073/v1'
+    #   # baseURL: 'http://localhost:8000/v1'
+    #   models:
+    #     default: ['langchain-weather-agent', 'langchain-web-search-agent']
+    #     fetch: true
+    #   # Title
+    #   titleConvo: false
+    #   titleModel: 'langchain-weather-agent'
+    #   # Token Config
+    #   tokenConfig:
+    #     'langchain-weather-agent':
+    #       context: 8000
+    #       prompt: 0.0005
+    #       completion: 0.001
+
+    # # DEEPSEEK
+    # - name: 'deepseek'
+    #   # Basic Info:
+    #   # https://api-docs.deepseek.com/quick_start/pricing
+    #   apiKey: '${DEEPSEEK_API_KEY}'
+    #   baseURL: 'https://api.deepseek.com/v1'
+    #   # Models:
+    #   models:
+    #     default: ['deepseek-chat', 'deepseek-reasoner']
+    #     fetch: true
+    #   # Title
+    #   titleConvo: true
+    #   titleModel: 'deepseek-chat'
+    #   # Token Config
+    #   tokenConfig:
+    #     'deepseek-chat':
+    #       context: 64000
+    #       prompt: 0.001
+    #       completion: 0.002
+    #     'deepseek-reasoner':
+    #       context: 64000
+    #       prompt: 0.001
+    #       completion: 0.002
+
+    # # NVIDIA NIM
+    # - name: 'NVIDIA'
+    #   # Basic Info:
+    #   # https://build.nvidia.com/
+    #   apiKey: '${NVIDIA_NIM_API_KEY}'
+    #   baseURL: 'https://integrate.api.nvidia.com/v1'
+    #   iconURL: 'https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg'
+    #   # Models:
+    #   models:
+    #     default: ['qwen/qwen3-235b-a22b', 'nvidia/llama-3.1-nemotron-ultra-253b-v1']
+    #     fetch: false
+    #   # Title
+    #   titleConvo: true
+    #   titleModel: 'qwen/qwen3-235b-a22b'
+    #   # Token Config
+    #   tokenConfig:
+    #     'qwen/qwen3-235b-a22b': # https://build.nvidia.com/nvidia/llama-3_1-nemotron-ultra-253b-v1
+    #       context: 128000
+    #       prompt: 0.001
+    #       completion: 0.002
+    #     'nvidia/llama-3.1-nemotron-ultra-253b-v1': # https://build.nvidia.com/qwen/qwen3-235b-a22b
+    #       context: 128000
+    #       prompt: 0.001
+    #       completion: 0.002
+
+    # - name: 'deepseek'
+    #   apiKey: '${FIREWORKS_API_KEY}'
+    #   baseURL: 'https://api.fireworks.ai/inference/v1'
+    #   iconURL: '/assets/deepseek.svg'
+    #   addParams:
+    #     temperature: 0.1
+    #     top_p: 0.9
+    #     frequency_penalty: 0.1
+    #     presence_penalty: 0.05
+    #     maxTokens: 32000
+    #   models:
+    #     default:
+    #       ['accounts/fireworks/models/deepseek-v3p1', 'accounts/fireworks/models/gpt-oss-20b']
+    #     fetch: false
+    #   titleConvo: true
+    #   titleModel: 'accounts/fireworks/models/gpt-oss-20b'
+    #   tokenConfig:
+    #     'accounts/fireworks/models/deepseek-v3p1':
+    #       context: 159000
+    #       prompt: 0.56
+    #       completion: 1.68
+    #     'accounts/fireworks/models/gpt-oss-20b':
+    #       context: 131072
+    #       prompt: 0.1
+    #       completion: 0.5
+
+    # - name: 'Z.ai'
+    #   apiKey: '${FIREWORKS_API_KEY}'
+    #   baseURL: 'https://api.fireworks.ai/inference/v1'
+    #   iconURL: '/assets/zai.svg'
+    #   addParams:
+    #     temperature: 0.1
+    #     top_p: 0.9
+    #     frequency_penalty: 0.1
+    #     presence_penalty: 0.05
+    #     maxTokens: 32000
+    #   models:
+    #     default: [
+    #         # GLM
+    #         'accounts/fireworks/models/glm-4p5',
+    #         'accounts/fireworks/models/gpt-oss-20b',
+    #       ]
+    #     fetch: false
+    #   titleConvo: true
+    #   titleModel: 'accounts/fireworks/models/gpt-oss-20b'
+    #   tokenConfig:
+    #     'accounts/fireworks/models/glm-4p5':
+    #       context: 160000
+    #       prompt: 0.55
+    #       completion: 2.19
+    #     'accounts/fireworks/models/gpt-oss-20b':
+    #       context: 131072
+    #       prompt: 0.1
+    #       completion: 0.5
+
+    # - name: 'Chutes'
+    #   apiKey: '${CHUTES_API_KEY}'
+    #   baseURL: 'https://llm.chutes.ai/v1'
+    #   iconURL: '/assets/moonshotai.png'
+    #   addParams:
+    #     temperature: 0.7
+    #     maxTokens: 32000
+    #     reasoning_effort: 'high'
+    #   models:
+    #     default: [
+    #         # Kimi K2
+    #         'moonshotai/Kimi-K2-Thinking',
+    #         'moonshotai/Kimi-K2-Instruct-0905',
+    #       ]
+    #     fetch: false
+    #   titleConvo: false
+    #   # titleModel:
+    #   tokenConfig:
+    #     'moonshotai/Kimi-K2-Thinking':
+    #       context: 260000
+    #       prompt: 0.6
+    #       completion: 2.5
+    #     'moonshotai/Kimi-K2-Instruct-0905':
+    #       context: 260000
+    #       prompt: 0.6
+    #       completion: 2.5
+
+    # - name: 'MoonshotAI'
+    #   apiKey: '${FIREWORKS_API_KEY}'
+    #   baseURL: 'https://api.fireworks.ai/inference/v1'
+    #   iconURL: '/assets/moonshotai.png'
+    #   addParams:
+    #     temperature: 0.7
+    #     maxTokens: 32000
+    #     reasoning_effort: 'high'
+    #   models:
+    #     default: [
+    #         # Kimi K2
+    #         'accounts/fireworks/models/kimi-k2-thinking',
+    #         'accounts/fireworks/models/gpt-oss-120b',
+    #         'accounts/fireworks/models/gpt-oss-20b',
+    #       ]
+    #     fetch: false
+    #   titleConvo: true
+    #   titleModel: 'accounts/fireworks/models/gpt-oss-20b'
+    #   tokenConfig:
+    #     'accounts/fireworks/models/kimi-k2-thinking':
+    #       context: 260000
+    #       prompt: 0.6
+    #       completion: 2.5
+    #     'accounts/fireworks/models/gpt-oss-120b':
+    #       context: 131072
+    #       prompt: 0.15
+    #       completion: 0.6
+    #     'accounts/fireworks/models/gpt-oss-20b':
+    #       context: 131072
+    #       prompt: 0.07
+    #       completion: 0.3
+
+    # - name: 'Alibaba'
+    #   apiKey: '${FIREWORKS_API_KEY}'
+    #   baseURL: 'https://api.fireworks.ai/inference/v1'
+    #   iconURL: '/assets/alibaba.png'
+    #   addParams:
+    #     temperature: 0.1
+    #     top_p: 0.9
+    #     frequency_penalty: 0.1
+    #     presence_penalty: 0.05
+    #     maxTokens: 32000
+    #   models:
+    #     default: [
+    #         # Qwen
+    #         'accounts/fireworks/models/qwen3-235b-a22b-instruct-2507',
+    #         'accounts/fireworks/models/qwen3-235b-a22b-thinking-2507',
+    #         'accounts/fireworks/models/qwen3-coder-480b-a35b-instruct',
+    #         'accounts/fireworks/models/gpt-oss-20b',
+    #       ]
+    #     fetch: false
+    #   titleConvo: true
+    #   titleModel: 'accounts/fireworks/models/gpt-oss-20b'
+    #   tokenConfig:
+    #     'accounts/fireworks/models/qwen3-235b-a22b-instruct-2507':
+    #       context: 128000
+    #       prompt: 0.22
+    #       completion: 0.88
+    #     'accounts/fireworks/models/qwen3-235b-a22b-thinking-2507':
+    #       context: 255000
+    #       prompt: 0.22
+    #       completion: 0.88
+    #     'accounts/fireworks/models/qwen3-coder-480b-a35b-instruct':
+    #       context: 255000
+    #       prompt: 0.45
+    #       completion: 1.8
+    #     'accounts/fireworks/models/gpt-oss-20b':
+    #       context: 131072
+    #       prompt: 0.1
+    #       completion: 0.5
+
+memory:
+  disabled: false
+  validKeys: [
+      'hpe_profile', # Quem é o colaborador na estrutura (Nome, Cargo, Área, Unidade: Catalão/SP)
+      'corporate_context', # Regras macro da HPE, Compliance, Siglas da Montadora, Políticas
+      'dept_business_rules', # Regras específicas da área (Industrial, Jurídico, Pós-Venda, Mkt)
+      'comm_style_email', # Estilos de E-mail (Formal, Interno, Fornecedores, Assinaturas)
+      'workflow_tools', # Ferramentas de trabalho (SAP, Salesforce, Python, Excel, Jira)
+      'active_priorities', # O que é urgente agora para este colaborador
+    ]
+  tokenLimit: 4000
+  personalize: true
+  messageWindowSize: 10
+  agent:
+    provider: 'xai'
+    model: 'grok-4-1-fast-reasoning'
+
+    instructions: |
+      You are the Official Enterprise Memory System for HPE Automotores do Brasil (Mitsubishi Motors).
+      Your primary mandate is to ensure business continuity, professional consistency, and alignment with company standards across ALL departments.
+
+      ## 🏢 HIERARCHY OF IMPORTANCE (STRICT ORDER):
+
+      ### 1. 🏭 THE AUTOMAKER (HPE/MITSUBISHI) COMES FIRST
+      - Prioritize information that affects the company's integrity or operations.
+      - Store terminology specific to the automotive industry (e.g., CKD, SKD, PDI, Recall, Warranty).
+      - If a user defines a "Company Policy" or "Standard Procedure", this is the highest priority memory.
+
+      ### 2. 📧 COMMUNICATION & EMAIL STANDARDS (HIGH PRIORITY)
+      - **Crucial:** Capture the user's specific voice for emails.
+      - Differentiate contexts:
+        - *Internal (Peers):* Casual/Direct?
+        - *Executive (Upward):* Concise, KPI-focused?
+        - *External (Suppliers/Dealers):* Formal, Documented?
+      - Store signature preferences and greetings.
+
+      ### 3. 📂 DEPARTMENTAL CONTEXT (DOMAIN AGNOSTIC)
+      - Identify the department immediately and adapt storage logic:
+        - **Industrial/Production:** Store Shift times, Line metrics, Safety (CIPA/SESMT) rules.
+        - **Commercial/Sales:** Store Dealer codes, Region definitions, Sales targets.
+        - **Finance/Fiscal:** Store Tax codes, Cost Centers, Approval limits.
+        - **Legal:** Store Clause preferences, Contract types, Deadlines.
+        - **IT/Tech:** (Only here) Store Stacks, Architecture, Deploy rules.
+
+      ### 4. 🛠️ TOOLS & PREFERENCES (OPERATIONAL)
+      - Only after understanding the business context, store the *how*.
+      - Examples: "User prefers Excel for Finance", "User uses Python for Data", "User uses SAP T-Codes".
+
+      ## 🧠 STORAGE TRIGGER EXAMPLES:
+
+      #### ✅ SAVE (Permanent Business Value):
+      - "In emails to MMC Japan, always use very formal English and apologize for delays." -> `comm_style_email`
+      - "The Catalão plant shuts down for maintenance in July." -> `corporate_context`
+      - "For Warranty claims, we only accept photos in JPG format." -> `dept_business_rules`
+      - "My job title is Dealer Network Manager." -> `hpe_profile`
+
+      #### ❌ DO NOT SAVE (Transient/Sensitive):
+      - "Draft an email for John about lunch." (Too casual)
+      - "Here is the password for the SAP user." (SECURITY VIOLATION - IGNORE)
+      - "Use a blue background for this specific chart." (One-off formatting)
+
+      ## ⚠️ SAFETY & COMPLIANCE:
+      - strictly ignore PII (CPF, RG) and Sensitive Financial Data (Credit Card, Raw Bank Info).
+      - Maintain professional distance. This is a work tool.
+
+    model_parameters:
+      reasoning_effort: 'medium'
+      temperature: 0.15 # Baixa para manter o tom corporativo e evitar invenções.
+      max_tokens: 1500
+
+webSearch:
+  # Search Provider Configuration
+  serperApiKey: '${SERPER_API_KEY}' # ✅ Correct: Using environment variable name
+  # serperApiKey: "sk-123..."               # ❌ Wrong: Never put actual API keys here
+
+  # Scraper Configuration
+  firecrawlApiKey: '${FIRECRAWL_API_KEY}'
+  # firecrawlApiKey: "fc-123..."            # ❌ Wrong: Never put actual API keys here
+
+  # Reranker Configuration
+  jinaApiKey: '${JINA_API_KEY}'
+
+  searchProvider: 'serper' # Only use Serper for search
+  scraperType: 'firecrawl' # Only use Firecrawl for scraping
+  rerankerType: 'jina' # Only use Jina for reranking
+

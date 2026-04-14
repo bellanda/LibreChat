@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Maximize2 } from 'lucide-react';
+import { Button, OGDialog, OGDialogContent } from '@librechat/client';
 import { FileSources } from 'librechat-data-provider';
-import { OGDialog, OGDialogContent } from '@librechat/client';
+import { Maximize2, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { cn } from '~/utils';
 import ProgressCircle from './ProgressCircle';
 import SourceIcon from './SourceIcon';
-import { cn } from '~/utils';
 
 type styleProps = {
   backgroundImage?: string;
@@ -12,11 +12,6 @@ type styleProps = {
   backgroundPosition?: string;
   backgroundRepeat?: string;
 };
-
-interface CloseModalEvent {
-  stopPropagation: () => void;
-  preventDefault: () => void;
-}
 
 const ImagePreview = ({
   imageBase64,
@@ -35,53 +30,56 @@ const ImagePreview = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [previousActiveElement, setPreviousActiveElement] = useState<Element | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const openModal = useCallback(() => {
-    setPreviousActiveElement(document.activeElement);
     setIsModalOpen(true);
   }, []);
 
-  const closeModal = useCallback(
-    (e: CloseModalEvent): void => {
-      setIsModalOpen(false);
-      e.stopPropagation();
-      e.preventDefault();
+  const handleOpenChange = useCallback((open: boolean) => {
+    setIsModalOpen(open);
+    if (!open && triggerRef.current) {
+      requestAnimationFrame(() => {
+        triggerRef.current?.focus({ preventScroll: true });
+      });
+    }
+  }, []);
 
-      if (
-        previousActiveElement instanceof HTMLElement &&
-        !previousActiveElement.closest('[data-skip-refocus="true"]')
-      ) {
-        previousActiveElement.focus();
+  // Handle click on background areas to close (only if clicking the overlay/content directly)
+  const handleBackgroundClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target === e.currentTarget) {
+        handleOpenChange(false);
       }
     },
-    [previousActiveElement],
-  );
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeModal(e);
-      }
-    },
-    [closeModal],
+    [handleOpenChange],
   );
 
   useEffect(() => {
     if (isModalOpen) {
-      document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
-      const closeButton = document.querySelector('[aria-label="Close full view"]') as HTMLElement;
-      if (closeButton) {
-        setTimeout(() => closeButton.focus(), 0);
-      }
+    } else {
+      document.body.style.overflow = 'unset';
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [isModalOpen, handleKeyDown]);
+  }, [isModalOpen]);
+
+  // Handle escape key
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleOpenChange(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isModalOpen, handleOpenChange]);
 
   const baseStyle: styleProps = {
     backgroundSize: 'cover',
@@ -93,9 +91,9 @@ const ImagePreview = ({
 
   const style: styleProps = imageUrl
     ? {
-        ...baseStyle,
-        backgroundImage: `url(${imageUrl})`,
-      }
+      ...baseStyle,
+      backgroundImage: `url(${imageUrl})`,
+    }
     : baseStyle;
 
   if (typeof style.backgroundImage !== 'string' || style.backgroundImage.length === 0) {
@@ -111,23 +109,25 @@ const ImagePreview = ({
 
   return (
     <>
-      <div
-        className={cn('relative size-14 rounded-xl', className)}
+      <button
+        ref={triggerRef}
+        type="button"
+        className={cn(
+          'relative size-14 overflow-hidden rounded-xl transition-shadow',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface-primary',
+          className,
+        )}
+        style={style}
+        aria-label={`View ${alt} in full size`}
+        aria-haspopup="dialog"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openModal();
+        }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <button
-          type="button"
-          className="size-full overflow-hidden rounded-xl"
-          style={style}
-          aria-label={`View ${alt} in full size`}
-          aria-haspopup="dialog"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            openModal();
-          }}
-        />
         {progress < 1 ? (
           <ProgressCircle
             circumference={circumference}
@@ -156,19 +156,45 @@ const ImagePreview = ({
           </div>
         )}
         <SourceIcon source={source} aria-label={source ? `Source: ${source}` : undefined} />
-      </div>
+      </button>
 
-      <OGDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <OGDialog open={isModalOpen} onOpenChange={handleOpenChange}>
         <OGDialogContent
           showCloseButton={false}
-          className="w-11/12 overflow-x-auto bg-transparent p-0 sm:w-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center outline-none bg-black/90 p-0"
           disableScroll={false}
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            closeButtonRef.current?.focus();
+          }}
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            triggerRef.current?.focus();
+          }}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onClick={handleBackgroundClick}
         >
-          <img
-            src={imageUrl}
-            alt={alt}
-            className="max-w-screen h-full max-h-screen w-full object-contain"
-          />
+          {/* Close button */}
+          <Button
+            ref={closeButtonRef}
+            onClick={() => handleOpenChange(false)}
+            variant="ghost"
+            className="absolute right-4 top-4 z-20 h-10 w-10 p-0 text-white hover:bg-white/10"
+            aria-label="Close"
+          >
+            <X className="size-5" aria-hidden="true" />
+          </Button>
+
+          {/* Image container */}
+          <div onClick={(e) => e.stopPropagation()}>
+            <img
+              ref={imageRef}
+              src={imageUrl}
+              alt={alt}
+              className="max-h-[85vh] max-w-[90vw] object-contain"
+              draggable={false}
+            />
+          </div>
         </OGDialogContent>
       </OGDialog>
     </>

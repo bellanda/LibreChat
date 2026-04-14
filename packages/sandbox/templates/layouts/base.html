@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        {% block theme_vars %}
+        :root {
+            --primary: #0F2D5C;
+            --secondary: #1D4E89;
+            --accent: #A92525;
+            --accent-light: #A94545;
+            --success: #166534;
+            --text: #475569;
+            --muted: #94A3B8;
+            --bg-light: #F5F7FB;
+        }
+        {% endblock %}
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+            color: var(--text);
+            font-size: 11pt;
+            line-height: 1.6;
+        }
+
+        @page {
+            size: A4;
+            margin: 40mm 20mm 30mm 20mm;
+        }
+
+        .document { position: relative; }
+
+        /* ── Header ── */
+        .header {
+            border-bottom: 4px solid var(--accent);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .title { color: var(--primary); font-size: 28pt; font-weight: bold; margin-bottom: 8px; }
+        .subtitle { color: var(--secondary); font-size: 14pt; margin-bottom: 12px; }
+        .metadata { display: flex; gap: 20px; font-size: 10pt; color: var(--muted); margin-top: 12px; }
+        .metadata-item { display: inline-block; }
+        .metadata-item strong { color: var(--text); margin-right: 4px; }
+        .classification-badge {
+            display: inline-block;
+            background-color: var(--accent); color: white;
+            padding: 4px 12px; border-radius: 3px;
+            font-weight: bold; font-size: 10pt; margin-left: 10px;
+        }
+
+        /* ── Abstract / Summary box ── */
+        .abstract {
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--primary);
+            padding: 15px; margin-bottom: 20px; border-radius: 2px;
+        }
+        .abstract-title { color: var(--primary); font-weight: bold; margin-bottom: 8px; font-size: 11pt; }
+        .abstract-content { color: var(--text); font-size: 10pt; line-height: 1.5; }
+
+        /* ── KPI Grid ── */
+        .kpi-grid { display: table; width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+        .kpi-row { display: table-row; }
+        .kpi-card {
+            display: table-cell; width: 25%;
+            background-color: var(--bg-light); border: 1px solid #E2E8F0;
+            padding: 15px; text-align: center; vertical-align: middle;
+        }
+        .kpi-value { color: var(--primary); font-size: 20pt; font-weight: bold; margin-bottom: 5px; }
+        .kpi-label { color: var(--muted); font-size: 10pt; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-delta { color: var(--success); font-size: 9pt; font-weight: bold; margin-top: 5px; }
+        .kpi-delta.negative { color: var(--accent); }
+
+        /* ── Sections ── */
+        section { margin-bottom: 25px; page-break-inside: avoid; }
+        section.page-break { page-break-before: always; }
+        .section-title {
+            color: var(--primary); font-size: 16pt; font-weight: bold;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 8px; margin-bottom: 15px;
+        }
+        .section-subtitle {
+            color: var(--secondary); font-size: 13pt; font-weight: bold;
+            margin-bottom: 10px; margin-top: 15px;
+        }
+
+        /* ── Tables ── */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th {
+            background-color: var(--primary); color: white;
+            padding: 10px; text-align: left; font-weight: bold;
+            font-size: 10pt; border: 1px solid var(--primary);
+        }
+        td { padding: 8px 10px; border: 1px solid #E2E8F0; font-size: 10pt; }
+        tr:nth-child(even) { background-color: #F9FAFC; }
+        tr:nth-child(odd) { background-color: white; }
+
+        /* ── Charts / Images ── */
+        img { max-width: 100%; height: auto; margin-bottom: 15px; }
+        .chart-container { text-align: center; margin: 20px 0; }
+        .chart-title { color: var(--text); font-weight: bold; font-size: 11pt; margin-bottom: 10px; }
+
+        /* ── Typography ── */
+        p { margin-bottom: 12px; text-align: justify; }
+        p.lead { font-size: 12pt; font-weight: 500; color: var(--secondary); margin-bottom: 15px; }
+        ul, ol { margin-left: 20px; margin-bottom: 12px; }
+        li { margin-bottom: 6px; }
+
+        /* ── Tutorial / Onboarding: Steps ── */
+        .steps { margin-bottom: 20px; }
+        .step {
+            display: flex; gap: 15px;
+            margin-bottom: 20px; page-break-inside: avoid;
+        }
+        .step-number {
+            flex-shrink: 0;
+            width: 32px; height: 32px;
+            background-color: var(--primary); color: white;
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-weight: bold; font-size: 13pt;
+            text-align: center; line-height: 32px;
+        }
+        .step-body { flex: 1; }
+        .step-title { color: var(--primary); font-weight: bold; font-size: 12pt; margin-bottom: 6px; }
+        .step-content { color: var(--text); font-size: 10pt; margin-bottom: 8px; }
+        .code-block {
+            background-color: #1E293B; color: #E2E8F0;
+            font-family: 'Courier New', monospace; font-size: 9pt;
+            padding: 10px 14px; border-radius: 4px;
+            margin-top: 8px; white-space: pre-wrap;
+            page-break-inside: avoid;
+        }
+
+        /* ── Tips / Warnings boxes ── */
+        .tips-box {
+            background-color: #F0FDF4;
+            border-left: 4px solid var(--success);
+            padding: 12px 15px; margin-bottom: 15px; border-radius: 2px;
+        }
+        .tips-box-title { color: var(--success); font-weight: bold; margin-bottom: 8px; font-size: 10pt; }
+        .warnings-box {
+            background-color: #FFF5F5;
+            border-left: 4px solid var(--accent);
+            padding: 12px 15px; margin-bottom: 15px; border-radius: 2px;
+        }
+        .warnings-box-title { color: var(--accent); font-weight: bold; margin-bottom: 8px; font-size: 10pt; }
+
+        /* ── Priority badges ── */
+        .badge {
+            display: inline-block; padding: 2px 8px;
+            border-radius: 3px; font-size: 9pt; font-weight: bold;
+        }
+        .badge-alta  { background-color: #FEE2E2; color: var(--accent); }
+        .badge-media { background-color: #FEF9C3; color: #92400E; }
+        .badge-baixa { background-color: #DCFCE7; color: var(--success); }
+        .badge-aberta   { background-color: #DBEAFE; color: #1D4E89; }
+        .badge-fechada  { background-color: #DCFCE7; color: var(--success); }
+        .badge-pendente { background-color: #F3F4F6; color: var(--text); }
+
+        /* ── Checklist (onboarding) ── */
+        .checklist { margin-bottom: 15px; }
+        .checklist-item {
+            display: flex; gap: 10px; align-items: flex-start;
+            padding: 6px 0; border-bottom: 1px solid #F1F5F9;
+            font-size: 10pt;
+        }
+        .checklist-box {
+            flex-shrink: 0; width: 14px; height: 14px;
+            border: 2px solid var(--muted); border-radius: 2px;
+            margin-top: 2px;
+        }
+
+        /* ── Footer ── */
+        .document-footer {
+            margin-top: 40px; padding-top: 20px;
+            border-top: 1px solid #E2E8F0;
+            font-size: 9pt; color: var(--muted); text-align: center;
+        }
+
+        /* ── Utilities ── */
+        .text-center { text-align: center; }
+        .text-right  { text-align: right; }
+        .text-muted  { color: var(--muted); }
+        .text-primary { color: var(--primary); }
+        .text-accent  { color: var(--accent); }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+        .small { font-size: 9pt; }
+        .two-col {
+            display: table; width: 100%; border-collapse: collapse; margin-bottom: 15px;
+        }
+        .two-col-left  { display: table-cell; width: 50%; padding-right: 15px; vertical-align: top; }
+        .two-col-right { display: table-cell; width: 50%; padding-left: 15px; vertical-align: top; }
+    </style>
+</head>
+<body>
+<div class="document">
+
+    <!-- ── Shared header (all types) ── -->
+    <div class="header">
+        <div class="title">{{ title }}</div>
+        {% if subtitle %}<div class="subtitle">{{ subtitle }}</div>{% endif %}
+        <div class="metadata">
+            {% if date %}<div class="metadata-item"><strong>Data:</strong> {{ date }}</div>{% endif %}
+            {% if version %}<div class="metadata-item"><strong>Versão:</strong> {{ version }}</div>{% endif %}
+            {% if client %}<div class="metadata-item"><strong>Cliente:</strong> {{ client }}</div>{% endif %}
+            {% if location %}<div class="metadata-item"><strong>Local:</strong> {{ location }}</div>{% endif %}
+            {% if classification %}<span class="classification-badge">{{ classification }}</span>{% endif %}
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+         RELATORIO (default)
+         ════════════════════════════════════════════════ -->
+    {% if not document_type or document_type == "relatorio" %}
+
+        {% if executive_summary %}
+        <div class="abstract">
+            <div class="abstract-title">Resumo Executivo</div>
+            <div class="abstract-content">{{ executive_summary }}</div>
+        </div>
+        {% endif %}
+
+        {% if kpis %}
+        <div class="kpi-grid"><div class="kpi-row">
+            {% for kpi in kpis %}{% if kpi %}
+            <div class="kpi-card">
+                <div class="kpi-value">{{ kpi.value }}</div>
+                <div class="kpi-label">{{ kpi.label }}</div>
+                {% if kpi.delta %}
+                <div class="kpi-delta {% if kpi.delta.startswith('-') %}negative{% endif %}">{{ kpi.delta }}</div>
+                {% endif %}
+            </div>
+            {% endif %}{% endfor %}
+        </div></div>
+        {% endif %}
+
+        {% for section in sections|default([]) %}
+        <section {% if section.page_break %}class="page-break"{% endif %}>
+            <div class="section-title">{{ section.title }}</div>
+            {% if section.subtitle %}<div class="section-subtitle">{{ section.subtitle }}</div>{% endif %}
+            {% if section.content %}<p>{{ section.content }}</p>{% endif %}
+            {% if section.chart_path %}
+            <div class="chart-container">
+                {% if section.chart_title %}<div class="chart-title">{{ section.chart_title }}</div>{% endif %}
+                <img src="{{ section.chart_path }}" alt="Chart">
+            </div>
+            {% endif %}
+            {% if section.table %}
+            <table>
+                <thead><tr>{% for h in section.table.headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+                <tbody>{% for row in section.table.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+            </table>
+            {% endif %}
+            {% if section.bullets %}<ul>{% for b in section.bullets %}<li>{{ b }}</li>{% endfor %}</ul>{% endif %}
+        </section>
+        {% endfor %}
+
+    <!-- ════════════════════════════════════════════════
+         TUTORIAL
+         ════════════════════════════════════════════════ -->
+    {% elif document_type == "tutorial" %}
+
+        {% if summary %}
+        <div class="abstract">
+            <div class="abstract-title">Resumo</div>
+            <div class="abstract-content">{{ summary }}</div>
+        </div>
+        {% endif %}
+
+        <div class="steps">
+            {% for step in steps %}
+            <div class="step">
+                <div class="step-number">{{ loop.index }}</div>
+                <div class="step-body">
+                    <div class="step-title">{{ step.title }}</div>
+                    <div class="step-content">{{ step.content }}</div>
+                    {% if step.code %}<pre class="code-block">{{ step.code }}</pre>{% endif %}
+                    {% if step.image %}
+                    <div class="chart-container"><img src="{{ step.image }}" alt="Step {{ loop.index }}"></div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if tips %}
+        <div class="tips-box">
+            <div class="tips-box-title">Dicas</div>
+            <ul>{% for tip in tips %}<li>{{ tip }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+
+        {% if warnings %}
+        <div class="warnings-box">
+            <div class="warnings-box-title">Atenção</div>
+            <ul>{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════
+         BRAINSTORM
+         ════════════════════════════════════════════════ -->
+    {% elif document_type == "brainstorm" %}
+
+        {% if context %}
+        <div class="abstract">
+            <div class="abstract-title">Contexto</div>
+            <div class="abstract-content">{{ context }}</div>
+        </div>
+        {% endif %}
+
+        <section>
+            <div class="section-title">Ideias</div>
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Ideia</th><th>Categoria</th><th>Prioridade</th><th>Descrição</th></tr>
+                </thead>
+                <tbody>
+                    {% for idea in ideas %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ idea.title }}</strong></td>
+                        <td>{{ idea.category|default('—') }}</td>
+                        <td>
+                            {% set p = idea.priority|default('media')|lower %}
+                            <span class="badge badge-{{ p }}">{{ p|capitalize }}</span>
+                        </td>
+                        <td>{{ idea.description|default('') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        {% if next_steps %}
+        <section>
+            <div class="section-title">Próximos Passos</div>
+            <ul>{% for step in next_steps %}<li>{{ step }}</li>{% endfor %}</ul>
+        </section>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════
+         ATA
+         ════════════════════════════════════════════════ -->
+    {% elif document_type == "ata" %}
+
+        <section>
+            <div class="section-title">Participantes</div>
+            <ul>{% for person in attendees %}<li>{{ person }}</li>{% endfor %}</ul>
+        </section>
+
+        <section>
+            <div class="section-title">Decisões</div>
+            <ul>{% for d in decisions %}<li>{{ d }}</li>{% endfor %}</ul>
+        </section>
+
+        {% if action_items %}
+        <section>
+            <div class="section-title">Action Items</div>
+            <table>
+                <thead><tr><th>Tarefa</th><th>Responsável</th><th>Prazo</th></tr></thead>
+                <tbody>
+                    {% for item in action_items %}
+                    <tr>
+                        <td>{{ item.task }}</td>
+                        <td>{{ item.owner|default('—') }}</td>
+                        <td>{{ item.due|default('—') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════
+         PROPOSTA
+         ════════════════════════════════════════════════ -->
+    {% elif document_type == "proposta" %}
+
+        <section>
+            <div class="section-title">Escopo</div>
+            <p>{{ scope }}</p>
+        </section>
+
+        <section>
+            <div class="section-title">Entregas</div>
+            {% if deliverables is string %}
+            <p>{{ deliverables }}</p>
+            {% else %}
+            <ul>{% for d in deliverables %}<li>{{ d }}</li>{% endfor %}</ul>
+            {% endif %}
+        </section>
+
+        {% if pricing %}
+        <section>
+            <div class="section-title">Investimento</div>
+            {% if pricing is string %}
+            <p>{{ pricing }}</p>
+            {% else %}
+            <table>
+                <thead><tr><th>Item</th><th>Descrição</th><th>Valor</th></tr></thead>
+                <tbody>
+                    {% for item in pricing %}
+                    <tr>
+                        <td>{{ item.item }}</td>
+                        <td>{{ item.description|default('') }}</td>
+                        <td>{{ item.value }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        {% if timeline %}
+        <section>
+            <div class="section-title">Cronograma</div>
+            {% if timeline is string %}
+            <p>{{ timeline }}</p>
+            {% else %}
+            <ul>{% for item in timeline %}<li>{{ item }}</li>{% endfor %}</ul>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        {% if terms %}
+        <section>
+            <div class="section-title">Termos e Condições</div>
+            <p>{{ terms }}</p>
+        </section>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════
+         SPEC TECNICA
+         ════════════════════════════════════════════════ -->
+    {% elif document_type == "spec_tecnica" %}
+
+        <section>
+            <div class="section-title">Requisitos</div>
+            {% if requirements[0] is mapping %}
+            <table>
+                <thead><tr><th>ID</th><th>Requisito</th><th>Prioridade</th></tr></thead>
+                <tbody>
+                    {% for req in requirements %}
+                    <tr>
+                        <td>{{ req.id|default(loop.index) }}</td>
+                        <td>{{ req.description }}</td>
+                        <td>
+                            {% set p = req.priority|default('media')|lower %}
+                            <span class="badge badge-{{ p }}">{{ p|capitalize }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <ol>{% for req in requirements %}<li>{{ req }}</li>{% endfor %}</ol>
+            {% endif %}
+        </section>
+
+        {% if architecture %}
+        <section>
+            <div class="section-title">Arquitetura</div>
+            <p>{{ architecture }}</p>
+        </section>
+        {% endif %}
+
+        {% if decisions %}
+        <section>
+            <div class="section-title">Decisões de Design</div>
+            <table>
+                <thead><tr><th>Decisão</th><th>Racional</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for d in decisions %}
+                    <tr>
+                        <td>{{ d.decision }}</td>
+                        <td>{{ d.rationale|default('') }}</td>
+                        <td>
+                            {% set s = d.status|default('fechada')|lower %}
+                            <span class="badge badge-{{ s }}">{{ s|capitalize }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if open_questions %}
+        <section>
+            <div class="section-title">Questões em Aberto</div>
+            <ol>{% for q in open_questions %}<li>{{ q }}</li>{% endfor %}</ol>
+        </section>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════
+         PLANO DE PROJETO
+         ════════════════════════════════════════════════ -->
+    {% elif document_type == "plano_projeto" %}
+
+        <section>
+            <div class="section-title">Marcos do Projeto</div>
+            <table>
+                <thead><tr><th>Marco</th><th>Responsável</th><th>Data</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for m in milestones %}
+                    <tr>
+                        <td>{{ m.label }}</td>
+                        <td>{{ m.owner|default('—') }}</td>
+                        <td>{{ m.date|default('—') }}</td>
+                        <td>
+                            {% set s = m.status|default('pendente')|lower %}
+                            <span class="badge badge-{{ s }}">{{ s|capitalize }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        {% if timeline %}
+        <section>
+            <div class="section-title">Cronograma</div>
+            <p>{{ timeline }}</p>
+        </section>
+        {% endif %}
+
+        {% if raci %}
+        <section>
+            <div class="section-title">Matriz RACI</div>
+            <table>
+                <thead><tr><th>Atividade</th><th>Responsável</th><th>Aprovador</th><th>Consultado</th><th>Informado</th></tr></thead>
+                <tbody>
+                    {% for r in raci %}
+                    <tr>
+                        <td>{{ r.activity }}</td>
+                        <td>{{ r.responsible|default('—') }}</td>
+                        <td>{{ r.accountable|default('—') }}</td>
+                        <td>{{ r.consulted|default('—') }}</td>
+                        <td>{{ r.informed|default('—') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if risks %}
+        <section>
+            <div class="section-title">Riscos</div>
+            <table>
+                <thead><tr><th>Risco</th><th>Probabilidade</th><th>Impacto</th><th>Mitigação</th></tr></thead>
+                <tbody>
+                    {% for r in risks %}
+                    <tr>
+                        <td>{{ r.risk }}</td>
+                        <td>{{ r.probability|default('—') }}</td>
+                        <td>{{ r.impact|default('—') }}</td>
+                        <td>{{ r.mitigation|default('—') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════
+         ONBOARDING
+         ════════════════════════════════════════════════ -->
+    {% elif document_type == "onboarding" %}
+
+        {% if subtitle %}
+        <div class="abstract">
+            <div class="abstract-content">{{ subtitle }}</div>
+        </div>
+        {% endif %}
+
+        <section>
+            <div class="section-title">Passos de Integração</div>
+            <div class="steps">
+                {% for step in steps %}
+                <div class="step">
+                    <div class="step-number">{{ loop.index }}</div>
+                    <div class="step-body">
+                        <div class="step-title">{{ step.title }}</div>
+                        <div class="step-content">{{ step.content }}</div>
+                        {% if step.code %}<pre class="code-block">{{ step.code }}</pre>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {% if contacts %}
+        <section>
+            <div class="section-title">Contatos Importantes</div>
+            <table>
+                <thead><tr><th>Nome</th><th>Papel</th><th>Contato</th></tr></thead>
+                <tbody>
+                    {% for c in contacts %}
+                    <tr><td>{{ c.name }}</td><td>{{ c.role|default('') }}</td><td>{{ c.contact|default('') }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if resources %}
+        <section>
+            <div class="section-title">Recursos</div>
+            <ul>{% for r in resources %}<li>{{ r }}</li>{% endfor %}</ul>
+        </section>
+        {% endif %}
+
+        {% if checklist %}
+        <section>
+            <div class="section-title">Checklist</div>
+            <div class="checklist">
+                {% for item in checklist %}
+                <div class="checklist-item">
+                    <div class="checklist-box"></div>
+                    <div>{{ item }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+    {% endif %}
+    <!-- ── end document_type blocks ── -->
+
+    {% if footer_text %}
+    <div class="document-footer">{{ footer_text }}</div>
+    {% endif %}
+
+</div>
+</body>
+</html>

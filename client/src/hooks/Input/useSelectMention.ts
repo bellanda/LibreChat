@@ -11,7 +11,7 @@ import { useRecoilValue } from 'recoil';
 import type { ConvoGenerator, MentionOption } from '~/common';
 import { useDefaultConvo } from '~/hooks';
 import store from '~/store';
-import { getConvoSwitchLogic, getModelSpecIconURL, logger, removeUnavailableTools } from '~/utils';
+import { getConvoSwitchLogic, getModelSpecIconURL, logger, removeUnavailableTools, clearModelForNonEphemeralAgent } from '~/utils';
 
 export default function useSelectMention({
   presets,
@@ -157,6 +157,7 @@ export default function useSelectMention({
         // Explicitly clear agent_id for non-agent endpoints
         template.agent_id = undefined;
       }
+      clearModelForNonEphemeralAgent(template);
 
       template.spec = null;
       template.iconURL = null;
@@ -207,7 +208,7 @@ export default function useSelectMention({
 
       newConversation({
         template: { ...(template as Partial<TConversation>) },
-        preset,
+        preset: { ...kwargs, spec: null, iconURL: null, modelLabel: null, endpoint: newEndpoint },
         keepAddedConvos: isNewModular,
       });
     },

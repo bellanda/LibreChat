@@ -1,0 +1,332 @@
+{
+  "_id": {
+    "$oid": "69820450ebbb69dd59ec9f60"
+  },
+  "gemini-3-flash-preview": {
+    "name": "Gemini 3.0 Flash",
+    "provider": "Google",
+    "creator": "Google",
+    "title": "Google Gemini 3.0 Flash",
+    "shortUseCase": "Alta inteligência, muito rápido e custo baixo",
+    "description": "A melhor escolha para o dia a dia. Combina raciocínio avançado com uma velocidade incrível. Use para a maioria das tarefas onde você não quer esperar, mas precisa de uma resposta inteligente e multimodal.",
+    "image": "/assets/google-gemini-logo.png",
+    "useCases": [
+      "Tarefas gerais do dia a dia com resposta rápida",
+      "Análise de grandes volumes de documentos (Janela longa)",
+      "Multimodalidade ágil (vídeo, áudio e texto)"
+    ],
+    "prompt": 0.5,
+    "completion": 3,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "very-fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "gemini-3-pro-preview": {
+    "name": "Gemini 3.0 Pro",
+    "provider": "Google",
+    "creator": "Google",
+    "title": "Google Gemini 3.0 Pro",
+    "shortUseCase": "Alta inteligência para problemas complexos",
+    "description": "O modelo 'peso-pesado' do Google. Use quando o Flash não for suficiente e você precisar de raciocínio profundo, lógica complexa ou análise criativa nuançada. É mais caro, mas entrega qualidade superior.",
+    "image": "/assets/google-gemini-logo.png",
+    "useCases": [
+      "Resolução de problemas complexos e lógica difícil",
+      "Criação de conteúdo criativo e nuançado",
+      "Análise multimodal profunda"
+    ],
+    "prompt": 2,
+    "completion": 12,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "extreme",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "gpt-5.2-medium": {
+    "name": "GPT 5.2 Medium",
+    "provider": "Azure",
+    "creator": "OpenAI",
+    "title": "GPT 5.2 Medium (Balanced)",
+    "shortUseCase": "Uso geral com bom custo/latência",
+    "description": "O modelo equilibrado padrão. Perfeito para chat, resumos, e-mails corporativos e tarefas de negócio. É rápido e inteligente o suficiente para 90% das interações sem o custo dos modelos Extreme.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Atendimento e produtividade (chat corporativo)",
+      "Resumos, relatórios e e-mails",
+      "Automação e scripts de complexidade média"
+    ],
+    "prompt": 1.75,
+    "completion": 14,
+    "characteristics": {
+      "reasoning": true,
+      "reasoningLevel": "medium",
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "gpt-5.2-xhigh": {
+    "name": "GPT 5.2 XHIGH",
+    "provider": "Azure",
+    "creator": "OpenAI",
+    "title": "GPT 5.2 XHigh (Extreme)",
+    "shortUseCase": "Qualidade máxima para decisões críticas",
+    "description": "Use SOMENTE quando a prioridade for precisão absoluta. Ele é mais lento propositalmente para 'pensar' mais. Ideal para análises estratégicas, documentos jurídicos ou cenários onde o erro não é uma opção.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Análise profunda de dados e documentos",
+      "Planejamento estratégico e tomada de decisão",
+      "Problemas de lógica avançada"
+    ],
+    "prompt": 1.75,
+    "completion": 14,
+    "characteristics": {
+      "reasoning": true,
+      "reasoningLevel": "very-high",
+      "speed": "medium-slow",
+      "intelligence": "extreme",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "gpt-5.2-codex-xhigh": {
+    "name": "GPT 5.2 Codex",
+    "provider": "Azure",
+    "creator": "OpenAI",
+    "title": "GPT 5.2 Codex (Architect)",
+    "shortUseCase": "Especialista em Engenharia de Software",
+    "description": "Não use para perguntas gerais. Este modelo é um Arquiteto de Software. Use para refatorar códigos legados, desenhar sistemas, migrar tecnologias e revisar Pull Requests complexos.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Arquitetura e design de sistemas",
+      "Refatoração e migração de código",
+      "Revisão técnica profunda e testes unitários"
+    ],
+    "prompt": 1.75,
+    "completion": 14,
+    "characteristics": {
+      "reasoning": true,
+      "reasoningLevel": "very-high",
+      "speed": "medium",
+      "intelligence": "extreme",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "openai/gpt-oss-120b": {
+    "name": "GPT-OSS 120B",
+    "provider": "Groq",
+    "creator": "OpenAI",
+    "title": "OpenAI GPT-OSS 120B",
+    "shortUseCase": "Geral, Rápido e Somente Texto",
+    "description": "Uma opção Open Source robusta e muito rápida. Excelente para processar grandes blocos de texto, formatar dados e gerar conteúdo escrito quando você não precisa de visão (análise de imagens).",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Processamento de texto em alta velocidade",
+      "Formatação e limpeza de dados (JSON/CSV)",
+      "Geração de conteúdo textual longo"
+    ],
+    "prompt": 0.15,
+    "completion": 0.75,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "very-fast",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": false
+  },
+  "openai/gpt-oss-20b": {
+    "name": "GPT-OSS 20B",
+    "provider": "Groq",
+    "creator": "OpenAI",
+    "title": "OpenAI GPT-OSS 20B",
+    "shortUseCase": "Extremamente Rápido (1000 t/s)",
+    "description": "Velocidade pura. O modelo mais rápido da lista. Use para tarefas simples, classificações rápidas, ou quando você precisa traduzir/resumir algo instantaneamente. Não recomendado para raciocínio complexo.",
+    "image": "/assets/openai-logo.jpg",
+    "useCases": [
+      "Classificação instantânea de textos",
+      "Traduções simples e rápidas",
+      "Chatbots de resposta imediata"
+    ],
+    "prompt": 0.1,
+    "completion": 0.5,
+    "characteristics": {
+      "reasoning": false,
+      "speed": "instant",
+      "intelligence": "medium",
+      "coding": true,
+      "math": false,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": false
+  },
+  "claude-sonnet-4-5": {
+    "name": "Claude 4.5 Sonnet",
+    "provider": "Anthropic",
+    "creator": "Anthropic",
+    "title": "Anthropic Claude 4.5 Sonnet",
+    "shortUseCase": "Especializado em Código e Agentes",
+    "description": "O favorito dos desenvolvedores. Se você precisa gerar código funcional, scripts complexos ou documentação técnica, este é o melhor custo-benefício. Possui uma 'personalidade' de trabalho muito focada.",
+    "image": "/assets/anthropic-logo.png",
+    "useCases": [
+      "Desenvolvimento Full-stack (Frontend/Backend)",
+      "Criação de documentação técnica",
+      "Agentes autônomos e workflows"
+    ],
+    "prompt": 3,
+    "completion": 15,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "very-high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "claude-opus-4-5": {
+    "name": "Claude 4.5 Opus",
+    "provider": "Anthropic",
+    "creator": "Anthropic",
+    "title": "Anthropic Claude 4.5 Opus",
+    "shortUseCase": "Alta Inteligência Enterprise e Código",
+    "description": "A versão mais potente e cara da Anthropic. Use apenas quando o Sonnet falhar. Capacidade extrema de seguir instruções complexas e manter coerência em projetos gigantescos de código ou escrita.",
+    "image": "/assets/anthropic-logo.png",
+    "useCases": [
+      "Projetos de missão crítica",
+      "Escrita criativa de altíssimo nível",
+      "Análise de código extremamente complexo"
+    ],
+    "prompt": 5,
+    "completion": 25,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "extreme",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "claude-haiku-4-5": {
+    "name": "Claude 4.5 Haiku",
+    "provider": "Anthropic",
+    "creator": "Anthropic",
+    "title": "Anthropic Claude 4.5 Haiku",
+    "shortUseCase": "Geral, Rápido e Econômico",
+    "description": "O irmão menor e mais rápido da família Claude. Ideal para responder e-mails, pequenas correções de texto e dúvidas rápidas de programação onde o Sonnet seria um exagero.",
+    "image": "/assets/anthropic-logo.png",
+    "useCases": [
+      "Respostas rápidas de suporte",
+      "Correção de pequenos trechos de código",
+      "Resumos de reuniões"
+    ],
+    "prompt": 1,
+    "completion": 5,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "very-fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "grok-4-1-fast-reasoning": {
+    "name": "Grok 4.1 Fast",
+    "provider": "xAI",
+    "creator": "xAI",
+    "title": "xAI Grok 4.1 Fast",
+    "shortUseCase": "Geral, Rápido e Muito Barato",
+    "description": "Excelente para pesquisas conectadas à internet em tempo real com custo muito baixo. Se você precisa de informações atuais do mundo com rapidez, esta é uma ótima opção econômica.",
+    "image": "/assets/xai-grok-logo.png",
+    "useCases": [
+      "Pesquisa de informações em tempo real",
+      "Análise de notícias e eventos recentes",
+      "Perguntas gerais com contexto amplo"
+    ],
+    "prompt": 0.2,
+    "completion": 0.5,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": true
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": true
+  },
+  "grok-code-fast-1": {
+    "name": "Grok Code Fast 1",
+    "provider": "xAI",
+    "creator": "xAI",
+    "title": "xAI Grok Code Fast 1",
+    "shortUseCase": "Especializado em Código, Rápido e Barato",
+    "description": "Uma alternativa econômica para programação. Use para gerar scripts simples, funções isoladas ('boilerplate') ou explicar trechos de código sem gastar os créditos dos modelos Premium.",
+    "image": "/assets/xai-grok-logo.png",
+    "useCases": [
+      "Geração de scripts rápidos (Python/Bash)",
+      "Explicação de código",
+      "Prototipagem rápida de funções"
+    ],
+    "prompt": 0.2,
+    "completion": 1.5,
+    "characteristics": {
+      "reasoning": true,
+      "speed": "fast",
+      "intelligence": "high",
+      "coding": true,
+      "math": true,
+      "multimodal": false
+    },
+    "supportsWebSearch": true,
+    "supportsCodeExecution": true,
+    "supportsImageAttachment": false
+  }
+}

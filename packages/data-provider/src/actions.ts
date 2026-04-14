@@ -2,7 +2,6 @@ import _axios from 'axios';
 import crypto from 'crypto';
 import { load } from 'js-yaml';
 import type { OpenAPIV3 } from 'openapi-types';
-import { URL } from 'url';
 import { z } from 'zod';
 import type { ActionMetadata, ActionMetadataRuntime } from './types/agents';
 import { AuthTypeEnum, AuthorizationTypeEnum } from './types/agents';
@@ -39,8 +38,8 @@ export type Credentials = ApiKeyCredentials | OAuthCredentials;
 type MediaTypeObject =
   | undefined
   | {
-      [media: string]: OpenAPIV3.MediaTypeObject | undefined;
-    };
+    [media: string]: OpenAPIV3.MediaTypeObject | undefined;
+  };
 
 type RequestBodyObject = Omit<OpenAPIV3.RequestBodyObject, 'content'> & {
   content: MediaTypeObject;
@@ -50,11 +49,13 @@ export function sha1(input: string) {
   return crypto.createHash('sha1').update(input).digest('hex');
 }
 
+// Upstream: import { URL } from 'url'; new URL(fullURL).toString()
+// Aqui: globalThis.URL para compatibilidade com o bundle Vite (alias 'url' → polyfill que não exporta URL)
 export function createURL(domain: string, path: string) {
   const cleanDomain = domain.replace(/\/$/, '');
   const cleanPath = path.replace(/^\//, '');
   const fullURL = `${cleanDomain}/${cleanPath}`;
-  return new URL(fullURL).toString();
+  return new (globalThis.URL)(fullURL).toString();
 }
 
 const schemaTypeHandlers: Record<string, (schema: OpenAPISchema) => z.ZodTypeAny> = {
@@ -164,7 +165,7 @@ class RequestConfig {
     readonly isConsequential: boolean,
     readonly contentType: string,
     readonly parameterLocations?: Record<string, 'query' | 'path' | 'header' | 'body'>,
-  ) {}
+  ) { }
 }
 
 class RequestExecutor {
@@ -239,8 +240,12 @@ class RequestExecutor {
       oauth_client_secret != null &&
       oauth_client_secret &&
       type === AuthTypeEnum.OAuth &&
+      authorization_url != null &&
+      authorization_url &&
       client_url != null &&
       client_url &&
+      scope != null &&
+      scope &&
       token_exchange_method
     );
 
@@ -275,14 +280,6 @@ class RequestExecutor {
       // If valid, use it
       this.authToken = oauth_access_token;
       this.authHeaders['Authorization'] = `Bearer ${this.authToken}`;
-
-      // Debug log for OAuth token usage
-      console.log('OAuth token set for request:', {
-        token_preview: this.authToken ? `${this.authToken.substring(0, 20)}...` : 'No token',
-        header: this.authHeaders['Authorization']
-          ? `${this.authHeaders['Authorization'].substring(0, 30)}...`
-          : 'No header',
-      });
     }
     return this;
   }
@@ -294,31 +291,21 @@ class RequestExecutor {
       ...(this.config.contentType ? { 'Content-Type': this.config.contentType } : {}),
     };
     const method = this.config.method.toLowerCase();
-    const axios = _axios.create();
 
-    // Add request interceptor to log the actual request being sent
-    axios.interceptors.request.use(
-      (config) => {
-        console.log('Axios request interceptor - Actual request being sent:', {
-          method: config.method?.toUpperCase(),
-          url: config.url,
-          headers: {
-            ...config.headers,
-            // Mask sensitive headers for security
-            Authorization: config.headers?.Authorization
-              ? `${String(config.headers.Authorization).substring(0, 30)}...`
-              : 'No Authorization header',
-          },
-          data: config.data,
-          params: config.params,
-        });
-        return config;
-      },
-      (error) => {
-        console.error('Axios request interceptor error:', error);
-        return Promise.reject(error);
-      },
-    );
+    /**
+     * SECURITY: Disable automatic redirects to prevent SSRF bypass.
+     * Attackers could use redirects to access internal services:
+     *   1. Set action URL to allowed external domain
+     *   2. External domain redirects to internal service (e.g., 127.0.0.1, rag_api)
+     *   3. Without this protection, axios would follow the redirect
+     *
+     * By setting maxRedirects: 0, we prevent this attack vector.
+     * The action will receive the redirect response (3xx) instead of following it.
+     */
+    const axios = _axios.create({
+      maxRedirects: 0,
+      validateStatus: (status) => status >= 200 && status < 400, // Accept 3xx but don't follow
+    });
 
     // Initialize separate containers for query and body parameters.
     const queryParams: Record<string, unknown> = {};
@@ -343,23 +330,6 @@ class RequestExecutor {
       Object.assign(queryParams, this.params);
       Object.assign(bodyParams, this.params);
     }
-
-    // Debug log to show the actual request being made
-    console.log('Making API request:', {
-      method: method.toUpperCase(),
-      url: url.toString(),
-      headers: {
-        ...headers,
-        // Mask sensitive headers for security
-        Authorization: headers.Authorization
-          ? `${headers.Authorization.substring(0, 30)}...`
-          : 'No Authorization header',
-      },
-      hasAuthToken: !!this.authToken,
-      authTokenPreview: this.authToken ? `${this.authToken.substring(0, 20)}...` : 'No auth token',
-      queryParams,
-      bodyParams,
-    });
 
     if (method === 'get') {
       return axios.get(url, { headers, params: queryParams });
@@ -448,10 +418,10 @@ export class ActionRequest {
 
 export function resolveRef<
   T extends
-    | OpenAPIV3.ReferenceObject
-    | OpenAPIV3.SchemaObject
-    | OpenAPIV3.ParameterObject
-    | OpenAPIV3.RequestBodyObject,
+  | OpenAPIV3.ReferenceObject
+  | OpenAPIV3.SchemaObject
+  | OpenAPIV3.ParameterObject
+  | OpenAPIV3.RequestBodyObject,
 >(obj: T, components?: OpenAPIV3.ComponentsObject): Exclude<T, OpenAPIV3.ReferenceObject> {
   if ('$ref' in obj && components) {
     const refPath = obj.$ref.replace(/^#\/components\//, '').split('/');
@@ -537,9 +507,9 @@ export function openapiToFunction(
           // Record the parameter location from the OpenAPI "in" field.
           paramLocations[paramName] =
             resolvedParam.in === 'query' ||
-            resolvedParam.in === 'path' ||
-            resolvedParam.in === 'header' ||
-            resolvedParam.in === 'body'
+              resolvedParam.in === 'path' ||
+              resolvedParam.in === 'header' ||
+              resolvedParam.in === 'body'
               ? resolvedParam.in
               : 'query';
         }

@@ -19,6 +19,29 @@ import { useLocalize, useAuthContext } from '~/hooks';
 
 type FormValues = Record<Permissions, boolean>;
 
+const memoryPermissionsConfig = [
+  {
+    permission: Permissions.USE,
+    labelKey: 'com_ui_memories_allow_use',
+  },
+  {
+    permission: Permissions.CREATE,
+    labelKey: 'com_ui_memories_allow_create',
+  },
+  {
+    permission: Permissions.UPDATE,
+    labelKey: 'com_ui_memories_allow_update',
+  },
+  {
+    permission: Permissions.READ,
+    labelKey: 'com_ui_memories_allow_read',
+  },
+  {
+    permission: Permissions.OPT_OUT,
+    labelKey: 'com_ui_memories_allow_opt_out',
+  },
+];
+
 type LabelControllerProps = {
   label: string;
   memoryPerm: Permissions;
@@ -94,26 +117,10 @@ const AdminSettings = () => {
   }
 
   const labelControllerData = [
-    {
-      memoryPerm: Permissions.USE,
-      label: localize('com_ui_memories_allow_use'),
-    },
-    {
-      memoryPerm: Permissions.CREATE,
-      label: localize('com_ui_memories_allow_create'),
-    },
-    {
-      memoryPerm: Permissions.UPDATE,
-      label: localize('com_ui_memories_allow_update'),
-    },
-    {
-      memoryPerm: Permissions.READ,
-      label: localize('com_ui_memories_allow_read'),
-    },
-    {
-      memoryPerm: Permissions.OPT_OUT,
-      label: localize('com_ui_memories_allow_opt_out'),
-    },
+    ...memoryPermissionsConfig.map(({ permission, labelKey }) => ({
+      memoryPerm: permission,
+      label: localize(labelKey),
+    })),
   ];
 
   const onSubmit = (data: FormValues) => {

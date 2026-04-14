@@ -14,8 +14,12 @@ type ThrottledFunction = (() => void) & {
 
 type ScrollToRefReturn = {
   scrollToRef?: ThrottledFunction;
+  /** Smooth scroll with short throttle for streaming (so the view doesn't jump). */
+  scrollToRefSmoothStreaming?: ThrottledFunction;
   handleSmoothToRef: React.MouseEventHandler<HTMLButtonElement>;
 };
+
+const STREAMING_THROTTLE_MS = 220;
 
 export default function useScrollToRef({
   targetRef,
@@ -23,8 +27,6 @@ export default function useScrollToRef({
   smoothCallback,
 }: TUseScrollToRef): ScrollToRefReturn {
   const logAndScroll = (behavior: 'instant' | 'smooth', callbackFn: () => void) => {
-    // Debugging:
-    // console.log(`Scrolling with behavior: ${behavior}, Time: ${new Date().toISOString()}`);
     targetRef.current?.scrollIntoView({ behavior });
     callbackFn();
   };
@@ -32,6 +34,13 @@ export default function useScrollToRef({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const scrollToRef = useCallback(
     throttle(() => logAndScroll('instant', callback), 145, { leading: true }),
+    [targetRef],
+  );
+
+  // Smooth scroll with shorter throttle for use during streaming (less jumpy).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const scrollToRefSmoothStreaming = useCallback(
+    throttle(() => logAndScroll('smooth', callback), STREAMING_THROTTLE_MS, { leading: true }),
     [targetRef],
   );
 
@@ -48,6 +57,7 @@ export default function useScrollToRef({
 
   return {
     scrollToRef,
+    scrollToRefSmoothStreaming,
     handleSmoothToRef,
   };
 }

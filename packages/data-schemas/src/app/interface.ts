@@ -34,6 +34,7 @@ export async function loadDefaultInterface({
     modelSelect:
       interfaceConfig?.modelSelect ??
       (hasModelSpecs ? includesAddedEndpoints : defaults.modelSelect),
+    groupModelsByEndpoint: interfaceConfig?.groupModelsByEndpoint ?? defaults?.groupModelsByEndpoint,
     parameters: interfaceConfig?.parameters ?? (hasModelSpecs ? false : defaults.parameters),
     presets: interfaceConfig?.presets ?? (hasModelSpecs ? false : defaults.presets),
     sidePanel: interfaceConfig?.sidePanel ?? defaults.sidePanel,

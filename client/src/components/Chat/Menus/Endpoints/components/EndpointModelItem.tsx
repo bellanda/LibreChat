@@ -336,14 +336,16 @@ export function renderEndpointModels(
   models: Array<{ name: string; isGlobal?: boolean }>,
   selectedModel: string | null,
   filteredModels?: string[],
+  endpointIndex?: number,
 ) {
   const modelsToRender = filteredModels || models.map((model) => model.name);
+  const indexSuffix = endpointIndex != null ? `-${endpointIndex}` : '';
 
   return modelsToRender.map(
-    (modelId) =>
+    (modelId, modelIndex) =>
       endpoint && (
         <EndpointModelItem
-          key={modelId}
+          key={`${endpoint.value}${indexSuffix}-${modelId}-${modelIndex}`}
           modelId={modelId}
           endpoint={endpoint}
           isSelected={selectedModel === modelId}

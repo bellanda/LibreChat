@@ -1,8 +1,8 @@
-import React, { memo } from 'react';
-import { Globe } from 'lucide-react';
 import { CheckboxButton } from '@librechat/client';
 import { Permissions, PermissionTypes } from 'librechat-data-provider';
-import { useLocalize, useHasAccess } from '~/hooks';
+import { Globe } from 'lucide-react';
+import { memo } from 'react';
+import { useHasAccess, useLocalize } from '~/hooks';
 import { useBadgeRowContext } from '~/Providers';
 
 function WebSearch() {
@@ -29,7 +29,7 @@ function WebSearch() {
         setValue={debouncedChange}
         label={localize('com_ui_search')}
         isCheckedClassName="border-blue-600/40 bg-blue-500/10 hover:bg-blue-700/10"
-        icon={<Globe className="icon-md" />}
+        icon={<Globe className="icon-md" aria-hidden="true" />}
       />
     )
   );

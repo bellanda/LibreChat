@@ -1,14 +1,14 @@
-import { useRef, useEffect, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import { TextareaAutosize, TooltipAnchor } from '@librechat/client';
 import { useUpdateMessageMutation } from 'librechat-data-provider/react-query';
+import { useCallback, useEffect, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import type { TEditProps } from '~/common';
-import { useMessagesOperations, useMessagesConversation, useAddedChatContext } from '~/Providers';
-import { cn, removeFocusRings } from '~/utils';
 import { useLocalize } from '~/hooks';
-import Container from './Container';
+import { useAddedChatContext, useMessagesConversation, useMessagesOperations } from '~/Providers';
 import store from '~/store';
+import { cn, removeFocusRings } from '~/utils';
+import Container from './Container';
 
 const EditMessage = ({
   text,
@@ -19,7 +19,7 @@ const EditMessage = ({
   siblingIdx,
   setSiblingIdx,
 }: TEditProps) => {
-  const { addedIndex } = useAddedChatContext();
+  const { addedIndex, conversation: addedConvo } = useAddedChatContext();
   const saveButtonRef = useRef<HTMLButtonElement | null>(null);
   const submitButtonRef = useRef<HTMLButtonElement | null>(null);
   const { conversation } = useMessagesConversation();
@@ -62,6 +62,7 @@ const EditMessage = ({
         },
         {
           overrideFiles: message.files,
+          addedConvo: addedConvo || undefined,
         },
       );
 
@@ -80,6 +81,7 @@ const EditMessage = ({
           editedMessageId: messageId,
           isRegenerate: true,
           isEdited: true,
+          addedConvo: addedConvo || undefined,
         },
       );
 
@@ -113,9 +115,9 @@ const EditMessage = ({
         messages.map((msg) =>
           msg.messageId === messageId
             ? {
-                ...msg,
-                text: data.text,
-              }
+              ...msg,
+              text: data.text,
+            }
             : msg,
         ),
       );

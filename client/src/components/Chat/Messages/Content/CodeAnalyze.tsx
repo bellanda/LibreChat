@@ -9,10 +9,12 @@ export default function CodeAnalyze({
   initialProgress = 0.1,
   code,
   outputs = [],
+  hideProgressIndicator = false,
 }: {
   initialProgress: number;
   code: string;
   outputs: Record<string, unknown>[];
+  hideProgressIndicator?: boolean;
 }) {
   const localize = useLocalize();
   const progress = useProgress(initialProgress);
@@ -28,16 +30,18 @@ export default function CodeAnalyze({
 
   return (
     <>
-      <div className="my-2.5 flex items-center gap-2.5">
-        <ProgressText
-          progress={progress}
-          onClick={() => setShowCode((prev) => !prev)}
-          inProgressText={localize('com_ui_analyzing')}
-          finishedText={localize('com_ui_analyzing_finished')}
-          hasInput={!!code.length}
-          isExpanded={showCode}
-        />
-      </div>
+      {!hideProgressIndicator && (
+        <div className="my-2.5 flex items-center gap-2.5">
+          <ProgressText
+            progress={progress}
+            onClick={() => setShowCode((prev) => !prev)}
+            inProgressText={localize('com_ui_analyzing')}
+            finishedText={localize('com_ui_analyzing_finished')}
+            hasInput={!!code.length}
+            isExpanded={showCode}
+          />
+        </div>
+      )}
       {showCode && (
         <div className="code-analyze-block mb-3 mt-0.5 overflow-hidden rounded-xl bg-black">
           <MarkdownLite content={code ? `\`\`\`python\n${code}\n\`\`\`` : ''} />

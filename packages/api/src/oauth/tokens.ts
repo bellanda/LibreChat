@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { logger } from '@librechat/data-schemas';
+import { encryptV2, decryptV2 } from '~/crypto/encryption';
 import { TokenExchangeMethodEnum } from 'librechat-data-provider';
 import type { TokenMethods } from '@librechat/data-schemas';
 import type { AxiosError } from 'axios';
-import { encryptV2, decryptV2 } from '~/crypto';
 import { logAxiosError } from '~/utils';
 
 export function createHandleOAuthToken({

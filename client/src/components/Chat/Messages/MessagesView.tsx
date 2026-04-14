@@ -1,15 +1,17 @@
-import { useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { useRecoilValue } from 'recoil';
-import { CSSTransition } from 'react-transition-group';
 import type { TMessage } from 'librechat-data-provider';
-import { useScreenshot, useMessageScrolling, useLocalize } from '~/hooks';
+import { MessageSquare } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CSSTransition } from 'react-transition-group';
+import { useRecoilValue } from 'recoil';
 import ScrollToBottom from '~/components/Messages/ScrollToBottom';
+import { useLocalize, useMessageScrolling, useScreenshot } from '~/hooks';
 import { MessagesViewProvider } from '~/Providers';
-import { fontSizeAtom } from '~/store/fontSize';
-import MultiMessage from './MultiMessage';
-import { cn } from '~/utils';
 import store from '~/store';
+import { fontSizeAtom } from '~/store/fontSize';
+import { cn } from '~/utils';
+import MultiMessage from './MultiMessage';
 
 function MessagesViewContent({
   messagesTree: _messagesTree,
@@ -17,10 +19,12 @@ function MessagesViewContent({
   messagesTree?: TMessage[] | null;
 }) {
   const localize = useLocalize();
+  const navigate = useNavigate();
   const fontSize = useAtomValue(fontSizeAtom);
   const { screenshotTargetRef } = useScreenshot();
   const scrollButtonPreference = useRecoilValue(store.showScrollButton);
   const [currentEditId, setCurrentEditId] = useState<number | string | null>(-1);
+  const scrollToBottomRef = useRef<HTMLButtonElement>(null);
 
   const {
     conversation,
@@ -47,15 +51,27 @@ function MessagesViewContent({
               width: '100%',
             }}
           >
-            <div className="flex flex-col pb-9 dark:bg-transparent">
+            <div className="flex flex-col pb-9 pt-14 dark:bg-transparent">
               {(_messagesTree && _messagesTree.length == 0) || _messagesTree === null ? (
                 <div
                   className={cn(
-                    'flex w-full items-center justify-center p-3 text-text-secondary',
+                    'flex w-full flex-col items-center justify-center gap-4 p-6 text-text-secondary',
                     fontSize,
                   )}
+                  role="status"
                 >
-                  {localize('com_ui_nothing_found')}
+                  <MessageSquare
+                    className="h-12 w-12 opacity-40"
+                    aria-hidden
+                  />
+                  <p className="text-center">{localize('com_ui_nothing_found')}</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/c/new', { state: { focusChat: true } })}
+                    className="rounded-lg border border-border-medium bg-surface-secondary px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-surface-hover"
+                  >
+                    {localize('com_ui_empty_conversation_cta')}
+                  </button>
                 </div>
               ) : (
                 <>
@@ -87,8 +103,9 @@ function MessagesViewContent({
             classNames="scroll-animation"
             unmountOnExit={true}
             appear={true}
+            nodeRef={scrollToBottomRef}
           >
-            <ScrollToBottom scrollHandler={handleSmoothToRef} />
+            <ScrollToBottom ref={scrollToBottomRef} scrollHandler={handleSmoothToRef} />
           </CSSTransition>
         </div>
       </div>

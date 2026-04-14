@@ -9,9 +9,14 @@ import remarkMath from 'remark-math';
 import supersub from 'remark-supersub';
 import type { Pluggable } from 'unified';
 import { Artifact, artifactPlugin } from '~/components/Artifacts/Artifact';
+import {
+  MCPUIResource,
+  MCPUIResourceCarousel,
+  mcpUIResourcePlugin,
+} from '~/components/MCPUIResource';
 import { unicodeCitation } from '~/components/Web';
 import { Citation, CompositeCitation, HighlightedText } from '~/components/Web/Citation';
-import { ArtifactProvider, CodeBlockProvider } from '~/Providers';
+import { ArtifactProvider, CodeBlockProvider, useMessageContext } from '~/Providers';
 import store from '~/store';
 import { hasBrazilianCurrency, langSubset, preprocessLaTeX } from '~/utils';
 import { a, code, img, p } from './MarkdownComponents';
@@ -24,6 +29,7 @@ type TContentProps = {
 
 const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
   const LaTeXParsing = useRecoilValue<boolean>(store.LaTeXParsing);
+  const { hideThinkingIndicator = false } = useMessageContext();
   const isInitializing = content === '';
 
   const currentContent = useMemo(() => {
@@ -56,11 +62,15 @@ const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
     remarkGfm,
     remarkDirective,
     artifactPlugin,
-    [remarkMath, { singleDollarTextMath: !shouldDisableSingleDollar }],
+    [remarkMath, { singleDollarTextMath: false }],
     unicodeCitation,
+    mcpUIResourcePlugin,
   ];
 
   if (isInitializing) {
+    if (hideThinkingIndicator) {
+      return null;
+    }
     return (
       <div className="absolute">
         <p className="relative">
@@ -89,6 +99,8 @@ const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
                 citation: Citation,
                 'highlighted-text': HighlightedText,
                 'composite-citation': CompositeCitation,
+                'mcp-ui-resource': MCPUIResource,
+                'mcp-ui-carousel': MCPUIResourceCarousel,
               } as {
                 [nodeType: string]: React.ElementType;
               }

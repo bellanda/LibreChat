@@ -1,5 +1,4 @@
-import { REPORT_CONFIG } from "../../store/reports";
-
+import { REPORT_CONFIG } from '../../store/reports';
 
 const fetchUsageCostData = async (filters: any) => {
   try {
@@ -23,8 +22,6 @@ const fetchUsageCostData = async (filters: any) => {
       params.append('end_date', today);
       console.log('[DEBUG] Aplicando data final padrão para incluir hoje:', today);
     }
-
-
 
     const url = `${REPORT_CONFIG.URL_BASE}${REPORT_CONFIG.ENDPOINTS.USAGE_COST}${params.toString() ? '?' + params.toString() : ''}`;
     console.log('[DEBUG] Fazendo requisição para:', url);
@@ -60,9 +57,13 @@ const fetchUsageCostData = async (filters: any) => {
       console.log('[DEBUG] Campos recebidos da API:', Object.keys(firstItem));
 
       // Verifica se já tem formato novo (QUESTIONS/ANSWERS)
-      const hasNewFormat = ['QUESTIONS', 'QUESTIONS custo', 'ANSWERS', 'ANSWERS custo', 'date'].every(
-        field => firstItem.hasOwnProperty(field)
-      );
+      const hasNewFormat = [
+        'QUESTIONS',
+        'QUESTIONS custo',
+        'ANSWERS',
+        'ANSWERS custo',
+        'date',
+      ].every((field) => firstItem.hasOwnProperty(field));
 
       if (hasNewFormat) {
         console.log('[DEBUG] ✅ Dados já têm formato correto (QUESTIONS/ANSWERS)');
@@ -71,23 +72,26 @@ const fetchUsageCostData = async (filters: any) => {
 
       // Verifica se tem formato antigo (IA msgs/USER msgs) e mapeia
       const hasOldFormat = ['IA msgs', 'IA custo', 'USER msgs', 'USER custo', 'date'].every(
-        field => firstItem.hasOwnProperty(field)
+        (field) => firstItem.hasOwnProperty(field),
       );
 
       if (hasOldFormat) {
         console.log('[DEBUG] 🔄 Convertendo dados do formato antigo para novo...');
-        const mappedData = data.map(item => ({
+        const mappedData = data.map((item) => ({
           date: item.date,
-          'QUESTIONS': item['USER msgs'],        // USER msgs → QUESTIONS
+          QUESTIONS: item['USER msgs'], // USER msgs → QUESTIONS
           'QUESTIONS custo': item['USER custo'], // USER custo → QUESTIONS custo
-          'ANSWERS': item['IA msgs'],            // IA msgs → ANSWERS
-          'ANSWERS custo': item['IA custo']      // IA custo → ANSWERS custo
+          ANSWERS: item['IA msgs'], // IA msgs → ANSWERS
+          'ANSWERS custo': item['IA custo'], // IA custo → ANSWERS custo
         }));
         console.log('[DEBUG] ✅ Dados convertidos com sucesso:', mappedData);
         return mappedData;
       }
 
-      console.warn('[DEBUG] ⚠️ Dados não têm formato esperado (nem antigo nem novo). Campos encontrados:', Object.keys(firstItem));
+      console.warn(
+        '[DEBUG] ⚠️ Dados não têm formato esperado (nem antigo nem novo). Campos encontrados:',
+        Object.keys(firstItem),
+      );
       return [];
     }
 
@@ -221,7 +225,6 @@ const fetchTopUsersCostData = async (filters: any) => {
 
 const fetchTopModelsData = async (filters: any) => {
   try {
-
     const params = new URLSearchParams();
 
     if (filters.user && filters.user.trim()) {
@@ -269,9 +272,7 @@ const fetchTopModelsData = async (filters: any) => {
     const data = await response.json();
     console.log('[DEBUG] Dados Top Models recebidos:', data);
 
-
     const timestamp = new Date().getTime();
-
 
     let descriptions = {};
 
@@ -281,17 +282,15 @@ const fetchTopModelsData = async (filters: any) => {
         'Cache-Control': 'no-cache',
         Pragma: 'no-cache',
       },
-    })
+    });
 
     descriptions = await response2.json();
-
 
     data.map((model) => {
       model.name = descriptions[model.name]?.name || model.name;
     });
 
     return data;
-
   } catch (error) {
     console.error('Erro ao buscar top models:', error);
     return [];
@@ -300,8 +299,9 @@ const fetchTopModelsData = async (filters: any) => {
 
 const fetchAvailableModels = async () => {
   try {
-
-    const response = await fetch(`${REPORT_CONFIG.URL_BASE}${REPORT_CONFIG.ENDPOINTS.AVAILABLE_MODELS}`);
+    const response = await fetch(
+      `${REPORT_CONFIG.URL_BASE}${REPORT_CONFIG.ENDPOINTS.AVAILABLE_MODELS}`,
+    );
     console.log('[DEBUG] Fazendo requisição para Available Models:', response);
 
     if (!response.ok) {
@@ -332,7 +332,7 @@ const fetchKPIsData = async (filters: any) => {
       params.append('end_date', filters.endDate);
     } else {
       // Para KPIs, incluímos data final até hoje para mostrar:
-      // - Custo Total (Período): acumulado até hoje  
+      // - Custo Total (Período): acumulado até hoje
       // - Novos Usuários: cadastrados até hoje
       const today = new Date().toISOString().split('T')[0];
       params.append('end_date', today);
@@ -359,7 +359,7 @@ const fetchKPIsData = async (filters: any) => {
     return {
       totalCost: 0,
       newUsers: 0,
-      activeAccounts: 0
+      activeAccounts: 0,
     };
   }
 };
@@ -534,10 +534,12 @@ const fetchTopCostCentersCostData = async (filters: any) => {
 
 export {
   fetchAvailableModels,
-  fetchKPIsData, fetchTopCostCentersCostData, fetchTopCostCentersVolumeData, fetchTopModelsData,
+  fetchKPIsData,
+  fetchTopCostCentersCostData,
+  fetchTopCostCentersVolumeData,
+  fetchTopModelsData,
   fetchTopUsersCostData,
   fetchTopUsersVolumeData,
   fetchUsageCostData,
-  fetchUserEfficiencyData
+  fetchUserEfficiencyData,
 };
-

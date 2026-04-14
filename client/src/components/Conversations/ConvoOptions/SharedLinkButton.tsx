@@ -1,21 +1,21 @@
-import { useState, useCallback } from 'react';
-import { QrCode, RotateCw, Trash2 } from 'lucide-react';
 import {
   Button,
+  Label,
   OGDialog,
+  OGDialogTemplate,
   Spinner,
   TooltipAnchor,
-  Label,
-  OGDialogTemplate,
   useToastContext,
 } from '@librechat/client';
 import type { TSharedLinkGetResponse } from 'librechat-data-provider';
+import { QrCode, RotateCw, Trash2 } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import { NotificationSeverity } from '~/common';
 import {
   useCreateSharedLinkMutation,
-  useUpdateSharedLinkMutation,
   useDeleteSharedLinkMutation,
+  useUpdateSharedLinkMutation,
 } from '~/data-provider';
-import { NotificationSeverity } from '~/common';
 import { useLocalize } from '~/hooks';
 
 export default function SharedLinkButton({
@@ -37,7 +37,9 @@ export default function SharedLinkButton({
 }) {
   const localize = useLocalize();
   const { showToast } = useToastContext();
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
   const shareId = share?.shareId ?? '';
 
   const { mutateAsync: mutate, isLoading: isCreateLoading } = useCreateSharedLinkMutation({
@@ -61,9 +63,17 @@ export default function SharedLinkButton({
   });
 
   const deleteMutation = useDeleteSharedLinkMutation({
-    onSuccess: async () => {
+    onSuccess: () => {
       setShowDeleteDialog(false);
       setShareDialogOpen(false);
+      setTimeout(() => {
+        const dialog = document
+          .getElementById('share-conversation-dialog')
+          ?.closest('[role="dialog"]');
+        if (dialog instanceof HTMLElement) {
+          dialog.focus();
+        }
+      }, 0);
     },
     onError: (error) => {
       console.error('Delete error:', error);
@@ -85,6 +95,10 @@ export default function SharedLinkButton({
     const updateShare = await mutateAsync({ shareId });
     const newLink = generateShareLink(updateShare.shareId);
     setSharedLink(newLink);
+    setAnnouncement(localize('com_ui_link_refreshed'));
+    setTimeout(() => {
+      setAnnouncement('');
+    }, 1000);
   };
 
   const createShareLink = async () => {
@@ -129,19 +143,24 @@ export default function SharedLinkButton({
             <TooltipAnchor
               description={localize('com_ui_refresh_link')}
               render={(props) => (
-                <Button
-                  {...props}
-                  onClick={() => updateSharedLink()}
-                  aria-label={localize('com_ui_refresh_link')}
-                  variant="outline"
-                  disabled={isUpdateLoading}
-                >
-                  {isUpdateLoading ? (
-                    <Spinner className="size-4" />
-                  ) : (
-                    <RotateCw className="size-4" />
-                  )}
-                </Button>
+                <>
+                  <span className="sr-only" aria-live="polite" aria-atomic="true">
+                    {announcement}
+                  </span>
+                  <Button
+                    {...props}
+                    onClick={() => updateSharedLink()}
+                    variant="outline"
+                    disabled={isUpdateLoading}
+                    aria-label={localize('com_ui_refresh_link')}
+                  >
+                    {isUpdateLoading ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      <RotateCw className="size-4" aria-hidden="true" />
+                    )}
+                  </Button>
+                </>
               )}
             />
 
@@ -154,7 +173,7 @@ export default function SharedLinkButton({
                   variant="outline"
                   aria-label={qrCodeLabel}
                 >
-                  <QrCode className="size-4" />
+                  <QrCode className="size-4" aria-hidden="true" />
                 </Button>
               )}
             />
@@ -164,17 +183,22 @@ export default function SharedLinkButton({
               render={(props) => (
                 <Button
                   {...props}
+                  ref={deleteButtonRef}
                   onClick={() => setShowDeleteDialog(true)}
                   variant="destructive"
                   aria-label={localize('com_ui_delete')}
                 >
-                  <Trash2 className="size-4" />
+                  <Trash2 className="size-4" aria-hidden="true" />
                 </Button>
               )}
             />
           </div>
         )}
-        <OGDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <OGDialog
+          open={showDeleteDialog}
+          triggerRef={deleteButtonRef}
+          onOpenChange={setShowDeleteDialog}
+        >
           <OGDialogTemplate
             showCloseButton={false}
             title={localize('com_ui_delete_shared_link')}

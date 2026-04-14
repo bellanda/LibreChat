@@ -1,9 +1,9 @@
-import React, { useCallback, useContext } from 'react';
-import { LayoutGrid } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Button, TooltipAnchor } from '@librechat/client';
 import { PermissionTypes, Permissions } from 'librechat-data-provider';
-import { TooltipAnchor, Button } from '@librechat/client';
-import { useLocalize, useHasAccess, AuthContext } from '~/hooks';
+import { LayoutGrid } from 'lucide-react';
+import { useCallback, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext, useHasAccess, useLocalize } from '~/hooks';
 
 interface AgentMarketplaceButtonProps {
   isSmallScreen?: boolean;
@@ -58,7 +58,7 @@ export default function AgentMarketplaceButton({
           className="rounded-full border-none bg-transparent p-2 hover:bg-surface-hover md:rounded-xl"
           onClick={handleAgentMarketplace}
         >
-          <LayoutGrid className="icon-lg text-text-primary" />
+          <LayoutGrid className="icon-lg text-text-primary" aria-hidden="true" />
         </Button>
       }
     />

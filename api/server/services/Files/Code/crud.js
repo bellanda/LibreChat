@@ -11,23 +11,21 @@ const MAX_FILE_SIZE = 150 * 1024 * 1024;
  * @param {string} fileIdentifier - The identifier for the file (e.g., "session_id/fileId").
  * @param {string} apiKey - The API key for authentication.
  * @returns {Promise<AxiosResponse>} A promise that resolves to a readable stream of the file content.
+ * @param {string} [userId] - Optional user ID for sandbox User-Id header.
  * @throws {Error} If there's an error during the download process.
  */
-async function getCodeOutputDownloadStream(fileIdentifier, apiKey) {
+async function getCodeOutputDownloadStream(fileIdentifier, apiKey, userId = null) {
   try {
     const baseURL = getCodeBaseURL();
-    /** @type {import('axios').AxiosRequestConfig} */
+    const headers = { 'User-Agent': 'LibreChat/1.0', 'X-API-Key': apiKey };
+    if (userId) headers['User-Id'] = userId;
     const options = {
       method: 'get',
       url: `${baseURL}/download/${fileIdentifier}`,
       responseType: 'stream',
-      headers: {
-        'User-Agent': 'LibreChat/1.0',
-        'X-API-Key': apiKey,
-      },
+      headers,
       timeout: 15000,
     };
-
     const response = await axios(options);
     return response;
   } catch (error) {

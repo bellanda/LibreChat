@@ -15,6 +15,7 @@ function createContextHandlers(req, userMessageContent) {
     return;
   }
 
+  const queryPromises = [];
   const processedFiles = [];
   const processedIds = new Set();
   const jwtToken = generateShortLivedToken(req.user.id);
@@ -22,9 +23,6 @@ function createContextHandlers(req, userMessageContent) {
 
   const query = async (file) => {
     if (useFullContext) {
-      logger.info(
-        `📄 [createContextHandlers] Usando full context para arquivo ${file.filename} (file_id: ${file.file_id})`,
-      );
       return axios.get(`${process.env.RAG_API_URL}/documents/${file.file_id}/context`, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
@@ -34,9 +32,6 @@ function createContextHandlers(req, userMessageContent) {
 
     // Para "Upload as Text", usar o endpoint /text em vez de /query
     if (file.source === 'text' || file.type === 'text/plain' || file.filename?.endsWith('.txt')) {
-      logger.info(
-        `📄 [createContextHandlers] Usando endpoint /text para arquivo de texto ${file.filename} (file_id: ${file.file_id})`,
-      );
       return axios.get(`${process.env.RAG_API_URL}/text/${file.file_id}`, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
@@ -49,7 +44,7 @@ function createContextHandlers(req, userMessageContent) {
       {
         file_id: file.file_id,
         query: userMessageContent,
-        k: 10,
+        k: 4,
       },
       {
         headers: {
@@ -63,6 +58,8 @@ function createContextHandlers(req, userMessageContent) {
   const processFile = async (file) => {
     if (file.embedded && !processedIds.has(file.file_id)) {
       try {
+        const promise = query(file);
+        queryPromises.push(promise);
         processedFiles.push(file);
         processedIds.add(file.file_id);
       } catch (error) {
@@ -71,27 +68,9 @@ function createContextHandlers(req, userMessageContent) {
     }
   };
 
-  /**
-   * Process files in batches with concurrency limit
-   * @param {Array} items - Items to process
-   * @param {number} batchSize - Maximum concurrent operations
-   * @param {Function} processor - Async function to process each item
-   * @returns {Promise<Array>} Results array
-   */
-  const batchProcess = async (items, batchSize, processor) => {
-    const results = [];
-    for (let i = 0; i < items.length; i += batchSize) {
-      const batch = items.slice(i, i + batchSize);
-      const batchPromises = batch.map(processor);
-      const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
-    }
-    return results;
-  };
-
   const createContext = async () => {
     try {
-      if (!processedFiles.length) {
+      if (!queryPromises.length || !processedFiles.length) {
         return '';
       }
 
@@ -120,49 +99,14 @@ function createContextHandlers(req, userMessageContent) {
         </files>`
       }`;
 
-      const MAX_CONCURRENT_QUERIES = 5;
-      const queryProcessor = async (file) => {
-        try {
-          return await query(file);
-        } catch (error) {
-          logger.error(`Error querying file ${file.filename}:`, error);
-          return null;
-        }
-      };
-
-      const resolvedQueries = await batchProcess(processedFiles, MAX_CONCURRENT_QUERIES, queryProcessor);
-      const validQueries = resolvedQueries.filter((result) => result !== null);
-
-      // Log do conteúdo retornado para debug
-      logger.info(`📄 [createContextHandlers] Processando ${validQueries.length} arquivos`);
-      validQueries.forEach((queryResult, index) => {
-        // Map back to original file by finding the matching file for this result
-        const fileIndex = resolvedQueries.findIndex((r) => r === queryResult);
-        const file = processedFiles[fileIndex];
-        if (file) {
-          logger.info(`📄 [createContextHandlers] Arquivo ${file.filename}:`);
-          logger.info(
-            `📄 [createContextHandlers] Tamanho dos dados: ${JSON.stringify(queryResult.data).length} caracteres`,
-          );
-          logger.info(
-            `📄 [createContextHandlers] Dados completos: ${JSON.stringify(queryResult.data)}`,
-          );
-        }
-      });
-
-      // Map valid queries back to their corresponding files
-      const queryFilePairs = [];
-      resolvedQueries.forEach((result, index) => {
-        if (result !== null) {
-          queryFilePairs.push({ queryResult: result, file: processedFiles[index] });
-        }
-      });
+      const resolvedQueries = await Promise.all(queryPromises);
 
       const context =
-        validQueries.length === 0
+        resolvedQueries.length === 0
           ? '\n\tThe semantic search did not return any results.'
-          : queryFilePairs
-              .map(({ queryResult, file }) => {
+          : resolvedQueries
+              .map((queryResult, index) => {
+                const file = processedFiles[index];
                 let contextItems = queryResult.data;
 
                 const generateContext = (currentContext) =>
@@ -196,9 +140,6 @@ function createContextHandlers(req, userMessageContent) {
           ${context}
           ${footer}`;
 
-        logger.info(`📄 [createContextHandlers] Contexto final criado:`);
-        logger.info(`📄 [createContextHandlers] Tamanho do contexto: ${prompt.length} caracteres`);
-        logger.info(`📄 [createContextHandlers] Contexto completo:\n${prompt}`);
         return prompt;
       }
 

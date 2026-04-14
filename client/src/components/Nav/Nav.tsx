@@ -1,8 +1,19 @@
-import { useMediaQuery } from '@librechat/client';
+import { Skeleton, useMediaQuery } from '@librechat/client';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
 import type { ConversationListResponse } from 'librechat-data-provider';
 import { Permissions, PermissionTypes } from 'librechat-data-provider';
-import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  lazy,
+  memo,
+  startTransition,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import type { List } from 'react-virtualized';
 import { useRecoilValue } from 'recoil';
 import { Conversations } from '~/components/Conversations';
 import { useConversationsInfiniteQuery } from '~/data-provider';
@@ -22,8 +33,18 @@ const BookmarkNav = lazy(() => import('./Bookmarks/BookmarkNav'));
 const AccountSettings = lazy(() => import('./AccountSettings'));
 const AgentMarketplaceButton = lazy(() => import('./AgentMarketplaceButton'));
 
-const NAV_WIDTH_DESKTOP = '260px';
-const NAV_WIDTH_MOBILE = '320px';
+export const NAV_WIDTH = {
+  MOBILE: 320,
+  DESKTOP: 260,
+} as const;
+
+const SearchBarSkeleton = memo(() => (
+  <div className={cn('flex h-10 items-center py-2')}>
+    <Skeleton className="h-10 w-full rounded-lg" />
+  </div>
+));
+
+SearchBarSkeleton.displayName = 'SearchBarSkeleton';
 
 const NavMask = memo(
   ({ navVisible, toggleNavVisible }: { navVisible: boolean; toggleNavVisible: () => void }) => (
@@ -31,7 +52,7 @@ const NavMask = memo(
       id="mobile-nav-mask-toggle"
       role="button"
       tabIndex={0}
-      className={`nav-mask transition-opacity duration-200 ease-in-out ${navVisible ? 'opacity-100 active' : 'opacity-0'}`}
+      className={`nav-mask transition-opacity duration-200 ease-in-out ${navVisible ? 'active opacity-100' : 'opacity-0'}`}
       onClick={toggleNavVisible}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -56,7 +77,6 @@ const Nav = memo(
     const localize = useLocalize();
     const { isAuthenticated } = useAuthContext();
 
-    const [navWidth, setNavWidth] = useState(NAV_WIDTH_DESKTOP);
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
     const [newUser, setNewUser] = useLocalStorage('newUser', true);
     const [showLoading, setShowLoading] = useState(false);
@@ -92,7 +112,7 @@ const Nav = memo(
     }, [data?.pages]);
 
     const outerContainerRef = useRef<HTMLDivElement>(null);
-    const listRef = useRef<any>(null);
+    const conversationsRef = useRef<List | null>(null);
 
     const { moveToTop } = useNavScrolling<ConversationListResponse>({
       setShowLoading,
@@ -112,13 +132,17 @@ const Nav = memo(
     }, [data]);
 
     const toggleNavVisible = useCallback(() => {
-      setNavVisible((prev: boolean) => {
-        localStorage.setItem('navVisible', JSON.stringify(!prev));
-        return !prev;
+      // Use startTransition to mark this as a non-urgent update
+      // This prevents blocking the main thread during the cascade of re-renders
+      startTransition(() => {
+        setNavVisible((prev: boolean) => {
+          localStorage.setItem('navVisible', JSON.stringify(!prev));
+          return !prev;
+        });
+        if (newUser) {
+          setNewUser(false);
+        }
       });
-      if (newUser) {
-        setNewUser(false);
-      }
     }, [newUser, setNavVisible, setNewUser]);
 
     const itemToggleNav = useCallback(() => {
@@ -133,9 +157,6 @@ const Nav = memo(
         if (savedNavVisible === null) {
           toggleNavVisible();
         }
-        setNavWidth(NAV_WIDTH_MOBILE);
-      } else {
-        setNavWidth(NAV_WIDTH_DESKTOP);
       }
     }, [isSmallScreen, toggleNavVisible]);
 
@@ -152,7 +173,12 @@ const Nav = memo(
     }, [isFetchingNextPage, computedHasNextPage, fetchNextPage]);
 
     const subHeaders = useMemo(
-      () => search.enabled === true && <SearchBar isSmallScreen={isSmallScreen} />,
+      () => (
+        <>
+          {search.enabled === null && <SearchBarSkeleton />}
+          {search.enabled === true && <SearchBar isSmallScreen={isSmallScreen} />}
+        </>
+      ),
       [search.enabled, isSmallScreen],
     );
 
@@ -189,58 +215,83 @@ const Nav = memo(
       }
     }, [search.query, search.isTyping, isLoading, isFetching]);
 
-    return (
-      <>
-        <div
-          data-testid="nav"
-          className={cn(
-            'overflow-x-hidden flex-shrink-0 transition-all duration-200 ease-in-out transform nav active max-w-[320px] bg-surface-primary-alt',
-            'md:max-w-[260px]',
-          )}
-          style={{
-            width: navVisible ? navWidth : '0px',
-            transform: navVisible ? 'translateX(0)' : 'translateX(-100%)',
-          }}
+    // Always render sidebar to avoid mount/unmount costs
+    // Use transform for GPU-accelerated animation (no layout thrashing)
+    const sidebarWidth = isSmallScreen ? NAV_WIDTH.MOBILE : NAV_WIDTH.DESKTOP;
+
+    // Sidebar content (shared between mobile and desktop)
+    const sidebarContent = (
+      <div className="flex h-full flex-col">
+        <nav
+          id="chat-history-nav"
+          aria-label={localize('com_ui_chat_history')}
+          className="flex h-full flex-col px-2 pb-3.5"
+          aria-hidden={!navVisible}
         >
-          <div className="h-full w-[320px] md:w-[260px]">
-            <div className="flex flex-col h-full">
-              <div
-                className={`flex h-full flex-col transition-opacity duration-200 ease-in-out ${navVisible ? 'opacity-100' : 'opacity-0'}`}
-              >
-                <div className="flex flex-col h-full">
-                  <nav
-                    id="chat-history-nav"
-                    aria-label={localize('com_ui_chat_history')}
-                    className="flex h-full flex-col px-2 pb-3.5 md:px-3"
-                  >
-                    <div className="flex flex-col flex-1" ref={outerContainerRef}>
-                      <MemoNewChat
-                        subHeaders={subHeaders}
-                        toggleNav={toggleNavVisible}
-                        headerButtons={headerButtons}
-                        isSmallScreen={isSmallScreen}
-                      />
-                      <Conversations
-                        conversations={conversations}
-                        moveToTop={moveToTop}
-                        toggleNav={itemToggleNav}
-                        containerRef={listRef}
-                        loadMoreConversations={loadMoreConversations}
-                        isLoading={isFetchingNextPage || showLoading || isLoading}
-                        isSearchLoading={isSearchLoading}
-                      />
-                    </div>
-                    <Suspense fallback={null}>
-                      <AccountSettings />
-                    </Suspense>
-                  </nav>
-                </div>
-              </div>
+          <div className="flex flex-1 flex-col overflow-hidden" ref={outerContainerRef}>
+            <MemoNewChat
+              subHeaders={subHeaders}
+              toggleNav={toggleNavVisible}
+              headerButtons={headerButtons}
+              isSmallScreen={isSmallScreen}
+            />
+            <div className="flex min-h-0 flex-grow flex-col overflow-hidden">
+              <Conversations
+                conversations={conversations}
+                moveToTop={moveToTop}
+                toggleNav={itemToggleNav}
+                containerRef={conversationsRef}
+                loadMoreConversations={loadMoreConversations}
+                isLoading={isFetchingNextPage || showLoading || isLoading}
+                isSearchLoading={isSearchLoading}
+              />
             </div>
           </div>
+          <Suspense fallback={<Skeleton className="mt-1 h-12 w-full rounded-xl" />}>
+            <AccountSettings />
+          </Suspense>
+        </nav>
+      </div>
+    );
+
+    // Mobile: Fixed positioned sidebar that slides over content
+    // Uses CSS transitions (not Framer Motion) to sync perfectly with content animation
+    if (isSmallScreen) {
+      return (
+        <>
+          <div
+            data-testid="nav"
+            className={cn(
+              'nav fixed left-0 top-0 z-[110] h-full bg-surface-primary-alt',
+              navVisible && 'active',
+            )}
+            style={{
+              width: sidebarWidth,
+              transform: navVisible ? 'translateX(0)' : `translateX(-${sidebarWidth}px)`,
+              transition: 'transform 0.2s ease-out',
+            }}
+          >
+            {sidebarContent}
+          </div>
+          <NavMask navVisible={navVisible} toggleNavVisible={toggleNavVisible} />
+        </>
+      );
+    }
+
+    // Desktop: Inline sidebar with width transition
+    return (
+      <div
+        className="flex-shrink-0 overflow-hidden"
+        style={{ width: navVisible ? sidebarWidth : 0, transition: 'width 0.2s ease-out' }}
+      >
+        <div
+          data-testid="nav"
+          className={cn('nav h-full bg-surface-primary-alt', navVisible && 'active')}
+          style={{ width: sidebarWidth }}
+        >
+          {sidebarContent}
         </div>
-        {isSmallScreen && <NavMask navVisible={navVisible} toggleNavVisible={toggleNavVisible} />}
-      </>
+      </div>
     );
   },
 );

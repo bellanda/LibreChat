@@ -138,16 +138,13 @@ const updateBalance = async ({ user, incrementValue, setValues }) => {
 
 /** Method to calculate and set the tokenValue for a transaction */
 function calculateTokenValue(txn) {
-  if (!txn.tokenType) {
+  if (!txn.valueKey || !txn.tokenType) {
     txn.tokenValue = txn.rawAmount;
-    return;
   }
-
   const { valueKey, tokenType, model, endpointTokenConfig } = txn;
   const multiplier = Math.abs(getMultiplier({ valueKey, tokenType, model, endpointTokenConfig }));
   txn.rate = multiplier;
   txn.tokenValue = txn.rawAmount * multiplier;
-
   if (txn.context && txn.tokenType === 'completion' && txn.context === 'incomplete') {
     txn.tokenValue = Math.ceil(txn.tokenValue * cancelRate);
     txn.rate *= cancelRate;
@@ -193,7 +190,6 @@ async function createAutoRefillTransaction(txData) {
  */
 async function createTransaction(_txData) {
   const { balance, transactions, ...txData } = _txData;
-
   if (txData.rawAmount != null && isNaN(txData.rawAmount)) {
     return;
   }
@@ -285,10 +281,10 @@ function calculateStructuredTokenValue(txn) {
       read: readMultiplier,
     };
 
-    const totalPromptTokens =
-      Math.abs(txn.inputTokens || 0) +
-      Math.abs(txn.writeTokens || 0) +
-      Math.abs(txn.readTokens || 0);
+    const inputTokensAbs = Math.abs(txn.inputTokens || 0);
+    const writeTokensAbs = Math.abs(txn.writeTokens || 0);
+    const readTokensAbs = Math.abs(txn.readTokens || 0);
+    const totalPromptTokens = inputTokensAbs + writeTokensAbs + readTokensAbs;
 
     if (totalPromptTokens > 0) {
       txn.rate =

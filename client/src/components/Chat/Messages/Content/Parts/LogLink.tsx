@@ -41,12 +41,14 @@ export const useAttachmentLink = ({ href, filename }: Pick<LogLinkProps, 'href' 
 
 const LogLink: React.FC<LogLinkProps> = ({ href, filename, children }) => {
   const { handleDownload } = useAttachmentLink({ href, filename });
+  // Only use href if it's a valid URL path (starts with /api/), otherwise prevent navigation
+  const isValidPath = href.startsWith('/api/');
   return (
     <a
-      href={href}
+      href={isValidPath ? href : '#'}
       onClick={handleDownload}
-      target="_blank"
-      rel="noopener noreferrer"
+      target={isValidPath ? '_blank' : undefined}
+      rel={isValidPath ? 'noopener noreferrer' : undefined}
       className="!text-blue-400 visited:!text-purple-400 hover:underline"
     >
       {children}

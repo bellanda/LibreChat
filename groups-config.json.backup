@@ -1,0 +1,55 @@
+{
+  "defaultGroup": "default",
+  "groups": {
+    "default": {
+      "name": "Default Users",
+      "description": "Standard user group with basic access",
+      "permissions": {
+        "endpoints": ["*"],
+        "models": {
+          "azureOpenAI": ["*"],
+          "google": ["*"],
+          "anthropic": ["*"],
+          "OpenAI (Open Source Models)": ["*"],
+          "Meta": ["*"],
+          "deepseek": [],
+          "Z.ai": [],
+          "MoonshotAI": [],
+          "Alibaba": [],
+          "xai": ["*"],
+          "agents": ["*"],
+          "HPEAgents": [],
+          "Chutes": []
+        },
+        "assistants": false,
+        "plugins": [],
+        "mcpServers": []
+      }
+    },
+    "ultimate": {
+      "name": "Ultimate Users",
+      "description": "Ultimate users with extended access",
+      "permissions": {
+        "endpoints": ["*"],
+        "models": {
+          "azureOpenAI": ["*"],
+          "google": ["*"],
+          "anthropic": ["*"],
+          "OpenAI (Open Source Models)": ["*"],
+          "Meta": ["*"],
+          "deepseek": ["*"],
+          "Z.ai": ["*"],
+          "MoonshotAI": ["*"],
+          "Alibaba": ["*"],
+          "xai": ["*"],
+          "agents": ["*"],
+          "HPEAgents": ["*"],
+          "Chutes": ["*"]
+        },
+        "assistants": false,
+        "plugins": [],
+        "mcpServers": ["*"]
+      }
+    }
+  }
+}

@@ -9,15 +9,21 @@ import { useProgress } from '~/hooks';
 export default function RetrievalCall({
   initialProgress = 0.1,
   isSubmitting,
+  hideProgressIndicator = false,
 }: {
   initialProgress: number;
   isSubmitting: boolean;
+  hideProgressIndicator?: boolean;
 }) {
   const progress = useProgress(initialProgress);
   const radius = 56.08695652173913;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - progress * circumference;
   const error = progress >= 2;
+
+  if (hideProgressIndicator) {
+    return null;
+  }
 
   return (
     <div className="my-2.5 flex items-center gap-2.5">

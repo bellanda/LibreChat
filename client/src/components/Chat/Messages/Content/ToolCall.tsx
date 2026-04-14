@@ -1,13 +1,13 @@
-import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Button } from '@librechat/client';
-import { TriangleAlert } from 'lucide-react';
-import { actionDelimiter, actionDomainSeparator, Constants } from 'librechat-data-provider';
 import type { TAttachment } from 'librechat-data-provider';
+import { actionDelimiter, actionDomainSeparator, Constants } from 'librechat-data-provider';
+import { TriangleAlert } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocalize, useProgress } from '~/hooks';
+import { cn, logger } from '~/utils';
 import { AttachmentGroup } from './Parts';
-import ToolCallInfo from './ToolCallInfo';
 import ProgressText from './ProgressText';
-import { logger, cn } from '~/utils';
+import ToolCallInfo from './ToolCallInfo';
 
 export default function ToolCall({
   initialProgress = 0.1,
@@ -18,6 +18,7 @@ export default function ToolCall({
   output,
   attachments,
   auth,
+  hideProgressIndicator = false,
 }: {
   initialProgress: number;
   isLast?: boolean;
@@ -28,6 +29,7 @@ export default function ToolCall({
   attachments?: TAttachment[];
   auth?: string;
   expires_at?: number;
+  hideProgressIndicator?: boolean;
 }) {
   const localize = useLocalize();
   const [showInfo, setShowInfo] = useState(false);
@@ -163,24 +165,26 @@ export default function ToolCall({
 
   return (
     <>
-      <div className="relative my-2.5 flex h-5 shrink-0 items-center gap-2.5">
-        <ProgressText
-          progress={progress}
-          onClick={() => setShowInfo((prev) => !prev)}
-          inProgressText={
-            function_name
-              ? localize('com_assistants_running_var', { 0: function_name })
-              : localize('com_assistants_running_action')
-          }
-          authText={
-            !cancelled && authDomain.length > 0 ? localize('com_ui_requires_auth') : undefined
-          }
-          finishedText={getFinishedText()}
-          hasInput={hasInfo}
-          isExpanded={showInfo}
-          error={cancelled}
-        />
-      </div>
+      {!hideProgressIndicator && (
+        <div className="relative my-2.5 flex h-5 shrink-0 items-center gap-2.5">
+          <ProgressText
+            progress={progress}
+            onClick={() => setShowInfo((prev) => !prev)}
+            inProgressText={
+              function_name
+                ? localize('com_assistants_running_var', { 0: function_name })
+                : localize('com_assistants_running_action')
+            }
+            authText={
+              !cancelled && authDomain.length > 0 ? localize('com_ui_requires_auth') : undefined
+            }
+            finishedText={getFinishedText()}
+            hasInput={hasInfo}
+            isExpanded={showInfo}
+            error={cancelled}
+          />
+        </div>
+      )}
       <div
         className="relative"
         style={{
@@ -236,12 +240,13 @@ export default function ToolCall({
             </Button>
           </div>
           <p className="flex items-center text-xs text-text-warning">
-            <TriangleAlert className="mr-1.5 inline-block h-4 w-4" />
+            <TriangleAlert className="mr-1.5 inline-block h-4 w-4" aria-hidden="true" />
             {localize('com_assistants_allow_sites_you_trust')}
           </p>
         </div>
       )}
-      {attachments && attachments.length > 0 && <AttachmentGroup attachments={attachments} />}
+      {/* Anexos de tool calls genéricos são exibidos em nível de mensagem
+          (AttachmentGroup em ContentParts / Message), para evitar duplicações. */}
     </>
   );
 }

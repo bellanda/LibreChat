@@ -2,7 +2,6 @@ const express = require('express');
 const { generateCheckAccess, skipAgentCheck } = require('@librechat/api');
 const { PermissionTypes, Permissions, PermissionBits } = require('librechat-data-provider');
 const {
-  setHeaders,
   moderateText,
   // validateModel,
   validateConvoAccess,
@@ -16,8 +15,6 @@ const { getRoleByName } = require('~/models/Role');
 
 const router = express.Router();
 
-router.use(moderateText);
-
 const checkAgentAccess = generateCheckAccess({
   permissionType: PermissionTypes.AGENTS,
   permissions: [Permissions.USE],
@@ -28,11 +25,13 @@ const checkAgentResourceAccess = canAccessAgentFromBody({
   requiredPermission: PermissionBits.VIEW,
 });
 
+router.use(moderateText);
 router.use(checkAgentAccess);
 router.use(checkAgentResourceAccess);
 router.use(validateConvoAccess);
 router.use(buildEndpointOption);
-router.use(setHeaders);
+// Do not use setHeaders here: resumable controller sends JSON first (streamId), not SSE.
+// SSE is used only for GET /chat/stream/:streamId in the same agents router.
 
 const controller = async (req, res, next) => {
   await AgentController(req, res, next, initializeClient, addTitle);

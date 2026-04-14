@@ -5,6 +5,7 @@ import { ThemeContext, Spinner, Button, isDark } from '@librechat/client';
 import type { TLoginUser, TStartupConfig } from 'librechat-data-provider';
 import type { TAuthContext } from '~/common';
 import { useResendVerificationEmail, useGetStartupConfig } from '~/data-provider';
+import { validateEmail } from '~/utils';
 import { useLocalize } from '~/hooks';
 
 type TLoginFormProps = {
@@ -27,7 +28,8 @@ const LoginForm: React.FC<TLoginFormProps> = ({ onSubmit, startupConfig, error, 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const { data: config } = useGetStartupConfig();
-  const useUsernameLogin = config?.ldap?.username;
+  // Prefer startupConfig so LDAP username mode is correct before hook cache loads (avoids "valid email" when LDAP is configured)
+  const useUsernameLogin = startupConfig?.ldap?.username ?? config?.ldap?.username ?? true;
   const validTheme = isDark(theme) ? 'dark' : 'light';
   const requireCaptcha = Boolean(startupConfig.turnstile?.siteKey);
 
@@ -96,10 +98,9 @@ const LoginForm: React.FC<TLoginFormProps> = ({ onSubmit, startupConfig, error, 
               {...register('email', {
                 required: localize('com_auth_email_required'),
                 maxLength: { value: 120, message: localize('com_auth_email_max_length') },
-                pattern: {
-                  value: useUsernameLogin ? /\S+/ : /\S+@\S+\.\S+/,
-                  message: localize('com_auth_email_pattern'),
-                },
+                validate: useUsernameLogin
+                  ? (value) => value.length > 0 || localize('com_auth_email_required')
+                  : (value) => validateEmail(value, localize('com_auth_email_pattern')),
               })}
               aria-invalid={!!errors.email}
               className="webkit-dark-styles transition-color peer w-full rounded-2xl border border-border-light bg-surface-primary px-3.5 pb-2.5 pt-3 text-text-primary duration-200 focus:border-green-500 focus:outline-none"

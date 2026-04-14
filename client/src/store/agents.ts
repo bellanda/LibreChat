@@ -1,7 +1,36 @@
-import { Constants } from 'librechat-data-provider';
+import { Constants, LocalStorageKeys } from 'librechat-data-provider';
 import { atomFamily, useRecoilCallback } from 'recoil';
 import type { TEphemeralAgent } from 'librechat-data-provider';
 import { logger } from '~/utils';
+import { getTimestampedValue, setTimestamp } from '~/utils/timestamps';
+
+export const autoModeByConvoId = atomFamily<boolean, string>({
+  key: 'autoModeByConvoId',
+  default: true,
+  effects: (key) => [
+    ({ setSelf, onSet }) => {
+      const storageKey = `${LocalStorageKeys.LAST_AUTO_MODE_TOGGLE_}${key}`;
+
+      const saved = getTimestampedValue(storageKey);
+      if (saved !== null) {
+        try {
+          setSelf(JSON.parse(saved));
+        } catch (e) {
+          console.error('Failed to parse auto mode value:', e);
+        }
+      }
+
+      onSet((newValue, _, isReset) => {
+        if (isReset) {
+          localStorage.removeItem(storageKey);
+        } else {
+          localStorage.setItem(storageKey, JSON.stringify(newValue));
+          setTimestamp(storageKey);
+        }
+      });
+    },
+  ],
+});
 
 export const ephemeralAgentByConvoId = atomFamily<TEphemeralAgent | null, string>({
   key: 'ephemeralAgentByConvoId',
@@ -102,4 +131,20 @@ export function useGetEphemeralAgent() {
   );
 
   return getEphemeralAgent;
+}
+
+/**
+ * Creates a callback to get the current auto mode state for a conversation ID.
+ */
+export function useGetAutoMode() {
+  const getAutoMode = useRecoilCallback(
+    ({ snapshot }) =>
+      (conversationId: string): boolean => {
+        const loadable = snapshot.getLoadable(autoModeByConvoId(conversationId));
+        return (loadable.contents as boolean) ?? true;
+      },
+    [],
+  );
+
+  return getAutoMode;
 }

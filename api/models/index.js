@@ -10,6 +10,7 @@ const {
   deleteFiles,
   getFiles,
   updateFileUsage,
+  updateFilesUsage,
 } = require('./File');
 const {
   getMessage,
@@ -47,6 +48,7 @@ module.exports = {
   deleteFiles,
   getFiles,
   updateFileUsage,
+  updateFilesUsage,
 
   getMessage,
   getMessages,

@@ -57,9 +57,9 @@ const LabelController: React.FC<LabelControllerProps> = ({
       render={({ field }) => (
         <Switch
           {...field}
-          checked={field.value}
+          checked={field.value ?? false}
           onCheckedChange={field.onChange}
-          value={field.value.toString()}
+          value={(field.value ?? false).toString()}
           aria-label={label}
         />
       )}
@@ -120,19 +120,19 @@ const PeoplePickerAdminSettings = () => {
     peoplePickerPerm: Permissions.VIEW_USERS | Permissions.VIEW_GROUPS | Permissions.VIEW_ROLES;
     label: string;
   }[] = [
-    {
-      peoplePickerPerm: Permissions.VIEW_USERS,
-      label: localize('com_ui_people_picker_allow_view_users'),
-    },
-    {
-      peoplePickerPerm: Permissions.VIEW_GROUPS,
-      label: localize('com_ui_people_picker_allow_view_groups'),
-    },
-    {
-      peoplePickerPerm: Permissions.VIEW_ROLES,
-      label: localize('com_ui_people_picker_allow_view_roles'),
-    },
-  ];
+      {
+        peoplePickerPerm: Permissions.VIEW_USERS,
+        label: localize('com_ui_people_picker_allow_view_users'),
+      },
+      {
+        peoplePickerPerm: Permissions.VIEW_GROUPS,
+        label: localize('com_ui_people_picker_allow_view_groups'),
+      },
+      {
+        peoplePickerPerm: Permissions.VIEW_ROLES,
+        label: localize('com_ui_people_picker_allow_view_roles'),
+      },
+    ];
 
   const onSubmit = (data: FormValues) => {
     mutate({ roleName: selectedRole, updates: data });
@@ -166,9 +166,9 @@ const PeoplePickerAdminSettings = () => {
         </Button>
       </OGDialogTrigger>
       <OGDialogContent className="w-full border-border-light bg-surface-primary text-text-primary lg:w-1/4">
-        <OGDialogTitle>{`${localize('com_ui_admin_settings')} - ${localize(
-          'com_ui_people_picker',
-        )}`}</OGDialogTitle>
+        <OGDialogTitle>
+          {localize('com_ui_admin_settings_section', { section: localize('com_ui_people_picker') })}
+        </OGDialogTitle>
         <div className="p-2">
           {/* Role selection dropdown */}
           <div className="flex items-center gap-2">

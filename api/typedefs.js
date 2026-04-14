@@ -1265,12 +1265,6 @@
  */
 
 /**
- * @exports OpenAISpecClient
- * @typedef {import('./app/clients/OpenAIClient')} OpenAISpecClient
- * @memberof typedefs
- */
-
-/**
  * @exports TAgentClient
  * @typedef {import('./server/controllers/agents/client')} TAgentClient
  * @memberof typedefs
@@ -1504,7 +1498,6 @@
  * @property {boolean|{userProvide: boolean}} [openAI] - Flag to indicate if OpenAI endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean}} [assistant] - Flag to indicate if Assistant endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean}} [azureOpenAI] - Flag to indicate if Azure OpenAI endpoint is user provided, or its configuration.
- * @property {boolean|{userProvide: boolean}} [chatGPTBrowser] - Flag to indicate if ChatGPT Browser endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean}} [anthropic] - Flag to indicate if Anthropic endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean}} [google] - Flag to indicate if Google endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean, userProvideURL: boolean, name: string}} [custom] - Custom Endpoint configuration.
@@ -1520,22 +1513,11 @@
  */
 
 /**
- * @exports GptPlugins
- * @typedef {Object} GptPlugins
- * @property {Plugin[]} plugins - An array of plugins available.
- * @property {string[]} availableAgents - Available agents, 'classic' or 'functions'.
- * @property {boolean} userProvide - A flag indicating if the user has provided the data.
- * @property {boolean} azure - A flag indicating if azure plugins are used.
- * @memberof typedefs
- */
-
-/**
  * @exports DefaultConfig
  * @typedef {Object} DefaultConfig
  * @property {boolean|{userProvide: boolean}} [openAI] - Flag to indicate if OpenAI endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean}} [assistant] - Flag to indicate if Assistant endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean}} [azureOpenAI] - Flag to indicate if Azure OpenAI endpoint is user provided, or its configuration.
- * @property {boolean|{userProvide: boolean}} [chatGPTBrowser] - Flag to indicate if ChatGPT Browser endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean}} [anthropic] - Flag to indicate if Anthropic endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean}} [google] - Flag to indicate if Google endpoint is user provided, or its configuration.
  * @property {boolean|{userProvide: boolean, userProvideURL: boolean, name: string}} [custom] - Custom Endpoint configuration.

@@ -23,8 +23,9 @@ import {
 } from '~/data-provider';
 import { MinimalIcon } from '~/components/Endpoints';
 import { NotificationSeverity } from '~/common';
+import type { TranslationKeys } from '~/hooks';
 import { useLocalize } from '~/hooks';
-import { formatDate } from '~/utils';
+import { formatDate, logger } from '~/utils';
 import store from '~/store';
 
 const DEFAULT_PARAMS: ConversationListParams = {
@@ -42,7 +43,7 @@ export default function ArchivedChatsTable({
   const localize = useLocalize();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const { showToast } = useToastContext();
-  const isSearchEnabled = useRecoilValue(store.search);
+  const searchState = useRecoilValue(store.search);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [queryParams, setQueryParams] = useState<ConversationListParams>(DEFAULT_PARAMS);
   const [deleteConversation, setDeleteConversation] = useState<TConversation | null>(null);
@@ -95,6 +96,7 @@ export default function ArchivedChatsTable({
       await refetch();
     },
     onError: (error: unknown) => {
+      logger.error('Error deleting archived conversation:', error);
       showToast({
         message: localize('com_ui_archive_delete_error') as string,
         severity: NotificationSeverity.ERROR,
@@ -107,6 +109,7 @@ export default function ArchivedChatsTable({
       await refetch();
     },
     onError: (error: unknown) => {
+      logger.error('Error unarchiving conversation', error);
       showToast({
         message: localize('com_ui_unarchive_error') as string,
         severity: NotificationSeverity.ERROR,
@@ -152,7 +155,7 @@ export default function ArchivedChatsTable({
           return (
             <button
               type="button"
-              className="flex items-center gap-2 truncate"
+              className="flex items-center gap-2 truncate rounded-sm"
               onClick={() => window.open(`/c/${conversationId}`, '_blank')}
             >
               <MinimalIcon
@@ -224,6 +227,7 @@ export default function ArchivedChatsTable({
                       })
                     }
                     title={localize('com_ui_unarchive')}
+                    aria-label={localize('com_ui_unarchive')}
                     disabled={unarchiveMutation.isLoading}
                   >
                     {unarchiveMutation.isLoading ? (
@@ -245,8 +249,9 @@ export default function ArchivedChatsTable({
                       setIsDeleteOpen(true);
                     }}
                     title={localize('com_ui_delete')}
+                    aria-label={localize('com_ui_delete')}
                   >
-                    <TrashIcon className="size-4" />
+                    <TrashIcon className="size-4" aria-hidden="true" />
                   </Button>
                 }
               />
@@ -275,7 +280,7 @@ export default function ArchivedChatsTable({
         isFetchingNextPage={isFetchingNextPage}
         isLoading={isLoading}
         showCheckboxes={false}
-        enableSearch={isSearchEnabled}
+        enableSearch={searchState?.enabled === true}
       />
 
       <OGDialog open={isDeleteOpen} onOpenChange={onOpenChange}>

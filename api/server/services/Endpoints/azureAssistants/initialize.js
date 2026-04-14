@@ -1,13 +1,13 @@
 const OpenAI = require('openai');
 const { ProxyAgent } = require('undici');
-const { constructAzureURL, isUserProvided, resolveHeaders } = require('@librechat/api');
-const { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } = require('librechat-data-provider');
 const {
+  isUserProvided,
+  resolveHeaders,
+  constructAzureURL,
   checkUserKeyExpiry,
-  getUserKeyValues,
-  getUserKeyExpiry,
-} = require('~/server/services/UserService');
-const OAIClient = require('~/app/clients/OpenAIClient');
+} = require('@librechat/api');
+const { ErrorTypes, EModelEndpoint, mapModelToAzureConfig } = require('librechat-data-provider');
+const { getUserKeyValues, getUserKeyExpiry } = require('~/models');
 
 class Files {
   constructor(client) {
@@ -123,16 +123,7 @@ const initializeClient = async ({ req, res, version, endpointOption, initAppClie
     if (initAppClient) {
       clientOptions.titleConvo = azureConfig.titleConvo;
       clientOptions.titleModel = azureConfig.titleModel;
-      clientOptions.promptPrefix = azureConfig.promptPrefix;
       clientOptions.titleMethod = azureConfig.titleMethod ?? 'completion';
-
-      // Aplicar promptPrefix global se não houver um específico do endpoint
-      if (!clientOptions.promptPrefix) {
-        const allConfig = req.config?.endpoints?.all;
-        if (allConfig && allConfig.promptPrefix) {
-          clientOptions.promptPrefix = allConfig.promptPrefix;
-        }
-      }
 
       const groupName = modelGroupMap[modelName].group;
       clientOptions.addParams = azureConfig.groupMap[groupName].addParams;
@@ -191,15 +182,6 @@ const initializeClient = async ({ req, res, version, endpointOption, initAppClie
 
   if (azureOptions) {
     openai.locals = { ...(openai.locals ?? {}), azureOptions };
-  }
-
-  if (endpointOption && initAppClient) {
-    const client = new OAIClient(apiKey, clientOptions);
-    return {
-      client,
-      openai,
-      openAIApiKey: apiKey,
-    };
   }
 
   return {

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Search, X } from 'lucide-react';
 import { Input } from '@librechat/client';
+import { Search, X } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDebounce, useLocalize } from '~/hooks';
 
 /**
@@ -99,6 +99,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch, className = '' }
           <X
             className="size-5 text-text-secondary transition-colors duration-200 group-hover:text-text-primary"
             strokeWidth={2.5}
+            aria-hidden="true"
           />
         </button>
       )}

@@ -100,10 +100,11 @@ export enum BedrockProviders {
   Amazon = 'amazon',
   Anthropic = 'anthropic',
   Cohere = 'cohere',
+  DeepSeek = 'deepseek',
   Meta = 'meta',
   MistralAI = 'mistral',
+  Moonshot = 'moonshot',
   StabilityAI = 'stability',
-  DeepSeek = 'deepseek',
 }
 
 export const getModelKey = (endpoint: EModelEndpoint | string, model: string) => {
@@ -172,6 +173,7 @@ export enum ReasoningEffort {
   low = 'low',
   medium = 'medium',
   high = 'high',
+  xhigh = 'xhigh',
 }
 
 export enum ReasoningSummary {
@@ -386,6 +388,10 @@ export const anthropicSettings = {
         return CLAUDE_4_64K_MAX_OUTPUT;
       }
 
+      if (/claude-opus[-.]?(?:[5-9]|4[-.]?([5-9]|\d{2,}))/.test(modelName)) {
+        return CLAUDE_4_64K_MAX_OUTPUT;
+      }
+
       if (/claude-opus[-.]?[4-9]/.test(modelName)) {
         return CLAUDE_32K_MAX_OUTPUT;
       }
@@ -397,7 +403,14 @@ export const anthropicSettings = {
         return CLAUDE_4_64K_MAX_OUTPUT;
       }
 
-      if (/claude-(?:opus|haiku)[-.]?[4-9]/.test(modelName) && value > CLAUDE_32K_MAX_OUTPUT) {
+      if (/claude-opus[-.]?(?:[5-9]|4[-.]?([5-9]|\d{2,}))/.test(modelName)) {
+        if (value > CLAUDE_4_64K_MAX_OUTPUT) {
+          return CLAUDE_4_64K_MAX_OUTPUT;
+        }
+        return value;
+      }
+
+      if (/claude-opus[-.]?[4-9]/.test(modelName) && value > CLAUDE_32K_MAX_OUTPUT) {
         return CLAUDE_32K_MAX_OUTPUT;
       }
 
@@ -622,9 +635,10 @@ export type MemoryArtifact = {
 };
 
 export type UIResource = {
+  resourceId: string;
   type?: string;
   data?: unknown;
-  uri?: string;
+  uri: string;
   mimeType?: string;
   text?: string;
   [key: string]: unknown;
@@ -643,11 +657,11 @@ export type TAttachmentMetadata = {
 export type TAttachment =
   | (TFile & TAttachmentMetadata)
   | (Pick<TFile, 'filename' | 'filepath' | 'conversationId'> & {
-      expiresAt: number;
-    } & TAttachmentMetadata)
+    expiresAt: number;
+  } & TAttachmentMetadata)
   | (Partial<Pick<TFile, 'filename' | 'filepath'>> &
-      Pick<TFile, 'conversationId'> &
-      TAttachmentMetadata);
+    Pick<TFile, 'conversationId'> &
+    TAttachmentMetadata);
 
 export type TMessage = z.input<typeof tMessageSchema> & {
   children?: TMessage[];
@@ -945,7 +959,7 @@ export const googleBaseSchema = tConversationSchema.pick({
 });
 
 export const googleSchema = googleBaseSchema
-  .transform((obj: Partial<TConversation>) => removeNullishValues(obj))
+  .transform((obj: Partial<TConversation>) => removeNullishValues(obj, true))
   .catch(() => ({}));
 
 /**
@@ -1212,7 +1226,7 @@ export const compactGoogleSchema = googleBaseSchema
       delete newObj.topK;
     }
 
-    return removeNullishValues(newObj);
+    return removeNullishValues(newObj, true);
   })
   .catch(() => ({}));
 
@@ -1293,6 +1307,7 @@ export const tBannerSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   isPublic: z.boolean(),
+  persistable: z.boolean().default(false),
 });
 export type TBanner = z.infer<typeof tBannerSchema>;
 

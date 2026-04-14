@@ -53,7 +53,11 @@ export const fullMimeTypesList = [
   'image/heic',
   'image/heif',
   'application/x-tar',
+  'application/x-sh',
   'application/typescript',
+  'application/sql',
+  'application/yaml',
+  'application/vnd.coffeescript',
   'application/xml',
   'application/zip',
   'image/svg',
@@ -140,7 +144,7 @@ export const textMimeTypes =
   /^(text\/(x-c|x-csharp|tab-separated-values|x-c\+\+|x-h|x-java|html|markdown|x-php|x-python|x-script\.python|x-ruby|x-tex|plain|css|vtt|javascript|csv|xml))$/;
 
 export const applicationMimeTypes =
-  /^(application\/(epub\+zip|csv|json|pdf|x-tar|typescript|vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation|spreadsheetml\.sheet)|xml|zip))$/;
+  /^(application\/(epub\+zip|csv|json|pdf|x-tar|x-sh|typescript|sql|yaml|vnd\.coffeescript|vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation|spreadsheetml\.sheet)|xml|zip))$/;
 
 export const imageMimeTypes = /^image\/(jpeg|gif|png|webp|heic|heif)$/;
 
@@ -149,19 +153,11 @@ export const audioMimeTypes =
 
 export const videoMimeTypes = /^video\/(mp4|avi|mov|wmv|flv|webm|mkv|m4v|3gp|ogv)$/;
 
-// Tipos de arquivo que devem ser excluídos do OCR e usar processamento normal
-export const excludedFromOCRMimeTypes = [
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // Excel XLSX
-  'application/vnd.ms-excel', // Excel XLS
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.template', // Excel XLTX
-  'application/vnd.ms-excel.template', // Excel XLT
-];
-
 export const defaultOCRMimeTypes = [
   imageMimeTypes,
   /^application\/pdf$/,
-  /^application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation)$/,
-  /^application\/vnd\.ms-(word|powerpoint)$/,
+  /^application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation|spreadsheetml\.sheet)$/,
+  /^application\/vnd\.ms-(word|powerpoint|excel)$/,
   /^application\/epub\+zip$/,
 ];
 
@@ -188,120 +184,132 @@ export const codeInterpreterMimeTypes = [
 ];
 
 export const codeTypeMapping: { [key: string]: string } = {
-  c: 'text/x-c',
-  cs: 'text/x-csharp',
-  cpp: 'text/x-c++',
-  h: 'text/x-h',
-  md: 'text/markdown',
-  php: 'text/x-php',
-  py: 'text/x-python',
-  rb: 'text/x-ruby',
-  tex: 'text/x-tex',
-  js: 'text/javascript',
-  sh: 'application/x-sh',
-  ts: 'application/typescript',
-  tar: 'application/x-tar',
-  zip: 'application/zip',
-  yml: 'application/x-yaml',
-  yaml: 'application/x-yaml',
-  log: 'text/plain',
-  tsv: 'text/tab-separated-values',
-  // Database files
-  sql: 'text/plain',
-  // Configuration files
-  toml: 'text/plain',
-  ini: 'text/plain',
-  cfg: 'text/plain',
-  conf: 'text/plain',
-  config: 'text/plain',
-  env: 'text/plain',
-  properties: 'text/plain',
-  // Git and version control files
-  gitignore: 'text/plain',
-  gitattributes: 'text/plain',
-  gitmodules: 'text/plain',
-  // Other common text-based files
-  dockerfile: 'text/plain',
-  makefile: 'text/plain',
-  cmake: 'text/plain',
-  requirements: 'text/plain',
-  txt: 'text/plain',
-  text: 'text/plain',
-  // Lock files and package files
-  lock: 'text/plain',
-  json: 'application/json',
-  xml: 'application/xml',
-  csv: 'text/csv',
-  html: 'text/html',
-  css: 'text/css',
-  scss: 'text/css',
-  sass: 'text/css',
-  less: 'text/css',
-  // Additional programming languages
-  java: 'text/x-java',
-  kt: 'text/plain', // Kotlin
-  scala: 'text/plain',
-  go: 'text/plain',
-  rs: 'text/plain', // Rust
-  swift: 'text/plain',
-  dart: 'text/plain',
-  r: 'text/plain',
-  m: 'text/plain', // Objective-C
-  mm: 'text/plain', // Objective-C++
-  pl: 'text/plain', // Perl
-  lua: 'text/plain',
-  vim: 'text/plain',
-  vimrc: 'text/plain',
-  bashrc: 'text/plain',
-  zshrc: 'text/plain',
-  // Web development
-  jsx: 'text/javascript',
-  tsx: 'application/typescript',
-  vue: 'text/html',
-  svelte: 'text/html',
-  // Data formats
-  jsonl: 'application/json',
-  ndjson: 'application/json',
-  // Shell scripts
-  bash: 'application/x-sh',
-  zsh: 'application/x-sh',
-  fish: 'application/x-sh',
-  // Documentation
-  rst: 'text/plain',
-  adoc: 'text/plain',
-  asciidoc: 'text/plain',
-  // Other common extensions
-  bat: 'text/plain', // Windows batch
-  cmd: 'text/plain', // Windows command
-  ps1: 'text/plain', // PowerShell
-  psm1: 'text/plain', // PowerShell module
-  psd1: 'text/plain', // PowerShell data
-  // Markup and templating
-  handlebars: 'text/html',
-  hbs: 'text/html',
-  mustache: 'text/html',
-  twig: 'text/html',
-  jinja: 'text/html',
-  jinja2: 'text/html',
-  // Configuration formats
-  editorconfig: 'text/plain',
-  gitconfig: 'text/plain',
-  npmrc: 'text/plain',
-  yarnrc: 'text/plain',
-  // Build and project files
-  gradle: 'text/plain',
-  maven: 'text/plain',
-  sbt: 'text/plain',
-  // License and readme files
-  license: 'text/plain',
-  readme: 'text/plain',
-  changelog: 'text/plain',
-  contributing: 'text/plain',
-  // Ignore files
-  dockerignore: 'text/plain',
-  eslintignore: 'text/plain',
-  prettierignore: 'text/plain',
+  c: 'text/x-c', // .c - C source
+  cs: 'text/x-csharp', // .cs - C# source
+  cpp: 'text/x-c++', // .cpp - C++ source
+  h: 'text/x-h', // .h - C/C++ header
+  md: 'text/markdown', // .md - Markdown
+  php: 'text/x-php', // .php - PHP source
+  py: 'text/x-python', // .py - Python source
+  rb: 'text/x-ruby', // .rb - Ruby source
+  tex: 'text/x-tex', // .tex - LaTeX source
+  js: 'text/javascript', // .js - JavaScript source
+  sh: 'application/x-sh', // .sh - Shell script
+  ts: 'application/typescript', // .ts - TypeScript source
+  tar: 'application/x-tar', // .tar - Tar archive
+  zip: 'application/zip', // .zip - ZIP archive
+  log: 'text/plain', // .log - Log file
+  tsv: 'text/tab-separated-values', // .tsv - Tab-separated values
+  yml: 'application/yaml', // .yml - YAML
+  yaml: 'application/yaml', // .yaml - YAML
+  sql: 'application/sql', // .sql - SQL (IANA registered)
+  dart: 'text/plain', // .dart - Dart source
+  coffee: 'application/vnd.coffeescript', // .coffee - CoffeeScript (IANA registered)
+  go: 'text/plain', // .go - Go source
+  rs: 'text/plain', // .rs - Rust source
+  swift: 'text/plain', // .swift - Swift source
+  kt: 'text/plain', // .kt - Kotlin source
+  kts: 'text/plain', // .kts - Kotlin script
+  scala: 'text/plain', // .scala - Scala source
+  lua: 'text/plain', // .lua - Lua source
+  r: 'text/plain', // .r - R source
+  pl: 'text/plain', // .pl - Perl source
+  pm: 'text/plain', // .pm - Perl module
+  groovy: 'text/plain', // .groovy - Groovy source
+  gradle: 'text/plain', // .gradle - Gradle build script
+  clj: 'text/plain', // .clj - Clojure source
+  cljs: 'text/plain', // .cljs - ClojureScript source
+  cljc: 'text/plain', // .cljc - Clojure common source
+  elm: 'text/plain', // .elm - Elm source
+  erl: 'text/plain', // .erl - Erlang source
+  hrl: 'text/plain', // .hrl - Erlang header
+  ex: 'text/plain', // .ex - Elixir source
+  exs: 'text/plain', // .exs - Elixir script
+  hs: 'text/plain', // .hs - Haskell source
+  lhs: 'text/plain', // .lhs - Literate Haskell source
+  ml: 'text/plain', // .ml - OCaml source
+  mli: 'text/plain', // .mli - OCaml interface
+  fs: 'text/plain', // .fs - F# source
+  fsx: 'text/plain', // .fsx - F# script
+  lisp: 'text/plain', // .lisp - Lisp source
+  cl: 'text/plain', // .cl - Common Lisp source
+  scm: 'text/plain', // .scm - Scheme source
+  rkt: 'text/plain', // .rkt - Racket source
+  jsx: 'text/plain', // .jsx - React JSX
+  tsx: 'text/plain', // .tsx - React TSX
+  vue: 'text/plain', // .vue - Vue component
+  svelte: 'text/plain', // .svelte - Svelte component
+  astro: 'text/plain', // .astro - Astro component
+  scss: 'text/plain', // .scss - SCSS source
+  sass: 'text/plain', // .sass - Sass source
+  less: 'text/plain', // .less - Less source
+  styl: 'text/plain', // .styl - Stylus source
+  toml: 'text/plain', // .toml - TOML config
+  ini: 'text/plain', // .ini - INI config
+  cfg: 'text/plain', // .cfg - Config file
+  conf: 'text/plain', // .conf - Config file
+  env: 'text/plain', // .env - Environment file
+  properties: 'text/plain', // .properties - Java properties
+  graphql: 'text/plain', // .graphql - GraphQL schema/query
+  gql: 'text/plain', // .gql - GraphQL schema/query
+  proto: 'text/plain', // .proto - Protocol Buffers
+  dockerfile: 'text/plain', // Dockerfile
+  makefile: 'text/plain', // Makefile
+  cmake: 'text/plain', // .cmake - CMake script
+  rake: 'text/plain', // .rake - Rake task
+  gemspec: 'text/plain', // .gemspec - Ruby gem spec
+  bash: 'text/plain', // .bash - Bash script
+  zsh: 'text/plain', // .zsh - Zsh script
+  fish: 'text/plain', // .fish - Fish script
+  ps1: 'text/plain', // .ps1 - PowerShell script
+  psm1: 'text/plain', // .psm1 - PowerShell module
+  bat: 'text/plain', // .bat - Batch script
+  cmd: 'text/plain', // .cmd - Windows command script
+  asm: 'text/plain', // .asm - Assembly source
+  s: 'text/plain', // .s - Assembly source
+  v: 'text/plain', // .v - V or Verilog source
+  zig: 'text/plain', // .zig - Zig source
+  nim: 'text/plain', // .nim - Nim source
+  cr: 'text/plain', // .cr - Crystal source
+  d: 'text/plain', // .d - D source
+  pas: 'text/plain', // .pas - Pascal source
+  pp: 'text/plain', // .pp - Pascal/Puppet source
+  f90: 'text/plain', // .f90 - Fortran 90 source
+  f95: 'text/plain', // .f95 - Fortran 95 source
+  f03: 'text/plain', // .f03 - Fortran 2003 source
+  jl: 'text/plain', // .jl - Julia source
+  m: 'text/plain', // .m - Objective-C/MATLAB source
+  mm: 'text/plain', // .mm - Objective-C++ source
+  ada: 'text/plain', // .ada - Ada source
+  adb: 'text/plain', // .adb - Ada body
+  ads: 'text/plain', // .ads - Ada spec
+  cob: 'text/plain', // .cob - COBOL source
+  cbl: 'text/plain', // .cbl - COBOL source
+  tcl: 'text/plain', // .tcl - Tcl source
+  awk: 'text/plain', // .awk - AWK script
+  sed: 'text/plain', // .sed - Sed script
 };
+
+/** Maps image extensions to MIME types for formats browsers may not recognize */
+export const imageTypeMapping: { [key: string]: string } = {
+  heic: 'image/heic',
+  heif: 'image/heif',
+};
+
+/**
+ * Infers the MIME type from a file's extension when the browser doesn't recognize it
+ * @param fileName - The name of the file including extension
+ * @param currentType - The current MIME type reported by the browser (may be empty)
+ * @returns The inferred MIME type if browser didn't provide one, otherwise the original type
+ */
+export function inferMimeType(fileName: string, currentType: string): string {
+  if (currentType) {
+    return currentType;
+  }
+
+  const extension = fileName.split('.').pop()?.toLowerCase() ?? '';
+  return codeTypeMapping[extension] || imageTypeMapping[extension] || currentType;
+}
 
 export const retrievalMimeTypes = [
   /^(text\/(x-c|x-c\+\+|x-h|html|x-java|markdown|x-php|x-python|x-script\.python|x-ruby|x-tex|plain|vtt|xml))$/,
@@ -684,262 +692,4 @@ export function mergeFileConfig(dynamic: z.infer<typeof fileConfigSchema> | unde
   }
 
   return mergedConfig;
-}
-
-/**
- * Helper function to determine if a file extension is likely a text-based file
- * This serves as a fallback for extensions not in codeTypeMapping
- */
-export function isLikelyTextFile(extension: string): boolean {
-  const textExtensions = new Set([
-    // Programming languages not in main mapping
-    'asm',
-    'c++',
-    'cc',
-    'cxx',
-    'h',
-    'hpp',
-    'hxx',
-    'inc',
-    'f',
-    'f77',
-    'f90',
-    'f95',
-    'for',
-    'ftn',
-    'fpp',
-    'pas',
-    'pp',
-    'inc',
-    'dpr',
-    'dpk',
-    'hs',
-    'lhs',
-    'elm',
-    'ml',
-    'mli',
-    'fsx',
-    'fs',
-    'erl',
-    'hrl',
-    'ex',
-    'exs',
-    'clj',
-    'cljs',
-    'cljc',
-    'lisp',
-    'lsp',
-    'cl',
-    'el',
-    'scm',
-    'ss',
-    'rkt',
-    'nim',
-    'nims',
-    'nimble',
-    'cr',
-    'jl',
-    'zig',
-    'v',
-    'vv',
-    'vsh',
-    'gleam',
-    'odin',
-    'pony',
-    // Markup and documentation
-    'org',
-    'tex',
-    'latex',
-    'bib',
-    'wiki',
-    'mediawiki',
-    'textile',
-    'creole',
-    'pod',
-    'rdoc',
-    'man',
-    // Configuration and data
-    'inf',
-    'reg',
-    'desktop',
-    'service',
-    'timer',
-    'mount',
-    'automount',
-    'swap',
-    'target',
-    'socket',
-    'slice',
-    'scope',
-    'path',
-    'device',
-    'netdev',
-    'network',
-    'link',
-    'zone',
-    'policy',
-    'pkla',
-    // Web and API
-    'graphql',
-    'gql',
-    'proto',
-    'avsc',
-    'avdl',
-    'thrift',
-    'capnp',
-    'fbs',
-    'yang',
-    'yang',
-    // Database and query languages
-    'cql',
-    'cypher',
-    'sparql',
-    'xquery',
-    'xpath',
-    'hql',
-    'pig',
-    'ql',
-    'dml',
-    'ddl',
-    // Templating and DSL
-    'styl',
-    'stylus',
-    'pug',
-    'jade',
-    'slim',
-    'haml',
-    'erb',
-    'ejs',
-    'nunjucks',
-    'liquid',
-    'ftl',
-    'vm',
-    'vtl',
-    'art',
-    'dot',
-    'ect',
-    // Build and automation
-    'mk',
-    'mak',
-    'cmake',
-    'bazel',
-    'bzl',
-    'build',
-    'ninja',
-    'gn',
-    'gyp',
-    'gypi',
-    'waf',
-    'scons',
-    'ant',
-    'ivy',
-    'gradle',
-    'mvn',
-    'pom',
-    'sbt',
-    'mix',
-    'rebar',
-    'stack',
-    'cabal',
-    'opam',
-    // CI/CD and deployment
-    'jenkinsfile',
-    'dockerfile',
-    'containerfile',
-    'compose',
-    'stack',
-    'swarm',
-    'nomad',
-    'consul',
-    'terraform',
-    'tf',
-    'tfvars',
-    'hcl',
-    'pkr',
-    'ansible',
-    'playbook',
-    'inventory',
-    'vault',
-    'k8s',
-    'kube',
-    'helm',
-    'chart',
-    'values',
-    // Logs and monitoring
-    'access',
-    'error',
-    'debug',
-    'trace',
-    'audit',
-    'syslog',
-    'dmesg',
-    'kern',
-    'mail',
-    'cron',
-    'auth',
-    'daemon',
-    'user',
-    'local',
-    'messages',
-    // Version control
-    'patch',
-    'diff',
-    'rej',
-    'orig',
-    'conflict',
-    'gitkeep',
-    'gitmodules',
-    'gitattributes',
-    'hgignore',
-    'hgtags',
-    'svnignore',
-    // Package managers
-    'podfile',
-    'cartfile',
-    'brewfile',
-    'gemfile',
-    'pipfile',
-    'poetry',
-    'pyproject',
-    'setup',
-    'requirements',
-    'constraints',
-    'manifest',
-    'package-lock',
-    'yarn',
-    'pnpm-lock',
-    'shrinkwrap',
-    // IDE and editor
-    'editorconfig',
-    'prettierrc',
-    'eslintrc',
-    'tslint',
-    'jsconfig',
-    'tsconfig',
-    'babelrc',
-    'webpack',
-    'rollup',
-    'vite',
-    'parcel',
-    'snowpack',
-    'esbuild',
-    // Other text-based formats
-    'ldif',
-    'dsv',
-    'psv',
-    'ssv',
-    'tab',
-    'fixed',
-    'arff',
-    'weka',
-    'libsvm',
-    'bibtex',
-    'ris',
-    'endnote',
-    'refer',
-    'medline',
-    'pubmed',
-  ]);
-
-  return textExtensions.has(extension.toLowerCase());
 }

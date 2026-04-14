@@ -1,19 +1,19 @@
-import React, { useMemo, useEffect } from 'react';
 import { Spinner } from '@librechat/client';
-import { PermissionBits } from 'librechat-data-provider';
 import type t from 'librechat-data-provider';
+import { PermissionBits } from 'librechat-data-provider';
+import React, { useEffect, useMemo } from 'react';
 import { useMarketplaceAgentsInfiniteQuery } from '~/data-provider/Agents';
 import { useAgentCategories, useLocalize } from '~/hooks';
 import { useInfiniteScroll } from '~/hooks/useInfiniteScroll';
-import { useHasData } from './SmartLoader';
-import ErrorDisplay from './ErrorDisplay';
 import AgentCard from './AgentCard';
+import ErrorDisplay from './ErrorDisplay';
+import { useHasData } from './SmartLoader';
 
 interface AgentGridProps {
-  category: string; // Currently selected category
-  searchQuery: string; // Current search query
-  onSelectAgent: (agent: t.Agent) => void; // Callback when agent is selected
-  scrollElementRef?: React.RefObject<HTMLElement>; // Parent scroll container ref for infinite scroll
+  category: string;
+  searchQuery: string;
+  onSelectAgent: (agent: t.Agent) => void;
+  scrollElementRef?: React.RefObject<HTMLElement>;
 }
 
 /**
@@ -184,7 +184,7 @@ const AgentGrid: React.FC<AgentGridProps> = ({
           {/* Agent grid - 2 per row with proper semantic structure */}
           {currentAgents && currentAgents.length > 0 && (
             <div
-              className="grid grid-cols-1 gap-6 md:grid-cols-2"
+              className="mx-4 grid grid-cols-1 gap-6 md:grid-cols-2"
               role="grid"
               aria-label={localize('com_agents_grid_announcement', {
                 count: currentAgents.length,
@@ -193,7 +193,7 @@ const AgentGrid: React.FC<AgentGridProps> = ({
             >
               {currentAgents.map((agent: t.Agent, index: number) => (
                 <div key={`${agent.id}-${index}`} role="gridcell">
-                  <AgentCard agent={agent} onClick={() => onSelectAgent(agent)} />
+                  <AgentCard agent={agent} onSelect={onSelectAgent} />
                 </div>
               ))}
             </div>

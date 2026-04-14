@@ -1,5 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { createTransaction, createStructuredTransaction } = require('./Transaction');
+
 /**
  * Creates up to two transactions to record the spending of tokens.
  *
@@ -14,7 +15,15 @@ const { createTransaction, createStructuredTransaction } = require('./Transactio
  */
 const spendTokens = async (txData, tokenUsage) => {
   const { promptTokens, completionTokens } = tokenUsage;
-
+  logger.debug(
+    `[spendTokens] conversationId: ${txData.conversationId}${
+      txData?.context ? ` | Context: ${txData?.context}` : ''
+    } | Token usage: `,
+    {
+      promptTokens,
+      completionTokens,
+    },
+  );
   let prompt, completion;
   try {
     if (promptTokens !== undefined) {
@@ -33,7 +42,18 @@ const spendTokens = async (txData, tokenUsage) => {
       });
     }
 
-    // No logging by default; rely on upstream summary logs
+    if (prompt || completion) {
+      logger.debug('[spendTokens] Transaction data record against balance:', {
+        user: txData.user,
+        prompt: prompt?.prompt,
+        promptRate: prompt?.rate,
+        completion: completion?.completion,
+        completionRate: completion?.rate,
+        balance: completion?.balance ?? prompt?.balance,
+      });
+    } else {
+      logger.debug('[spendTokens] No transactions incurred against balance');
+    }
   } catch (err) {
     logger.error('[spendTokens]', err);
   }
@@ -56,7 +76,15 @@ const spendTokens = async (txData, tokenUsage) => {
  */
 const spendStructuredTokens = async (txData, tokenUsage) => {
   const { promptTokens, completionTokens } = tokenUsage;
-
+  logger.debug(
+    `[spendStructuredTokens] conversationId: ${txData.conversationId}${
+      txData?.context ? ` | Context: ${txData?.context}` : ''
+    } | Token usage: `,
+    {
+      promptTokens,
+      completionTokens,
+    },
+  );
   let prompt, completion;
   try {
     if (promptTokens) {
@@ -78,7 +106,18 @@ const spendStructuredTokens = async (txData, tokenUsage) => {
       });
     }
 
-    // No logging by default; rely on upstream summary logs
+    if (prompt || completion) {
+      logger.debug('[spendStructuredTokens] Transaction data record against balance:', {
+        user: txData.user,
+        prompt: prompt?.prompt,
+        promptRate: prompt?.rate,
+        completion: completion?.completion,
+        completionRate: completion?.rate,
+        balance: completion?.balance ?? prompt?.balance,
+      });
+    } else {
+      logger.debug('[spendStructuredTokens] No transactions incurred against balance');
+    }
   } catch (err) {
     logger.error('[spendStructuredTokens]', err);
   }

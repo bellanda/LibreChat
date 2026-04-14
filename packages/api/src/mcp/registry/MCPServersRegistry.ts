@@ -1,8 +1,10 @@
+import { logger } from '@librechat/data-schemas';
 import type * as t from '~/mcp/types';
 import {
   ServerConfigsCacheFactory,
   type ServerConfigsCache,
 } from './cache/ServerConfigsCacheFactory';
+import { MCPServerInspector } from './MCPServerInspector';
 
 /**
  * Central registry for managing MCP server configurations across different scopes and users.
@@ -16,11 +18,36 @@ import {
  * Falls back to raw config when servers haven't been initialized yet or failed to initialize.
  * Handles server lifecycle operations including adding, removing, and querying configurations.
  */
-class MCPServersRegistry {
+export class MCPServersRegistry {
+  private static instance: MCPServersRegistry | null = null;
+
   public readonly sharedAppServers = ServerConfigsCacheFactory.create('App', false);
   public readonly sharedUserServers = ServerConfigsCacheFactory.create('User', false);
   private readonly privateUserServers: Map<string | undefined, ServerConfigsCache> = new Map();
   private rawConfigs: t.MCPServers = {};
+
+  /** Creates and returns the singleton instance (mongoose/allowedDomains accepted for API compatibility; DB not implemented). */
+  public static createInstance(
+    _mongoose?: unknown,
+    _allowedDomains?: string[] | null,
+  ): MCPServersRegistry {
+    if (MCPServersRegistry.instance) {
+      logger.debug('[MCPServersRegistry] Returning existing instance');
+      return MCPServersRegistry.instance;
+    }
+    logger.info('[MCPServersRegistry] Creating new instance');
+    const inst = new MCPServersRegistry();
+    MCPServersRegistry.instance = inst;
+    return inst;
+  }
+
+  /** Returns the singleton MCPServersRegistry instance. */
+  public static getInstance(): MCPServersRegistry {
+    if (!MCPServersRegistry.instance) {
+      throw new Error('MCPServersRegistry has not been initialized. Call createInstance first.');
+    }
+    return MCPServersRegistry.instance;
+  }
 
   /**
    * Stores the raw MCP configuration as a fallback when servers haven't been initialized yet.
@@ -28,6 +55,29 @@ class MCPServersRegistry {
    */
   public setRawConfigs(configs: t.MCPServers): void {
     this.rawConfigs = configs;
+  }
+
+  /**
+   * Inspects a server and adds it to the appropriate cache (app or user).
+   * For 'CACHE': inspects then adds to sharedAppServers or sharedUserServers based on startup/requiresOAuth.
+   * 'DB' storage is not implemented in this registry (no mongoose/DB layer).
+   */
+  public async addServer(
+    serverName: string,
+    config: t.MCPOptions,
+    storageLocation: 'CACHE' | 'DB',
+    _userId?: string,
+  ): Promise<t.AddServerResult> {
+    if (storageLocation === 'DB') {
+      throw new Error(
+        'MCPServersRegistry: DB storage is not implemented. Use CACHE for startup initialization.',
+      );
+    }
+    const parsedConfig = await MCPServerInspector.inspect(serverName, config);
+    if (parsedConfig.startup === false || parsedConfig.requiresOAuth) {
+      return this.sharedUserServers.add(serverName, parsedConfig);
+    }
+    return this.sharedAppServers.add(serverName, parsedConfig);
   }
 
   public async addPrivateUserServer(
@@ -115,4 +165,5 @@ class MCPServersRegistry {
   }
 }
 
-export const mcpServersRegistry = new MCPServersRegistry();
+// Singleton: mesma instância usada por createInstance/getInstance (api/config) e por imports diretos (packages/api).
+export const mcpServersRegistry = MCPServersRegistry.createInstance();

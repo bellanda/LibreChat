@@ -206,9 +206,10 @@ describe('getLLMConfig', () => {
   });
 
   describe('Edge cases', () => {
-    it('should handle missing apiKey', () => {
-      const result = getLLMConfig(undefined, { modelOptions: {} });
-      expect(result.llmConfig).not.toHaveProperty('apiKey');
+    it('should throw when credentials are missing or invalid', () => {
+      expect(() => getLLMConfig(undefined, { modelOptions: {} })).toThrow(
+        'Invalid credentials provided',
+      );
     });
 
     it('should handle empty modelOptions', () => {

@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import type { IAction } from '~/types';
 
 // Define the Auth sub-schema with type-safety.
@@ -18,7 +18,7 @@ const AuthSchema = new Schema(
 
 const Action = new Schema<IAction>({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     index: true,
     required: true,

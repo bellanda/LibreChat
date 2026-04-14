@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, Document } from 'mongoose';
 import { conversationPreset } from './defaults';
 
 // @ts-ignore
@@ -81,7 +81,7 @@ const presetSchema: Schema<IPreset> = new Schema(
     },
     ...conversationPreset,
     agentOptions: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
       default: null,
     },
   },

@@ -1,7 +1,7 @@
-import React, { useState, useRef, useMemo } from 'react';
 import { Skeleton } from '@librechat/client';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { apiBaseUrl } from 'librechat-data-provider';
+import { useMemo, useRef, useState } from 'react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { cn, scaleImage } from '~/utils';
 import DialogImage from './DialogImage';
 
@@ -34,6 +34,7 @@ const Image = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const handleImageLoad = () => setIsLoaded(true);
 
@@ -96,9 +97,15 @@ const Image = ({
 
   return (
     <div ref={containerRef}>
-      <div
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={`View ${altText} in dialog`}
+        aria-haspopup="dialog"
+        onClick={() => setIsOpen(true)}
         className={cn(
-          'relative mt-1 flex h-auto w-full max-w-lg items-center justify-center overflow-hidden rounded-lg border border-border-light text-text-secondary-alt shadow-md',
+          'relative mt-1 flex h-auto w-full max-w-lg cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-border-light text-text-secondary-alt shadow-md transition-shadow',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface-primary',
           className,
         )}
       >
@@ -139,9 +146,10 @@ const Image = ({
             src={absoluteImageUrl}
             downloadImage={downloadImage}
             args={args}
+            triggerRef={triggerRef}
           />
         )}
-      </div>
+      </button>
     </div>
   );
 };

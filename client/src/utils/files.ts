@@ -1,21 +1,21 @@
 import {
-  AudioPaths,
-  CodePaths,
-  FilePaths,
-  SheetPaths,
   TextPaths,
+  FilePaths,
+  CodePaths,
+  AudioPaths,
   VideoPaths,
+  SheetPaths,
 } from '@librechat/client';
-import type { QueryClient } from '@tanstack/react-query';
-import type { EndpointFileConfig, TFile } from 'librechat-data-provider';
 import {
-  codeTypeMapping,
-  fileConfig as defaultFileConfig,
-  EToolResources,
-  excelMimeTypes,
   megabyte,
   QueryKeys,
+  codeTypeMapping,
+  excelMimeTypes,
+  EToolResources,
+  fileConfig as defaultFileConfig,
 } from 'librechat-data-provider';
+import type { TFile, EndpointFileConfig, FileConfig } from 'librechat-data-provider';
+import type { QueryClient } from '@tanstack/react-query';
 import type { ExtendedFile } from '~/common';
 
 export const partialTypes = ['text/x-'];
@@ -220,74 +220,13 @@ export function formatBytes(bytes: number, decimals = 2) {
 
 const { checkType } = defaultFileConfig;
 
-// Helper function to check if a file extension is likely a text file
-function isLikelyTextFile(extension: string): boolean {
-  const textExtensions = [
-    'txt',
-    'md',
-    'markdown',
-    'rst',
-    'log',
-    'ini',
-    'cfg',
-    'conf',
-    'config',
-    'json',
-    'xml',
-    'html',
-    'htm',
-    'css',
-    'scss',
-    'sass',
-    'less',
-    'yaml',
-    'yml',
-    'toml',
-    'csv',
-    'tsv',
-    'sql',
-    'sh',
-    'bash',
-    'zsh',
-    'fish',
-    'ps1',
-    'bat',
-    'cmd',
-    'py',
-    'js',
-    'ts',
-    'jsx',
-    'tsx',
-    'vue',
-    'svelte',
-    'php',
-    'rb',
-    'go',
-    'rs',
-    'java',
-    'kt',
-    'swift',
-    'c',
-    'cpp',
-    'cc',
-    'cxx',
-    'h',
-    'hpp',
-    'cs',
-    'fs',
-    'vb',
-    'pl',
-    'pm',
-    'r',
-    'm',
-    'mm',
-    'scala',
-    'clj',
-    'edn',
-    'hs',
-    'elm',
-  ];
-  return textExtensions.includes(extension.toLowerCase());
+/** Infer MIME type from file name and type (mirrors librechat-data-provider when not exported). */
+function inferMimeType(name: string, type: string): string | undefined {
+  if (type?.trim()) {
+    return type;
+  }
+  const ext = (name.split('.').pop() ?? '').toLowerCase();
+  return codeTypeMapping[ext] ?? undefined;
 }
 
 export const validateFiles = ({
@@ -327,49 +266,12 @@ export const validateFiles = ({
 
   for (let i = 0; i < fileList.length; i++) {
     let originalFile = fileList[i];
-    let fileType = originalFile.type;
-    const extension = originalFile.name.split('.').pop() ?? '';
-    const knownCodeType = codeTypeMapping[extension];
-
-    console.log(`🚀 Processing file: ${originalFile.name}`);
-    console.log(`📄 Original type: "${fileType}"`);
-    console.log(`🔤 Extension: "${extension}"`);
-    console.log(`🗂️ Known code type: "${knownCodeType}"`);
-
-    // Infer MIME type for Known Code files when the type is empty or a mismatch
-    if (knownCodeType && (!fileType || fileType !== knownCodeType)) {
-      console.log(
-        `🔧 Setting MIME type for ${originalFile.name} from extension "${extension}" to "${knownCodeType}"`,
-      );
-      fileType = knownCodeType;
-    }
+    const fileType = inferMimeType(originalFile.name, originalFile.type);
 
     // Check if the file type is still empty after the extension check
     if (!fileType) {
-      console.log(
-        `❓ No file type detected for ${originalFile.name} with extension "${extension}"`,
-      );
-      // Try to determine if it's likely a text file based on extension
-      if (isLikelyTextFile(extension)) {
-        fileType = 'text/plain';
-        console.log(
-          `✅ File ${originalFile.name} extension "${extension}" detected as likely text file, setting to text/plain`,
-        );
-      } else {
-        // For file_search uploads, default to text/plain if we can't determine the type
-        if (toolResource === 'file_search') {
-          fileType = 'text/plain';
-          console.log(
-            `🔍 File ${originalFile.name} has unknown type, defaulting to text/plain for file_search upload`,
-          );
-        } else {
-          console.log(`❌ Unable to determine file type for: ${originalFile.name}`);
-          setError('Unable to determine file type for: ' + originalFile.name);
-          return false;
-        }
-      }
-    } else {
-      console.log(`✅ File type already determined: ${originalFile.name} -> ${fileType}`);
+      setError('Unable to determine file type for: ' + originalFile.name);
+      return false;
     }
 
     // Replace empty type with inferred type
@@ -385,7 +287,6 @@ export const validateFiles = ({
         ...(fileConfig?.text?.supportedMimeTypes || []),
         ...(fileConfig?.ocr?.supportedMimeTypes || []),
         ...(fileConfig?.stt?.supportedMimeTypes || []),
-        excelMimeTypes, // Add Excel support for context tool resource
       ];
     }
 

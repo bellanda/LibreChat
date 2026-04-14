@@ -25,7 +25,7 @@ export class LeaderElection {
   static readonly LEADER_KEY = `${cache.REDIS_KEY_PREFIX}${cache.GLOBAL_PREFIX_SEPARATOR}LeadingServerUUID`;
   private static _instance = new LeaderElection();
 
-  readonly UUID: string = randomUUID();
+  readonly UUID: string = crypto.randomUUID();
   private refreshTimer: NodeJS.Timeout | undefined = undefined;
 
   // DO NOT create new instances of this class directly.

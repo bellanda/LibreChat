@@ -1,15 +1,14 @@
-import React, { useState, useRef } from 'react';
-import { useRecoilState } from 'recoil';
 import * as Ariakit from '@ariakit/react';
 import { VisuallyHidden } from '@ariakit/react';
-import { GitFork, InfoIcon } from 'lucide-react';
 import { useToastContext } from '@librechat/client';
 import { ForkOptions } from 'librechat-data-provider';
-import { GitCommit, GitBranchPlus, ListTree } from 'lucide-react';
-import { TranslationKeys, useLocalize, useNavigateToConvo } from '~/hooks';
+import { GitBranchPlus, GitCommit, GitFork, InfoIcon, ListTree } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { useRecoilState } from 'recoil';
 import { useForkConvoMutation } from '~/data-provider';
-import { cn } from '~/utils';
+import { TranslationKeys, useLocalize, useNavigateToConvo } from '~/hooks';
 import store from '~/store';
+import { cn } from '~/utils';
 
 interface PopoverButtonProps {
   children: React.ReactNode;
@@ -75,6 +74,21 @@ const PopoverButton: React.FC<PopoverButtonProps> = ({
                   setActiveSetting(optionLabels[ForkOptions.DEFAULT]);
                 }, 175);
               }}
+              onFocus={() => {
+                if (timeoutRef.current) {
+                  clearTimeout(timeoutRef.current);
+                  timeoutRef.current = null;
+                }
+                setActiveSetting(optionLabels[setting]);
+              }}
+              onBlur={() => {
+                if (timeoutRef.current) {
+                  clearTimeout(timeoutRef.current);
+                }
+                timeoutRef.current = setTimeout(() => {
+                  setActiveSetting(optionLabels[ForkOptions.DEFAULT]);
+                }, 175);
+              }}
               className="mx-0.5 w-14 flex-1 rounded-xl border-2 border-border-medium bg-surface-secondary text-text-secondary transition duration-200 ease-in-out hover:bg-surface-hover hover:text-text-primary"
               aria-label={label}
             >
@@ -92,23 +106,23 @@ const PopoverButton: React.FC<PopoverButtonProps> = ({
         {((hoverInfo != null && hoverInfo !== '') ||
           (hoverTitle != null && hoverTitle !== '') ||
           (hoverDescription != null && hoverDescription !== '')) && (
-          <Ariakit.Hovercard
-            gutter={16}
-            shift={40}
-            flip={false}
-            className="z-[999] w-80 rounded-2xl border border-border-medium bg-surface-secondary p-4 text-text-primary shadow-md"
-            portal={true}
-            unmountOnHide={true}
-          >
-            <div className="space-y-2">
-              <p className="flex flex-col gap-2 text-sm text-text-secondary">
-                {hoverInfo && hoverInfo}
-                {hoverTitle && <span className="flex flex-wrap gap-1 font-bold">{hoverTitle}</span>}
-                {hoverDescription && hoverDescription}
-              </p>
-            </div>
-          </Ariakit.Hovercard>
-        )}
+            <Ariakit.Hovercard
+              gutter={16}
+              shift={40}
+              flip={false}
+              className="z-[999] w-80 rounded-2xl border border-border-medium bg-surface-secondary p-4 text-text-primary shadow-md"
+              portal={true}
+              unmountOnHide={true}
+            >
+              <div className="space-y-2">
+                <p className="flex flex-col gap-2 text-sm text-text-secondary">
+                  {hoverInfo && hoverInfo}
+                  {hoverTitle && <span className="flex flex-wrap gap-1 font-bold">{hoverTitle}</span>}
+                  {hoverDescription && hoverDescription}
+                </p>
+              </div>
+            </Ariakit.Hovercard>
+          )}
       </div>
     </Ariakit.HovercardProvider>
   );
@@ -134,35 +148,36 @@ const CheckboxOption: React.FC<CheckboxOptionProps> = ({
   const { showToast } = useToastContext();
   return (
     <Ariakit.HovercardProvider placement="right-start">
-      <div className="flex items-center">
-        <div className="flex h-6 w-full select-none items-center justify-start rounded-md text-sm text-text-secondary hover:text-text-primary">
-          <Ariakit.HovercardAnchor
-            render={
-              <div>
-                <Ariakit.Checkbox
-                  id={id}
-                  checked={checked}
-                  onChange={(e) => {
-                    const value = e.target.checked;
-                    if (value && showToastOnCheck) {
-                      showToast({
-                        message: localize('com_ui_fork_remember_checked'),
-                        status: 'info',
-                      });
-                    }
-                    onToggle(value);
-                  }}
-                  className="h-4 w-4 rounded-sm border border-primary ring-offset-background transition duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                  aria-label={localize(labelKey)}
-                />
-                <label htmlFor={id} className="ml-2 cursor-pointer">
-                  {localize(labelKey)}
-                </label>
-              </div>
-            }
-          />
-        </div>
-        <Ariakit.HovercardDisclosure className="rounded-full text-text-secondary focus:outline-none focus:ring-2 focus:ring-ring">
+      <div className="flex items-center justify-between">
+        <Ariakit.HovercardAnchor
+          render={
+            <div className="flex items-center">
+              <Ariakit.Checkbox
+                id={id}
+                checked={checked}
+                onChange={(e) => {
+                  const value = e.target.checked;
+                  if (value && showToastOnCheck) {
+                    showToast({
+                      message: localize('com_ui_fork_remember_checked'),
+                      status: 'info',
+                    });
+                  }
+                  onToggle(value);
+                }}
+                className="h-4 w-4 rounded-sm border border-primary ring-offset-background transition duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                aria-label={localize(labelKey)}
+              />
+              <label
+                htmlFor={id}
+                className="ml-2 cursor-pointer select-none text-sm text-text-secondary hover:text-text-primary"
+              >
+                {localize(labelKey)}
+              </label>
+            </div>
+          }
+        />
+        <Ariakit.HovercardDisclosure className="ml-1 rounded-full text-text-secondary focus:outline-none focus:ring-2 focus:ring-ring">
           <VisuallyHidden>{localize(infoKey)}</VisuallyHidden>
           {chevronDown}
         </Ariakit.HovercardDisclosure>
@@ -211,7 +226,7 @@ export default function Fork({
   });
 
   const buttonStyle = cn(
-    'hover-button rounded-lg p-1.5 text-text-secondary-alt transition-colors duration-200',
+    'hover-button rounded-lg p-1.5 text-text-secondary-alt',
     'hover:text-text-primary hover:bg-surface-hover',
     'md:group-hover:visible md:group-focus-within:visible md:group-[.final-completion]:visible',
     !isLast && 'md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100',
@@ -273,10 +288,10 @@ export default function Fork({
     {
       setting: ForkOptions.DIRECT_PATH,
       label: localize(optionLabels[ForkOptions.DIRECT_PATH]),
-      icon: <GitCommit className="h-full w-full rotate-90 p-2" />,
+      icon: <GitCommit className="h-full w-full rotate-90 p-2" aria-hidden="true" />,
       hoverTitle: (
         <>
-          <GitCommit className="h-5 w-5 rotate-90" />
+          <GitCommit className="h-5 w-5 rotate-90" aria-hidden="true" />
           {localize(optionLabels[ForkOptions.DIRECT_PATH])}
         </>
       ),
@@ -285,10 +300,10 @@ export default function Fork({
     {
       setting: ForkOptions.INCLUDE_BRANCHES,
       label: localize(optionLabels[ForkOptions.INCLUDE_BRANCHES]),
-      icon: <GitBranchPlus className="h-full w-full rotate-180 p-2" />,
+      icon: <GitBranchPlus className="h-full w-full rotate-180 p-2" aria-hidden="true" />,
       hoverTitle: (
         <>
-          <GitBranchPlus className="h-4 w-4 rotate-180" />
+          <GitBranchPlus className="h-4 w-4 rotate-180" aria-hidden="true" />
           {localize(optionLabels[ForkOptions.INCLUDE_BRANCHES])}
         </>
       ),
@@ -297,10 +312,10 @@ export default function Fork({
     {
       setting: ForkOptions.TARGET_LEVEL,
       label: localize(optionLabels[ForkOptions.TARGET_LEVEL]),
-      icon: <ListTree className="h-full w-full p-2" />,
+      icon: <ListTree className="h-full w-full p-2" aria-hidden="true" />,
       hoverTitle: (
         <>
-          <ListTree className="h-5 w-5" />
+          <ListTree className="h-5 w-5" aria-hidden="true" />
           {`${localize(optionLabels[ForkOptions.TARGET_LEVEL])} (${localize('com_endpoint_default')})`}
         </>
       ),
@@ -331,9 +346,9 @@ export default function Fork({
               }
             }}
             type="button"
-            aria-label={localize('com_ui_fork')}
+            aria-label={localize('com_ui_fork_open_menu')}
           >
-            <GitFork size="19" />
+            <GitFork size="19" aria-hidden="true" />
           </button>
         }
       />
@@ -360,7 +375,7 @@ export default function Fork({
                     className="flex h-5 w-5 cursor-help items-center rounded-full text-text-secondary"
                     aria-label={localize('com_ui_fork_info_button_label')}
                   >
-                    <InfoIcon />
+                    <InfoIcon aria-hidden="true" />
                   </button>
                 }
               />

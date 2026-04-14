@@ -27,6 +27,8 @@ type ModelSelectorContextType = {
   // LibreChat
   modelSpecs: t.TModelSpec[];
   mappedEndpoints: Endpoint[];
+  /** When false, show a flat list of models instead of grouping by endpoint. */
+  groupModelsByEndpoint: boolean;
   agentsMap: t.TAgentsMap | undefined;
   assistantsMap: t.TAssistantsMap | undefined;
   endpointsConfig: t.TEndpointsConfig;
@@ -124,21 +126,29 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   });
 
   // State
-  const [selectedValues, setSelectedValues] = useState<SelectedValues>({
-    endpoint: endpoint || '',
-    model: model || '',
-    modelSpec: spec || '',
+  const [selectedValues, setSelectedValues] = useState<SelectedValues>(() => {
+    let initialModel = model || '';
+    if (isAgentsEndpoint(endpoint) && agent_id) {
+      initialModel = agent_id;
+    } else if (isAssistantsEndpoint(endpoint) && assistant_id) {
+      initialModel = assistant_id;
+    }
+    return {
+      endpoint: endpoint || '',
+      model: initialModel,
+      modelSpec: spec || '',
+    };
   });
   useSelectorEffects({
     agentsMap,
     conversation: endpoint
       ? ({
-          endpoint: endpoint ?? null,
-          model: model ?? null,
-          spec: spec ?? null,
-          agent_id: agent_id ?? null,
-          assistant_id: assistant_id ?? null,
-        } as any)
+        endpoint: endpoint ?? null,
+        model: model ?? null,
+        spec: spec ?? null,
+        agent_id: agent_id ?? null,
+        assistant_id: assistant_id ?? null,
+      } as any)
       : null,
     assistantsMap,
     setSelectedValues,
@@ -263,6 +273,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     assistantsMap,
     mappedEndpoints,
     endpointsConfig,
+    groupModelsByEndpoint: startupConfig?.interface?.groupModelsByEndpoint ?? true,
 
     // Functions
     handleSelectSpec,

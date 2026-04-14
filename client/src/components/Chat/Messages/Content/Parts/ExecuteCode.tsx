@@ -50,12 +50,14 @@ export default function ExecuteCode({
   args,
   output = '',
   attachments,
+  hideProgressIndicator = false,
 }: {
   initialProgress: number;
   isSubmitting: boolean;
   args?: string;
   output?: string;
   attachments?: TAttachment[];
+  hideProgressIndicator?: boolean;
 }) {
   const localize = useLocalize();
   const hasOutput = output.length > 0;
@@ -142,19 +144,21 @@ export default function ExecuteCode({
 
   return (
     <>
-      <div className="relative my-2.5 flex size-5 shrink-0 items-center gap-2.5">
-        <ProgressText
-          progress={progress}
-          onClick={() => setShowCode((prev) => !prev)}
-          inProgressText={localize('com_ui_analyzing')}
-          finishedText={
-            cancelled ? localize('com_ui_cancelled') : localize('com_ui_analyzing_finished')
-          }
-          hasInput={!!code?.length}
-          isExpanded={showCode}
-          error={cancelled}
-        />
-      </div>
+      {!hideProgressIndicator && (
+        <div className="relative my-2.5 flex size-5 shrink-0 items-center gap-2.5">
+          <ProgressText
+            progress={progress}
+            onClick={() => setShowCode((prev) => !prev)}
+            inProgressText={localize('com_ui_analyzing')}
+            finishedText={
+              cancelled ? localize('com_ui_cancelled') : localize('com_ui_analyzing_finished')
+            }
+            hasInput={!!code?.length}
+            isExpanded={showCode}
+            error={cancelled}
+          />
+        </div>
+      )}
       <div
         className="relative mb-2"
         style={{
@@ -219,7 +223,8 @@ export default function ExecuteCode({
           )}
         </div>
       </div>
-      {attachments && attachments.length > 0 && <AttachmentGroup attachments={attachments} />}
+      {/* Anexos de execute_code são renderizados globalmente por mensagem (AttachmentGroup),
+          para evitar duplicações quando há múltiplos tool calls na mesma resposta. */}
     </>
   );
 }

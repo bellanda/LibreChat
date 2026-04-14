@@ -1,6 +1,6 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
-import { debugTraverse, jsonTruncateFormat, redactFormat, redactMessage } from './parsers';
+import { redactFormat, redactMessage, debugTraverse, jsonTruncateFormat } from './parsers';
 import { getLogDirectory } from './utils';
 
 const logDir = getLogDirectory();
@@ -33,8 +33,7 @@ winston.addColors({
 
 const level = (): string => {
   const env = NODE_ENV || 'development';
-  // Reduzir verbosidade: apenas error, warn e info
-  return 'info';
+  return env === 'development' ? 'debug' : 'warn';
 };
 
 const fileFormat = winston.format.combine(

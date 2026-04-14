@@ -1,16 +1,18 @@
-import { memo, useMemo, useState, useCallback } from 'react';
 import { useAtom } from 'jotai';
-import type { MouseEvent } from 'react';
 import { ContentTypes } from 'librechat-data-provider';
-import { ThinkingContent, ThinkingButton } from './Thinking';
-import { showThinkingAtom } from '~/store/showThinking';
+import type { MouseEvent } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useMessageContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
+import { showThinkingAtom } from '~/store/showThinking';
 import { cn } from '~/utils';
+import { FloatingThinkingBar, ThinkingButton, ThinkingContent } from './Thinking';
 
 type ReasoningProps = {
   reasoning: string;
   isLast: boolean;
+  /** Quando true, a barra unificada já mostra "Pensando..."; não mostrar esta linha */
+  hideProgressIndicator?: boolean;
 };
 
 /**
@@ -35,10 +37,12 @@ type ReasoningProps = {
  *
  * For legacy text-based messages, see Thinking.tsx component.
  */
-const Reasoning = memo(({ reasoning, isLast }: ReasoningProps) => {
+const Reasoning = memo(({ reasoning, isLast, hideProgressIndicator = false }: ReasoningProps) => {
   const localize = useLocalize();
   const [showThinking] = useAtom(showThinkingAtom);
   const [isExpanded, setIsExpanded] = useState(showThinking);
+  const [isBarVisible, setIsBarVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { isSubmitting, isLatestMessage, nextType } = useMessageContext();
 
   // Strip <think> tags from the reasoning content (modern format)
@@ -54,6 +58,26 @@ const Reasoning = memo(({ reasoning, isLast }: ReasoningProps) => {
     setIsExpanded((prev) => !prev);
   }, []);
 
+  const handleFocus = useCallback(() => {
+    setIsBarVisible(true);
+  }, []);
+
+  const handleBlur = useCallback((e: FocusEvent) => {
+    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+      setIsBarVisible(false);
+    }
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsBarVisible(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (!containerRef.current?.contains(document.activeElement)) {
+      setIsBarVisible(false);
+    }
+  }, []);
+
   const effectiveIsSubmitting = isLatestMessage ? isSubmitting : false;
 
   const label = useMemo(
@@ -66,10 +90,23 @@ const Reasoning = memo(({ reasoning, isLast }: ReasoningProps) => {
     return null;
   }
 
+  // Quando hideProgressIndicator é true, a barra unificada cuida de mostrar
+  // o conteúdo do pensamento. Este componente não renderiza nada.
+  if (hideProgressIndicator) {
+    return null;
+  }
+
   return (
-    <div className="group/reasoning">
+    <div
+      ref={containerRef}
+      className="group/reasoning"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+    >
       <div className="group/thinking-container">
-        <div className="sticky top-0 z-10 mb-2 bg-presentation pb-2 pt-2">
+        <div className="mb-2 pb-2 pt-2">
           <ThinkingButton
             isExpanded={isExpanded}
             onClick={handleClick}
@@ -86,8 +123,14 @@ const Reasoning = memo(({ reasoning, isLast }: ReasoningProps) => {
             gridTemplateRows: isExpanded ? '1fr' : '0fr',
           }}
         >
-          <div className="overflow-hidden">
+          <div className="relative overflow-hidden">
             <ThinkingContent>{reasoningText}</ThinkingContent>
+            <FloatingThinkingBar
+              isVisible={isBarVisible && isExpanded}
+              isExpanded={isExpanded}
+              onClick={handleClick}
+              content={reasoningText}
+            />
           </div>
         </div>
       </div>

@@ -1,24 +1,24 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import * as Ariakit from '@ariakit/react';
-import { TFeedback, TFeedbackTag, getTagsForRating } from 'librechat-data-provider';
 import {
   Button,
   OGDialog,
   OGDialogContent,
   OGDialogTitle,
-  ThumbUpIcon,
   ThumbDownIcon,
+  ThumbUpIcon,
 } from '@librechat/client';
+import { TFeedback, TFeedbackTag, getTagsForRating } from 'librechat-data-provider';
 import {
   AlertCircle,
-  PenTool,
-  ImageOff,
   Ban,
-  HelpCircle,
   CheckCircle,
+  HelpCircle,
+  ImageOff,
   Lightbulb,
+  PenTool,
   Search,
 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -65,7 +65,7 @@ function FeedbackOptionButton({
       aria-label={label}
       aria-pressed={active}
     >
-      <Icon size="19" bold={active} />
+      <Icon size="19" bold={active} aria-hidden="true" />
       <span>{label}</span>
     </button>
   );
@@ -216,7 +216,7 @@ function FeedbackButtons({
 
 function buttonClasses(isActive: boolean, isLast: boolean) {
   return cn(
-    'hover-button rounded-lg p-1.5 text-text-secondary-alt transition-colors duration-200',
+    'hover-button rounded-lg p-1.5 text-text-secondary-alt',
     'hover:text-text-primary hover:bg-surface-hover',
     'md:group-hover:visible md:group-focus-within:visible md:group-[.final-completion]:visible',
     !isLast && 'md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100',

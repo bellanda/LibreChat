@@ -54,17 +54,15 @@ const useFileHandling = (params?: UseFileHandling) => {
   const agent_id = params?.additionalMetadata?.agent_id ?? '';
   const assistant_id = params?.additionalMetadata?.assistant_id ?? '';
   const endpointType = useMemo(() => conversation?.endpointType, [conversation?.endpointType]);
-
-  const { data: fileConfig = null } = useGetFileConfig({
-    select: (data) => mergeFileConfig(data),
-  });
-
-  // Override endpoint if provided in params
   const endpoint = useMemo(
     () =>
       params?.overrideEndpoint ?? conversation?.endpointType ?? conversation?.endpoint ?? 'default',
     [params?.overrideEndpoint, conversation?.endpointType, conversation?.endpoint],
   );
+
+  const { data: fileConfig = null } = useGetFileConfig({
+    select: (data) => mergeFileConfig(data),
+  });
 
   // Check if current model supports image attachments
   const currentModel = conversation?.model ?? null;
@@ -109,6 +107,7 @@ const useFileHandling = (params?: UseFileHandling) => {
       onSuccess: (data) => {
         console.log('✅ [uploadFile] Upload SUCCESS:', data);
         clearUploadTimer(data.temp_file_id);
+        console.log('upload success', data);
         if (agent_id) {
           console.log('🔄 [uploadFile] Refetching agent queries for agent_id:', agent_id);
           queryClient.refetchQueries([QueryKeys.agent, agent_id]);

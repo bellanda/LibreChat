@@ -92,6 +92,17 @@ function createValidateImageRequest(secureImageLinks) {
         }
         userIdForPath = validationResult.userId;
       } else {
+        /**
+         * For non-OpenID users (or OpenID without REUSE_TOKENS), use refreshToken from cookies.
+         * These users authenticate via setAuthTokens() which stores refreshToken in cookies.
+         */
+        const refreshToken = parsedCookies.refreshToken;
+
+        if (!refreshToken) {
+          logger.warn('[validateImageRequest] Token not provided');
+          return res.status(401).send('Unauthorized');
+        }
+
         const validationResult = validateToken(refreshToken);
         if (!validationResult.valid) {
           logger.warn(`[validateImageRequest] ${validationResult.error}`);

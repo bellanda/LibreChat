@@ -1,8 +1,11 @@
 import { createAccessRoleModel } from './accessRole';
 import { createAclEntryModel } from './aclEntry';
-import { createActionModel } from './action';
+
 import { createAgentModel } from './agent';
 import { createAgentCategoryModel } from './agentCategory';
+import { createMCPServerModel } from './mcpServer';
+import { createRoleModel } from './role';
+import { createActionModel } from './action';
 import { createAssistantModel } from './assistant';
 import { createBalanceModel } from './balance';
 import { createBannerModel } from './banner';
@@ -19,7 +22,6 @@ import { createPresetModel } from './preset';
 import { createProjectModel } from './project';
 import { createPromptModel } from './prompt';
 import { createPromptGroupModel } from './promptGroup';
-import { createRoleModel } from './role';
 import { createSessionModel } from './session';
 import { createSharedLinkModel } from './sharedLink';
 import { createTokenModel } from './token';
@@ -41,6 +43,7 @@ export function createModels(mongoose: typeof import('mongoose')) {
     Message: createMessageModel(mongoose),
     Agent: createAgentModel(mongoose),
     AgentCategory: createAgentCategoryModel(mongoose),
+    MCPServer: createMCPServerModel(mongoose),
     Role: createRoleModel(mongoose),
     Action: createActionModel(mongoose),
     Assistant: createAssistantModel(mongoose),

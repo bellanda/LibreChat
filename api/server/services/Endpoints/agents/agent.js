@@ -53,7 +53,12 @@ const initializeAgent = async ({
   allowedProviders,
   isInitialAgent = false,
 }) => {
-  const appConfig = req.config;
+  /**
+   * Garante que appConfig seja sempre um objeto,
+   * evitando erros do tipo "Cannot read properties of undefined (reading 'endpoints')"
+   * em quaisquer chamadas subsequentes que dependam de configuração (ex.: getProviderConfig).
+   */
+  const appConfig = req.config ?? {};
   if (
     isAgentsEndpoint(endpointOption?.endpoint) &&
     allowedProviders.size > 0 &&
@@ -223,9 +228,13 @@ const initializeAgent = async ({
   }
 
   if (typeof agent.artifacts === 'string' && agent.artifacts !== '') {
+    const ephemeralAgent = req.body?.ephemeralAgent ?? req?.body?.ephemeralAgent;
+    const isAutoMode = Boolean(ephemeralAgent?.auto_mode === true);
+
     agent.additional_instructions = generateArtifactsPrompt({
       endpoint: agent.provider,
       artifacts: agent.artifacts,
+      isAutoMode,
     });
   }
 

@@ -1,6 +1,10 @@
+import { useRef } from 'react';
 import type { FC } from 'react';
 import { BookCopy } from 'lucide-react';
-import { TooltipAnchor } from '@librechat/client';
+import {
+  Button,
+  TooltipAnchor,
+} from '@librechat/client';
 import { Content, Portal, Root, Trigger } from '@radix-ui/react-popover';
 import { EditPresetDialog, PresetItems } from './Presets';
 import { useLocalize, usePresets } from '~/hooks';
@@ -8,6 +12,7 @@ import { useChatContext } from '~/Providers';
 
 const PresetsMenu: FC = () => {
   const localize = useLocalize();
+  const presetsMenuTriggerRef = useRef<HTMLDivElement>(null);
   const {
     presetsQuery,
     onSetDefaultPreset,
@@ -24,16 +29,22 @@ const PresetsMenu: FC = () => {
     <Root>
       <Trigger asChild>
         <TooltipAnchor
-          id="presets-button"
-          aria-label={localize('com_endpoint_examples')}
+          ref={presetsMenuTriggerRef}
           description={localize('com_endpoint_examples')}
-          tabIndex={0}
-          role="button"
-          data-testid="presets-button"
-          className="inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light bg-transparent text-text-primary transition-all ease-in-out hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
-        >
-          <BookCopy size={16} aria-label="Preset Icon" />
-        </TooltipAnchor>
+          render={
+            <Button
+              size="icon"
+              variant="outline"
+              tabIndex={0}
+              id="presets-button"
+              data-testid="presets-button"
+              aria-label={localize('com_endpoint_examples')}
+              className="rounded-xl bg-presentation p-2 duration-0 hover:bg-surface-active-alt"
+            >
+              <BookCopy className="icon-lg" aria-hidden="true" />
+            </Button>
+          }
+        />
       </Trigger>
       <Portal>
         <div
@@ -49,7 +60,7 @@ const PresetsMenu: FC = () => {
           <Content
             side="bottom"
             align="center"
-            className="mt-2 max-h-[495px] overflow-x-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white md:min-w-[400px]"
+            className="mt-2 max-h-[495px] overflow-x-hidden rounded-lg border border-border-light bg-presentation text-text-primary shadow-lg md:min-w-[400px]"
           >
             <PresetItems
               presets={presetsQuery.data}
@@ -63,7 +74,13 @@ const PresetsMenu: FC = () => {
           </Content>
         </div>
       </Portal>
-      {preset && <EditPresetDialog submitPreset={submitPreset} exportPreset={exportPreset} />}
+      {preset && (
+        <EditPresetDialog
+          submitPreset={submitPreset}
+          exportPreset={exportPreset}
+          triggerRef={presetsMenuTriggerRef}
+        />
+      )}
     </Root>
   );
 };

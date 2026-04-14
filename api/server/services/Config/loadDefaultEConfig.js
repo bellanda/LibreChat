@@ -9,8 +9,8 @@ const { logger } = require('~/config');
  * @returns {Promise<Object.<string, EndpointWithOrder>>} An object whose keys are endpoint names and values are objects that contain the endpoint configuration and an order.
  */
 async function loadDefaultEndpointsConfig(appConfig) {
-  const { google, gptPlugins } = await loadAsyncEndpoints(appConfig);
-  const { assistants, azureAssistants, azureOpenAI, chatGPTBrowser } = config;
+  const { google } = await loadAsyncEndpoints(appConfig);
+  const { assistants, azureAssistants, azureOpenAI } = config;
 
   const enabledEndpoints = getEnabledEndpoints();
 
@@ -21,30 +21,17 @@ async function loadDefaultEndpointsConfig(appConfig) {
     [EModelEndpoint.azureAssistants]: azureAssistants,
     [EModelEndpoint.azureOpenAI]: azureOpenAI,
     [EModelEndpoint.google]: google,
-    [EModelEndpoint.chatGPTBrowser]: chatGPTBrowser,
-    [EModelEndpoint.gptPlugins]: gptPlugins,
     [EModelEndpoint.anthropic]: config[EModelEndpoint.anthropic],
     [EModelEndpoint.bedrock]: config[EModelEndpoint.bedrock],
   };
 
-  logger.debug('[loadDefaultEndpointsConfig] Endpoint config before ordering:', endpointConfig);
-
   const orderedAndFilteredEndpoints = enabledEndpoints.reduce((config, key, index) => {
-    logger.debug(`[loadDefaultEndpointsConfig] Processing endpoint '${key}' at index ${index}`);
-
     if (endpointConfig[key]) {
-      logger.debug(`[loadDefaultEndpointsConfig] Adding '${key}' with order ${index}`);
       config[key] = { ...(endpointConfig[key] ?? {}), order: index };
-    } else {
-      logger.debug(`[loadDefaultEndpointsConfig] Skipping '${key}' - no config found`);
     }
     return config;
   }, {});
 
-  logger.debug(
-    '[loadDefaultEndpointsConfig] Final ordered and filtered endpoints:',
-    orderedAndFilteredEndpoints,
-  );
   return orderedAndFilteredEndpoints;
 }
 

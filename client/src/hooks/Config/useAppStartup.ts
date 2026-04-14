@@ -4,7 +4,7 @@ import { useAvailablePluginsQuery } from 'librechat-data-provider/react-query';
 import { useEffect } from 'react';
 import TagManager from 'react-gtm-module';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { useMCPToolsQuery } from '~/data-provider';
+import { useMCPToolsQuery, useMCPServersQuery } from '~/data-provider';
 import store from '~/store';
 import { mapPlugins, processPlugins, selectPlugins } from '~/utils';
 import { cleanupTimestampedStorage } from '~/utils/timestamps';
@@ -36,10 +36,10 @@ export default function useAppStartup({
   });
 
   useSpeechSettingsInit(!!user);
-  useFontSizeInit();
+  const { data: loadedServers, isLoading: serversLoading } = useMCPServersQuery();
 
   useMCPToolsQuery({
-    enabled: !!startupConfig?.mcpServers && !!user,
+    enabled: !serversLoading && !!loadedServers && Object.keys(loadedServers).length > 0 && !!user,
   });
 
   /** Clean up old localStorage entries on startup */

@@ -1,26 +1,37 @@
+import {
+  QueryKeys,
+  dataService,
+  EModelEndpoint,
+  isAgentsEndpoint,
+  defaultOrderQuery,
+  defaultAssistantsVersion,
+} from 'librechat-data-provider';
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   InfiniteData,
   QueryObserverResult,
   UseInfiniteQueryOptions,
+  QueryObserverResult,
   UseQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import type t from 'librechat-data-provider';
 import type {
   Action,
-  Assistant,
-  AssistantDocument,
-  AssistantListParams,
-  AssistantListResponse,
-  ConversationListParams,
+  TPreset,
   ConversationListResponse,
+  ConversationListParams,
   MessagesListParams,
   MessagesListResponse,
+  Assistant,
+  AssistantListParams,
+  AssistantListResponse,
+  AssistantDocument,
+  TEndpointsConfig,
+  TCheckUserKeyResponse,
   SharedLinksListParams,
   SharedLinksResponse,
-  TCheckUserKeyResponse,
-  TEndpointsConfig,
-  TPreset,
 } from 'librechat-data-provider';
 import {
   EModelEndpoint,
@@ -131,6 +142,19 @@ export const useMessagesInfiniteQuery = (
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 30 * 60 * 1000, // 30 minutes
     ...config,
+  });
+};
+
+/** Optional feature: AI-suggested starters from last 2 convos. Use when no entity starters. */
+export const suggestedStartersQueryKey = ['suggestedStarters'] as const;
+
+export const useSuggestedStartersQuery = (enabled: boolean) => {
+  return useQuery<string[] | null>({
+    queryKey: suggestedStartersQueryKey,
+    queryFn: async () => dataService.getSuggestedStarters().then((r) => r?.starters ?? null),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
   });
 };
 

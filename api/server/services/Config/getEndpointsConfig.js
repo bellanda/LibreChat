@@ -30,7 +30,13 @@ async function getEndpointsConfig(req) {
     return cachedEndpointsConfig;
   }
 
-  const appConfig = req.config ?? (await getAppConfig({ role: req.user?.role }));
+  /**
+   * Garante que appConfig seja sempre um objeto,
+   * mesmo que getAppConfig retorne null/undefined ou req.config não esteja definido.
+   * Evita erros do tipo "Cannot read properties of undefined (reading 'endpoints')".
+   */
+  const appConfig =
+    req.config != null ? req.config : (await getAppConfig({ role: req.user?.role })) ?? {};
   const defaultEndpointsConfig = await loadDefaultEndpointsConfig(appConfig);
   const customEndpointsConfig = loadCustomEndpointsConfig(appConfig?.endpoints?.custom);
 
@@ -43,6 +49,14 @@ async function getEndpointsConfig(req) {
   if (appConfig.endpoints?.[EModelEndpoint.azureOpenAI]) {
     /** @type {Omit<TConfig, 'order'>} */
     mergedConfig[EModelEndpoint.azureOpenAI] = {
+      userProvide: false,
+    };
+  }
+
+  // Enable Anthropic endpoint when Vertex AI is configured in YAML
+  if (appConfig.endpoints?.[EModelEndpoint.anthropic]?.vertexConfig?.enabled) {
+    /** @type {Omit<TConfig, 'order'>} */
+    mergedConfig[EModelEndpoint.anthropic] = {
       userProvide: false,
     };
   }

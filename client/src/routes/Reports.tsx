@@ -2,7 +2,6 @@ import { useEffect, useMemo } from 'react';
 
 // COMPONENTS
 
-
 import GraphMessagesCost from '~/components/Reports/graphs/GraphMessagesCost';
 import GraphModelsMessage from '~/components/Reports/graphs/GraphModelsMessage';
 import GraphUserCost from '~/components/Reports/graphs/GraphUserCost';
@@ -15,10 +14,7 @@ import GraphCCmessages from '~/components/Reports/graphs/GraphCCmessages';
 import GraphModelsCost from '~/components/Reports/graphs/GraphModelsCost';
 
 import MainKpis from '~/components/Reports/kpis/main';
-import {
-  ReportUtils,
-  useReportStore
-} from '../store/reports';
+import { ReportUtils, useReportStore } from '../store/reports';
 
 // Importar as tabelas
 import CostCentersTable from '~/components/Reports/tables/CostCentersTable';
@@ -30,9 +26,8 @@ import UserMessagesTable from '~/components/Reports/tables/UserMessagesCostTable
 //==============================================================================
 
 export default function Reports() {
-
-  const { 
-    filters, 
+  const {
+    filters,
     usageCostData,
     topUsersVolumeData,
     topUsersCostData,
@@ -41,7 +36,7 @@ export default function Reports() {
     topCostCentersCostData,
     userEfficiencyData,
     kpiData,
-    
+
     // Dados das tabelas (sem limit)
     allTopUsersVolumeData,
     allTopUsersCostData,
@@ -49,32 +44,34 @@ export default function Reports() {
     allUserEfficiencyData,
     allTopCostCentersVolumeData,
     allTopCostCentersCostData,
-    
+
     isLoadingUsageCost,
     isLoadingKPIs,
     isLoadingTopUsers,
     isLoadingTopModels,
     isLoadingEfficiency,
     isLoadingCostCenters,
-    
+
     // Obs: Loading states são os mesmos para gráficos e tabelas agora
-    
-    setFilter, 
+
+    setFilter,
     clearFilters,
     fetchAllData,
   } = useReportStore();
-  
+
   // Loading global - true se qualquer uma das chamadas estiver carregando
-  const loading = isLoadingUsageCost || isLoadingKPIs || isLoadingTopUsers || isLoadingTopModels || isLoadingEfficiency || isLoadingCostCenters;
-
-
+  const loading =
+    isLoadingUsageCost ||
+    isLoadingKPIs ||
+    isLoadingTopUsers ||
+    isLoadingTopModels ||
+    isLoadingEfficiency ||
+    isLoadingCostCenters;
 
   // Busca todos os dados quando os filtros mudam
   useEffect(() => {
     fetchAllData(); // Agora já busca todos os dados (gráficos + tabelas)
   }, [fetchAllData, filters.startDate, filters.endDate, filters.costCenter]);
-
-  
 
   // Dados de usuários ordenados por volume COM CORES ESPECÍFICAS
   const filteredTopUsersVolume = useMemo(() => {
@@ -103,99 +100,75 @@ export default function Reports() {
     return ReportUtils.addColorsToCostCentersCost(sortedCCs);
   }, [topCostCentersCostData]);
 
-
   return (
-    <div className="bg-[#0f0f0f] text-white min-h-screen p-4 sm:p-6 lg:p-8 font-sans">
+    <div className="min-h-screen bg-[#0f0f0f] p-4 font-sans text-white sm:p-6 lg:p-8">
       <div className="w-full">
-          {/* --- KPIs COM FILTROS INTEGRADOS --- */}
-            <MainKpis 
-              kpiData={kpiData || {
-                totalCost: 0,
-                newUsers: 0,
-                activeAccounts: 0
-              }}
-              filters={filters}
-              setFilter={setFilter}
-              clearFilters={clearFilters}
+        {/* --- KPIs COM FILTROS INTEGRADOS --- */}
+        <MainKpis
+          kpiData={
+            kpiData || {
+              totalCost: 0,
+              newUsers: 0,
+              activeAccounts: 0,
+            }
+          }
+          filters={filters}
+          setFilter={setFilter}
+          clearFilters={clearFilters}
+        />
+
+        {/* --- Gráfico Principal de Uso e Custo ao Longo do Tempo --- */}
+        <div className="mb-4 rounded-xl border border-gray-700/50 bg-[#1c1c1c] p-5">
+          <GraphMessagesCost usageCostData={usageCostData} loading={loading} />
+        </div>
+
+        {/* --- Análise de Centros de Custo --- */}
+        <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <GraphCCmessages filteredTopCostCenters={filteredTopCostCentersVolume} />
+          <GraphCCcost filteredTopCostCenters={filteredTopCostCentersCost} />
+        </div>
+
+        {/* --- Análise de Usuários --- */}
+        <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <GraphUserMessages filteredTopUsersVolume={filteredTopUsersVolume} />
+          <GraphUserCost filteredTopUsersCost={filteredTopUsersCost} />
+        </div>
+
+        <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <GraphModelsMessage filteredTopModels={filteredTopModels} />
+
+          {/*CUSTO POR MODELO*/}
+          <GraphModelsCost filteredTopModels={filteredTopModels} />
+        </div>
+
+        {/* --- Análise de Modelos --- */}
+        <div className="mb-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="lg:col-span-2">
+            <GraphUserEfficiency
+              userEfficiencyData={ReportUtils.addColorsToUsersEfficiency(userEfficiencyData)}
             />
+          </div>
+        </div>
 
+        {/* --- TABELAS DETALHADAS --- */}
+        <div className="mt-8">
+          <h2 className="mb-6 text-2xl font-bold text-white">📊 Tabelas Detalhadas</h2>
 
-          {/* --- Gráfico Principal de Uso e Custo ao Longo do Tempo --- */}
-          <div className="bg-[#1c1c1c] p-5 rounded-xl border border-gray-700/50 mb-4">
-            <GraphMessagesCost usageCostData={usageCostData} loading={loading} />
+          {/* Tabela de Centros de Custo */}
+          <div className="mb-6">
+            <CostCentersTable data={allTopCostCentersVolumeData} isLoading={isLoadingCostCenters} />
           </div>
 
-          {/* --- Análise de Centros de Custo --- */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <GraphCCmessages 
-              filteredTopCostCenters={filteredTopCostCentersVolume} 
-            />
-            <GraphCCcost 
-              filteredTopCostCenters={filteredTopCostCentersCost} 
-            />
-          </div>
-          
-          {/* --- Análise de Usuários --- */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <GraphUserMessages 
-              filteredTopUsersVolume={filteredTopUsersVolume} 
-            />
-            <GraphUserCost 
-              filteredTopUsersCost={filteredTopUsersCost} 
-            />
-            
+          {/* Tabelas de Usuários */}
+          <div className="mb-6 grid grid-cols-1 gap-6">
+            <UserMessagesTable data={allTopUsersVolumeData} isLoading={isLoadingTopUsers} />
           </div>
 
-            
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <GraphModelsMessage 
-              filteredTopModels={filteredTopModels} 
-            />
-
-            {/*CUSTO POR MODELO*/}
-            <GraphModelsCost 
-              filteredTopModels={filteredTopModels} 
-            /> 
+          {/* Tabela de Modelos */}
+          <div className="mb-6">
+            <ModelsTable data={allTopModelsData} isLoading={isLoadingTopModels} />
           </div>
-          
-
-          {/* --- Análise de Modelos --- */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
-            <div className="lg:col-span-2">
-              <GraphUserEfficiency 
-                userEfficiencyData={ReportUtils.addColorsToUsersEfficiency(userEfficiencyData)} 
-              />
-            </div>
-          </div>
-
-          {/* --- TABELAS DETALHADAS --- */}
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold text-white mb-6">📊 Tabelas Detalhadas</h2>
-            
-            {/* Tabela de Centros de Custo */}
-            <div className="mb-6">
-              <CostCentersTable 
-                data={allTopCostCentersVolumeData} 
-                isLoading={isLoadingCostCenters}
-              />
-            </div>
-            
-            {/* Tabelas de Usuários */}
-            <div className="grid grid-cols-1 gap-6 mb-6">
-              <UserMessagesTable 
-                data={allTopUsersVolumeData} 
-                isLoading={isLoadingTopUsers}
-              />
-            </div>
-
-            {/* Tabela de Modelos */}
-            <div className="mb-6">
-              <ModelsTable 
-                data={allTopModelsData} 
-                isLoading={isLoadingTopModels}
-              />
-            </div>
-          </div>
+        </div>
       </div>
     </div>
   );

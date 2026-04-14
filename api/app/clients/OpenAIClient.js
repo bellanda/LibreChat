@@ -284,10 +284,61 @@ class OpenAIClient extends BaseClient {
     }
   }
 
+  /**
+   * Determina o encoding de tokenização correto para o modelo especificado.
+   * Baseado em tiktoken/model.py (https://github.com/openai/tiktoken/blob/main/tiktoken/model.py)
+   *
+   * Encodings suportados:
+   * - o200k_harmony: Usado por modelos gpt-oss-* (lançado em agosto 2025)
+   * - o200k_base: Usado por modelos mais recentes (o1, o3, o4-mini, gpt-5, gpt-4.1, gpt-4o e variantes)
+   * - cl100k_base: Usado por modelos mais antigos (gpt-4, gpt-3.5-turbo, etc.)
+   *
+   * Modelos cobertos (baseado em tiktoken/model.py MODEL_TO_ENCODING e MODEL_PREFIX_TO_ENCODING):
+   * - Modelos exatos: o1, o3, o4-mini, gpt-5, gpt-4.1, gpt-4o
+   * - Prefixos o200k_base: o1-*, o3-*, o4-mini-*, gpt-5-*, gpt-4.5-*, gpt-4.1-*, chatgpt-4o-*, gpt-4o-*, ft:gpt-4o*
+   * - Prefixos o200k_harmony: gpt-oss-*
+   *
+   * @returns {string} O nome do encoding ('o200k_harmony', 'o200k_base', ou 'cl100k_base')
+   */
   getEncoding() {
-    return this.modelOptions?.model && /gpt-4[^-\s]/.test(this.modelOptions.model)
-      ? 'o200k_base'
-      : 'cl100k_base';
+    const model = this.modelOptions?.model;
+    if (!model) {
+      return 'cl100k_base';
+    }
+
+    // Modelos exatos que usam o200k_base (baseado em tiktoken/model.py MODEL_TO_ENCODING)
+    const exactO200kModels = ['o1', 'o3', 'o4-mini', 'gpt-5', 'gpt-4.1', 'gpt-4o'];
+    if (exactO200kModels.includes(model)) {
+      return 'o200k_base';
+    }
+
+    // Verifica o200k_harmony primeiro (usado por gpt-oss-*)
+    // Baseado em tiktoken/model.py MODEL_PREFIX_TO_ENCODING
+    // Nota: Requer tiktoken >= 0.11.0 (agosto 2025) para suporte completo
+    if (/^gpt-oss-/.test(model)) {
+      return 'o200k_harmony';
+    }
+
+    // Prefixos que usam o200k_base (baseado em tiktoken/model.py MODEL_PREFIX_TO_ENCODING)
+    const o200kPrefixes = [
+      /^o1-/,           // o1-preview, o1-mini, etc.
+      /^o3-/,           // o3-preview, o3-mini, etc.
+      /^o4-mini-/,      // o4-mini-preview, etc.
+      /^gpt-5-/,        // gpt-5-2024-*, etc.
+      /^gpt-4\.5-/,     // gpt-4.5-2024-*, etc.
+      /^gpt-4\.1-/,     // gpt-4.1-2024-*, etc.
+      /^chatgpt-4o-/,   // chatgpt-4o-*, etc.
+      /^gpt-4o-/,       // gpt-4o-2024-05-13, gpt-4o-mini, gpt-4o-reasoning, etc.
+      /^ft:gpt-4o/,     // Fine-tuned gpt-4o models
+    ];
+
+    // Verifica se o modelo corresponde a algum prefixo o200k_base
+    // Nota: Não usa fallback regex genérico pois temos lista completa de modelos/prefixos
+    // baseada em tiktoken/model.py oficial
+    const usesO200k = o200kPrefixes.some((prefix) => prefix.test(model));
+    const encoding = usesO200k ? 'o200k_base' : 'cl100k_base';
+
+    return encoding;
   }
 
   /**

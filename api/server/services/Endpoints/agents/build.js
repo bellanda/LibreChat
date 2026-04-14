@@ -19,9 +19,10 @@ const buildOptions = async (req, endpoint, parsedBody, endpointType) => {
     ...model_parameters
   } = parsedBody;
 
-  // Check if web search is active in ephemeral agent
+  // Check if web search and/or auto mode are active in ephemeral agent
   const ephemeralAgent = req.body.ephemeralAgent;
   const isWebSearchActive = ephemeralAgent && ephemeralAgent.web_search === true;
+  const isAutoMode = ephemeralAgent && ephemeralAgent.auto_mode === true;
 
   // Preserve user's promptPrefix and combine with endpoint configuration when web search is active
   let finalPromptPrefix = promptPrefix;
@@ -59,6 +60,26 @@ const buildOptions = async (req, endpoint, parsedBody, endpointType) => {
     }
   }
 
+  // Injetar instruções do modo AUTO quando auto_mode estiver ativo
+  if (isAutoMode) {
+    let autoPrompt;
+    try {
+      // Lazy require para evitar dependência circular em tempo de carga
+      // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+      const { generateAutoModeToolsPrompt } = require('@librechat/api');
+      autoPrompt = generateAutoModeToolsPrompt?.();
+    } catch (e) {
+      // Se algo falhar ao carregar o prompt, segue sem modificar o promptPrefix
+      logger.warn('[agents/build] Failed to load auto mode tools prompt', e);
+    }
+
+    if (autoPrompt && typeof autoPrompt === 'string' && autoPrompt.trim().length > 0) {
+      finalPromptPrefix = finalPromptPrefix
+        ? `${finalPromptPrefix}\n\n${autoPrompt}`
+        : autoPrompt;
+    }
+  }
+
   // Set the final promptPrefix in req.body for ephemeral agent
   if (finalPromptPrefix) {
     req.body.promptPrefix = finalPromptPrefix;
@@ -73,6 +94,9 @@ const buildOptions = async (req, endpoint, parsedBody, endpointType) => {
     logger.error(`[/agents/:${agent_id}] Error retrieving agent during build options step`, error);
     return undefined;
   });
+
+  /** @type {import('librechat-data-provider').TConversation | undefined} */
+  const addedConvo = req.body?.addedConvo;
 
   return removeNullishValues({
     spec,

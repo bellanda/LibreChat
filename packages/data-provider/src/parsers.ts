@@ -109,28 +109,22 @@ export function orderEndpointsConfig(endpointsConfig: t.TEndpointsConfig) {
   if (!endpointsConfig) {
     return {};
   }
-
   const enabledEndpoints = getEnabledEndpoints();
   const endpointKeys = Object.keys(endpointsConfig);
-
+  const defaultCustomIndex = enabledEndpoints.indexOf(EModelEndpoint.custom);
   return endpointKeys.reduce(
     (accumulatedConfig: Record<string, t.TConfig | null | undefined>, currentEndpointKey) => {
       const isCustom = !(currentEndpointKey in EModelEndpoint);
       const isEnabled = enabledEndpoints.includes(currentEndpointKey);
-      const index = enabledEndpoints.indexOf(currentEndpointKey);
-
       if (!isEnabled && !isCustom) {
         return accumulatedConfig;
       }
 
-      if (isCustom && isEnabled) {
+      const index = enabledEndpoints.indexOf(currentEndpointKey);
+
+      if (isCustom) {
         accumulatedConfig[currentEndpointKey] = {
-          order: index,
-          ...(endpointsConfig[currentEndpointKey] as Omit<t.TConfig, 'order'> & { order?: number }),
-        };
-      } else if (isCustom && !isEnabled) {
-        accumulatedConfig[currentEndpointKey] = {
-          order: 9999,
+          order: defaultCustomIndex >= 0 ? defaultCustomIndex : 9999,
           ...(endpointsConfig[currentEndpointKey] as Omit<t.TConfig, 'order'> & { order?: number }),
         };
       } else if (endpointsConfig[currentEndpointKey]) {
@@ -139,7 +133,6 @@ export function orderEndpointsConfig(endpointsConfig: t.TEndpointsConfig) {
           order: index,
         };
       }
-
       return accumulatedConfig;
     },
     {},
@@ -180,7 +173,6 @@ export function getNonEmptyValue(possibleValues: string[]) {
 
 export type TPossibleValues = {
   models: string[];
-  secondaryModels?: string[];
 };
 
 export const parseConvo = ({
@@ -209,14 +201,10 @@ export const parseConvo = ({
   // }
 
   const convo = schema?.parse(conversation) as s.TConversation | undefined;
-  const { models, secondaryModels } = possibleValues ?? {};
+  const { models } = possibleValues ?? {};
 
   if (models && convo) {
     convo.model = getFirstDefinedValue(models) ?? convo.model;
-  }
-
-  if (secondaryModels && convo?.agentOptions) {
-    convo.agentOptions.model = getFirstDefinedValue(secondaryModels) ?? convo.agentOptions.model;
   }
 
   return convo;
@@ -245,7 +233,7 @@ const extractOmniVersion = (modelStr: string): string => {
   return '';
 };
 
-export const getResponseSender = (endpointOption: t.TEndpointOption): string => {
+export const getResponseSender = (endpointOption: Partial<t.TEndpointOption>): string => {
   const {
     model: _m,
     endpoint: _e,
@@ -270,10 +258,11 @@ export const getResponseSender = (endpointOption: t.TEndpointOption): string => 
       EModelEndpoint.chatGPTBrowser,
     ].includes(endpoint)
   ) {
-    if (chatGptLabel) {
-      return chatGptLabel;
-    } else if (modelLabel) {
+    if (modelLabel) {
       return modelLabel;
+    } else if (chatGptLabel) {
+      // @deprecated - prefer modelLabel
+      return chatGptLabel;
     } else if (model && extractOmniVersion(model)) {
       return extractOmniVersion(model);
     } else if (model && (model.includes('mistral') || model.includes('codestral'))) {
@@ -284,7 +273,7 @@ export const getResponseSender = (endpointOption: t.TEndpointOption): string => 
       const gptVersion = extractGPTVersion(model);
       return gptVersion || 'GPT';
     }
-    return (alternateName[endpoint] as string | undefined) ?? 'ChatGPT';
+    return (alternateName[endpoint] as string | undefined) ?? 'AI';
   }
 
   if (endpoint === EModelEndpoint.anthropic) {
@@ -309,6 +298,7 @@ export const getResponseSender = (endpointOption: t.TEndpointOption): string => 
     if (modelLabel) {
       return modelLabel;
     } else if (chatGptLabel) {
+      // @deprecated - prefer modelLabel
       return chatGptLabel;
     } else if (model && extractOmniVersion(model)) {
       return extractOmniVersion(model);
@@ -380,17 +370,16 @@ export const parseCompactConvo = ({
     throw new Error(`Unknown endpointType: ${endpointType}`);
   }
 
-  const convo = schema.parse(conversation) as s.TConversation | null;
-  // const { models, secondaryModels } = possibleValues ?? {};
+  // Strip iconURL from input before parsing - it should only be derived server-side
+  // from model spec configuration, not accepted from client requests
+  const { iconURL: _clientIconURL, ...conversationWithoutIconURL } = conversation;
+
+  const convo = schema.parse(conversationWithoutIconURL) as s.TConversation | null;
   const { models } = possibleValues ?? {};
 
   if (models && convo) {
     convo.model = getFirstDefinedValue(models) ?? convo.model;
   }
-
-  // if (secondaryModels && convo.agentOptions) {
-  //   convo.agentOptionmodel = getFirstDefinedValue(secondaryModels) ?? convo.agentOptionmodel;
-  // }
 
   return convo;
 };
@@ -469,31 +458,140 @@ export function replaceSpecialVars({ text, user }: { text: string; user?: t.TUse
     result = result.replace(/{{current_user}}/gi, user.name);
   }
 
-  if (user) {
-    // Create a clean user object with only the relevant fields
-    const userInfo = {
-      _id: (user as any)._id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      emailVerified: (user as any).emailVerified,
-      role: user.role,
-      ldapId: (user as any).ldapId,
-      costCenterCode: (user as any).costCenterCode,
-      costCenterName: (user as any).costCenterName,
-      workPositionCode: (user as any).workPositionCode,
-      workPositionName: (user as any).workPositionName,
-    };
+  return result;
+}
 
-    console.log('userInfo', userInfo);
+/**
+ * Parsed ephemeral agent ID result
+ */
+export type ParsedEphemeralAgentId = {
+  endpoint: string;
+  model: string;
+  sender?: string;
+  index?: number;
+};
 
-    // Remove undefined/null values
-    const cleanUserInfo = Object.fromEntries(
-      Object.entries(userInfo).filter(([_, value]) => value !== undefined && value !== null),
-    );
+/**
+ * Encodes an ephemeral agent ID from endpoint, model, optional sender, and optional index.
+ * Uses __ to replace : (reserved in graph node names) and ___ to separate sender.
+ *
+ * Format: endpoint__model___sender or endpoint__model___sender____index (if index provided)
+ *
+ * @example
+ * encodeEphemeralAgentId({ endpoint: 'openAI', model: 'gpt-4o', sender: 'GPT-4o' })
+ * // => 'openAI__gpt-4o___GPT-4o'
+ *
+ * @example
+ * encodeEphemeralAgentId({ endpoint: 'openAI', model: 'gpt-4o', sender: 'GPT-4o', index: 1 })
+ * // => 'openAI__gpt-4o___GPT-4o____1'
+ */
+export function encodeEphemeralAgentId({
+  endpoint,
+  model,
+  sender,
+  index,
+}: {
+  endpoint: string;
+  model: string;
+  sender?: string;
+  index?: number;
+}): string {
+  const base = `${endpoint}:${model}`.replace(/:/g, '__');
+  let result = base;
+  if (sender) {
+    // Use ___ as separator before sender to distinguish from __ in model names
+    result = `${base}___${sender.replace(/:/g, '__')}`;
+  }
+  if (index != null) {
+    // Use ____ (4 underscores) as separator for index
+    result = `${result}____${index}`;
+  }
+  return result;
+}
 
-    result = result.replace(/{{user_complete_info}}/gi, JSON.stringify(cleanUserInfo, null, 2));
+/**
+ * Parses an ephemeral agent ID back into its components.
+ * Returns undefined if the ID doesn't match the expected format.
+ *
+ * Format: endpoint__model___sender or endpoint__model___sender____index
+ * - ____ (4 underscores) separates optional index suffix
+ * - ___ (triple underscore) separates model from optional sender
+ * - __ (double underscore) replaces : in endpoint/model names
+ *
+ * @example
+ * parseEphemeralAgentId('openAI__gpt-4o___GPT-4o')
+ * // => { endpoint: 'openAI', model: 'gpt-4o', sender: 'GPT-4o' }
+ *
+ * @example
+ * parseEphemeralAgentId('openAI__gpt-4o___GPT-4o____1')
+ * // => { endpoint: 'openAI', model: 'gpt-4o', sender: 'GPT-4o', index: 1 }
+ */
+export function parseEphemeralAgentId(agentId: string): ParsedEphemeralAgentId | undefined {
+  if (!agentId.includes('__')) {
+    return undefined;
   }
 
-  return result;
+  // First check for index suffix (separated by ____)
+  let index: number | undefined;
+  let workingId = agentId;
+  if (agentId.includes('____')) {
+    const lastIndexSep = agentId.lastIndexOf('____');
+    const indexStr = agentId.slice(lastIndexSep + 4);
+    const parsedIndex = parseInt(indexStr, 10);
+    if (!isNaN(parsedIndex)) {
+      index = parsedIndex;
+      workingId = agentId.slice(0, lastIndexSep);
+    }
+  }
+
+  // Check for sender (separated by ___)
+  let sender: string | undefined;
+  let mainPart = workingId;
+  if (workingId.includes('___')) {
+    const [before, after] = workingId.split('___');
+    mainPart = before;
+    // Restore colons in sender if any
+    sender = after?.replace(/__/g, ':');
+  }
+
+  const [endpoint, ...modelParts] = mainPart.split('__');
+  if (!endpoint || modelParts.length === 0) {
+    return undefined;
+  }
+  // Restore colons in model name (model names can contain colons like claude-3:opus)
+  const model = modelParts.join(':');
+  return { endpoint, model, sender, index };
+}
+
+/**
+ * Checks if an agent ID represents an ephemeral (non-saved) agent.
+ * Real agent IDs always start with "agent_", so anything else is ephemeral.
+ */
+export function isEphemeralAgentId(agentId: string | null | undefined): boolean {
+  return !agentId?.startsWith('agent_');
+}
+
+/**
+ * Strips the index suffix (____N) from an agent ID if present.
+ * Works with both ephemeral and real agent IDs.
+ *
+ * @example
+ * stripAgentIdSuffix('agent_abc123____1') // => 'agent_abc123'
+ * stripAgentIdSuffix('openAI__gpt-4o___GPT-4o____1') // => 'openAI__gpt-4o___GPT-4o'
+ * stripAgentIdSuffix('agent_abc123') // => 'agent_abc123' (unchanged)
+ */
+export function stripAgentIdSuffix(agentId: string): string {
+  return agentId.replace(/____\d+$/, '');
+}
+
+/**
+ * Appends an index suffix (____N) to an agent ID.
+ * Used to distinguish parallel agents with the same base ID.
+ *
+ * @example
+ * appendAgentIdSuffix('agent_abc123', 1) // => 'agent_abc123____1'
+ * appendAgentIdSuffix('openAI__gpt-4o___GPT-4o', 1) // => 'openAI__gpt-4o___GPT-4o____1'
+ */
+export function appendAgentIdSuffix(agentId: string, index: number): string {
+  return `${agentId}____${index}`;
 }

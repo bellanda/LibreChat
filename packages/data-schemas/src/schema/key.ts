@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import { Schema, Document, Types } from 'mongoose';
 
 export interface IKey extends Document {
   userId: Types.ObjectId;
@@ -9,7 +9,7 @@ export interface IKey extends Document {
 
 const keySchema: Schema<IKey> = new Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },

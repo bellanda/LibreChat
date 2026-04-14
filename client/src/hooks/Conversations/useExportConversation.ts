@@ -210,7 +210,7 @@ export default function useExportConversation({
     if (content.type === ContentTypes.TEXT) {
       // TEXT
       const textPart = content[ContentTypes.TEXT];
-      const text = typeof textPart === 'string' ? textPart : textPart.value;
+      const text = typeof textPart === 'string' ? textPart : (textPart?.value ?? '');
       return [sender, text];
     }
 
@@ -288,9 +288,7 @@ export default function useExportConversation({
         data.push(message);
       }
     } else {
-      if (messages && messages.messageId) {
-        data.push(messages as TMessage);
-      }
+      data.push(messages);
     }
 
     exportFromJSON({

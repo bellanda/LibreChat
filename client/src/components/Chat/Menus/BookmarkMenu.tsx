@@ -4,22 +4,18 @@ import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TConversationTag } from 'librechat-data-provider';
 import { Constants, QueryKeys } from 'librechat-data-provider';
-import { BookmarkPlusIcon, Edit, Trash2 } from 'lucide-react';
+import { BookmarkPlusIcon } from 'lucide-react';
 import type { FC } from 'react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import type * as t from '~/common';
 import { NotificationSeverity } from '~/common';
 import { BookmarkEditDialog } from '~/components/Bookmarks';
-import {
-  useConversationTagsQuery,
-  useDeleteConversationTagMutation,
-  useTagConversationMutation,
-} from '~/data-provider';
+import { useConversationTagsQuery, useDeleteConversationTagMutation, useTagConversationMutation } from '~/data-provider';
 import { useBookmarkSuccess, useLocalize } from '~/hooks';
 import { BookmarkContext } from '~/Providers/BookmarkContext';
 import store from '~/store';
-import { logger } from '~/utils';
+import { cn, logger } from '~/utils';
 
 const BookmarkMenu: FC = () => {
   const localize = useLocalize();
@@ -32,17 +28,19 @@ const BookmarkMenu: FC = () => {
   const tags = conversation?.tags;
   const isTemporary = conversation?.expiredAt != null;
 
+  const menuId = useId();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<TConversationTag | null>(null);
 
-  const menuId = `bookmark-menu-${conversationId}`;
+
 
   const mutation = useTagConversationMutation(conversationId, {
     onSuccess: (newTags: string[], vars) => {
       updateConvoTags(newTags);
       const tagElement = document.getElementById(vars.tag);
+      console.log('tagElement', tagElement);
       if (tagElement) {
         setTimeout(() => tagElement.focus(), 2);
       }
@@ -55,6 +53,7 @@ const BookmarkMenu: FC = () => {
     },
     onMutate: (vars) => {
       const tagElement = document.getElementById(vars.tag);
+      console.log('tagElement', tagElement);
       if (tagElement) {
         setTimeout(() => tagElement.focus(), 2);
       }
@@ -79,9 +78,9 @@ const BookmarkMenu: FC = () => {
 
   const isActiveConvo = Boolean(
     conversation &&
-      conversationId &&
-      conversationId !== Constants.NEW_CONVO &&
-      conversationId !== 'search',
+    conversationId &&
+    conversationId !== Constants.NEW_CONVO &&
+    conversationId !== 'search',
   );
 
   const handleSubmit = useCallback(
@@ -137,7 +136,46 @@ const BookmarkMenu: FC = () => {
 
   const newBookmarkRef = useRef<HTMLButtonElement>(null);
 
-  if (!isActiveConvo || isTemporary) {
+  const dropdownItems: t.MenuItemProps[] = useMemo(() => {
+    const items: t.MenuItemProps[] = [
+      {
+        id: '%___new___bookmark___%',
+        label: localize('com_ui_bookmarks_new'),
+        icon: <BookmarkPlusIcon className="size-4" />,
+        hideOnClick: false,
+        ref: newBookmarkRef,
+        render: (props) => <button {...props} />,
+        onClick: () => setIsDialogOpen(true),
+      },
+    ];
+
+    if (data) {
+      for (const tag of data) {
+        const isSelected = tags?.includes(tag.tag);
+        items.push({
+          id: tag.tag,
+          label: tag.tag,
+          hideOnClick: false,
+          icon:
+            isSelected === true ? (
+              <BookmarkFilledIcon className="size-4" />
+            ) : (
+              <BookmarkIcon className="size-4" />
+            ),
+          onClick: () => handleSubmit(tag.tag),
+          disabled: mutation.isLoading,
+        });
+      }
+    }
+
+    return items;
+  }, [tags, data, handleSubmit, mutation.isLoading, localize]);
+
+  if (!isActiveConvo) {
+    return null;
+  }
+
+  if (isTemporary) {
     return null;
   }
 
@@ -146,41 +184,10 @@ const BookmarkMenu: FC = () => {
       return <Spinner aria-label="Spinner" />;
     }
     if ((tags?.length ?? 0) > 0) {
-      return <BookmarkFilledIcon className="icon-sm" aria-label="Filled Bookmark" />;
+      return <BookmarkFilledIcon className="icon-lg" aria-label="Filled Bookmark" />;
     }
-    return <BookmarkIcon className="icon-sm" aria-label="Bookmark" />;
+    return <BookmarkIcon className="icon-lg" aria-label="Bookmark" />;
   };
-
-  // Create dropdown items for DropdownPopup
-  const dropdownItems: t.MenuItemProps[] = [
-    {
-      label: localize('com_ui_bookmarks_new'),
-      onClick: handleNewBookmark,
-      icon: <BookmarkPlusIcon className="size-4" />,
-    },
-    ...(data?.map((tag) => ({
-      label: tag.tag,
-      onClick: () => handleSubmit(tag.tag),
-      icon: tags?.includes(tag.tag) ? (
-        <BookmarkFilledIcon className="size-4" />
-      ) : (
-        <BookmarkIcon className="size-4" />
-      ),
-      actions: [
-        {
-          icon: <Edit className="w-4 h-4" />,
-          label: localize('com_ui_edit'),
-          onClick: () => handleEditBookmark(tag),
-        },
-        {
-          icon: <Trash2 className="w-4 h-4" />,
-          label: localize('com_ui_delete'),
-          onClick: () => handleDeleteBookmark(tag),
-          className: 'text-red-600 focus:text-red-600',
-        },
-      ],
-    })) ?? []),
-  ];
 
   return (
     <BookmarkContext.Provider value={{ bookmarks: data || [] }}>
@@ -193,22 +200,25 @@ const BookmarkMenu: FC = () => {
         unmountOnHide={true}
         setIsOpen={setIsMenuOpen}
         keyPrefix={`${conversationId}-bookmark-`}
-        items={dropdownItems}
-        className="z-50"
         trigger={
           <TooltipAnchor
             description={localize('com_ui_bookmarks_add')}
             render={
               <Ariakit.MenuButton
-                id="bookmark-button"
+                id="bookmark-menu-button"
                 aria-label={localize('com_ui_bookmarks_add')}
-                className="inline-flex flex-shrink-0 justify-center items-center bg-transparent rounded-xl border transition-all ease-in-out size-10 border-border-light text-text-primary hover:bg-surface-tertiary disabled:pointer-events-none disabled:opacity-50 radix-state-open:bg-surface-tertiary"
+                className={cn(
+                  'mt-text-sm flex size-10 flex-shrink-0 items-center justify-center gap-2 rounded-xl border border-border-light bg-presentation text-sm transition-colors duration-200 hover:bg-surface-hover',
+                  isMenuOpen ? 'bg-surface-hover' : '',
+                )}
+                data-testid="bookmark-menu"
               >
                 {renderButtonContent()}
               </Ariakit.MenuButton>
             }
           />
         }
+        items={dropdownItems}
       />
 
       {/* New Bookmark Dialog */}
@@ -220,19 +230,6 @@ const BookmarkMenu: FC = () => {
         triggerRef={newBookmarkRef}
         conversationId={conversationId}
         context="BookmarkMenu - BookmarkEditDialog"
-      />
-
-      {/* Edit Bookmark Dialog */}
-      <BookmarkEditDialog
-        bookmark={editingBookmark || undefined}
-        open={isEditDialogOpen}
-        setOpen={(open) => {
-          setIsEditDialogOpen(open);
-        }}
-        onSuccess={() => {
-          setEditingBookmark(null);
-        }}
-        context="BookmarkMenu - EditBookmarkDialog"
       />
     </BookmarkContext.Provider>
   );

@@ -17,7 +17,9 @@ RUN apt-get update \
 COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
 RUN uv --version
 
-COPY pyproject.toml uv.lock .python-version .
+COPY pyproject.toml .
+COPY uv.lock .
+COPY .python-version .
 RUN uv sync --frozen
 
 # Download NLTK with certificate handling

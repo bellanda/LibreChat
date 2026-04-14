@@ -8,9 +8,16 @@ import {
   WebSocketOptionsSchema,
   StreamableHTTPOptionsSchema,
 } from 'librechat-data-provider';
+import type {
+  EmbeddedResource,
+  ListToolsResult,
+  ImageContent,
+  AudioContent,
+  TextContent,
+  Tool,
+} from '@modelcontextprotocol/sdk/types.js';
 import type { SearchResultData, UIResource, TPlugin } from 'librechat-data-provider';
 import type { TokenMethods, JsonSchemaType, IUser } from '@librechat/data-schemas';
-import type * as t from '@modelcontextprotocol/sdk/types.js';
 import type { FlowStateManager } from '~/flow/manager';
 import type { RequestBody } from '~/types/http';
 import type * as o from '~/mcp/oauth/types';
@@ -57,17 +64,17 @@ export interface MCPPrompt {
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
 
-export type MCPTool = z.infer<typeof t.ToolSchema>;
-export type MCPToolListResponse = z.infer<typeof t.ListToolsResultSchema>;
-export type ToolContentPart = t.TextContent | t.ImageContent | t.EmbeddedResource | t.AudioContent;
-export type ImageContent = Extract<ToolContentPart, { type: 'image' }>;
+export type MCPTool = Tool;
+export type MCPToolListResponse = ListToolsResult;
+export type ToolContentPart = TextContent | ImageContent | EmbeddedResource | AudioContent;
+export type { TextContent, ImageContent, EmbeddedResource, AudioContent };
 export type MCPToolCallResponse =
   | undefined
   | {
-      _meta?: Record<string, unknown>;
-      content?: Array<ToolContentPart>;
-      isError?: boolean;
-    };
+    _meta?: Record<string, unknown>;
+    content?: Array<ToolContentPart>;
+    isError?: boolean;
+  };
 
 export type Provider =
   | 'google'
@@ -82,34 +89,30 @@ export type Provider =
 
 export type FormattedContent =
   | {
-      type: 'text';
-      metadata?: {
-        type: string;
-        data: UIResource[];
-      };
-      text?: string;
-    }
+    type: 'text';
+    text: string;
+  }
   | {
-      type: 'image';
-      inlineData: {
-        mimeType: string;
-        data: string;
-      };
-    }
-  | {
-      type: 'image';
-      source: {
-        type: 'base64';
-        media_type: string;
-        data: string;
-      };
-    }
-  | {
-      type: 'image_url';
-      image_url: {
-        url: string;
-      };
+    type: 'image';
+    inlineData: {
+      mimeType: string;
+      data: string;
     };
+  }
+  | {
+    type: 'image';
+    source: {
+      type: 'base64';
+      media_type: string;
+      data: string;
+    };
+  }
+  | {
+    type: 'image_url';
+    image_url: {
+      url: string;
+    };
+  };
 
 export type FileSearchSource = {
   fileId: string;
@@ -124,19 +127,19 @@ export type FileSearchSource = {
 
 export type Artifacts =
   | {
-      content?: FormattedContent[];
-      [Tools.ui_resources]?: {
-        data: UIResource[];
-      };
-      [Tools.file_search]?: {
-        sources: FileSearchSource[];
-        fileCitations?: boolean;
-      };
-      [Tools.web_search]?: SearchResultData;
-      files?: Array<{ id: string; name: string }>;
-      session_id?: string;
-      file_ids?: string[];
-    }
+    content?: FormattedContent[];
+    [Tools.ui_resources]?: {
+      data: UIResource[];
+    };
+    [Tools.file_search]?: {
+      sources: FileSearchSource[];
+      fileCitations?: boolean;
+    };
+    [Tools.web_search]?: SearchResultData;
+    files?: Array<{ id: string; name: string }>;
+    session_id?: string;
+    file_ids?: string[];
+  }
   | undefined;
 
 export type FormattedContentResult = [string | FormattedContent[], undefined | Artifacts];
@@ -153,6 +156,15 @@ export type ParsedServerConfig = MCPOptions & {
   tools?: string;
   toolFunctions?: LCAvailableTools;
   initDuration?: number;
+  updatedAt?: number;
+  dbId?: string;
+  /** True if access is only via agent (not directly shared with user) */
+  consumeOnly?: boolean;
+};
+
+export type AddServerResult = {
+  serverName: string;
+  config: ParsedServerConfig;
 };
 
 export interface BasicConnectionOptions {

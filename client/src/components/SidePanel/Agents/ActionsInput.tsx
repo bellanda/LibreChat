@@ -121,12 +121,12 @@ export default function ActionsInput({
     const action_id = action?.action_id;
     metadata.raw_spec = inputValue;
     const parsedUrl = new URL(data[0].domain);
-    const domain = parsedUrl.hostname;
-    if (!domain) {
+    if (!parsedUrl.hostname) {
       // alert user?
       return;
     }
-    metadata.domain = domain;
+    // Send protocol + hostname for proper SSRF validation (e.g., "http://192.168.1.1")
+    metadata.domain = `${parsedUrl.protocol}//${parsedUrl.hostname}`;
 
     const { type, saved_auth_fields } = authFormData;
 
@@ -208,7 +208,7 @@ export default function ActionsInput({
             htmlFor="schemaInput"
             className="text-token-text-primary whitespace-nowrap font-medium"
           >
-            Schema
+            {localize('com_ui_schema')}
           </label>
           <div className="flex items-center gap-2">
             {/* <button className="btn btn-neutral border-token-border-light relative h-8 min-w-[100px] rounded-lg font-medium">

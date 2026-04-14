@@ -113,6 +113,42 @@ const updateFileUsage = async (data) => {
 };
 
 /**
+ * Updates usage tracking for multiple files (deduplicated by file_id).
+ * @param {Array<{ file_id: string }>} files
+ * @param {string[]} [fileIds]
+ * @returns {Promise<Array<object>>}
+ */
+async function updateFilesUsage(files, fileIds) {
+  const promises = [];
+  const seen = new Set();
+
+  for (const file of files) {
+    const { file_id } = file;
+    if (seen.has(file_id)) {
+      continue;
+    }
+    seen.add(file_id);
+    promises.push(updateFileUsage({ file_id }));
+  }
+
+  if (!fileIds) {
+    const results = await Promise.all(promises);
+    return results.filter((result) => result != null);
+  }
+
+  for (const file_id of fileIds) {
+    if (seen.has(file_id)) {
+      continue;
+    }
+    seen.add(file_id);
+    promises.push(updateFileUsage({ file_id }));
+  }
+
+  const results = await Promise.all(promises);
+  return results.filter((result) => result != null);
+}
+
+/**
  * Deletes a file identified by file_id.
  * @param {string} file_id - The unique identifier of the file to delete.
  * @returns {Promise<MongoFile>} A promise that resolves to the deleted file document or null.
@@ -172,6 +208,7 @@ module.exports = {
   createFile,
   updateFile,
   updateFileUsage,
+  updateFilesUsage,
   deleteFile,
   deleteFiles,
   deleteFileByFilter,

@@ -16,6 +16,35 @@ const { loadAuthValues } = require('~/server/services/Tools/credentials');
 const { loadTools } = require('~/app/clients/tools/util');
 const { getRoleByName } = require('~/models/Role');
 const { getMessage } = require('~/models/Message');
+const { limitCodeOutput } = require('~/server/utils/limitCodeOutput');
+
+const imageOutputExtRegex = /\.(png|jpe?g|gif|webp|bmp|svg)$/i;
+const finalDownloadExtRegex = /\.(pptx|ppt|xlsx|xls|pdf|docx|doc|zip|csv)$/i;
+
+/**
+ * Hide intermediate chart/image files when a final downloadable file exists.
+ * This keeps execute_code outputs cleaner for users requesting a single deliverable.
+ * @param {Array<{ id?: string; fileId?: string; name?: string; filename?: string }>} files
+ */
+function filterCodeOutputFiles(files = []) {
+  if (!Array.isArray(files) || files.length === 0) {
+    return [];
+  }
+
+  const hasFinalDownload = files.some((file) => {
+    const name = String(file?.name ?? file?.filename ?? '');
+    return finalDownloadExtRegex.test(name);
+  });
+
+  if (!hasFinalDownload) {
+    return files;
+  }
+
+  return files.filter((file) => {
+    const name = String(file?.name ?? file?.filename ?? '');
+    return !imageOutputExtRegex.test(name);
+  });
+}
 
 const fieldsMap = {
   [Tools.execute_code]: [EnvVar.CODE_API_KEY],
@@ -173,13 +202,19 @@ const callTool = async (req, res) => {
     });
 
     const { content, artifact } = result;
+    
+    // Limita o output do code interpreter para evitar consumo excessivo de créditos
+    const limitedContent = toolId === Tools.execute_code 
+      ? limitCodeOutput(content, 10000) 
+      : content;
+    
     const toolCallData = {
       toolId,
       messageId,
       partIndex,
       blockIndex,
       conversationId,
-      result: content,
+      result: limitedContent,
       user: req.user.id,
     };
 
@@ -188,13 +223,30 @@ const callTool = async (req, res) => {
         logger.error(`Error creating tool call: ${error.message}`);
       });
       return res.status(200).json({
-        result: content,
+        result: limitedContent,
+      });
+    }
+
+    const filteredFiles = filterCodeOutputFiles(artifact.files);
+    if (filteredFiles.length !== artifact.files.length) {
+      logger.debug('[execute_code] Filtered intermediate image outputs from artifacts', {
+        originalCount: artifact.files.length,
+        filteredCount: filteredFiles.length,
+        session_id: artifact.session_id,
       });
     }
 
     const artifactPromises = [];
-    for (const file of artifact.files) {
-      const { id, name } = file;
+    for (const file of filteredFiles) {
+      const id = file.id ?? file.fileId;
+      const name = file.name ?? file.filename ?? file.id ?? file.fileId;
+      if (!id || typeof id !== 'string') {
+        logger.warn('[execute_code] Skipping file with missing id/fileId:', {
+          fileKeys: Object.keys(file || {}),
+          session_id: artifact.session_id,
+        });
+        continue;
+      }
       artifactPromises.push(
         (async () => {
           const fileMetadata = await processCodeOutput({
@@ -225,7 +277,7 @@ const callTool = async (req, res) => {
       logger.error(`Error creating tool call: ${error.message}`);
     });
     res.status(200).json({
-      result: content,
+      result: limitedContent,
       attachments,
     });
   } catch (error) {

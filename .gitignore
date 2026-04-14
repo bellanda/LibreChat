@@ -178,3 +178,13 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
+
+
+
+# SANDBOX
+packages/sandbox/storage/
+*.pyc
+storage/
+**pycache**
+docs/superpowers
+.superpowers/

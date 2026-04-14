@@ -1,10 +1,10 @@
-import { EModelEndpoint, removeNullishValues } from 'librechat-data-provider';
 import type { BindToolsInput } from '@langchain/core/language_models/chat_models';
-import type { SettingDefinition } from 'librechat-data-provider';
 import type { AzureOpenAIInput } from '@langchain/openai';
+import type { SettingDefinition } from 'librechat-data-provider';
+import { EModelEndpoint, removeNullishValues } from 'librechat-data-provider';
 import type { OpenAI } from 'openai';
 import type * as t from '~/types';
-import { sanitizeModelName, constructAzureURL } from '~/utils/azure';
+import { constructAzureURL, sanitizeModelName } from '~/utils/azure';
 import { isEnabled } from '~/utils/common';
 
 export const knownOpenAIParams = new Set([
@@ -139,6 +139,12 @@ export function getOpenAILLMConfig({
 }): Pick<t.LLMConfigResult, 'llmConfig' | 'tools'> & {
   azure?: t.AzureOptions;
 } {
+  /** Clean empty strings from model options (e.g., temperature: "" should be removed) */
+  const cleanedModelOptions = removeNullishValues(
+    _modelOptions,
+    true,
+  ) as Partial<t.OpenAIParameters>;
+
   const {
     reasoning_effort,
     reasoning_summary,
@@ -147,7 +153,7 @@ export function getOpenAILLMConfig({
     frequency_penalty,
     presence_penalty,
     ...modelOptions
-  } = _modelOptions;
+  } = cleanedModelOptions;
 
   const llmConfig = Object.assign(
     {
@@ -259,9 +265,35 @@ export function getOpenAILLMConfig({
   }
 
   /**
-   * Note: OpenAI Web Search models do not support any known parameters besides `max_tokens`
+   * Note: OpenAI reasoning models (o1/o3/gpt-5) do not support temperature and other sampling parameters
+   * Exception: gpt-5-chat and versioned models like gpt-5.1 DO support these parameters
    */
-  if (modelOptions.model && /gpt-4o.*search/.test(modelOptions.model as string)) {
+  if (
+    modelOptions.model &&
+    /\b(o[13]|gpt-5)(?!\.|-chat)(?:-|$)/.test(modelOptions.model as string)
+  ) {
+    const reasoningExcludeParams = [
+      'frequencyPenalty',
+      'presencePenalty',
+      'temperature',
+      'topP',
+      'logitBias',
+      'n',
+      'logprobs',
+    ];
+
+    const updatedDropParams = dropParams || [];
+    const combinedDropParams = [...new Set([...updatedDropParams, ...reasoningExcludeParams])];
+
+    combinedDropParams.forEach((param) => {
+      if (param in llmConfig) {
+        delete llmConfig[param as keyof t.OAIClientOptions];
+      }
+    });
+  } else if (modelOptions.model && /gpt-4o.*search/.test(modelOptions.model as string)) {
+    /**
+     * Note: OpenAI Web Search models do not support any known parameters besides `max_tokens`
+     */
     const searchExcludeParams = [
       'frequency_penalty',
       'presence_penalty',

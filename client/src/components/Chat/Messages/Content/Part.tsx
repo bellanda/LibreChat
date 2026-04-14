@@ -1,23 +1,31 @@
+import type { TAttachment, TMessageContentParts } from 'librechat-data-provider';
 import {
-  Tools,
   Constants,
   ContentTypes,
   ToolCallTypes,
+  Tools,
   imageGenTools,
   isImageVisionTool,
 } from 'librechat-data-provider';
 import { memo } from 'react';
-import type { TMessageContentParts, TAttachment } from 'librechat-data-provider';
-import { OpenAIImageGen, EmptyText, Reasoning, ExecuteCode, AgentUpdate, Text } from './Parts';
-import { ErrorMessage } from './MessageContent';
-import RetrievalCall from './RetrievalCall';
 import AgentHandoff from './AgentHandoff';
 import CodeAnalyze from './CodeAnalyze';
 import Container from './Container';
-import WebSearch from './WebSearch';
-import ToolCall from './ToolCall';
-import ImageGen from './ImageGen';
 import Image from './Image';
+import ImageGen from './ImageGen';
+import { ErrorMessage } from './MessageContent';
+import {
+  AgentUpdate,
+  AttachmentGroup,
+  EmptyText,
+  ExecuteCode,
+  OpenAIImageGen,
+  Reasoning,
+  Text,
+} from './Parts';
+import RetrievalCall from './RetrievalCall';
+import ToolCall from './ToolCall';
+import WebSearch from './WebSearch';
 
 type PartProps = {
   part?: TMessageContentParts;
@@ -26,10 +34,20 @@ type PartProps = {
   showCursor: boolean;
   isCreatedByUser: boolean;
   attachments?: TAttachment[];
+  /** Quando true, a barra unificada já mostra "Pensando..." / "Analisando..."; esconde o indicador desta part */
+  hideProgressIndicator?: boolean;
 };
 
 const Part = memo(
-  ({ part, isSubmitting, attachments, isLast, showCursor, isCreatedByUser }: PartProps) => {
+  ({
+    part,
+    isSubmitting,
+    attachments,
+    isLast,
+    showCursor,
+    isCreatedByUser,
+    hideProgressIndicator = false,
+  }: PartProps) => {
     if (!part) {
       return null;
     }
@@ -77,12 +95,26 @@ const Part = memo(
         </Container>
       );
     } else if (part.type === ContentTypes.THINK) {
+      // Quando hideProgressIndicator é true, significa que está sendo representado
+      // pela barra unificada ou pelo preview sequencial - não renderizar
+      if (hideProgressIndicator) {
+        return null;
+      }
       const reasoning = typeof part.think === 'string' ? part.think : part.think?.value;
       if (typeof reasoning !== 'string') {
         return null;
       }
-      return <Reasoning reasoning={reasoning} isLast={isLast ?? false} />;
+      return (
+        <Reasoning
+          reasoning={reasoning}
+          isLast={isLast ?? false}
+          hideProgressIndicator={hideProgressIndicator}
+        />
+      );
     } else if (part.type === ContentTypes.TOOL_CALL) {
+      if (hideProgressIndicator) {
+        return null;
+      }
       const toolCall = part[ContentTypes.TOOL_CALL];
 
       if (!toolCall) {
@@ -99,11 +131,14 @@ const Part = memo(
             output={toolCall.output ?? ''}
             initialProgress={toolCall.progress ?? 0.1}
             args={typeof toolCall.args === 'string' ? toolCall.args : ''}
+            hideProgressIndicator={hideProgressIndicator}
           />
         );
       } else if (
         isToolCall &&
-        (toolCall.name === 'image_gen_oai' || toolCall.name === 'image_edit_oai')
+        (toolCall.name === 'image_gen_oai' ||
+          toolCall.name === 'image_edit_oai' ||
+          toolCall.name === 'gemini_image_gen')
       ) {
         return (
           <OpenAIImageGen
@@ -123,6 +158,7 @@ const Part = memo(
             isSubmitting={isSubmitting}
             attachments={attachments}
             isLast={isLast}
+            hideProgressIndicator={hideProgressIndicator}
           />
         );
       } else if (isToolCall && toolCall.name?.startsWith(Constants.LC_TRANSFER_TO_)) {
@@ -145,6 +181,7 @@ const Part = memo(
             auth={toolCall.auth}
             expires_at={toolCall.expires_at}
             isLast={isLast}
+            hideProgressIndicator={hideProgressIndicator}
           />
         );
       } else if (toolCall.type === ToolCallTypes.CODE_INTERPRETER) {
@@ -154,6 +191,7 @@ const Part = memo(
             initialProgress={toolCall.progress ?? 0.1}
             code={code_interpreter.input}
             outputs={code_interpreter.outputs ?? []}
+            hideProgressIndicator={hideProgressIndicator}
           />
         );
       } else if (
@@ -161,7 +199,11 @@ const Part = memo(
         toolCall.type === ToolCallTypes.FILE_SEARCH
       ) {
         return (
-          <RetrievalCall initialProgress={toolCall.progress ?? 0.1} isSubmitting={isSubmitting} />
+          <RetrievalCall
+            initialProgress={toolCall.progress ?? 0.1}
+            isSubmitting={isSubmitting}
+            hideProgressIndicator={hideProgressIndicator}
+          />
         );
       } else if (
         toolCall.type === ToolCallTypes.FUNCTION &&

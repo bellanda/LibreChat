@@ -17,12 +17,14 @@ const {
   EModelEndpoint,
   isParamEndpoint,
   isAgentsEndpoint,
+  isEphemeralAgentId,
   supportsBalanceCheck,
 } = require('librechat-data-provider');
 const { getMessages, saveMessage, updateMessage, saveConvo, getConvo } = require('~/models');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { checkBalance } = require('~/models/balanceMethods');
 const { truncateToolCallOutputs } = require('./prompts');
+/** Contagem de tokens local (não usar @librechat/api) */
 const countTokens = require('~/server/utils/countTokens');
 const { getFiles } = require('~/models/File');
 const TextStream = require('./TextStream');
@@ -104,8 +106,8 @@ class BaseClient {
    * @returns {string}
    */
   getResponseModel() {
-    if (isAgentsEndpoint(this.options.endpoint) && this.options.agent && this.options.agent.model) {
-      return this.options.agent.model;
+    if (isAgentsEndpoint(this.options.endpoint) && this.options.agent && this.options.agent.id) {
+      return this.options.agent.id;
     }
 
     return this.modelOptions?.model ?? this.model;
@@ -610,11 +612,35 @@ class BaseClient {
       }, {});
     }
 
-    const promptTokens = this.maxContextTokens - remainingContextTokens;
+    // Calculate actual prompt tokens used by summing tokenCount of messages in context
+    // Instead of using maxContextTokens - remainingContextTokens which can be incorrect
+    let calculatedPromptTokens = 0;
+    if (buildTokenMap && tokenCountMap) {
+      calculatedPromptTokens = Object.values(tokenCountMap).reduce((sum, count) => {
+        const numCount = Number(count);
+        return sum + (isNaN(numCount) ? 0 : numCount);
+      }, 0);
+    }
+    
+    // Always add instructions token count if present (not dependent on buildTokenMap)
+    if (instructions?.tokenCount) {
+      calculatedPromptTokens += instructions.tokenCount;
+    }
+    // Always add summary token count if present (not dependent on buildTokenMap)
+    if (summaryTokenCount) {
+      calculatedPromptTokens += summaryTokenCount;
+    }
+    
+    // Use calculated value if available, otherwise fall back to the difference calculation
+    // Note: The difference calculation can be incorrect when maxContextTokens is large
+    const promptTokens = calculatedPromptTokens > 0 
+      ? calculatedPromptTokens 
+      : this.maxContextTokens - remainingContextTokens;
 
     logger.debug('[BaseClient] tokenCountMap:', tokenCountMap);
     logger.debug('[BaseClient]', {
       promptTokens,
+      calculatedPromptTokens,
       remainingContextTokens,
       payloadSize: payload.length,
       maxContextTokens: this.maxContextTokens,
@@ -691,6 +717,25 @@ class BaseClient {
       opts,
     );
 
+    const promptPayloadInfo = {
+      type: Array.isArray(payload) ? 'array' : typeof payload,
+      length: Array.isArray(payload)
+        ? payload.length
+        : typeof payload === 'string'
+          ? payload.length
+          : null,
+    };
+
+    const payloadFull = Array.isArray(payload)
+      ? payload.map((m) => ({
+          role: m.role ?? m.author,
+          content: m.content,
+          text: m.text,
+        }))
+      : typeof payload === 'string'
+        ? payload
+        : null;
+
     if (tokenCountMap) {
       if (tokenCountMap[userMessage.messageId]) {
         userMessage.tokenCount = tokenCountMap[userMessage.messageId];
@@ -746,7 +791,7 @@ class BaseClient {
       iconURL: this.options.iconURL,
       endpoint: this.options.endpoint,
       ...(this.metadata ?? {}),
-      metadata,
+      metadata: Object.keys(metadata ?? {}).length > 0 ? metadata : undefined,
     };
 
     if (typeof completion === 'string') {
@@ -1065,6 +1110,7 @@ class BaseClient {
    * @param {TMessage[]} options.messages - An array of message objects. Each object should have either an 'id' or 'messageId' property, and may have a 'parentMessageId' property.
    * @param {string} options.parentMessageId - The ID of the parent message to start the traversal from.
    * @param {Function} [options.mapMethod] - An optional function to map over the ordered messages. If provided, it will be applied to each message in the resulting array.
+   * @param {Function} [options.mapCondition=null] - Optional predicate; when provided with mapMethod, mapMethod is applied only to messages for which mapCondition(message) is true.
    * @param {boolean} [options.summary=false] - If set to true, the traversal modifies messages with 'summary' and 'summaryTokenCount' properties and stops at the message with a 'summary' property.
    * @returns {TMessage[]} An array containing the messages in the order they should be displayed, starting with the most recent message with a 'summary' property if the 'summary' option is true, and ending with the message identified by 'parentMessageId'.
    */
@@ -1072,6 +1118,7 @@ class BaseClient {
     messages,
     parentMessageId,
     mapMethod = null,
+    mapCondition = null,
     summary = false,
   }) {
     if (!messages || messages.length === 0) {
@@ -1106,7 +1153,9 @@ class BaseClient {
         message.tokenCount = message.summaryTokenCount;
       }
 
-      orderedMessages.push(message);
+      const shouldMap = mapMethod != null && (mapCondition != null ? mapCondition(message) : true);
+      const processedMessage = shouldMap ? mapMethod(message) : message;
+      orderedMessages.push(processedMessage);
 
       if (summary && message.summary) {
         break;
@@ -1266,8 +1315,8 @@ class BaseClient {
       this.options.req,
       attachments,
       {
-        provider: this.options.agent?.provider,
-        endpoint: this.options.agent?.endpoint,
+        provider: this.options.agent?.provider ?? this.options.endpoint,
+        endpoint: this.options.agent?.endpoint ?? this.options.endpoint,
         useResponsesApi: this.options.agent?.model_parameters?.useResponsesApi,
       },
       getStrategyFunctions,
@@ -1284,8 +1333,8 @@ class BaseClient {
       this.options.req,
       attachments,
       {
-        provider: this.options.agent?.provider,
-        endpoint: this.options.agent?.endpoint,
+        provider: this.options.agent?.provider ?? this.options.endpoint,
+        endpoint: this.options.agent?.endpoint ?? this.options.endpoint,
       },
       getStrategyFunctions,
     );
@@ -1299,8 +1348,8 @@ class BaseClient {
       this.options.req,
       attachments,
       {
-        provider: this.options.agent?.provider,
-        endpoint: this.options.agent?.endpoint,
+        provider: this.options.agent?.provider ?? this.options.endpoint,
+        endpoint: this.options.agent?.endpoint ?? this.options.endpoint,
       },
       getStrategyFunctions,
     );

@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import { ISession } from '~/types';
 
 const sessionSchema: Schema<ISession> = new Schema({
@@ -12,7 +12,7 @@ const sessionSchema: Schema<ISession> = new Schema({
     expires: 0,
   },
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },

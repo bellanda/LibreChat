@@ -116,8 +116,8 @@ export default function useMessageActions(props: TMessageActions) {
       return;
     }
 
-    regenerate(message);
-  }, [isSubmitting, isCreatedByUser, message, regenerate]);
+    regenerate(message, { addedConvo: isMultiMessage === true ? addedConvo : undefined });
+  }, [isSubmitting, isCreatedByUser, message, regenerate, isMultiMessage, addedConvo]);
 
   const copyToClipboard = useCopyToClipboard({ text, content, searchResults });
 

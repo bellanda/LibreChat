@@ -13,10 +13,12 @@ import React, {
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import type { BadgeItem } from '~/common';
 import { useChatBadges } from '~/hooks';
-import { useModelDescriptions } from '~/hooks/useModelDescriptions';
-import { BadgeRowProvider, useChatContext } from '~/Providers';
+import { Constants } from 'librechat-data-provider';
+import { BadgeRowProvider } from '~/Providers';
 import store from '~/store';
+import { autoModeByConvoId } from '~/store/agents';
 import Artifacts from './Artifacts';
+import AutoModeBadge from './AutoModeBadge';
 import CodeInterpreter from './CodeInterpreter';
 import FileSearch from './FileSearch';
 import MCPSelect from './MCPSelect';
@@ -101,13 +103,13 @@ interface DragState {
 
 type DragAction =
   | {
-      type: 'START_DRAG';
-      badge: BadgeItem;
-      mouseX: number;
-      offsetX: number;
-      insertIndex: number;
-      isActive: boolean;
-    }
+    type: 'START_DRAG';
+    badge: BadgeItem;
+    mouseX: number;
+    offsetX: number;
+    insertIndex: number;
+    isActive: boolean;
+  }
   | { type: 'UPDATE_POSITION'; mouseX: number; insertIndex: number }
   | { type: 'END_DRAG' };
 
@@ -148,8 +150,8 @@ function BadgeRow({
   onToggle,
   isInChat,
 }: BadgeRowProps) {
-  const { conversation } = useChatContext();
-  const { getModelDescription } = useModelDescriptions();
+  const key = conversationId ?? Constants.NEW_CONVO;
+  const autoMode = useRecoilValue(autoModeByConvoId(key));
   const [orderedBadges, setOrderedBadges] = useState<BadgeItem[]>([]);
   const [dragState, dispatch] = useReducer(dragReducer, {
     draggedBadge: null,
@@ -171,12 +173,6 @@ function BadgeRow({
     () => allBadges.filter((badge) => badge.isAvailable !== false),
     [allBadges],
   );
-
-  // Get current model capabilities
-  const currentModel = conversation?.model ?? null;
-  const modelDescription = getModelDescription(currentModel);
-  const supportsWebSearch = modelDescription?.supportsWebSearch ?? true;
-  const supportsCodeExecution = modelDescription?.supportsCodeExecution ?? true;
 
   const toggleBadge = useRecoilCallback(
     ({ snapshot, set }) =>
@@ -331,7 +327,7 @@ function BadgeRow({
   return (
     <BadgeRowProvider conversationId={conversationId} isSubmitting={isSubmitting}>
       <div ref={containerRef} className="relative flex flex-wrap items-center gap-2">
-        {showEphemeralBadges === true && <ToolsDropdown />}
+        {showEphemeralBadges === true && !autoMode && <ToolsDropdown />}
         {tempBadges.map((badge, index) => (
           <React.Fragment key={badge.id}>
             {dragState.draggedBadge && dragState.insertIndex === index && ghostBadge && (
@@ -373,11 +369,16 @@ function BadgeRow({
         )}
         {showEphemeralBadges === true && (
           <>
-            <WebSearch />
-            <CodeInterpreter />
-            <FileSearch />
-            <Artifacts />
-            <MCPSelect />
+            <AutoModeBadge />
+            {!autoMode && (
+              <>
+                <WebSearch />
+                <CodeInterpreter />
+                <FileSearch />
+                <Artifacts />
+                <MCPSelect />
+              </>
+            )}
           </>
         )}
         {ghostBadge && (
