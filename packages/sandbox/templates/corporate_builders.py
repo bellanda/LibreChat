@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import pandas as pd
+import polars as pl
 from jinja2 import Environment, FileSystemLoader
 from xhtml2pdf import pisa
 from pptx import Presentation
@@ -27,7 +27,29 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 from style import get_theme
 
-TEMPLATES_DIR = Path(__file__).parent / "pdf_templates"
+TEMPLATES_DIR = Path(__file__).parent / "layouts"
+
+
+def _resolve_css_vars(html: str, theme_cfg) -> str:
+    """Replace CSS custom properties (var(--x)) with their real hex values.
+
+    xhtml2pdf does not support var(). This substitution runs on the rendered
+    HTML so the PDF renderer sees only concrete color values.
+    """
+    import re
+    replacements = {
+        "var(--primary)": f"#{theme_cfg.primary}",
+        "var(--secondary)": f"#{theme_cfg.secondary}",
+        "var(--accent)": f"#{theme_cfg.accent}",
+        "var(--accent-light)": f"#{theme_cfg.accent_light}",
+        "var(--success)": f"#{theme_cfg.success}",
+        "var(--text)": f"#{theme_cfg.text}",
+        "var(--muted)": f"#{theme_cfg.muted}",
+        "var(--bg-light)": f"#{theme_cfg.surface}",
+    }
+    for var, value in replacements.items():
+        html = html.replace(var, value)
+    return html
 
 
 def _pptx_rgb(hex_color: str) -> PptxRGBColor:
@@ -38,20 +60,18 @@ def _pptx_rgb(hex_color: str) -> PptxRGBColor:
 
 def _style_pptx_slide_with_title(slide, theme_cfg, title: str, subtitle: str = ""):
     """Add HPE-styled title bar to a slide."""
-    # Blue background shape for title area
     bg_shape = slide.shapes.add_shape(
         1,  # RECTANGLE
         Inches(0),
         Inches(0),
-        Inches(13.333),
+        Inches(10),
         Inches(1.2),
     )
     bg_shape.fill.solid()
     bg_shape.fill.fore_color.rgb = _pptx_rgb(theme_cfg.primary)
     bg_shape.line.fill.background()
 
-    # Title text
-    title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.2), Inches(12), Inches(0.7))
+    title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.2), Inches(9), Inches(0.7))
     title_frame = title_box.text_frame
     title_frame.text = title
     title_p = title_frame.paragraphs[0]
@@ -60,9 +80,8 @@ def _style_pptx_slide_with_title(slide, theme_cfg, title: str, subtitle: str = "
     title_p.font.bold = True
     title_p.font.color.rgb = _pptx_rgb("FFFFFF")
 
-    # Subtitle text if provided
     if subtitle:
-        sub_box = slide.shapes.add_textbox(Inches(0.5), Inches(1.0), Inches(12), Inches(0.4))
+        sub_box = slide.shapes.add_textbox(Inches(0.5), Inches(1.0), Inches(9), Inches(0.4))
         sub_frame = sub_box.text_frame
         sub_frame.text = subtitle
         sub_p = sub_frame.paragraphs[0]
@@ -71,26 +90,257 @@ def _style_pptx_slide_with_title(slide, theme_cfg, title: str, subtitle: str = "
         sub_p.font.color.rgb = _pptx_rgb(theme_cfg.accent)
 
 
+# ── PPTX auto-slide generation ────────────────────────────────────────────────
+
+def _auto_slides_from_document_type(document_type: str, kw: dict) -> list[dict]:
+    """Convert document_type + kwargs into a list of slide specs."""
+    title = kw.get("title", "")
+    date = kw.get("date", "")
+    subtitle = kw.get("subtitle", "")
+    slides: list[dict] = [{"type": "cover", "title": title, "subtitle": subtitle, "date": date}]
+
+    if document_type in (None, "relatorio"):
+        if kw.get("kpis"):
+            slides.append({"type": "kpi_grid", "title": "Indicadores", "kpis": kw["kpis"]})
+        for section in kw.get("sections", []):
+            tbl = section.get("table")
+            if tbl:
+                slides.append({"type": "table", "title": section.get("title", ""),
+                                "headers": tbl.get("headers", []), "rows": tbl.get("rows", [])})
+            elif section.get("bullets"):
+                slides.append({"type": "bullets", "title": section.get("title", ""),
+                                "bullets": section["bullets"]})
+            elif section.get("content"):
+                slides.append({"type": "bullets", "title": section.get("title", ""),
+                                "bullets": [section["content"]]})
+
+    elif document_type == "tutorial":
+        for step in kw.get("steps", []):
+            bullets = [step.get("content", "")]
+            if step.get("code"):
+                bullets.append(f"Código: {step['code'][:120]}")
+            slides.append({"type": "bullets", "title": step.get("title", ""), "bullets": bullets})
+        if kw.get("tips"):
+            slides.append({"type": "bullets", "title": "Dicas", "bullets": kw["tips"]})
+        if kw.get("warnings"):
+            slides.append({"type": "bullets", "title": "Atenção", "bullets": kw["warnings"]})
+
+    elif document_type == "ata":
+        attendees = kw.get("attendees", [])
+        if attendees:
+            slides.append({"type": "bullets", "title": "Participantes", "bullets": attendees})
+        decisions = kw.get("decisions", [])
+        if decisions:
+            slides.append({"type": "bullets", "title": "Decisões", "bullets": decisions})
+        action_items = kw.get("action_items", [])
+        if action_items:
+            rows = [[ai.get("task", ""), ai.get("owner", "—"), ai.get("due", "—")] for ai in action_items]
+            slides.append({"type": "table", "title": "Action Items",
+                           "headers": ["Tarefa", "Responsável", "Prazo"], "rows": rows})
+
+    elif document_type == "brainstorm":
+        ideas = kw.get("ideas", [])
+        if ideas:
+            rows = [[i.get("title", ""), i.get("category", "—"), i.get("priority", "—"),
+                     i.get("description", "")] for i in ideas]
+            slides.append({"type": "table", "title": "Ideias",
+                           "headers": ["Ideia", "Categoria", "Prioridade", "Descrição"], "rows": rows})
+        if kw.get("next_steps"):
+            slides.append({"type": "bullets", "title": "Próximos Passos", "bullets": kw["next_steps"]})
+
+    elif document_type == "proposta":
+        scope = kw.get("scope", "")
+        deliverables = kw.get("deliverables", [])
+        bullets = ([scope] if scope else []) + (deliverables if isinstance(deliverables, list) else [deliverables])
+        if bullets:
+            slides.append({"type": "bullets", "title": "Escopo e Entregas", "bullets": bullets})
+        pricing = kw.get("pricing", [])
+        if pricing and isinstance(pricing, list) and isinstance(pricing[0], dict):
+            rows = [[p.get("item", ""), p.get("description", ""), p.get("value", "")] for p in pricing]
+            slides.append({"type": "table", "title": "Investimento",
+                           "headers": ["Item", "Descrição", "Valor"], "rows": rows})
+
+    elif document_type == "spec_tecnica":
+        requirements = kw.get("requirements", [])
+        if requirements:
+            if isinstance(requirements[0], dict):
+                rows = [[str(r.get("id", i + 1)), r.get("description", ""), r.get("priority", "—")]
+                        for i, r in enumerate(requirements)]
+                slides.append({"type": "table", "title": "Requisitos",
+                               "headers": ["ID", "Requisito", "Prioridade"], "rows": rows})
+            else:
+                slides.append({"type": "bullets", "title": "Requisitos", "bullets": requirements})
+        decisions = kw.get("decisions", [])
+        if decisions and isinstance(decisions[0], dict):
+            rows = [[d.get("decision", ""), d.get("rationale", ""), d.get("status", "")] for d in decisions]
+            slides.append({"type": "table", "title": "Decisões de Design",
+                           "headers": ["Decisão", "Racional", "Status"], "rows": rows})
+
+    elif document_type == "plano_projeto":
+        milestones = kw.get("milestones", [])
+        if milestones:
+            slides.append({"type": "timeline", "title": "Marcos do Projeto",
+                           "milestones": [{"label": m.get("label", ""), "text": m.get("date", "")}
+                                          for m in milestones]})
+            rows = [[m.get("label", ""), m.get("owner", "—"), m.get("date", "—"), m.get("status", "—")]
+                    for m in milestones]
+            slides.append({"type": "table", "title": "Detalhes",
+                           "headers": ["Marco", "Responsável", "Data", "Status"], "rows": rows})
+        risks = kw.get("risks", [])
+        if risks:
+            rows = [[r.get("risk", ""), r.get("probability", "—"), r.get("impact", "—"),
+                     r.get("mitigation", "—")] for r in risks]
+            slides.append({"type": "table", "title": "Riscos",
+                           "headers": ["Risco", "Probabilidade", "Impacto", "Mitigação"], "rows": rows})
+
+    elif document_type == "onboarding":
+        steps = kw.get("steps", [])
+        if steps:
+            bullets = [f"{s.get('title', '')}: {s.get('content', '')}" for s in steps]
+            slides.append({"type": "bullets", "title": "Passos de Integração", "bullets": bullets})
+        contacts = kw.get("contacts", [])
+        if contacts:
+            rows = [[c.get("name", ""), c.get("role", ""), c.get("contact", "")] for c in contacts]
+            slides.append({"type": "table", "title": "Contatos",
+                           "headers": ["Nome", "Papel", "Contato"], "rows": rows})
+        checklist = kw.get("checklist", [])
+        if checklist:
+            slides.append({"type": "bullets", "title": "Checklist", "bullets": checklist})
+
+    return slides
+
+
+# ── DOCX data normalization ───────────────────────────────────────────────────
+
+def _normalize_docx_data(document_type: str | None, kwargs: dict) -> dict:
+    """Convert document_type + raw kwargs into canonical DOCX data dict."""
+    data: dict = dict(kwargs)
+    data.setdefault("document_title", data.pop("title", "Documento"))
+
+    if document_type in (None, "relatorio"):
+        return data
+
+    sections: list[dict] = []
+
+    if document_type == "tutorial":
+        for step in data.get("steps", []):
+            sec: dict = {"title": step.get("title", ""), "content": step.get("content", "")}
+            if step.get("code"):
+                sec["bullets"] = [f"Código: {step['code']}"]
+            sections.append(sec)
+        if data.get("tips"):
+            sections.append({"title": "Dicas", "bullets": data["tips"]})
+        if data.get("warnings"):
+            sections.append({"title": "Atenção", "bullets": data["warnings"]})
+
+    elif document_type == "ata":
+        if data.get("attendees"):
+            sections.append({"title": "Participantes", "bullets": data["attendees"]})
+        if data.get("decisions"):
+            sections.append({"title": "Decisões", "bullets": data["decisions"]})
+        action_items = data.get("action_items", [])
+        if action_items:
+            rows = [[ai.get("task", ""), ai.get("owner", "—"), ai.get("due", "—")] for ai in action_items]
+            sections.append({"title": "Action Items",
+                              "table": {"headers": ["Tarefa", "Responsável", "Prazo"], "rows": rows}})
+
+    elif document_type == "brainstorm":
+        if data.get("context"):
+            sections.append({"title": "Contexto", "content": data["context"]})
+        ideas = data.get("ideas", [])
+        if ideas:
+            rows = [[i.get("title", ""), i.get("category", "—"), i.get("priority", "—"),
+                     i.get("description", "")] for i in ideas]
+            sections.append({"title": "Ideias",
+                              "table": {"headers": ["Ideia", "Categoria", "Prioridade", "Descrição"],
+                                        "rows": rows}})
+        if data.get("next_steps"):
+            sections.append({"title": "Próximos Passos", "bullets": data["next_steps"]})
+
+    elif document_type == "proposta":
+        if data.get("scope"):
+            sections.append({"title": "Escopo", "content": data["scope"]})
+        deliverables = data.get("deliverables", [])
+        if deliverables:
+            bullets = deliverables if isinstance(deliverables, list) else [deliverables]
+            sections.append({"title": "Entregas", "bullets": bullets})
+        pricing = data.get("pricing", [])
+        if pricing and isinstance(pricing, list) and isinstance(pricing[0], dict):
+            rows = [[p.get("item", ""), p.get("description", ""), p.get("value", "")] for p in pricing]
+            sections.append({"title": "Investimento",
+                              "table": {"headers": ["Item", "Descrição", "Valor"], "rows": rows}})
+
+    elif document_type == "spec_tecnica":
+        requirements = data.get("requirements", [])
+        if requirements:
+            if isinstance(requirements[0], dict):
+                rows = [[str(r.get("id", i + 1)), r.get("description", ""), r.get("priority", "—")]
+                        for i, r in enumerate(requirements)]
+                sections.append({"title": "Requisitos",
+                                  "table": {"headers": ["ID", "Requisito", "Prioridade"], "rows": rows}})
+            else:
+                sections.append({"title": "Requisitos", "bullets": requirements})
+        decisions = data.get("decisions", [])
+        if decisions and isinstance(decisions[0], dict):
+            rows = [[d.get("decision", ""), d.get("rationale", ""), d.get("status", "")] for d in decisions]
+            sections.append({"title": "Decisões de Design",
+                              "table": {"headers": ["Decisão", "Racional", "Status"], "rows": rows}})
+
+    elif document_type == "plano_projeto":
+        milestones = data.get("milestones", [])
+        if milestones:
+            rows = [[m.get("label", ""), m.get("owner", "—"), m.get("date", "—"), m.get("status", "—")]
+                    for m in milestones]
+            sections.append({"title": "Marcos",
+                              "table": {"headers": ["Marco", "Responsável", "Data", "Status"], "rows": rows}})
+        risks = data.get("risks", [])
+        if risks:
+            rows = [[r.get("risk", ""), r.get("probability", "—"), r.get("impact", "—"),
+                     r.get("mitigation", "—")] for r in risks]
+            sections.append({"title": "Riscos",
+                              "table": {"headers": ["Risco", "Probabilidade", "Impacto", "Mitigação"],
+                                        "rows": rows}})
+
+    elif document_type == "onboarding":
+        for step in data.get("steps", []):
+            sections.append({"title": step.get("title", ""), "content": step.get("content", "")})
+        contacts = data.get("contacts", [])
+        if contacts:
+            rows = [[c.get("name", ""), c.get("role", ""), c.get("contact", "")] for c in contacts]
+            sections.append({"title": "Contatos",
+                              "table": {"headers": ["Nome", "Papel", "Contato"], "rows": rows}})
+        if data.get("checklist"):
+            sections.append({"title": "Checklist", "bullets": data["checklist"]})
+
+    data["sections"] = sections
+    return data
+
+
+# ── Public builders ───────────────────────────────────────────────────────────
+
 def create_pptx_document(
     output_path: str | Path,
     *,
     theme: str = "executivo",
     slides: list[dict[str, Any]] | None = None,
+    document_type: str | None = None,
+    **kwargs: Any,
 ) -> Path:
     """Create a PPTX presentation with 6 slide types.
 
-    Slide types:
-    - cover: Full-bleed HPE blue, title + subtitle + date, accent bar
-    - kpi_grid: 2x2 grid of metric cards
-    - bullets: Section header bar + bullet list
-    - chart: Title + matplotlib PNG image
-    - table: Title + HPE-styled table
-    - timeline: Horizontal milestone timeline
+    Slide types: cover, kpi_grid, bullets, chart, table, timeline.
+
+    Can be called two ways:
+    - Explicit: pass ``slides=[...]``
+    - Auto: pass ``document_type="tutorial"`` + document fields as kwargs
     """
     theme_cfg = get_theme(theme)
     prs = Presentation()
     prs.slide_width = Inches(10)
     prs.slide_height = Inches(7.5)
+
+    if slides is None and document_type is not None:
+        slides = _auto_slides_from_document_type(document_type, kwargs)
 
     for slide_spec in slides or []:
         slide_type = slide_spec.get("type", "bullets")
@@ -214,7 +464,7 @@ def _add_chart_slide(prs, theme_cfg, spec: dict):
 
     if spec.get("chart_path"):
         try:
-            pic = slide.shapes.add_picture(
+            slide.shapes.add_picture(
                 spec.get("chart_path"),
                 Inches(1),
                 Inches(1.8),
@@ -235,30 +485,38 @@ def _add_table_slide(prs, theme_cfg, spec: dict):
     if not headers:
         return
 
-    table_shape = slide.shapes.add_table(len(rows) + 1, len(headers), Inches(0.5), Inches(1.8), Inches(9), Inches(4.5))
+    table_shape = slide.shapes.add_table(
+        len(rows) + 1, len(headers),
+        Inches(0.5), Inches(1.8), Inches(9), Inches(4.5),
+    )
     table = table_shape.table
 
-    # Header row
+    # Header row — colored background + white text
     for col_idx, header in enumerate(headers):
         cell = table.cell(0, col_idx)
-        cell.text = str(header)
-        # Style header
-        for paragraph in cell.text_frame.paragraphs:
-            for run in paragraph.runs:
-                run.font.bold = True
-                run.font.color.rgb = _pptx_rgb("FFFFFF")
-                run.font.size = PptPt(11)
-            paragraph.font.name = theme_cfg.font_main
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = _pptx_rgb(theme_cfg.primary)
+        tf = cell.text_frame
+        tf.clear()
+        p = tf.paragraphs[0]
+        run = p.add_run()
+        run.text = str(header)
+        run.font.bold = True
+        run.font.color.rgb = _pptx_rgb("FFFFFF")
+        run.font.size = PptPt(11)
+        run.font.name = theme_cfg.font_main
 
     # Body rows
     for row_idx, row_data in enumerate(rows, 1):
         for col_idx, cell_value in enumerate(row_data):
             cell = table.cell(row_idx, col_idx)
-            cell.text = str(cell_value)
-            for paragraph in cell.text_frame.paragraphs:
-                for run in paragraph.runs:
-                    run.font.size = PptPt(10)
-                paragraph.font.name = theme_cfg.font_main
+            tf = cell.text_frame
+            tf.clear()
+            p = tf.paragraphs[0]
+            run = p.add_run()
+            run.text = str(cell_value)
+            run.font.size = PptPt(10)
+            run.font.name = theme_cfg.font_main
 
 
 def _add_timeline_slide(prs, theme_cfg, spec: dict):
@@ -442,32 +700,53 @@ def _add_chart_sheet(wb, theme_cfg, sheet_name: str, spec: dict):
 def create_pdf_document(
     output_path: str | Path,
     *,
-    template: str = "executivo",
+    template: str | None = None,
     theme: str = "executivo",
     data: dict[str, Any] | None = None,
+    document_type: str | None = None,
+    **kwargs: Any,
 ) -> Path:
     """Create PDF using Jinja2 templates + xhtml2pdf.
 
-    Available templates: executivo, operacional, tecnico
+    Can be called two ways:
+    - Old style: ``data={"document_title": ..., "sections": [...]}``
+    - New style: pass ``document_type`` and document fields as kwargs
+
+    Available themes: executivo, operacional, tecnico
     """
-    theme_cfg = get_theme(theme)
     out = Path(output_path)
 
-    # Load Jinja2 template
+    # Build template context
+    if data is not None:
+        ctx = dict(data)
+    else:
+        ctx = dict(kwargs)
+
+    # Inject document_type so the template can branch
+    if document_type is not None:
+        ctx.setdefault("document_type", document_type)
+
+    # Layouts templates use `title`; old pdf_templates used `document_title` — normalise both
+    if "title" not in ctx and "document_title" in ctx:
+        ctx["title"] = ctx["document_title"]
+    if "document_title" not in ctx and "title" in ctx:
+        ctx["document_title"] = ctx["title"]
+    ctx.setdefault("title", "Documento")
+    ctx.setdefault("document_title", ctx["title"])
+
+    theme_cfg = get_theme(theme)
+
+    # Determine which template file to use
+    tpl_name = f"{template or theme}.html"
     env = Environment(loader=FileSystemLoader(str(TEMPLATES_DIR)))
-    template_file = f"{template}.html"
-
     try:
-        jinja_template = env.get_template(template_file)
+        jinja_template = env.get_template(tpl_name)
     except Exception as e:
-        raise ValueError(f"Template '{template}' not found: {e}")
+        raise ValueError(f"Template '{tpl_name}' not found in {TEMPLATES_DIR}: {e}")
 
-    # Render template with data
-    context = data or {}
-    context.setdefault("document_title", "Relatório")
-    html_content = jinja_template.render(**context)
+    html_content = jinja_template.render(**ctx)
+    html_content = _resolve_css_vars(html_content, theme_cfg)
 
-    # Convert HTML to PDF
     with open(out, "w+b") as pdf_file:
         pisa.CreatePDF(html_content, pdf_file)
 
@@ -479,12 +758,25 @@ def create_docx_document(
     *,
     theme: str = "executivo",
     data: dict[str, Any] | None = None,
+    document_type: str | None = None,
+    **kwargs: Any,
 ) -> Path:
     """Create DOCX programmatically with HPE styling.
 
-    No external template required. Builds document structure from data dict.
+    Can be called two ways:
+    - Old style: ``data={"document_title": ..., "sections": [...]}``
+    - New style: pass ``document_type`` and document fields as kwargs
     """
     theme_cfg = get_theme(theme)
+
+    # Resolve data dict
+    if data is not None:
+        doc_data = dict(data)
+    else:
+        doc_data = _normalize_docx_data(document_type, kwargs)
+
+    doc_data.setdefault("document_title", doc_data.pop("title", "Documento"))
+
     doc = Document()
 
     # Set default font
@@ -494,34 +786,33 @@ def create_docx_document(
     font.size = Pt(11)
     font.color.rgb = RGBColor.from_string(theme_cfg.text)
 
-    data = data or {}
-
     # Document title
-    if data.get("document_title"):
+    if doc_data.get("document_title"):
         title = doc.add_paragraph()
-        title_run = title.add_run(data.get("document_title"))
+        title_run = title.add_run(doc_data.get("document_title"))
         title_run.font.size = Pt(24)
         title_run.font.bold = True
         title_run.font.color.rgb = RGBColor.from_string(theme_cfg.primary)
         title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     # Author / Date / Classification
-    if data.get("author") or data.get("date") or data.get("classification"):
+    if doc_data.get("author") or doc_data.get("date") or doc_data.get("classification"):
         meta = doc.add_paragraph()
-        if data.get("author"):
-            meta.add_run(f"Autor: {data.get('author')} | ")
-        if data.get("date"):
-            meta.add_run(f"Data: {data.get('date')} | ")
-        if data.get("classification"):
-            meta.add_run(f"Classificação: {data.get('classification')}")
+        if doc_data.get("author"):
+            meta.add_run(f"Autor: {doc_data.get('author')} | ")
+        if doc_data.get("date"):
+            meta.add_run(f"Data: {doc_data.get('date')} | ")
+        if doc_data.get("classification"):
+            meta.add_run(f"Classificação: {doc_data.get('classification')}")
         for run in meta.runs:
             run.font.size = Pt(9)
             run.font.color.rgb = RGBColor.from_string(theme_cfg.muted)
         meta.paragraph_format.space_after = Pt(12)
 
     # Abstract
-    if data.get("abstract"):
-        abstract = doc.add_paragraph(data.get("abstract"))
+    if doc_data.get("abstract") or doc_data.get("executive_summary"):
+        text = doc_data.get("abstract") or doc_data.get("executive_summary")
+        abstract = doc.add_paragraph(text)
         abstract.paragraph_format.left_indent = DocxInches(0.25)
         for run in abstract.runs:
             run.font.italic = True
@@ -529,17 +820,18 @@ def create_docx_document(
         abstract.paragraph_format.space_after = Pt(12)
 
     # Sections
-    for section in data.get("sections", []):
-        # Section title
+    for section in doc_data.get("sections", []):
         if section.get("title"):
-            section_title = doc.add_heading(section.get("title"), level=1)
-            section_title.style.font.color.rgb = RGBColor.from_string(theme_cfg.primary)
+            doc.add_heading(section.get("title"), level=1)
 
-        # Section content
         if section.get("content"):
             doc.add_paragraph(section.get("content"))
 
-        # Table
+        if section.get("bullets"):
+            for bullet in section["bullets"]:
+                p = doc.add_paragraph(style="List Bullet")
+                p.add_run(str(bullet))
+
         if section.get("table"):
             table_spec = section.get("table")
             headers = table_spec.get("headers", [])
@@ -549,25 +841,20 @@ def create_docx_document(
                 table = doc.add_table(rows=len(rows) + 1, cols=len(headers))
                 table.style = "Light Grid Accent 1"
 
-                # Header row
                 header_cells = table.rows[0].cells
                 for col_idx, header in enumerate(headers):
                     cell = header_cells[col_idx]
                     cell.text = str(header)
-                    # Style header
                     for paragraph in cell.paragraphs:
                         for run in paragraph.runs:
                             run.font.bold = True
-                            run.font.color.rgb = RGBColor.from_string("FFFFFF")
-                        paragraph.style.font.color.rgb = RGBColor.from_string("FFFFFF")
 
-                # Data rows
                 for row_idx, row_data in enumerate(rows, 1):
                     row_cells = table.rows[row_idx].cells
                     for col_idx, cell_value in enumerate(row_data):
                         row_cells[col_idx].text = str(cell_value)
 
-    # Page header/footer (programmatically for DOCX is limited, so we note the requirement)
+    # Page header/footer
     section = doc.sections[0]
     header = section.header
     header_para = header.paragraphs[0]
@@ -575,7 +862,7 @@ def create_docx_document(
 
     footer = section.footer
     footer_para = footer.paragraphs[0]
-    footer_para.text = f"HPE Confidential | {data.get('document_title', 'Document')}"
+    footer_para.text = f"HPE Confidential | {doc_data.get('document_title', 'Document')}"
 
     out = Path(output_path)
     doc.save(str(out))
@@ -585,5 +872,5 @@ def create_docx_document(
 def create_csv_document(output_path: str | Path, *, rows: list[dict[str, Any]]) -> Path:
     """Create simple CSV file from row data."""
     out = Path(output_path)
-    pd.DataFrame(rows if rows else [{"coluna": "sem_dados"}]).to_csv(out, index=False, encoding="utf-8")
+    pl.DataFrame(rows if rows else [{"coluna": "sem_dados"}]).write_csv(str(out))
     return out

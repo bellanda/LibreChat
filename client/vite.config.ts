@@ -3,12 +3,12 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import rollupNodePolyFill from 'rollup-plugin-node-polyfills';
 import type { Plugin } from 'vite';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// Polyfills Node (buffer, process, stream, etc.) sem usar os plugins esbuild no optimizeDeps,
-// que no Vite 6 causam "injected path cannot be marked as external".
+// Polyfills Node (buffer, process, stream, etc.) via aliases + Rollup em vez de
+// vite-plugin-node-polyfills no optimizeDeps — evita falhas em readable-stream/crypto no browser (tela branca).
 const nodePolyfillAliases = {
   _stream_duplex: 'rollup-plugin-node-polyfills/polyfills/readable-stream/duplex',
   _stream_passthrough: 'rollup-plugin-node-polyfills/polyfills/readable-stream/passthrough',
@@ -40,21 +40,13 @@ const nodePolyfillAliases = {
 };
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command, mode }) => {
-  const isProd = command === 'build';
-  const env = loadEnv(mode, path.resolve(__dirname, '../'), [
-    'VITE_',
-    'SCRIPT_',
-    'DOMAIN_',
-    'ALLOW_',
-    'PORT',
-    'BACKEND_PORT',
-    'HOST',
-  ]);
-  const backendPort = (env.BACKEND_PORT && Number(env.BACKEND_PORT)) || 3080;
-  const host = env.HOST === '0.0.0.0' ? '127.0.0.1' : env.HOST || '127.0.0.1';
-  const backendURL = `http://${host}:${backendPort}`;
+const backendPort = (process.env.BACKEND_PORT && Number(process.env.BACKEND_PORT)) || 3080;
+const backendURL = process.env.HOST
+  ? `http://${process.env.HOST}:${backendPort}`
+  : `http://localhost:${backendPort}`;
 
+export default defineConfig(({ command }) => {
+  const isProd = command === 'build';
   return {
     base: '',
     server: {
@@ -74,7 +66,6 @@ export default defineConfig(({ command, mode }) => {
         },
       },
     },
-    // Set the directory where environment variables are loaded from and restrict prefixes
     envDir: '../',
     envPrefix: ['VITE_', 'SCRIPT_', 'DOMAIN_', 'ALLOW_'],
     define: {
@@ -93,10 +84,10 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       react(),
       VitePWA({
-        injectRegister: 'auto', // 'auto' | 'manual' | 'disabled'
-        registerType: 'autoUpdate', // 'prompt' | 'autoUpdate'
+        injectRegister: 'auto',
+        registerType: 'autoUpdate',
         devOptions: {
-          enabled: false, // disable service worker registration in development mode
+          enabled: false,
         },
         useCredentials: true,
         includeManifestIcons: false,
@@ -167,21 +158,6 @@ export default defineConfig(({ command, mode }) => {
           manualChunks(id: string) {
             const normalizedId = id.replace(/\\/g, '/');
             if (normalizedId.includes('node_modules')) {
-              // High-impact chunking for large libraries
-
-              // IMPORTANT: mermaid and ALL its dependencies must be in the same chunk
-              // to avoid initialization order issues. This includes chevrotain, langium,
-              // dagre-d3-es, and their nested lodash-es dependencies.
-              if (
-                normalizedId.includes('mermaid') ||
-                normalizedId.includes('dagre-d3-es') ||
-                normalizedId.includes('chevrotain') ||
-                normalizedId.includes('langium') ||
-                normalizedId.includes('lodash-es')
-              ) {
-                return 'mermaid';
-              }
-
               if (normalizedId.includes('@codesandbox/sandpack')) {
                 return 'sandpack';
               }
@@ -191,8 +167,7 @@ export default defineConfig(({ command, mode }) => {
               if (normalizedId.includes('i18next') || normalizedId.includes('react-i18next')) {
                 return 'i18n';
               }
-              // Only regular lodash (not lodash-es which goes to mermaid chunk)
-              if (normalizedId.includes('/lodash/')) {
+              if (normalizedId.includes('lodash')) {
                 return 'utilities';
               }
               if (normalizedId.includes('date-fns')) {
@@ -240,10 +215,7 @@ export default defineConfig(({ command, mode }) => {
               ) {
                 return 'markdown-processing';
               }
-              if (
-                normalizedId.includes('monaco-editor') ||
-                normalizedId.includes('@monaco-editor')
-              ) {
+              if (normalizedId.includes('monaco-editor') || normalizedId.includes('@monaco-editor')) {
                 return 'code-editor';
               }
               if (normalizedId.includes('react-window') || normalizedId.includes('react-virtual')) {
@@ -276,7 +248,6 @@ export default defineConfig(({ command, mode }) => {
                 return 'heic-converter';
               }
 
-              // Existing chunks
               if (normalizedId.includes('@radix-ui')) {
                 return 'radix-ui';
               }
@@ -299,14 +270,11 @@ export default defineConfig(({ command, mode }) => {
                 return 'headlessui';
               }
 
-              // Everything else falls into a generic vendor chunk.
               return 'vendor';
             }
-            // Create a separate chunk for all locale files under src/locales.
             if (normalizedId.includes('/src/locales/')) {
               return 'locales';
             }
-            // Let Rollup decide automatically for any other files.
             return null;
           },
           entryFileNames: 'assets/[name].[hash].js',
@@ -318,10 +286,6 @@ export default defineConfig(({ command, mode }) => {
             return 'assets/[name].[hash][extname]';
           },
         },
-        /**
-         * Ignore "use client" warning since we are not using SSR
-         * @see {@link https://github.com/TanStack/query/pull/5161#issuecomment-1477389761 Preserve 'use client' directives TanStack/query#5161}
-         */
         onwarn(warning, warn) {
           if (warning.message.includes('Error when using sourcemap')) {
             return;
@@ -353,7 +317,6 @@ export function sourcemapExclude(opts?: SourcemapExclude): Plugin {
       if (opts?.excludeNodeModules && id.includes('node_modules')) {
         return {
           code,
-          // https://github.com/rollup/rollup/blob/master/docs/plugin-development/index.md#source-code-transformations
           map: { mappings: '' },
         };
       }

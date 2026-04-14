@@ -128,6 +128,7 @@ const tokenValues = Object.assign(
     'gpt-5.1-codex': { prompt: 1.25, completion: 10 },
     'gpt-5.1-codex-mini': { prompt: 0.25, completion: 2 },
     'gpt-5.2': { prompt: 1.75, completion: 14 },
+    'gpt-5.4': { prompt: 2.5, completion: 15 },
     o1: { prompt: 15, completion: 60 },
     'o1-mini': { prompt: 1.1, completion: 4.4 },
     'o1-preview': { prompt: 15, completion: 60 },
@@ -149,14 +150,11 @@ const tokenValues = Object.assign(
     'claude-3-5-haiku': { prompt: 0.8, completion: 4 },
     'claude-3.5-haiku': { prompt: 0.8, completion: 4 },
     'claude-3-haiku': { prompt: 0.25, completion: 1.25 },
-    'claude-sonnet-4': { prompt: 3, completion: 15 },
-    'claude-sonnet-4-5-20250929': { prompt: 3, completion: 15 },
-    'claude-sonnet-4-6': { prompt: 3, completion: 15 },
     'claude-haiku-4-5': { prompt: 1, completion: 5 },
-    'claude-opus-4-6': { prompt: 5, completion: 25 },
     'claude-opus-4-5': { prompt: 5, completion: 25 },
-    'claude-opus-4-1': { prompt: 15, completion: 75 },
-    'claude-sonnet-4': { prompt: 3, completion: 15 },
+    'claude-opus-4-6': { prompt: 5, completion: 25 },
+    'claude-sonnet-4-5': { prompt: 3, completion: 15 },
+    'claude-sonnet-4-6': { prompt: 3, completion: 15 },
     'command-r': { prompt: 0.5, completion: 1.5 },
     'command-r-plus': { prompt: 3, completion: 15 },
     'command-text': { prompt: 1.5, completion: 2.0 },
@@ -176,14 +174,15 @@ const tokenValues = Object.assign(
     'gemini-2.5-flash': { prompt: 0.3, completion: 2.5 },
     'gemini-2.5-flash-lite': { prompt: 0.1, completion: 0.4 },
     'gemini-2.5-pro': { prompt: 1.25, completion: 10 },
+    'gemini-3': { prompt: 2, completion: 12 },
     'gemini-2.5-flash-image': { prompt: 0.15, completion: 30 },
     'gemini-3-flash-preview': { prompt: 0.5, completion: 3 },
     'gemini-3-pro-preview': { prompt: 2, completion: 12 },
     'gemini-3-flash': { prompt: 0.5, completion: 3 },
     'gemini-3-pro': { prompt: 2, completion: 12 },
     'gemini-3-pro-image': { prompt: 2, completion: 120 },
-    'gemini-3.1': { prompt: 2, completion: 12 },
-    'gemini-3.1-flash-lite': { prompt: 0.25, completion: 1.5 },
+    'gemini-3.1-pro': { prompt: 2, completion: 12 },
+    'gemini-3.1-flash-lite-preview': { prompt: 0.25, completion: 1.5 },
     'gemini-pro-vision': { prompt: 0.5, completion: 1.5 },
     grok: { prompt: 2.0, completion: 10.0 }, // Base pattern defaults to grok-2
     'grok-beta': { prompt: 5.0, completion: 15.0 },
@@ -199,9 +198,8 @@ const tokenValues = Object.assign(
     'grok-3-mini': { prompt: 0.3, completion: 0.5 },
     'grok-3-mini-fast': { prompt: 0.6, completion: 4 },
     'grok-4': { prompt: 3.0, completion: 15.0 },
-    'grok-4-1-fast': { prompt: 0.2, completion: 0.5 },
+    'grok-4-1-fast': { prompt: 0.2, completion: 0.5 }, // covers reasoning & non-reasoning variants
     'grok-code-fast': { prompt: 0.2, completion: 1.5 },
-    'grok-4-fast': { prompt: 0.2, completion: 0.5 },
     codestral: { prompt: 0.3, completion: 0.9 },
     'ministral-3b': { prompt: 0.04, completion: 0.04 },
     'ministral-8b': { prompt: 0.1, completion: 0.1 },
@@ -252,20 +250,6 @@ const tokenValues = Object.assign(
     'qwen3-coder-plus': { prompt: 1, completion: 5 },
     'qwen3-coder-flash': { prompt: 0.3, completion: 1.5 },
     'qwen3-next-80b-a3b': { prompt: 0.1, completion: 0.8 },
-    // From modelDescriptions (token-values-reference)
-    'accounts/fireworks/models/gpt-oss-120b': { prompt: 0.15, completion: 0.6 },
-    'accounts/fireworks/models/gpt-oss-20b': { prompt: 0.07, completion: 0.3 },
-    'claude-haiku-4-5-20251001': { prompt: 1, completion: 5 },
-    'gemini-2.5-flash-lite-preview-09-2025': { prompt: 0.1, completion: 0.4 },
-    'gemini-2.5-flash-preview-09-2025': { prompt: 0.3, completion: 2.5 },
-    'gemini-3-pro-preview': { prompt: 2, completion: 12 },
-    'gpt-5.2-codex-xhigh': { prompt: 1.75, completion: 14 },
-    'gpt-5.2-medium': { prompt: 1.75, completion: 14 },
-    'gpt-5.2-xhigh': { prompt: 1.75, completion: 14 },
-    'meta-llama/llama-4-maverick-17b-128e-instruct': { prompt: 0.2, completion: 0.6 },
-    'meta-llama/llama-4-scout-17b-16e-instruct': { prompt: 0.11, completion: 0.34 },
-    'openai/gpt-oss-120b': { prompt: 0.3, completion: 0.75 },
-    'openai/gpt-oss-20b': { prompt: 0.1, completion: 0.5 },
   },
   bedrockValues,
 );
@@ -284,18 +268,11 @@ const cacheTokenValues = {
   'claude-3.5-haiku': { write: 1, read: 0.08 },
   'claude-3-5-haiku': { write: 1, read: 0.08 },
   'claude-3-haiku': { write: 0.3, read: 0.03 },
-  'claude-haiku-4-5': { write: 1.25, read: 0.1 },
+  'claude-haiku-4.5': { write: 1.25, read: 0.1 },
   'claude-sonnet-4': { write: 3.75, read: 0.3 },
   'claude-sonnet-4-6': { write: 3.75, read: 0.3 },
   'claude-opus-4': { write: 18.75, read: 1.5 },
-  'claude-opus-4-5': { write: 6.25, read: 0.5 },
   'claude-opus-4-6': { write: 6.25, read: 0.5 },
-  // DeepSeek models - cache hit: $0.028/1M, cache miss: $0.28/1M
-  deepseek: { write: 0.28, read: 0.028 },
-  'deepseek-chat': { write: 0.28, read: 0.028 },
-  'deepseek-reasoner': { write: 0.28, read: 0.028 },
-  'gemini-3.1': { write: 2, read: 0.2 },
-  'gemini-3.1-flash-lite': { write: 0.25, read: 0.025 },
 };
 
 /**
@@ -358,11 +335,13 @@ const getValueKey = (model, endpoint) => {
  */
 const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConfig }) => {
   if (endpointTokenConfig) {
-    return endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
+    const multiplier = endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
+    return multiplier;
   }
 
   if (valueKey && tokenType) {
-    return tokenValues[valueKey][tokenType] ?? defaultRate;
+    const multiplier = tokenValues[valueKey][tokenType] ?? defaultRate;
+    return multiplier;
   }
 
   if (!tokenType || !model) {
@@ -375,7 +354,8 @@ const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConf
   }
 
   // If we got this far, and values[tokenType] is undefined somehow, return a rough average of default multipliers
-  return tokenValues[valueKey]?.[tokenType] ?? defaultRate;
+  const multiplier = tokenValues[valueKey]?.[tokenType] ?? defaultRate;
+  return multiplier;
 };
 
 /**
@@ -403,14 +383,7 @@ const getCacheMultiplier = ({ valueKey, cacheType, model, endpoint, endpointToke
     return null;
   }
 
-  // Try direct lookup first (exact match) before using getValueKey
-  // This ensures more specific models like 'claude-opus-4-5' are found before 'claude-opus-4'
-  if (cacheTokenValues[model]?.[cacheType] !== undefined) {
-    return cacheTokenValues[model][cacheType];
-  }
-
   valueKey = getValueKey(model, endpoint);
-
   if (!valueKey) {
     return null;
   }
