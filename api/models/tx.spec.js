@@ -1363,6 +1363,16 @@ describe('Claude Model Tests', () => {
     );
   });
 
+  it('should resolve Claude Opus 4.6 dot variant to the same pricing', () => {
+    expect(getValueKey('claude-opus-4.6')).toBe('claude-opus-4.6');
+    expect(getMultiplier({ model: 'claude-opus-4.6', tokenType: 'prompt' })).toBe(
+      tokenValues['claude-opus-4.6'].prompt,
+    );
+    expect(getMultiplier({ model: 'claude-opus-4.6', tokenType: 'completion' })).toBe(
+      tokenValues['claude-opus-4.6'].completion,
+    );
+  });
+
   it('should return correct prompt and completion rates for Claude Haiku 4.5', () => {
     expect(getMultiplier({ model: 'claude-haiku-4-5', tokenType: 'prompt' })).toBe(
       tokenValues['claude-haiku-4-5'].prompt,
@@ -1437,6 +1447,15 @@ describe('Claude Model Tests', () => {
     );
     expect(getCacheMultiplier({ model: 'claude-opus-4', cacheType: 'read' })).toBe(
       cacheTokenValues['claude-opus-4'].read,
+    );
+  });
+
+  it('should resolve Claude Opus 4.6 dot variant cache rates', () => {
+    expect(getCacheMultiplier({ model: 'claude-opus-4.6', cacheType: 'write' })).toBe(
+      cacheTokenValues['claude-opus-4.6'].write,
+    );
+    expect(getCacheMultiplier({ model: 'claude-opus-4.6', cacheType: 'read' })).toBe(
+      cacheTokenValues['claude-opus-4.6'].read,
     );
   });
 
