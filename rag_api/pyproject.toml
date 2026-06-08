@@ -72,4 +72,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-markdown-html-pdf = { git = "https://github.com/bellanda/markdown-html-pdf", rev = "260135ae24a4a71b92480a2919d6b71a44f30682" }
+markdown-html-pdf = { git = "https://github.com/bellanda/markdown-html-pdf", rev = "ab2fc3c29034ad06e4717aa5831cd797b8bfe08a" }
