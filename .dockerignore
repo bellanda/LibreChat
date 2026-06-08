@@ -12,6 +12,7 @@ meili_data*
 librechat*
 Dockerfile*
 docs
+packages/sandbox/storage
 
 # Ignore all hidden files
 .*

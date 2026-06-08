@@ -188,3 +188,8 @@ storage/
 **pycache**
 docs/superpowers
 .superpowers/
+
+
+
+# TEMP
+.tmp_*

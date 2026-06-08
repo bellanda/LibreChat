@@ -47,18 +47,23 @@ Users must set the same API key in their Code Interpreter settings (or use a sha
 
 **Note**: If `MONGO_URI` is not set, the sandbox will still work but audit logs will only be written to structured log files (not persisted to database).
 
-### 4. (Optional) Run with Docker Compose
+### 4. (Optional) Run the server in Docker
 
-```yaml
-# docker-compose.override.yml
-services:
-  sandbox:
-    build:
-      context: ./packages/sandbox
-      dockerfile: docker/Dockerfile.executor
-    image: librechat/sandbox-executor:latest
-    # The sandbox server runs on the host and uses this image for execution
+```bash
+cd packages/sandbox
+docker build -t librechat-sandbox:latest -f docker/Dockerfile.server .
+docker run -d --name librechat-sandbox \
+  -p 3082:3082 \
+  -v "$(pwd)/storage:/app/storage" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e SANDBOX_API_KEY=your-key \
+  -e LIBRECHAT_CODE_API_KEY=your-key \
+  --user "$(id -u):$(id -g)" \
+  --group-add "$(getent group docker | cut -d: -f3)" \
+  librechat-sandbox:latest
 ```
+
+Point LibreChat at the sandbox (`LIBRECHAT_CODE_BASEURL=http://host:3082` or the Docker network hostname).
 
 ## Environment Variables
 
