@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
 import { useRecoilState } from 'recoil';
@@ -18,36 +18,38 @@ export function useMCPSelect({ conversationId }: { conversationId?: string | nul
   const [isPinned, setIsPinned] = useAtom(mcpPinnedAtom);
   const [mcpValues, setMCPValuesRaw] = useAtom(mcpValuesAtomFamily(key));
   const [ephemeralAgent, setEphemeralAgent] = useRecoilState(ephemeralAgentByConvoId(key));
-  const hasAutoSelectedRef = useRef(false);
-
+  // Sync Jotai state with ephemeral agent state; auto-enable visible MCPs when never configured
   useEffect(() => {
-    hasAutoSelectedRef.current = false;
-  }, [key]);
+    const mcps = ephemeralAgent?.mcp;
 
-  // Sync Jotai state with ephemeral agent state; auto-enable visible MCPs once per conversation
-  useEffect(() => {
-    const mcps = ephemeralAgent?.mcp ?? [];
+    // Undefined = nova conversa, nunca configurado → auto-selecionar os servidores visíveis
+    if (mcps === undefined) {
+      if (configuredServerList.length > 0) {
+        setMCPValuesRaw(configuredServerList);
+      }
+      return;
+    }
+
+    // mcp_clear = usuário explicitamente desligou tudo → limpar sem auto-selecionar
     if (mcps.length === 1 && mcps[0] === Constants.mcp_clear) {
-      hasAutoSelectedRef.current = true;
       setMCPValuesRaw([]);
       return;
     }
+
+    // Lista não-vazia: aplicar filtrando só os servidores ainda visíveis
     if (mcps.length > 0) {
-      hasAutoSelectedRef.current = true;
       const activeMcps = mcps.filter((mcp) => configuredServers.has(mcp));
       setMCPValuesRaw(activeMcps);
-      return;
     }
-    if (!hasAutoSelectedRef.current && configuredServerList.length > 0) {
-      hasAutoSelectedRef.current = true;
-      setMCPValuesRaw(configuredServerList);
-    }
+    // Lista vazia explícita (= usuário desligou tudo mas não via mcp_clear): não re-ligar
   }, [ephemeralAgent?.mcp, setMCPValuesRaw, configuredServers, configuredServerList]);
 
   useEffect(() => {
     setEphemeralAgent((prev) => {
-      if (!isEqual(prev?.mcp, mcpValues)) {
-        return { ...(prev ?? {}), mcp: mcpValues };
+      // Quando vazio, propagar mcp_clear para que o auto-select não religue numa remontagem
+      const nextMcp = mcpValues.length === 0 ? [Constants.mcp_clear as string] : mcpValues;
+      if (!isEqual(prev?.mcp, nextMcp)) {
+        return { ...(prev ?? {}), mcp: nextMcp };
       }
       return prev;
     });
@@ -60,7 +62,7 @@ export function useMCPSelect({ conversationId }: { conversationId?: string | nul
     }
   }, [mcpValues, key]);
 
-  /** Stable memoized setter */
+  /** Stable memoized setter. */
   const setMCPValues = useCallback(
     (value: string[]) => {
       if (!Array.isArray(value)) {
