@@ -2,6 +2,10 @@
 
 Self-hosted Code Interpreter sandbox compatible with the [code.librechat](https://code.librechat.ai) API.
 
+> 📐 For the end-to-end flow (auto mode → tool → execution → file return),
+> session isolation, template behavior and security findings, see
+> [**ARCHITECTURE.md**](./ARCHITECTURE.md).
+
 ## Features
 
 - **API-compatible**: Implements `/upload`, `/exec`, `/download`, `/files` endpoints
@@ -76,6 +80,8 @@ Point LibreChat at the sandbox (`LIBRECHAT_CODE_BASEURL=http://host:3082` or the
 | `SANDBOX_TIMEOUT_MS`                | 30000                               | Execution timeout                                                   |
 | `SANDBOX_MEMORY_MB`                 | 512                                 | Memory limit per execution                                          |
 | `SANDBOX_MAX_CONCURRENT_EXECUTIONS` | 5                                   | Maximum number of simultaneous code executions (queue limit)        |
+| `SANDBOX_FILE_TTL_DAYS`             | 30                                  | Delete session files older than N days (`0` disables cleanup)       |
+| `SANDBOX_CLEANUP_INTERVAL_HOURS`    | 24                                  | How often the retention sweeper runs                                |
 | `MONGO_URI`                         | -                                   | MongoDB connection string for audit logging (optional)              |
 | `SANDBOX_LOG_LEVEL`                 | `info`                              | Logging level (error, warn, info, debug, verbose)                   |
 | `SANDBOX_AUDIT_TTL_DAYS`            | -                                   | TTL in days for audit logs (auto-delete after expiration, optional) |
@@ -86,15 +92,29 @@ Point LibreChat at the sandbox (`LIBRECHAT_CODE_BASEURL=http://host:3082` or the
 
 ```
 storage/
-└── {userId}/
-    └── {sessionId}/
-        ├── uploads/          # User-uploaded files (read-only in container)
+├── .sessions.json           # Root index: sessionId -> owner userId
+└── {userId}/                # Real user id (uploads) OR "anonymous" (see note)
+    └── {sessionId}/         # = conversationId (entity_id)
+        ├── uploads/          # User-uploaded files
         │   ├── .manifest.json
         │   └── {uuid}.{ext}
-        ├── workspace/        # Execution outputs
-        │   └── exec_*/
+        ├── workspace/        # Execution outputs ({fileId}.{ext}); exec_*/ is transient
         └── .session.json
 ```
+
+> **Note on `{userId}`**: LibreChat only sends `User-Id` on `/upload`. Code-only
+> sessions (no uploaded file) are therefore stored under `storage/anonymous/{conversationId}/`.
+> Per-user isolation effectively relies on the LibreChat access layer plus the
+> uniqueness of `conversationId`. See [ARCHITECTURE.md §3](./ARCHITECTURE.md#3-isolamento-entre-sessões--vazamento-de-dados).
+
+## File Retention (cleanup)
+
+The sandbox owns the `storage/` volume, so retention is enforced **in-process**
+(no external cron in a different container). On startup, a sweeper removes whole
+session directories whose newest activity is older than `SANDBOX_FILE_TTL_DAYS`
+(default 30) and prunes the root `.sessions.json` index. Set
+`SANDBOX_FILE_TTL_DAYS=0` to disable. Interval: `SANDBOX_CLEANUP_INTERVAL_HOURS`
+(default 24).
 
 ## Python Package Management
 
@@ -133,12 +153,20 @@ To add a new Python package to the sandbox:
 
 The executor image includes a centralized template catalog at `/opt/templates`:
 
-- `/opt/templates/style.py` (themes/tokens)
+- `/opt/templates/style.py` (themes/tokens — HPE Corporate Clean palette)
 - `/opt/templates/corporate_builders.py` (Python builders)
+- `/opt/templates/document_types.py` (document type schemas; default `relatorio`)
 - `/opt/templates/ai_usage_guide_ptbr.md` (AI usage and guardrails)
 - `/opt/templates/js/corporate_builders.mjs` (JavaScript builders)
+- `/opt/templates/layouts/*.html` (Jinja2 PDF templates: `base` + `executivo` / `operacional` / `tecnico`)
 
 Generated outputs should be written to `/mnt/data` and appear as downloadable files in the chat UI.
+
+**What is actually template-driven:** only **PDF** is rendered from real Jinja2
+templates (`layouts/`). **PPTX / XLSX / DOCX** are built programmatically by the
+builders (themed via `style.py`), not from template files. The legacy
+`templates/pdf_templates/` directory is **orphaned** (the code uses `layouts/`).
+See [ARCHITECTURE.md §5](./ARCHITECTURE.md#5-templates--o-que-é-template-de-verdade).
 
 ### Code Execution
 
@@ -165,9 +193,17 @@ and rebuild the executor image when needed.
 ## Security
 
 - Path traversal and symlink escape prevention
-- Docker `--network none` by default
-- Non-root user in container
-- API key authentication
+- Docker `--network none` by default, memory/CPU limits, `--rm`, non-root user (uid 1000)
+- API key authentication — **required in production**: the server refuses to start
+  when `NODE_ENV=production` and no API key is set (an empty key would otherwise
+  accept every request). In development it starts but logs a loud warning.
+- File retention sweeper (see above) bounds data-at-rest.
+
+> ⚠️ The sandbox is an **internal service** and trusts the API-key holder. It does
+> not authorize per end-user on `/exec` / `/download` (no `User-Id` is sent there).
+> Do **not** expose its port publicly — keep it on the internal network and let the
+> LibreChat API be the gatekeeper. Full analysis in
+> [ARCHITECTURE.md §3](./ARCHITECTURE.md#3-isolamento-entre-sessões--vazamento-de-dados).
 
 ## Logging & Audit
 

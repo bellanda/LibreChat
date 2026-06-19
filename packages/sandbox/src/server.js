@@ -28,6 +28,7 @@ const { logger } = require('./logger');
 const audit = require('./audit');
 const { connectDb } = require('./db/connect');
 const { extractPdfText } = require('./pdfExtractor');
+const { startCleanupScheduler } = require('./cleanup');
 
 const app = express();
 const PORT = Number(process.env.SANDBOX_PORT) || 3081;
@@ -44,6 +45,22 @@ const STORAGE_ROOT = path.resolve(
   process.env.SANDBOX_STORAGE_PATH || path.join(process.cwd(), 'storage'),
 );
 const API_KEY = process.env.SANDBOX_API_KEY || process.env.LIBRECHAT_CODE_API_KEY || '';
+
+// Hard guard: an empty API key disables authentication entirely (every request
+// is accepted). That is only acceptable in local development.
+if (!API_KEY) {
+  if (process.env.NODE_ENV === 'production') {
+    logger.error(
+      'SANDBOX_API_KEY (or LIBRECHAT_CODE_API_KEY) is not set. Refusing to start ' +
+        'in production with authentication disabled.',
+    );
+    process.exit(1);
+  }
+  logger.warn(
+    'SANDBOX_API_KEY is not set — authentication is DISABLED. ' +
+      'All /exec, /upload and /download requests will be accepted. Set SANDBOX_API_KEY before exposing this service.',
+  );
+}
 
 // Middleware to capture client IP and User-Agent
 app.use((req, res, next) => {
@@ -643,11 +660,17 @@ app.get('/health', (req, res) => {
       logger.info('Audit logging to database disabled (using file logs only)');
     }
 
+    // Start periodic storage retention sweeper (in-process: the sandbox owns the
+    // storage volume, so no cross-container cron is needed). Configurable via
+    // SANDBOX_FILE_TTL_DAYS / SANDBOX_CLEANUP_INTERVAL_HOURS.
+    const cleanupScheduler = startCleanupScheduler(STORAGE_ROOT);
+
     const server = app.listen(PORT, () => {
       logger.info('Code Interpreter server started', {
         port: PORT,
         storageRoot: STORAGE_ROOT,
         auditDbEnabled: !!dbConnection,
+        fileRetention: cleanupScheduler ? 'enabled' : 'disabled',
       });
     });
 
@@ -662,6 +685,7 @@ app.get('/health', (req, res) => {
     // Graceful shutdown
     const shutdown = async () => {
       logger.info('Shutting down sandbox server...');
+      cleanupScheduler?.stop();
       server.close(async () => {
         const { disconnectDb } = require('./db/connect');
         await disconnectDb();
