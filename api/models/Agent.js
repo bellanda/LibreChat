@@ -12,6 +12,11 @@ const {
 } = require('./Project');
 const { removeAllPermissions } = require('~/server/services/PermissionService');
 const { getMCPServerTools } = require('~/server/services/Config');
+const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
+const {
+  filterMcpServersByGroup,
+  resolveMcpServersForUser,
+} = require('~/server/services/Config/GroupsService');
 const { Agent, AclEntry } = require('~/db/models');
 const { getActions } = require('./Action');
 
@@ -78,13 +83,30 @@ const loadEphemeralAgent = async ({ req, spec, agent_id, endpoint, model_paramet
   }
   /** @type {TEphemeralAgent | null} */
   const ephemeralAgent = req.body.ephemeralAgent;
-  const mcpServers = new Set(ephemeralAgent?.mcp);
   const userId = req.user?.id; // note: userId cannot be undefined at runtime
+
+  let requestedMcps = [...(ephemeralAgent?.mcp ?? [])];
   if (modelSpec?.mcpServers) {
-    for (const mcpServer of modelSpec.mcpServers) {
-      mcpServers.add(mcpServer);
-    }
+    requestedMcps.push(...modelSpec.mcpServers);
   }
+
+  let groupsConfig;
+  try {
+    groupsConfig = await getCachedGroupsConfig();
+  } catch (error) {
+    logger.error('[loadEphemeralAgent] Failed to load groups configuration:', error);
+  }
+
+  const visibleMcpConfig = filterMcpServersByGroup(req.config?.mcpConfig, req.user, groupsConfig);
+  const configuredServers = Object.keys(visibleMcpConfig ?? {});
+  const mcpServers = new Set(
+    resolveMcpServersForUser({
+      requested: requestedMcps,
+      user: req.user,
+      groupsConfig,
+      configuredServers,
+    }),
+  );
   /** @type {string[]} */
   const tools = [];
   if (ephemeralAgent?.execute_code === true || modelSpec?.executeCode === true) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
 import { useRecoilState } from 'recoil';
@@ -13,22 +13,36 @@ export function useMCPSelect({ conversationId }: { conversationId?: string | nul
   const configuredServers = useMemo(() => {
     return new Set(Object.keys(startupConfig?.mcpServers ?? {}));
   }, [startupConfig?.mcpServers]);
+  const configuredServerList = useMemo(() => [...configuredServers], [configuredServers]);
 
   const [isPinned, setIsPinned] = useAtom(mcpPinnedAtom);
   const [mcpValues, setMCPValuesRaw] = useAtom(mcpValuesAtomFamily(key));
   const [ephemeralAgent, setEphemeralAgent] = useRecoilState(ephemeralAgentByConvoId(key));
+  const hasAutoSelectedRef = useRef(false);
 
-  // Sync Jotai state with ephemeral agent state
+  useEffect(() => {
+    hasAutoSelectedRef.current = false;
+  }, [key]);
+
+  // Sync Jotai state with ephemeral agent state; auto-enable visible MCPs once per conversation
   useEffect(() => {
     const mcps = ephemeralAgent?.mcp ?? [];
     if (mcps.length === 1 && mcps[0] === Constants.mcp_clear) {
+      hasAutoSelectedRef.current = true;
       setMCPValuesRaw([]);
-    } else if (mcps.length > 0) {
-      // Strip out servers that are not available in the startup config
+      return;
+    }
+    if (mcps.length > 0) {
+      hasAutoSelectedRef.current = true;
       const activeMcps = mcps.filter((mcp) => configuredServers.has(mcp));
       setMCPValuesRaw(activeMcps);
+      return;
     }
-  }, [ephemeralAgent?.mcp, setMCPValuesRaw, configuredServers]);
+    if (!hasAutoSelectedRef.current && configuredServerList.length > 0) {
+      hasAutoSelectedRef.current = true;
+      setMCPValuesRaw(configuredServerList);
+    }
+  }, [ephemeralAgent?.mcp, setMCPValuesRaw, configuredServers, configuredServerList]);
 
   useEffect(() => {
     setEphemeralAgent((prev) => {

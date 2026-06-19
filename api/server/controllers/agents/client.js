@@ -51,6 +51,11 @@ const BaseClient = require('~/app/clients/BaseClient');
 const { getRoleByName } = require('~/models/Role');
 const { loadAgent } = require('~/models/Agent');
 const { getMCPManager } = require('~/config');
+const { getCachedGroupsConfig } = require('~/server/middleware/groupsMiddleware');
+const {
+  filterMcpServersByGroup,
+  resolveMcpServersForUser,
+} = require('~/server/services/Config/GroupsService');
 
 const omitTitleOptions = new Set([
   'stream',
@@ -402,8 +407,25 @@ class AgentClient extends BaseClient {
     let mcpServers = [];
 
     // Check for ephemeral agent MCP servers
-    if (ephemeralAgent && ephemeralAgent.mcp && ephemeralAgent.mcp.length > 0) {
-      mcpServers = ephemeralAgent.mcp;
+    if (ephemeralAgent?.mcp) {
+      let groupsConfig;
+      try {
+        groupsConfig = await getCachedGroupsConfig();
+      } catch (error) {
+        logger.error('[AgentClient] Failed to load groups configuration for MCP resolution:', error);
+      }
+
+      const visibleMcpConfig = filterMcpServersByGroup(
+        this.options.req.config?.mcpConfig,
+        this.options.req.user,
+        groupsConfig,
+      );
+      mcpServers = resolveMcpServersForUser({
+        requested: ephemeralAgent.mcp,
+        user: this.options.req.user,
+        groupsConfig,
+        configuredServers: Object.keys(visibleMcpConfig ?? {}),
+      });
     }
     // Check for regular agent MCP tools
     else if (this.options.agent && this.options.agent.tools) {

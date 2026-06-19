@@ -1,3 +1,4 @@
+const { Constants } = require('librechat-data-provider');
 const { logger } = require('~/config');
 
 // Import dinâmico para evitar problemas de conexão
@@ -255,6 +256,65 @@ function filterMcpServersByGroup(mcpConfig, user, groupsConfig) {
   );
 }
 
+/**
+ * Enforce group MCP permissions and auto-enable servers the group allows.
+ * @param {Object} params
+ * @param {string[]} [params.requested] - MCP servers requested by the client or model spec
+ * @param {Object} params.user - The user object
+ * @param {Object} [params.groupsConfig] - The groups configuration
+ * @param {string[]} [params.configuredServers] - MCP server names visible to the user
+ * @returns {string[]} Final MCP server names to use
+ */
+function resolveMcpServersForUser({
+  requested = [],
+  user,
+  groupsConfig,
+  configuredServers = [],
+}) {
+  const sanitizedRequested = requested.filter(Boolean);
+
+  if (sanitizedRequested.length === 1 && sanitizedRequested[0] === Constants.mcp_clear) {
+    return [];
+  }
+
+  if (!groupsConfig) {
+    return [...new Set(sanitizedRequested)];
+  }
+
+  const permissions = getGroupPermissions(getUserGroup(user, groupsConfig), groupsConfig);
+  const allowed = permissions.mcpServers;
+
+  if (!Array.isArray(allowed)) {
+    return [...new Set(sanitizedRequested)];
+  }
+
+  if (allowed.length === 0) {
+    return [];
+  }
+
+  const allowsAll = allowed.includes('*');
+  const allows = (name) => allowsAll || allowed.includes(name);
+  const result = new Set();
+
+  for (const name of sanitizedRequested) {
+    if (name !== Constants.mcp_clear && allows(name)) {
+      result.add(name);
+    }
+  }
+
+  const autoEnable = allowsAll
+    ? configuredServers
+    : allowed.filter((name) => name !== '*');
+
+  for (const name of autoEnable) {
+    if (configuredServers.length === 0 || configuredServers.includes(name)) {
+      result.add(name);
+    }
+  }
+
+  return [...result];
+}
+
 module.exports = {
   loadGroupsConfig,
   getDefaultGroupsConfig,
@@ -265,4 +325,5 @@ module.exports = {
   hasAssistantsAccess,
   getAllowedPlugins,
   filterMcpServersByGroup,
+  resolveMcpServersForUser,
 };
