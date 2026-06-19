@@ -9,7 +9,10 @@ export const mcpValuesAtomFamily = atomFamily((conversationId: string | null) =>
   const key = conversationId ?? Constants.NEW_CONVO;
   const storageKey = `${LocalStorageKeys.LAST_MCP_}${key}`;
 
-  return atomWithStorage<string[]>(storageKey, [], undefined, { getOnInit: true });
+  // null = nunca configurado (permite auto-select)
+  // []   = usuário limpou explicitamente (não auto-selecionar)
+  // [...] = seleção do usuário
+  return atomWithStorage<string[] | null>(storageKey, null, undefined, { getOnInit: true });
 });
 
 /**
