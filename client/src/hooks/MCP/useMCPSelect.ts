@@ -18,11 +18,12 @@ export function useMCPSelect({ conversationId }: { conversationId?: string | nul
   const [isPinned, setIsPinned] = useAtom(mcpPinnedAtom);
   // rawMcpValues: null = nunca configurado, [] = limpado, [...] = seleção
   const [rawMcpValues, setMCPValuesRaw] = useAtom(mcpValuesAtomFamily(key));
-  // mcpValues exposto externamente é sempre string[]
-  const mcpValues = rawMcpValues ?? [];
+  // mcpValues exposto externamente é sempre string[] (referência estável p/ evitar re-render)
+  const mcpValues = useMemo(() => rawMcpValues ?? [], [rawMcpValues]);
   const [ephemeralAgent, setEphemeralAgent] = useRecoilState(ephemeralAgentByConvoId(key));
 
-  // Sync ephemeralAgent → mcpValues; auto-enable quando nunca configurado
+  // Sync ephemeralAgent → mcpValues; auto-enable quando nunca configurado.
+  // Todas as escritas usam guard de igualdade para não recriar referências em loop.
   useEffect(() => {
     const mcps = ephemeralAgent?.mcp;
 
@@ -34,27 +35,40 @@ export function useMCPSelect({ conversationId }: { conversationId?: string | nul
       return;
     }
 
-    // mcp_clear = usuário explicitamente desligou tudo nesta sessão
-    if (mcps !== undefined && mcps.length === 1 && mcps[0] === Constants.mcp_clear) {
-      setMCPValuesRaw([]);
+    // Ephemeral ainda não inicializado: nada a derivar dele (Effect 2 cuida do storage→ephemeral)
+    if (mcps === undefined) {
       return;
     }
 
-    // Lista não-vazia vinda do ephemeral: aplicar filtrando só os servidores visíveis
-    if (mcps !== undefined && mcps.length > 0) {
-      const activeMcps = mcps.filter((mcp) => configuredServers.has(mcp));
+    // mcp_clear = usuário explicitamente desligou tudo nesta sessão
+    if (mcps.length === 1 && mcps[0] === Constants.mcp_clear) {
+      if (mcpValues.length !== 0) {
+        setMCPValuesRaw([]);
+      }
+      return;
+    }
+
+    // Lista vinda do ephemeral: aplicar filtrando só os servidores visíveis
+    const activeMcps = mcps.filter((mcp) => configuredServers.has(mcp));
+    if (!isEqual(activeMcps, mcpValues)) {
       setMCPValuesRaw(activeMcps);
     }
-    // Demais casos (storage com valor, ephemeral undefined): Effect 2 resolve via storage → ephemeral
-  }, [ephemeralAgent?.mcp, rawMcpValues, setMCPValuesRaw, configuredServers, configuredServerList]);
+  }, [
+    ephemeralAgent?.mcp,
+    rawMcpValues,
+    mcpValues,
+    setMCPValuesRaw,
+    configuredServers,
+    configuredServerList,
+  ]);
 
   // Sync mcpValues → ephemeralAgent
   useEffect(() => {
+    // Aguardar o auto-select: atom nulo → ainda não há decisão do usuário a propagar
+    if (rawMcpValues === null) {
+      return;
+    }
     setEphemeralAgent((prev) => {
-      // Aguardar o auto-select: atom nulo + ephemeral não iniciado → não interferir
-      if (rawMcpValues === null && prev?.mcp === undefined) {
-        return prev;
-      }
       // Vazio → propagar mcp_clear para que remontagem não re-ligue servidores desligados
       const nextMcp = mcpValues.length === 0 ? [Constants.mcp_clear as string] : mcpValues;
       if (!isEqual(prev?.mcp, nextMcp)) {
