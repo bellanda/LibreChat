@@ -4,9 +4,9 @@ import type { TAnnouncementConfig } from 'librechat-data-provider';
 import { useLocalize } from '~/hooks';
 
 const BADGE_ACCENT_CLASSES = [
-  'border-violet-500/25 bg-violet-500/10 text-violet-900 dark:text-violet-100',
-  'border-emerald-500/25 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100',
-  'border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-100',
+  'border-violet-500/25 bg-violet-500/10 text-violet-800 dark:text-violet-100',
+  'border-emerald-500/25 bg-emerald-500/10 text-emerald-800 dark:text-emerald-100',
+  'border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-100',
 ];
 
 const STRIPE_ACCENT_CLASSES = [
@@ -48,17 +48,16 @@ export default function AnnouncementModal({
       <DialogTemplate
         title={title}
         description={descriptionForDialog}
-        className="border-border-light/80 w-11/12 max-w-xl overflow-hidden border shadow-xl sm:w-4/5 md:max-w-xl"
+        className="w-11/12 max-w-xl overflow-hidden border border-border-medium bg-surface-dialog shadow-xl dark:bg-surface-dialog sm:w-4/5 md:max-w-xl"
         showCloseButton={true}
         showCancelButton={false}
         main={
           announcement.models && announcement.models.length > 0 ? (
             <section
-              tabIndex={0}
               className="max-h-[50vh] overflow-y-auto px-4 pb-1 pt-0"
               aria-label={title}
             >
-              <div className="border-border-light/60 bg-surface-secondary/40 dark:bg-surface-tertiary/30 mb-4 flex items-center gap-3 rounded-xl border px-3 py-2.5">
+              <div className="mb-4 flex items-center gap-3 rounded-xl border border-border-light bg-surface-secondary px-3 py-2.5">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/20">
                   <Sparkles className="size-4" aria-hidden />
                 </div>
@@ -72,7 +71,7 @@ export default function AnnouncementModal({
                 {announcement.models.map((model, index) => (
                   <li
                     key={`${model.name}-${index}`}
-                    className="from-surface-secondary/95 to-surface-secondary/40 dark:from-surface-tertiary/50 dark:to-surface-secondary/30 group relative overflow-hidden rounded-xl border border-border-medium bg-gradient-to-br p-4 pl-5 shadow-sm transition-[border-color,box-shadow] hover:border-primary/35 hover:shadow-md"
+                    className="group relative overflow-hidden rounded-xl border border-border-medium bg-surface-secondary p-4 pl-5 shadow-sm transition-[border-color,box-shadow] hover:border-border-heavy hover:shadow-md"
                   >
                     <span
                       className={`absolute bottom-2 left-0 top-2 w-1 rounded-full bg-gradient-to-b ${STRIPE_ACCENT_CLASSES[index % STRIPE_ACCENT_CLASSES.length]}`}

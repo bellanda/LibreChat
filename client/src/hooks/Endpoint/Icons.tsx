@@ -1,20 +1,20 @@
-import { Feather } from 'lucide-react';
-import { EModelEndpoint } from 'librechat-data-provider';
 import {
-  MinimalPlugin,
-  GPTIcon,
   AnthropicIcon,
-  AzureMinimalIcon,
-  GoogleMinimalIcon,
-  CustomMinimalIcon,
   AssistantIcon,
-  LightningIcon,
+  AzureMinimalIcon,
   BedrockIcon,
+  CustomMinimalIcon,
+  GoogleMinimalIcon,
+  GPTIcon,
+  LightningIcon,
+  MinimalPlugin,
   Sparkles,
 } from '@librechat/client';
-import type { IconMapProps, AgentIconMapProps, IconsRecord } from '~/common';
-import UnknownIcon from './UnknownIcon';
+import { EModelEndpoint } from 'librechat-data-provider';
+import { Feather } from 'lucide-react';
+import type { AgentIconMapProps, IconMapProps, IconsRecord } from '~/common';
 import { cn } from '~/utils';
+import UnknownIcon from './UnknownIcon';
 
 const AssistantAvatar = ({
   className = '',

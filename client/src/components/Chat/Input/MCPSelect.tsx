@@ -41,16 +41,13 @@ function MCPSelectContent() {
        Ensures Check & Text are adjacent and the group takes available space.
         */
       const mainContentWrapper = (
-        <button
-          type="button"
-          className={`flex flex-grow items-center rounded bg-transparent p-0 text-left transition-colors focus:outline-none ${
-            isServerInitializing ? 'opacity-50' : ''
+        <div
+          className={`flex flex-grow items-center rounded bg-transparent p-0 text-left transition-colors ${
+            isServerInitializing ? 'pointer-events-none opacity-50' : ''
           }`}
-          tabIndex={0}
-          disabled={isServerInitializing}
         >
           {defaultContent}
-        </button>
+        </div>
       );
 
       const statusIcon = statusIconProps && <MCPServerStatusIcon {...statusIconProps} />;

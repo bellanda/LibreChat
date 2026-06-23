@@ -149,6 +149,7 @@ const tokenValues = Object.assign(
     'claude-opus-4.6': { prompt: 5, completion: 25 },
     'claude-opus-4-7': { prompt: 5, completion: 25 },
     'claude-opus-4.7': { prompt: 5, completion: 25 },
+    'claude-opus-4-8': { prompt: 5, completion: 25 },
     'claude-sonnet-4-5': { prompt: 3, completion: 15 },
     'claude-sonnet-4-6': { prompt: 3, completion: 15 },
     'command-r': { prompt: 0.5, completion: 1.5 },
@@ -157,6 +158,8 @@ const tokenValues = Object.assign(
     'deepseek-reasoner': { prompt: 0.28, completion: 0.42 },
     'deepseek-r1': { prompt: 0.4, completion: 2.0 },
     'deepseek-v3': { prompt: 0.2, completion: 0.8 },
+    'deepseek-v4-flash': { prompt: 0.14, completion: 0.28 },
+    'deepseek-v4-pro': { prompt: 0.43, completion: 0.87 },
     'gemma-2': { prompt: 0.01, completion: 0.03 }, // Base pattern (using gemma-2-9b pricing)
     'gemma-3': { prompt: 0.02, completion: 0.04 }, // Base pattern (using gemma-3n-e4b pricing)
     'gemma-3-27b': { prompt: 0.09, completion: 0.16 },
@@ -171,6 +174,7 @@ const tokenValues = Object.assign(
     'gemini-2.5-flash-lite': { prompt: 0.1, completion: 0.4 },
     'gemini-2.5-pro': { prompt: 1.25, completion: 10 },
     'gemini-3': { prompt: 2, completion: 12 },
+    'gemini-3.5-flash': { prompt: 1.5, completion: 9 },
     'gemini-2.5-flash-image': { prompt: 0.15, completion: 30 },
     'gemini-3-flash-preview': { prompt: 0.5, completion: 3 },
     'gemini-3-pro-preview': { prompt: 2, completion: 12 },
@@ -275,6 +279,8 @@ const cacheTokenValues = {
   'claude-opus-4.6': { write: 6.25, read: 0.5 },
   'claude-opus-4-7': { write: 6.25, read: 0.5 },
   'claude-opus-4.7': { write: 6.25, read: 0.5 },
+  'claude-opus-4-8': { write: 6.25, read: 0.5 },
+  'claude-opus-4.8': { write: 6.25, read: 0.5 },
   'gpt-5.5': { write: 5.0, read: 0.5 },
 };
 

@@ -187,3 +187,5 @@ packages/data-provider/dist/
 docs/superpowers
 packages/sandbox/
 storage/
+
+.tmp_pymongo/

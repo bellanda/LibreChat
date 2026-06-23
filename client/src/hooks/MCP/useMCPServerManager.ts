@@ -1,16 +1,16 @@
-import { useCallback, useState, useMemo, useRef, useEffect } from 'react';
 import { useToastContext } from '@librechat/client';
 import { useQueryClient } from '@tanstack/react-query';
+import type { MCPServersResponse, TPlugin, TUpdateUserPlugins } from 'librechat-data-provider';
 import { Constants, QueryKeys } from 'librechat-data-provider';
 import {
   useCancelMCPOAuthMutation,
-  useUpdateUserPluginsMutation,
   useReinitializeMCPServerMutation,
+  useUpdateUserPluginsMutation,
 } from 'librechat-data-provider/react-query';
-import type { TUpdateUserPlugins, TPlugin, MCPServersResponse } from 'librechat-data-provider';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ConfigFieldDetail } from '~/common';
-import { useLocalize, useMCPSelect, useMCPConnectionStatus } from '~/hooks';
 import { useGetStartupConfig } from '~/data-provider';
+import { useLocalize, useMCPConnectionStatus, useMCPSelect } from '~/hooks';
 
 interface ServerState {
   isInitializing: boolean;
@@ -31,6 +31,8 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
   const [selectedToolForConfig, setSelectedToolForConfig] = useState<TPlugin | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const mcpValuesRef = useRef(mcpValues);
+  const pendingInitialization = useRef(new Set<string>());
+  const hasAutoInitializedRef = useRef(false);
 
   // fixes the issue where OAuth flows would deselect all the servers except the one that is being authenticated on success
   useEffect(() => {
@@ -83,6 +85,23 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
   const { connectionStatus } = useMCPConnectionStatus({
     enabled: !!startupConfig?.mcpServers && Object.keys(startupConfig.mcpServers).length > 0,
   });
+
+  // Auto-inicializa servidores que estão selecionados mas desconectados (ex: auto-select na primeira visita)
+  // DEVE ficar após a declaração de connectionStatus para evitar TDZ
+  useEffect(() => {
+    if (hasAutoInitializedRef.current) return;
+    if (!connectionStatus) return;
+    if (!mcpValues || mcpValues.length === 0) return;
+    hasAutoInitializedRef.current = true;
+    mcpValues.forEach((serverName) => {
+      const status = connectionStatus[serverName];
+      if (!status || status.connectionState === 'disconnected') {
+        pendingInitialization.current.add(serverName);
+        initializeServer(serverName);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectionStatus, mcpValues]);
 
   const updateServerState = useCallback((serverName: string, updates: Partial<ServerState>) => {
     setServerStates((prev) => {
@@ -184,6 +203,8 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
               status: 'success',
             });
 
+            // Só re-adiciona se o usuário ainda quer este servidor (não desmarcou durante o init)
+            pendingInitialization.current.delete(serverName);
             const currentValues = mcpValuesRef.current ?? [];
             if (!currentValues.includes(serverName)) {
               setMCPValues([...currentValues, serverName]);
@@ -271,6 +292,10 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
             message: localize('com_ui_mcp_init_failed', { 0: serverName }),
             status: 'error',
           });
+          if (pendingInitialization.current.has(serverName)) {
+            pendingInitialization.current.delete(serverName);
+            setMCPValues((mcpValuesRef.current ?? []).filter((n) => n !== serverName));
+          }
           cleanupServerState(serverName);
           return response;
         }
@@ -296,7 +321,8 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
             status: 'success',
           });
 
-          const currentValues = mcpValues ?? [];
+          pendingInitialization.current.delete(serverName);
+          const currentValues = mcpValuesRef.current ?? [];
           if (!currentValues.includes(serverName)) {
             setMCPValues([...currentValues, serverName]);
           }
@@ -310,6 +336,10 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
           message: localize('com_ui_mcp_init_failed', { 0: serverName }),
           status: 'error',
         });
+        if (pendingInitialization.current.has(serverName)) {
+          pendingInitialization.current.delete(serverName);
+          setMCPValues((mcpValuesRef.current ?? []).filter((n) => n !== serverName));
+        }
         cleanupServerState(serverName);
       }
     },
@@ -328,6 +358,9 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
 
   const cancelOAuthFlow = useCallback(
     (serverName: string) => {
+      // Remove seleção otimista já que o usuário cancelou
+      pendingInitialization.current.delete(serverName);
+      setMCPValues((mcpValuesRef.current ?? []).filter((n) => n !== serverName));
       cancelOAuthMutation.mutate(serverName, {
         onSuccess: () => {
           cleanupServerState(serverName);
@@ -347,7 +380,7 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
         },
       });
     },
-    [queryClient, cleanupServerState, showToast, localize, cancelOAuthMutation],
+    [queryClient, cleanupServerState, showToast, localize, cancelOAuthMutation, setMCPValues],
   );
 
   const isInitializing = useCallback(
@@ -378,25 +411,29 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
 
   const batchToggleServers = useCallback(
     (serverNames: string[]) => {
-      const connectedServers: string[] = [];
-      const disconnectedServers: string[] = [];
+      const serverNamesSet = new Set(serverNames);
 
-      serverNames.forEach((serverName) => {
-        if (isInitializing(serverName)) {
-          return;
+      // Cancela pending de servidores que foram desmarcados
+      for (const pending of pendingInitialization.current) {
+        if (!serverNamesSet.has(pending)) {
+          pendingInitialization.current.delete(pending);
         }
+      }
 
+      const toInitialize: string[] = [];
+      serverNames.forEach((serverName) => {
+        if (isInitializing(serverName)) return;
         const serverStatus = connectionStatus?.[serverName];
-        if (serverStatus?.connectionState === 'connected') {
-          connectedServers.push(serverName);
-        } else {
-          disconnectedServers.push(serverName);
+        if (serverStatus?.connectionState !== 'connected') {
+          toInitialize.push(serverName);
         }
       });
 
-      setMCPValues(connectedServers);
+      // Optimistic: marca todos selecionados imediatamente (inclusive os desconectados)
+      setMCPValues(serverNames);
 
-      disconnectedServers.forEach((serverName) => {
+      toInitialize.forEach((serverName) => {
+        pendingInitialization.current.add(serverName);
         initializeServer(serverName);
       });
     },
@@ -413,13 +450,15 @@ export function useMCPServerManager({ conversationId }: { conversationId?: strin
       const isCurrentlySelected = currentValues.includes(serverName);
 
       if (isCurrentlySelected) {
-        const filteredValues = currentValues.filter((name) => name !== serverName);
-        setMCPValues(filteredValues);
+        // Desmarcar: cancela pending para que o callback de sucesso não re-adicione
+        pendingInitialization.current.delete(serverName);
+        setMCPValues(currentValues.filter((name) => name !== serverName));
       } else {
+        // Optimistic: adiciona o check imediatamente, depois conecta se necessário
+        setMCPValues([...currentValues, serverName]);
         const serverStatus = connectionStatus?.[serverName];
-        if (serverStatus?.connectionState === 'connected') {
-          setMCPValues([...currentValues, serverName]);
-        } else {
+        if (serverStatus?.connectionState !== 'connected') {
+          pendingInitialization.current.add(serverName);
           initializeServer(serverName);
         }
       }
