@@ -21,6 +21,7 @@ const {
 const { EnvVar } = require('@librechat/agents');
 const { logger } = require('@librechat/data-schemas');
 const { sanitizeFilename, parseText, processAudioFile } = require('@librechat/api');
+const { canProviderRenderFileNatively } = require('./providerFileTypes');
 const {
   convertImage,
   resizeAndConvert,
@@ -605,6 +606,15 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
   let fileInfoMetadata;
   const entity_id = messageAttachment === true ? undefined : agent_id;
   const basePath = mime.getType(file.originalname)?.startsWith('image') ? 'images' : 'uploads';
+
+  const useTextFallback = !tool_resource && !canProviderRenderFileNatively(file.mimetype);
+
+  if (useTextFallback) {
+    logger.debug(
+      `[processAgentFileUpload] "${file.originalname}" (${file.mimetype}) cannot be sent to the provider natively; extracting text instead.`,
+    );
+  }
+
   if (tool_resource === EToolResources.execute_code) {
     const isCodeEnabled = await checkCapability(req, AgentCapabilities.execute_code);
     if (!isCodeEnabled) {
@@ -630,7 +640,7 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
       throw new Error('File search is not enabled for Agents');
     }
     // Note: File search processing continues to dual storage logic below
-  } else if (tool_resource === EToolResources.context) {
+  } else if (tool_resource === EToolResources.context || useTextFallback) {
     const { file_id, temp_file_id = null } = metadata;
 
     /**
@@ -693,9 +703,13 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
       ocrEnabled: appConfig?.ocr != null,
     });
 
-    if (shouldUseOCR && !(await checkCapability(req, AgentCapabilities.ocr))) {
+    const ocrAllowed = shouldUseOCR && (await checkCapability(req, AgentCapabilities.ocr));
+
+    /** On the implicit text fallback the user never asked for OCR, so a disabled OCR
+     * capability must degrade to plain text extraction rather than fail the upload. */
+    if (shouldUseOCR && !ocrAllowed && !useTextFallback) {
       throw new Error('OCR capability is not enabled for Agents');
-    } else if (shouldUseOCR) {
+    } else if (ocrAllowed) {
       try {
         const { handleFileUpload: uploadOCR } = getStrategyFunctions(
           appConfig?.ocr?.strategy ?? FileSources.mistral_ocr,
@@ -739,12 +753,16 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
       textSupportedMimeTypesLength: fileConfig.text?.supportedMimeTypes?.length || 0,
     });
 
-    if (!shouldUseText) {
+    if (!shouldUseText && !useTextFallback) {
       throw new Error(`File type ${file.mimetype} is not supported for text parsing.`);
     }
 
-    const { text, bytes } = await parseText({ req, file, file_id });
-    return await createTextFile({ text, bytes, type: file.mimetype });
+    /** Nothing to extract on the implicit fallback: keep the pre-existing behaviour of
+     * storing the file as-is instead of failing an upload the user didn't route here. */
+    if (shouldUseText) {
+      const { text, bytes } = await parseText({ req, file, file_id });
+      return await createTextFile({ text, bytes, type: file.mimetype });
+    }
   }
 
   // Dual storage pattern for RAG files: Storage + Vector DB

@@ -69,15 +69,39 @@ function getClaudeHeaders(
 }
 
 /**
- * Checks if a model uses the newer "adaptive" thinking API format
- * (models with generation 4+ and minor version >= 6, e.g. claude-opus-4-7, claude-sonnet-4-6)
+ * Checks if a model uses the newer "adaptive" thinking API format, i.e. `thinking.type =
+ * "adaptive"` plus `output_config.effort` instead of `thinking.budget_tokens`.
+ *
+ * That covers Claude 4.6 and later (claude-opus-4-6, claude-sonnet-4-6, claude-opus-4-7,
+ * claude-opus-4-8) and the whole 5-series onwards, which dropped the minor version from the id
+ * entirely (claude-opus-5, claude-sonnet-5). Getting this wrong fails the request outright in
+ * both directions: `budget_tokens` is rejected with a 400 on an adaptive model, and `adaptive`
+ * is not understood by an older one.
+ *
+ * Note the trailing segment of a dated snapshot is a date, not a minor version — reading
+ * `claude-sonnet-4-20250514` as "4.20250514 >= 4.6" would send adaptive thinking to Sonnet 4.0.
+ *
+ * Claude Fable/Mythos are deliberately absent: thinking is always on for them and any explicit
+ * `thinking` config other than `adaptive` is a 400, so they never reach this check (see
+ * `configureReasoning`).
+ *
  * @param {string} modelName
  * @returns {boolean}
  */
 function needsAdaptiveThinking(modelName: string): boolean {
-  const match = modelName.match(/claude-(?:sonnet|opus|haiku)-([4-9])-(\d+)/);
-  if (!match) return false;
-  return parseInt(match[2], 10) >= 6;
+  const match = modelName.match(/claude-(?:sonnet|opus|haiku)-(\d+)(?:-(\d+))?/);
+  if (!match) {
+    return false;
+  }
+
+  const major = parseInt(match[1], 10);
+  if (major >= 5) {
+    return true;
+  }
+
+  /** A one or two digit trailing segment is a minor version; anything longer is a date. */
+  const isMinorVersion = match[2] != null && match[2].length <= 2;
+  return major === 4 && isMinorVersion && parseInt(match[2], 10) >= 6;
 }
 
 /**
@@ -115,8 +139,18 @@ function configureReasoning(
   if (isThinkingModel && needsAdaptiveThinking(updatedOptions.model ?? '')) {
     // Newer Claude 4.x models (e.g. claude-opus-4-7, claude-sonnet-4-6) use the adaptive API:
     // thinking.type = "adaptive" + top-level output_config.effort
+    //
+    // `display` must be set explicitly: these models default to "omitted", which streams
+    // thinking blocks with empty text. LangChain then accumulates the assistant block from
+    // `signature_delta` alone, producing `{ type: 'thinking', signature }` with no `thinking`
+    // key — and replaying that block (every tool/MCP round-trip does) is rejected with
+    // `messages.N.content.0.thinking.thinking: Field required`. "summarized" keeps the field
+    // populated and is what the reasoning UI renders anyway.
     const budget = extendedOptions.thinkingBudget ?? 2000;
-    (updatedOptions as Record<string, unknown>).thinking = { type: 'adaptive' };
+    (updatedOptions as Record<string, unknown>).thinking = {
+      type: 'adaptive',
+      display: 'summarized',
+    };
     if (updatedOptions.invocationKwargs) {
       (updatedOptions.invocationKwargs as Record<string, unknown>).output_config = {
         effort: budgetToEffort(budget),

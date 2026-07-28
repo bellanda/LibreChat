@@ -122,6 +122,16 @@ describe('getValueKey', () => {
     expect(getValueKey('gpt-5-pro-preview')).toBe('gpt-5-pro');
   });
 
+  it('should return GPT-5.6 Sol/Terra/Luna keys (not fall through to gpt-5)', () => {
+    expect(getValueKey('gpt-5.6-sol')).toBe('gpt-5.6-sol');
+    expect(getValueKey('gpt-5.6-terra')).toBe('gpt-5.6-terra');
+    expect(getValueKey('gpt-5.6-luna')).toBe('gpt-5.6-luna');
+    expect(getValueKey('openai/gpt-5.6-sol')).toBe('gpt-5.6-sol');
+    expect(getValueKey('gpt-5.6-sol')).not.toBe('gpt-5');
+    expect(getValueKey('gpt-5.6-terra')).not.toBe('gpt-5');
+    expect(getValueKey('gpt-5.6-luna')).not.toBe('gpt-5');
+  });
+
   it('should return "gpt-4o" for model type of "gpt-4o"', () => {
     expect(getValueKey('gpt-4o-2024-08-06')).toBe('gpt-4o');
     expect(getValueKey('gpt-4o-2024-08-06-0718')).toBe('gpt-4o');
@@ -308,6 +318,19 @@ describe('getMultiplier', () => {
     );
     expect(getMultiplier({ model: 'openai/gpt-5-pro', tokenType: 'completion' })).toBe(
       tokenValues['gpt-5-pro'].completion,
+    );
+  });
+
+  it('should return the correct multipliers for GPT-5.6 Sol/Terra/Luna', () => {
+    expect(getMultiplier({ model: 'gpt-5.6-sol', tokenType: 'prompt' })).toBe(5);
+    expect(getMultiplier({ model: 'gpt-5.6-sol', tokenType: 'completion' })).toBe(30);
+    expect(getMultiplier({ model: 'gpt-5.6-terra', tokenType: 'prompt' })).toBe(2.5);
+    expect(getMultiplier({ model: 'gpt-5.6-terra', tokenType: 'completion' })).toBe(15);
+    expect(getMultiplier({ model: 'gpt-5.6-luna', tokenType: 'prompt' })).toBe(1);
+    expect(getMultiplier({ model: 'gpt-5.6-luna', tokenType: 'completion' })).toBe(6);
+    // Must not fall through to legacy gpt-5 rates
+    expect(getMultiplier({ model: 'gpt-5.6-sol', tokenType: 'prompt' })).not.toBe(
+      tokenValues['gpt-5'].prompt,
     );
   });
 
@@ -989,6 +1012,37 @@ describe('getCacheMultiplier', () => {
   it('should return null if only model or cacheType is missing', () => {
     expect(getCacheMultiplier({ cacheType: 'write' })).toBeNull();
     expect(getCacheMultiplier({ model: 'claude-3-5-sonnet' })).toBeNull();
+  });
+
+  /**
+   * Resolved end-to-end from the model id, the way `Transaction.js` calls it — not via `valueKey`.
+   * The key is matched against `tokenValues` and only then looked up in `cacheTokenValues`, so a
+   * cache entry whose spelling differs from its `tokenValues` counterpart is unreachable and
+   * `Transaction.js` silently bills cache tokens at the *input* rate (`?? inputMultiplier`),
+   * overcharging reads by ~10x. `claude-haiku-4.5` (dot) vs `claude-haiku-4-5` (hyphen) shipped
+   * exactly that bug, so assert every current model resolves to a real rate.
+   */
+  describe.each([
+    ['claude-haiku-4-5', 1, 5, 1.25, 0.1],
+    ['claude-sonnet-4-5', 3, 15, 3.75, 0.3],
+    ['claude-sonnet-4-6', 3, 15, 3.75, 0.3],
+    ['claude-opus-4-5', 5, 25, 6.25, 0.5],
+    ['claude-opus-4-6', 5, 25, 6.25, 0.5],
+    ['claude-opus-4-7', 5, 25, 6.25, 0.5],
+    ['claude-opus-4-8', 5, 25, 6.25, 0.5],
+    /** 5-series carries no minor version, so no `-4-N` key matches it */
+    ['claude-opus-5', 5, 25, 6.25, 0.5],
+    ['claude-sonnet-5', 3, 15, 3.75, 0.3],
+  ])('%s', (model, input, output, write, read) => {
+    it('bills input and output at the model rate, not the `claude-` catch-all', () => {
+      expect(getMultiplier({ model, tokenType: 'prompt' })).toBe(input);
+      expect(getMultiplier({ model, tokenType: 'completion' })).toBe(output);
+    });
+
+    it('resolves a real cache rate instead of falling back to the input rate', () => {
+      expect(getCacheMultiplier({ model, cacheType: 'write' })).toBe(write);
+      expect(getCacheMultiplier({ model, cacheType: 'read' })).toBe(read);
+    });
   });
 
   it('should return null if derived valueKey does not match any known patterns', () => {

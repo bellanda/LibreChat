@@ -74,7 +74,9 @@ export default function Header() {
                 isThemeDark ? '/assets/hpe-ia-neural-dark-mode.png' : '/assets/hpe-ia-neural.png'
               }
               alt="logo"
-              className="ml-[18vw] mt-6 h-[70px] rounded-[10px] bg-white"
+              /* The header is h-14 with p-2, leaving 40px of usable height: h-9 keeps the logo
+                 inside the bar instead of overflowing into the message area below it. */
+              className="ml-[18vw] h-9 w-auto rounded-[10px] bg-white"
             />
           </div>
         </div>

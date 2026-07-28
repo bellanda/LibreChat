@@ -20,6 +20,27 @@ import type { ExtendedFile } from '~/common';
 
 export const partialTypes = ['text/x-'];
 
+/**
+ * Spreadsheet types offered on the provider upload path. No provider takes a spreadsheet as a
+ * native content block, so the backend extracts their text and injects it as message context
+ * (`processAgentFileUpload` in `api/server/services/Files/process.js`). Listing them here is
+ * what makes them selectable in the file picker at all.
+ */
+export const spreadsheetAccept = '.xlsx,.xls,.csv';
+
+/** `accept` value for providers that take images + PDFs natively (everything but Google). */
+export const multimodalAccept = `image/*,.pdf,application/pdf,${spreadsheetAccept}`;
+
+/** Google additionally takes video and audio natively. */
+export const googleMultimodalAccept = `${multimodalAccept},video/*,audio/*`;
+
+/** Attachment types the provider upload path can deliver, natively or via text extraction. */
+export const isProviderUploadable = (type?: string): boolean =>
+  type?.startsWith('image/') === true ||
+  type === 'application/pdf' ||
+  excelMimeTypes.test(type ?? '') ||
+  type === 'text/csv';
+
 const textDocument = {
   paths: TextPaths,
   fill: '#FF5588',

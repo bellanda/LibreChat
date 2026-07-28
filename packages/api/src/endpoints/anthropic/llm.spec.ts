@@ -87,6 +87,90 @@ describe('getLLMConfig', () => {
     expect(result.llmConfig.thinking).toHaveProperty('budget_tokens', 2000);
   });
 
+  describe('adaptive thinking models (claude 4.6+)', () => {
+    /**
+     * Adaptive thinking defaults to `display: "omitted"` on the Anthropic API, which
+     * streams thinking blocks whose `thinking` text is empty. LangChain drops the
+     * `content_block_start` for thinking and only forwards `signature_delta`, so the
+     * accumulated assistant block ends up as `{ type: 'thinking', signature }` with no
+     * `thinking` key. Replaying that block (which happens on every tool/MCP round-trip)
+     * makes the API reject the request with
+     * `messages.N.content.0.thinking.thinking: Field required`.
+     * Requesting `display: 'summarized'` keeps the field populated.
+     */
+    it.each([
+      'claude-opus-4-6',
+      'claude-opus-4-7',
+      'claude-opus-4-8',
+      'claude-sonnet-4-6',
+      /** 5-series carries no minor version at all */
+      'claude-opus-5',
+      'claude-sonnet-5',
+      'claude-haiku-5',
+      /** dated snapshots of an adaptive model are still adaptive */
+      'claude-opus-5-20260601',
+      /** Bedrock prefixes the provider onto the same id */
+      'anthropic.claude-opus-5',
+    ])('should request summarized adaptive thinking for %s', (model) => {
+      const result = getLLMConfig('test-api-key', {
+        modelOptions: { model, thinking: true, thinkingBudget: 10000 },
+      });
+
+      expect(result.llmConfig.thinking).toEqual({
+        type: 'adaptive',
+        display: 'summarized',
+      });
+    });
+
+    /**
+     * `budget_tokens` is rejected with a 400 on every adaptive model, so a model that should be
+     * adaptive but is misdetected fails every thinking request outright.
+     */
+    it.each(['claude-opus-5', 'claude-sonnet-5'])(
+      'should never send budget_tokens for %s',
+      (model) => {
+        const result = getLLMConfig('test-api-key', {
+          modelOptions: { model, thinking: true, thinkingBudget: 10000 },
+        });
+
+        expect(result.llmConfig.thinking).not.toHaveProperty('budget_tokens');
+      },
+    );
+
+    it('should map the thinking budget to an effort level via output_config', () => {
+      const result = getLLMConfig('test-api-key', {
+        modelOptions: { model: 'claude-opus-4-8', thinking: true, thinkingBudget: 10000 },
+      });
+
+      expect(result.llmConfig.invocationKwargs).toHaveProperty('output_config', {
+        effort: 'high',
+      });
+    });
+
+    /**
+     * The trailing segment of a dated snapshot is a date, not a minor version: reading
+     * `claude-sonnet-4-20250514` as "4.20250514 >= 4.6" would send adaptive thinking to a
+     * Sonnet 4.0 model that only understands `budget_tokens`.
+     */
+    it.each([
+      ['claude-haiku-4-5', 2000],
+      ['claude-sonnet-4-5', 2000],
+      ['claude-opus-4-5', 2000],
+      ['claude-opus-4-1-20250805', 2000],
+      ['claude-sonnet-4-20250514', 2000],
+      ['claude-opus-4-20250514', 2000],
+      ['claude-3-7-sonnet', 2000],
+    ])('should keep the legacy budget_tokens format for %s', (model, budget) => {
+      const result = getLLMConfig('test-api-key', {
+        modelOptions: { model, thinking: true, thinkingBudget: budget },
+      });
+
+      expect(result.llmConfig.thinking).toHaveProperty('type', 'enabled');
+      expect(result.llmConfig.thinking).toHaveProperty('budget_tokens', budget);
+      expect(result.llmConfig.thinking).not.toHaveProperty('display');
+    });
+  });
+
   it('should add "prompt-caching" and "context-1m" beta headers for claude-sonnet-4 model', () => {
     const modelOptions = {
       model: 'claude-sonnet-4-20250514',

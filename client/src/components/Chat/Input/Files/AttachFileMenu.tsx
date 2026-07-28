@@ -35,7 +35,7 @@ import {
 import useSharePointFileHandling from '~/hooks/Files/useSharePointFileHandling';
 import { useChatContext } from '~/Providers';
 import { ephemeralAgentByConvoId } from '~/store';
-import { cn } from '~/utils';
+import { cn, googleMultimodalAccept, multimodalAccept } from '~/utils';
 
 interface AttachFileMenuProps {
   agentId?: string | null;
@@ -97,9 +97,9 @@ const AttachFileMenu = ({
     } else if (fileType === 'document') {
       inputRef.current.accept = '.pdf,application/pdf';
     } else if (fileType === 'multimodal') {
-      inputRef.current.accept = 'image/*,.pdf,application/pdf';
+      inputRef.current.accept = multimodalAccept;
     } else if (fileType === 'google_multimodal') {
-      inputRef.current.accept = 'image/*,.pdf,application/pdf,video/*,audio/*';
+      inputRef.current.accept = googleMultimodalAccept;
     } else {
       inputRef.current.accept = '';
     }

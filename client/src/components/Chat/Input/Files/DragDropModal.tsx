@@ -21,6 +21,7 @@ import {
   useLocalize,
 } from '~/hooks';
 import { ephemeralAgentByConvoId } from '~/store';
+import { isProviderUploadable } from '~/utils';
 import { useDragDropContext } from '~/Providers';
 
 interface DragDropModalProps {
@@ -62,12 +63,11 @@ const DragDropModal = ({ onOptionSelect, setShowModal, files, isVisible }: DragD
       const validFileTypes = isGoogleProvider
         ? files.every(
             (file) =>
-              file.type?.startsWith('image/') ||
+              isProviderUploadable(file.type) ||
               file.type?.startsWith('video/') ||
-              file.type?.startsWith('audio/') ||
-              file.type === 'application/pdf',
+              file.type?.startsWith('audio/'),
           )
-        : files.every((file) => file.type?.startsWith('image/') || file.type === 'application/pdf');
+        : files.every((file) => isProviderUploadable(file.type));
 
       _options.push({
         label: localize('com_ui_upload_provider'),

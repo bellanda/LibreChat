@@ -42,6 +42,10 @@ const openAIModels = {
   'gpt-5-mini': 400000,
   'gpt-5-nano': 400000,
   'gpt-5-pro': 400000,
+  /* GPT-5.6 family — Foundry catalog context window ~1050k */
+  'gpt-5.6-sol': 1048576,
+  'gpt-5.6-terra': 1048576,
+  'gpt-5.6-luna': 1048576,
   'gpt-4o': 127500, // -500 from max
   'gpt-4o-mini': 127500, // -500 from max
   'gpt-4o-2024-05-13': 127500, // -500 from max
@@ -140,6 +144,11 @@ const anthropicModels = {
   'claude-sonnet-4': 1000000,
   'claude-opus-4': 200000,
   'claude-4': 200000,
+  /** The 5-series has no minor version in the id, so no `-4`/`-4-N` key matches it and it would
+   * otherwise fall through to the `claude-` catch-all above (100000) — a 10x under-report that
+   * makes the context bar wrong and triggers summarization far too early. */
+  'claude-opus-5': 1000000,
+  'claude-sonnet-5': 1000000,
 };
 
 const deepseekModels = {
@@ -342,6 +351,9 @@ export const modelMaxOutputs = {
   'gpt-5-nano': 128000,
   'gpt-5-pro': 128000,
   'gpt-5.2': 128000,
+  'gpt-5.6-sol': 128000,
+  'gpt-5.6-terra': 128000,
+  'gpt-5.6-luna': 128000,
   'gpt-oss-20b': 131000,
   'gpt-oss-120b': 131000,
   // Custom Fireworks models
@@ -374,6 +386,8 @@ const anthropicMaxOutputs = {
   'claude-opus-4-5': 64000,
   'claude-sonnet-4-5': 64000,
   'claude-haiku-4-5': 64000,
+  'claude-opus-5': 128000,
+  'claude-sonnet-5': 128000,
 };
 
 // Custom models output limits

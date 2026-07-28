@@ -131,6 +131,15 @@ const tokenValues = Object.assign(
     'gpt-5.2': { prompt: 1.75, completion: 14 },
     'gpt-5.4': { prompt: 2.5, completion: 15 },
     'gpt-5.5': { prompt: 5, completion: 30 },
+    /**
+     * GPT-5.6 Sol / Terra / Luna (Azure AI Foundry, Standard Global).
+     * Must be explicit: findMatchingPattern uses includes(), so gpt-5.6-* would
+     * otherwise match the older `gpt-5` key ($1.25/$10) and undercharge badly.
+     * Pricing: https://azure.microsoft.com/en-us/blog/gpt-5-6-now-available-in-microsoft-foundry/
+     */
+    'gpt-5.6-sol': { prompt: 5, completion: 30 },
+    'gpt-5.6-terra': { prompt: 2.5, completion: 15 },
+    'gpt-5.6-luna': { prompt: 1, completion: 6 },
     'claude-instant': { prompt: 0.8, completion: 2.4 },
     'claude-2': { prompt: 8, completion: 24 },
     'claude-2.1': { prompt: 8, completion: 24 },
@@ -152,6 +161,14 @@ const tokenValues = Object.assign(
     'claude-opus-4-8': { prompt: 5, completion: 25 },
     'claude-sonnet-4-5': { prompt: 3, completion: 15 },
     'claude-sonnet-4-6': { prompt: 3, completion: 15 },
+    /**
+     * The 5-series dropped the minor version from the id, so none of the `-4-N` keys match it.
+     * Without an explicit key, `findMatchingPattern` falls through to the `claude-` catch-all
+     * (0.8/2.4) — a ~6x undercharge on input and ~10x on output for Opus 5.
+     * Sonnet 5 is listed at its standard rate; introductory pricing ($2/$10) runs to 2026-08-31.
+     */
+    'claude-opus-5': { prompt: 5, completion: 25 },
+    'claude-sonnet-5': { prompt: 3, completion: 15 },
     'command-r': { prompt: 0.5, completion: 1.5 },
     'command-r-plus': { prompt: 3, completion: 15 },
     'command-text': { prompt: 1.5, completion: 2.0 },
@@ -271,17 +288,33 @@ const cacheTokenValues = {
   'claude-3.5-haiku': { write: 1, read: 0.08 },
   'claude-3-5-haiku': { write: 1, read: 0.08 },
   'claude-3-haiku': { write: 0.3, read: 0.03 },
+  /**
+   * These keys are matched against `tokenValues`, not against this map: `getCacheMultiplier`
+   * resolves the key via `getValueKey` and only then looks it up here. A key that has no exact
+   * counterpart in `tokenValues` is therefore unreachable, and `Transaction.js` silently falls
+   * back to the *input* rate (`?? inputMultiplier`) — which overcharges cache reads by ~10x,
+   * the dominant token type in a chat. `claude-haiku-4.5` (dot) was unreachable for exactly this
+   * reason while `tokenValues` spells it `claude-haiku-4-5` (hyphen); keep both spellings in sync.
+   */
   'claude-haiku-4.5': { write: 1.25, read: 0.1 },
+  'claude-haiku-4-5': { write: 1.25, read: 0.1 },
   'claude-sonnet-4': { write: 3.75, read: 0.3 },
+  'claude-sonnet-4-5': { write: 3.75, read: 0.3 },
   'claude-sonnet-4-6': { write: 3.75, read: 0.3 },
+  'claude-sonnet-5': { write: 3.75, read: 0.3 },
   'claude-opus-4': { write: 18.75, read: 1.5 },
+  'claude-opus-4-5': { write: 6.25, read: 0.5 },
   'claude-opus-4-6': { write: 6.25, read: 0.5 },
   'claude-opus-4.6': { write: 6.25, read: 0.5 },
   'claude-opus-4-7': { write: 6.25, read: 0.5 },
   'claude-opus-4.7': { write: 6.25, read: 0.5 },
   'claude-opus-4-8': { write: 6.25, read: 0.5 },
   'claude-opus-4.8': { write: 6.25, read: 0.5 },
+  'claude-opus-5': { write: 6.25, read: 0.5 },
   'gpt-5.5': { write: 5.0, read: 0.5 },
+  'gpt-5.6-sol': { write: 5.0, read: 0.5 },
+  'gpt-5.6-terra': { write: 2.5, read: 0.25 },
+  'gpt-5.6-luna': { write: 1.0, read: 0.1 },
 };
 
 /**
