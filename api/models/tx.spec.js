@@ -334,6 +334,15 @@ describe('getMultiplier', () => {
     );
   });
 
+  it('should return the correct multipliers for gemini-3.6-flash, not gemini-3', () => {
+    expect(getValueKey('gemini-3.6-flash')).toBe('gemini-3.6-flash');
+    expect(getMultiplier({ model: 'gemini-3.6-flash', tokenType: 'prompt' })).toBe(1.5);
+    expect(getMultiplier({ model: 'gemini-3.6-flash', tokenType: 'completion' })).toBe(7.5);
+    expect(getMultiplier({ model: 'gemini-3.6-flash', tokenType: 'prompt' })).not.toBe(
+      tokenValues['gemini-3'].prompt,
+    );
+  });
+
   it('should return the correct multiplier for gpt-4o', () => {
     const valueKey = getValueKey('gpt-4o-2024-08-06');
     expect(getMultiplier({ valueKey, tokenType: 'prompt' })).toBe(tokenValues['gpt-4o'].prompt);

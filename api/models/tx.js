@@ -192,6 +192,7 @@ const tokenValues = Object.assign(
     'gemini-2.5-pro': { prompt: 1.25, completion: 10 },
     'gemini-3': { prompt: 2, completion: 12 },
     'gemini-3.5-flash': { prompt: 1.5, completion: 9 },
+    'gemini-3.6-flash': { prompt: 1.5, completion: 7.5 },
     'gemini-2.5-flash-image': { prompt: 0.15, completion: 30 },
     'gemini-3-flash-preview': { prompt: 0.5, completion: 3 },
     'gemini-3-pro-preview': { prompt: 2, completion: 12 },
