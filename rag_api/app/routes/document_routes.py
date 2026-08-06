@@ -24,7 +24,14 @@ from langchain_core.documents import Document
 from langchain_core.runnables import run_in_executor
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from app.config import CHUNK_OVERLAP, CHUNK_SIZE, RAG_UPLOAD_DIR, logger, vector_store
+from app.config import (
+    CHUNK_OVERLAP,
+    CHUNK_SIZE,
+    RAG_UPLOAD_DIR,
+    TEXT_EXTRACTION_TOKEN_LIMIT,
+    logger,
+    vector_store,
+)
 from app.constants import ERROR_MESSAGES
 from app.models import (
     DocumentResponse,
@@ -46,6 +53,47 @@ def get_user_id(request: Request, entity_id: str = None) -> str:
         return entity_id if entity_id else "public"
     else:
         return entity_id if entity_id else request.state.user.get("id")
+
+
+def enforce_text_extraction_token_limit(text_content: str, filename: str) -> int:
+    """Guard the /text endpoint against absurdly large extractions.
+
+    Returns the token count when the text is within TEXT_EXTRACTION_TOKEN_LIMIT,
+    raises 413 otherwise. The ceiling is a memory guard, not a business rule:
+    LibreChat truncates gracefully at `fileConfig.fileTokenLimit` on its side, so
+    rejecting here turns a truncatable file into a failed upload.
+    """
+    try:
+        encoding = tiktoken.get_encoding("cl100k_base")
+        token_count = len(encoding.encode(text_content))
+    except ImportError:
+        token_count = len(text_content) // 4
+        logger.warning("tiktoken not available, using character-based estimation")
+
+    if token_count > TEXT_EXTRACTION_TOKEN_LIMIT:
+        logger.warning(
+            "[/text] Rejecting '%s': %d tokens exceeds TEXT_EXTRACTION_TOKEN_LIMIT (%d)",
+            filename,
+            token_count,
+            TEXT_EXTRACTION_TOKEN_LIMIT,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=(
+                f"Arquivo muito grande para extração de texto ({token_count:,} tokens). "
+                f"Limite máximo: {TEXT_EXTRACTION_TOKEN_LIMIT:,} tokens. Para arquivos "
+                "maiores, use 'File Search' para documentos extensos ou 'Code Interpreter' "
+                "para dados estruturados."
+            ),
+        )
+
+    logger.info(
+        "[/text] '%s' accepted: %d tokens (limit %d)",
+        filename,
+        token_count,
+        TEXT_EXTRACTION_TOKEN_LIMIT,
+    )
+    return token_count
 
 
 async def save_upload_file_async(file: UploadFile, temp_file_path: str) -> None:
@@ -805,22 +853,7 @@ async def extract_text_from_file(
         logger.info(f"📄 [Upload as Text] Últimos 500 caracteres: {text_content[-500:]}")
         logger.info(f"📄 [Upload as Text] Conteúdo completo:\n{text_content}")
 
-        # Validação de tokens para "Upload as Text" - limite de 30k tokens
-        try:
-            # Usar encoding para GPT-4/GPT-3.5-turbo
-            encoding = tiktoken.get_encoding("cl100k_base")
-            tokens = encoding.encode(text_content)
-            token_count = len(tokens)
-        except ImportError:
-            # Fallback para estimativa se tiktoken não estiver disponível
-            token_count = len(text_content) // 4
-            logger.warning("tiktoken not available, using character-based estimation")
-
-        if token_count > 30000:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail=f"Arquivo muito grande para 'Upload as Text' ({token_count:,} tokens). Limite máximo: 30.000 tokens. Para arquivos maiores, use 'File Search' para documentos extensos ou 'Code Interpreter' para dados estruturados.",
-            )
+        enforce_text_extraction_token_limit(text_content, file.filename)
 
         return {
             "text": text_content,

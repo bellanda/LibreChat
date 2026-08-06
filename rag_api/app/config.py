@@ -65,6 +65,15 @@ MONGO_VECTOR_COLLECTION = get_env_variable("MONGO_VECTOR_COLLECTION", None)  # D
 CHUNK_SIZE = int(get_env_variable("CHUNK_SIZE", "1500"))
 CHUNK_OVERLAP = int(get_env_variable("CHUNK_OVERLAP", "100"))
 
+# Token ceiling for the /text ("Upload as Text") extraction endpoint.
+#
+# This is a memory guard against absurdly large files, NOT a business rule.
+# LibreChat truncates extracted text gracefully on its side at
+# `fileConfig.fileTokenLimit` (processTextWithTokenLimit, default 100_000), so
+# anything rejected here becomes a hard upload failure instead. Keep this well
+# above fileTokenLimit and let LibreChat decide where to cut.
+TEXT_EXTRACTION_TOKEN_LIMIT = int(get_env_variable("TEXT_EXTRACTION_TOKEN_LIMIT", "500000"))
+
 env_value = get_env_variable("PDF_EXTRACT_IMAGES", "False").lower()
 PDF_EXTRACT_IMAGES = True if env_value == "true" else False
 
