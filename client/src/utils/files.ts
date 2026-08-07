@@ -92,13 +92,17 @@ export const fileTypes = {
   // application:,
 
   /* Partial matches */
-  csv: spreadsheet,
   'application/pdf': textDocument,
   pdf: textDocument,
   'text/x-': codeFile,
   artifact: artifact,
 
   /* Exact matches */
+  /** CSV is a spreadsheet to the user. Matched by full mimetype because the
+   * category fallback below resolves `text/*` to the generic document icon,
+   * while XLSX gets the spreadsheet icon from the `excelMimeTypes` test. */
+  'text/csv': spreadsheet,
+  'application/csv': spreadsheet,
   // 'application/json':,
   // 'text/html':,
   // 'text/css':,
