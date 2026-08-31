@@ -1,0 +1,462 @@
+# Code Interpreter auto-hospedado, dentro do projeto Compose do LibreChat.
+#
+# A API hospedada (https://api.librechat.ai/v1, o default de `getCodeBaseURL()`)
+# não está mais disponível para compra. O substituto open-source não é uma API:
+# são os 8 serviços abaixo, que era o que rodava atrás dela.
+#
+# ---------------------------------------------------------------------------
+# Ativação em prod — uma vez
+# ---------------------------------------------------------------------------
+#
+#   1. Clonar o repo ao lado do LibreChat:
+#        git clone git@github.com:LibreChat-AI/code-interpreter.git ../code-interpreter
+#
+#   2. Gerar os runtimes de linguagem. São ~3,6 GB GERADOS na máquina, não
+#      versionados — por isso não existe pasta pronta para copiar:
+#        cd ../code-interpreter && ./build-packages.sh      # 40-60 min
+#
+#   3. Preencher os CODEAPI_* no .env (bloco no fim deste arquivo).
+#
+#   4. Duas linhas no docker-compose.override.yml do host — ESTE arquivo, não o
+#      docker-compose.prod.override.yml. O Compose auto-carrega apenas
+#      `docker-compose.yml` + `docker-compose.override.yml`; o prefixo `prod.`
+#      não significa nada para ele, e um `docker compose up` sem `-f` explícito
+#      ignora aquele arquivo por completo. Os dois nasceram idênticos em prod, o
+#      que esconde o problema até alguém editar só o `prod.`:
+#
+#        include:
+#          - docker-compose.code-interpreter.yml
+#
+#      Requer Compose >= 2.20 (`docker compose version`). Em versão anterior,
+#      cole o conteúdo deste arquivo direto no override.
+#
+#   5. No mesmo docker-compose.override.yml, no serviço `api`:
+#
+#        image: librechat-hpe:prod
+#
+#      Sem isso o build do fork herda `image:
+#      ghcr.io/danny-avila/librechat-dev:latest` de docker-compose.yml:12 (o
+#      compose base define o tag e não define `build:`), e um
+#      `docker compose pull` troca o fork pela imagem pública do upstream,
+#      revertendo fixes silenciosamente. Confirmado em prod em 31/08/2026:
+#      `docker inspect api --format '{{.Config.Image}}'` respondia
+#      `ghcr.io/danny-avila/librechat-dev:latest`.
+#
+#      Este passo mora aqui como documentação porque `*.override.yml` está no
+#      .gitignore: aquela linha não pode viajar por git, precisa ser feita no
+#      host. Foi assim que ela se perdeu uma vez.
+#
+# ---------------------------------------------------------------------------
+# Diferenças deliberadas em relação ao compose do upstream
+# ---------------------------------------------------------------------------
+#
+# Nomes prefixados `code-*`. O upstream declara um serviço `api` com
+# `container_name: api`, idêntico ao do LibreChat. No mesmo projeto o Compose
+# mescla as duas definições num único container quebrado.
+#
+# Nenhuma porta publicada. O upstream publica 3112, 3190, 2000, 13000, 19000,
+# 19001 e 16379 por conveniência de dev. Com `CODEAPI_AUTH_PROVIDER=none` a
+# identidade do chamador é apenas o header `User-Id`, então quem alcançasse a
+# 3112 executaria código se passando por qualquer usuário. `ports` não pode ser
+# removido por merge de override (o Compose concatena listas) — daí a
+# redeclaração completa dos serviços aqui em vez de um `include` do compose deles.
+#
+# Rede própria `codeint`. Só `code-api` fica também na rede default, que é por
+# onde o container `api` do LibreChat fala com ele. mongodb, vectordb e
+# meilisearch ficam fora do alcance do stack de execução. Isso é defesa em
+# profundidade: o isolamento de rede dos jobs em si vem do namespace do NsJail,
+# não daqui.
+#
+# Segredos sem default. O upstream cai em `localdev-internal-service-token`,
+# `localdev-egress-grant-secret-change-me-32b` e `REDIS_PASSWORD=localdev`
+# quando a variável não existe. Aqui `${VAR:?}` faz o `up` falhar em vez de
+# subir inseguro.
+#
+# ---------------------------------------------------------------------------
+# Modo NsJail (sem KVM) e limite de memória
+# ---------------------------------------------------------------------------
+#
+# A VPS não tem `/dev/kvm`, e não é questão de `modprobe`:
+# `grep -c -E 'vmx|svm' /proc/cpuinfo` = 0, ou seja o CPU não expõe flag de
+# virtualização. Fica o modo NsJail — mesma configuração de
+# `docker-compose.mac.yml`, que é o caminho testado: target `sandbox-build`,
+# `/dev/null` mapeado como `/dev/kvm`, perfil seccomp e os 14 `cap_add`.
+#
+# Consumo medido no stack completo: 375 MiB ocioso somando os 8 containers, e
+# ~170 MiB por job (pandas 200k linhas + 6 gráficos matplotlib a 150 dpi +
+# PPTX de 6 slides, 4,1 s de wall time). `LAUNCHER_RAM_MIB` só vale para o
+# caminho libkrun/microVM, que não é este.
+#
+# O teto de memória por job, porém, é obrigatório aqui:
+# `api/src/config.ts:65` usa -1 (sem limite) por default, e
+# `api/src/nsjail.ts:703` só passa `--cgroup_mem_max` quando cgroup v2 está
+# ligado E o limite é > 0. Em dev rodamos com cgroupv2 desligado (limitação do
+# WSL), então não houve teto nenhum. A VPS tem cgroup v2 e swap 0: sem teto, um
+# job patológico faz o OOM killer escolher uma vítima, e o candidato provável é
+# o mongodb.
+#
+# Ligar cgroup v2 exige duas coisas além da variável, e sem elas o container NÃO
+# sobe: o entrypoint só emite warning, mas o smoke test do NsJail morre com
+# "FATAL: NsJail smoke test failed". O próprio NsJail explica o porquê:
+#
+#   Could not apply '+memory' to cgroup.subtree_control in '/sys/fs/cgroup'.
+#   nsjail MUST be run from root and the cgroup mount path must refer to the
+#   root/host cgroup to use cgroupv2. If you use Docker, you may need to run the
+#   container with --cgroupns=host
+#
+# Daí o `cgroup: host` e o bind read-write de /sys/fs/cgroup em code-sandbox.
+# É concessão real de privilégio: somada ao CAP_SYS_ADMIN que o NsJail já exige,
+# o container passa a poder mexer na hierarquia de cgroup do host. O atacante
+# precisaria antes escapar do NsJail para o container, então o aumento é
+# incremental e não categórico — e é o modo documentado de rodar NsJail em
+# Docker. Verificado nesta configuração: job pedindo 3 GB contra teto de 2 GB
+# morre em 157 ms com code 137 / SIGKILL, sem mover a memória do host.
+#
+# Para não conceder isso: SANDBOX_USE_CGROUPV2=false e remova o `cgroup: host` e
+# o bind. O job fica sem teto individual e a proteção passa a ser só
+# SANDBOX_RLIMIT_AS mais o limite de memória do container (10g abaixo) — o host
+# segue protegido, mas um job desgovernado derruba os jobs concorrentes junto.
+
+services:
+  code-api:
+    container_name: code-api
+    build:
+      context: ${CODE_INTERPRETER_PATH:-../code-interpreter}
+      dockerfile: service/Dockerfile
+      target: api
+    environment:
+      - LOCAL_MODE=false
+      - CODEAPI_HARDENED_SANDBOX_MODE=true
+      - CODEAPI_AUTH_PROVIDER=none
+      - CODEAPI_ALLOW_AUTH_PROVIDER_NONE=true
+      - CODEAPI_HTTP_JSON_LIMIT=50mb
+      - SERVICE_PORT=3112
+      - SANDBOX_ENDPOINT=http://code-sandbox:2000/api/v2
+      - EGRESS_GATEWAY_URL=http://code-egress:3190
+      - FILE_SERVER_URL=http://code-files:3000
+      - TOOL_CALL_SERVER_URL=http://code-tools:3033
+      - CODEAPI_INTERNAL_SERVICE_TOKEN=${CODEAPI_INTERNAL_SERVICE_TOKEN:?defina no .env}
+      - REDIS_HOST=code-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${CODEAPI_REDIS_PASSWORD:?defina no .env}
+    depends_on:
+      - code-redis
+      - code-tools
+    networks:
+      - default
+      - codeint
+    restart: always
+    stop_grace_period: 1s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 1g
+          pids: 512
+
+  code-worker:
+    container_name: code-worker
+    build:
+      context: ${CODE_INTERPRETER_PATH:-../code-interpreter}
+      dockerfile: service/Dockerfile
+      target: worker
+    environment:
+      - LOCAL_MODE=false
+      - CODEAPI_HARDENED_SANDBOX_MODE=true
+      - CODEAPI_AUTH_PROVIDER=none
+      - CODEAPI_EXECUTION_MANIFEST_PRIVATE_KEY=${CODEAPI_EXECUTION_MANIFEST_PRIVATE_KEY:?defina no .env}
+      - SANDBOX_ENDPOINT=http://code-sandbox:2000/api/v2
+      - EGRESS_GATEWAY_URL=http://code-egress:3190
+      - CODEAPI_INTERNAL_SERVICE_TOKEN=${CODEAPI_INTERNAL_SERVICE_TOKEN:?defina no .env}
+      - REDIS_HOST=code-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${CODEAPI_REDIS_PASSWORD:?defina no .env}
+      - PYTHON_CONCURRENCY=${CODEAPI_PYTHON_CONCURRENCY:-2}
+      - OTHER_CONCURRENCY=${CODEAPI_OTHER_CONCURRENCY:-4}
+      - WORKER_HEALTH_PORT=3113
+    depends_on:
+      code-redis:
+        condition: service_started
+      code-sandbox:
+        condition: service_healthy
+    networks:
+      - codeint
+    restart: always
+    stop_grace_period: 1s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 1g
+          pids: 512
+
+  # CODEAPI_EGRESS_GRANT_SECRET vive SÓ aqui. `validateApiHardenedConfig` e
+  # `validateWorkerHardenedConfig` (service/src/secure-startup.ts:52,58) fazem
+  # `rejectValue` dele: se a variável aparecer no ambiente do code-api ou do
+  # code-worker, os dois se recusam a subir. É o motivo de nenhum serviço deste
+  # arquivo usar `env_file: .env` — isso injetaria o segredo em todos.
+  code-egress:
+    container_name: code-egress
+    build:
+      context: ${CODE_INTERPRETER_PATH:-../code-interpreter}
+      dockerfile: service/Dockerfile.egress-gateway
+      target: production
+    environment:
+      - SERVICE_NAME=egress-gateway
+      - CODEAPI_HARDENED_SANDBOX_MODE=true
+      - CODEAPI_EGRESS_LEDGER_REQUIRED=true
+      - EGRESS_GATEWAY_PORT=3190
+      - EGRESS_GATEWAY_FILE_SERVER_URL=http://code-files:3000
+      - EGRESS_GATEWAY_TOOL_CALL_SERVER_URL=http://code-tools:3033
+      - EGRESS_GATEWAY_MAX_TOOL_CALL_BYTES=1048576
+      - CODEAPI_EGRESS_GRANT_SECRET=${CODEAPI_EGRESS_GRANT_SECRET:?defina no .env, minimo 32 bytes}
+      - CODEAPI_INTERNAL_SERVICE_TOKEN=${CODEAPI_INTERNAL_SERVICE_TOKEN:?defina no .env}
+      - REDIS_HOST=code-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${CODEAPI_REDIS_PASSWORD:?defina no .env}
+    depends_on:
+      - code-files
+      - code-tools
+      - code-redis
+    networks:
+      - codeint
+    restart: always
+    stop_grace_period: 1s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 1g
+          pids: 512
+
+  code-tools:
+    container_name: code-tools
+    build:
+      context: ${CODE_INTERPRETER_PATH:-../code-interpreter}
+      dockerfile: service/Dockerfile.tool-call-server
+      target: production
+    environment:
+      - TOOL_CALL_SERVER_PORT=3033
+      - TOOL_CALL_REQUEST_TIMEOUT=300000
+      - TOOL_CALL_SESSION_EXPIRY=600
+      - REDIS_HOST=code-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${CODEAPI_REDIS_PASSWORD:?defina no .env}
+      - CODEAPI_INTERNAL_SERVICE_TOKEN=${CODEAPI_INTERNAL_SERVICE_TOKEN:?defina no .env}
+    depends_on:
+      - code-redis
+    networks:
+      - codeint
+    restart: always
+    stop_grace_period: 1s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512m
+          pids: 512
+
+  code-sandbox:
+    container_name: code-sandbox
+    build:
+      context: ${CODE_INTERPRETER_PATH:-../code-interpreter}
+      dockerfile: api/Dockerfile
+      target: sandbox-build
+    entrypoint: ['/sandbox_api/entrypoint.sh']
+    privileged: false
+    devices:
+      - /dev/null:/dev/kvm
+    # Exigência do NsJail para cgroup v2 — ver a nota no cabeçalho.
+    cgroup: host
+    security_opt:
+      - seccomp=${CODE_INTERPRETER_PATH:-../code-interpreter}/seccomp/nsjail.json
+    cap_add:
+      - SYS_ADMIN
+      - SYS_CHROOT
+      - SYS_PTRACE
+      - SETUID
+      - SETGID
+      - NET_ADMIN
+      - DAC_OVERRIDE
+      - DAC_READ_SEARCH
+      - CHOWN
+      - FOWNER
+      - FSETID
+      - KILL
+      - SETFCAP
+      - MKNOD
+    volumes:
+      # Os dois destinos são o que a mesclagem com docker-compose.mac.yml produz.
+      # SANDBOX_PACKAGES_DIRECTORY aponta para /pkgs; /host-packages fica para o
+      # caminho KVM, desativado via LAUNCHER_PACKAGES_HOST.
+      - ${CODE_INTERPRETER_PATH:-../code-interpreter}/data/pkgs:/host-packages:ro
+      - ${CODE_INTERPRETER_PATH:-../code-interpreter}/data/pkgs:/pkgs:ro
+      # Read-write de propósito: o NsJail precisa criar seu subtree em
+      # /sys/fs/cgroup/sandbox_api. Ver a nota no cabeçalho.
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    environment:
+      - KVM_ENABLED=false
+      - SANDBOX_USE_CGROUPV2=true
+      - SANDBOX_REMOVE_UMOUNT_AFTER_STARTUP=false
+      - LAUNCHER_PACKAGES_HOST=/disabled-host-packages
+      - CODEAPI_HARDENED_SANDBOX_MODE=true
+      - EGRESS_GATEWAY_URL=http://code-egress:3190
+      - SANDBOX_EXECUTE_BODY_LIMIT=50mb
+      - SANDBOX_PACKAGES_DIRECTORY=/pkgs
+      - SANDBOX_LOG_LEVEL=${CODEAPI_SANDBOX_LOG_LEVEL:-INFO}
+      - SANDBOX_OUTPUT_MAX_SIZE=65536
+      - SANDBOX_MAX_CONCURRENT_JOBS=${CODEAPI_MAX_CONCURRENT_JOBS:-4}
+      - SANDBOX_PER_JOB_UIDS=true
+      - SANDBOX_JOB_UID_BASE=200000
+      - SANDBOX_JOB_GID_BASE=200000
+      - SANDBOX_WORKSPACE_REAPER_MAX_AGE_SECONDS=3600
+      # Tetos por job. Sem estes dois o job roda sem limite de memória — ver a
+      # nota no cabeçalho.
+      - SANDBOX_RUN_MEMORY_LIMIT=${CODEAPI_RUN_MEMORY_LIMIT:-2147483648}
+      - SANDBOX_RLIMIT_AS=${CODEAPI_RLIMIT_AS:-4096}
+      - SANDBOX_RUN_TIMEOUT=300000
+      - SANDBOX_RUN_CPU_TIME=300000
+      - SANDBOX_COMPILE_TIMEOUT=30000
+      - SANDBOX_ALLOWED_LOCAL_NETWORK_PORT=3190
+      - SANDBOX_FORWARD_TARGET=code-egress:3190
+      - SANDBOX_REQUIRE_EGRESS_MANIFEST=true
+      - SANDBOX_EXECUTION_MANIFEST_PUBLIC_KEY=${SANDBOX_EXECUTION_MANIFEST_PUBLIC_KEY:?defina no .env}
+    depends_on:
+      code-egress:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          bun -e "fetch('http://localhost:2000/api/v2/runtimes').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 20s
+    networks:
+      - codeint
+    restart: always
+    stop_grace_period: 1s
+    deploy:
+      resources:
+        limits:
+          # Cinto de segurança de container, além do teto por job: 4 jobs a 2 GB
+          # cabem, um vazamento não derruba o host.
+          cpus: '8.00'
+          memory: 10g
+          pids: 4096
+
+  code-files:
+    container_name: code-files
+    build:
+      context: ${CODE_INTERPRETER_PATH:-../code-interpreter}
+      dockerfile: service/Dockerfile
+      target: production
+    environment:
+      - FILE_SERVER_PORT=3000
+      # Criado no primeiro boot por makeBucket() (service/src/file-server.ts:152).
+      - MINIO_BUCKET=${CODEAPI_MINIO_BUCKET:-codeapi}
+      - MINIO_ENDPOINT=code-minio
+      - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=${CODEAPI_MINIO_ROOT_USER:?defina no .env}
+      - MINIO_SECRET_KEY=${CODEAPI_MINIO_ROOT_PASSWORD:?defina no .env}
+      - REDIS_HOST=code-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${CODEAPI_REDIS_PASSWORD:?defina no .env}
+      - CODEAPI_INTERNAL_SERVICE_TOKEN=${CODEAPI_INTERNAL_SERVICE_TOKEN:?defina no .env}
+    depends_on:
+      - code-minio
+      - code-redis
+    networks:
+      - codeint
+    restart: always
+    stop_grace_period: 1s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 1g
+          pids: 512
+
+  code-redis:
+    container_name: code-redis
+    image: redis:7-alpine
+    command: redis-server --requirepass ${CODEAPI_REDIS_PASSWORD:?defina no .env}
+    networks:
+      - codeint
+    restart: always
+    stop_grace_period: 1s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 512m
+          pids: 512
+
+  code-minio:
+    container_name: code-minio
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${CODEAPI_MINIO_ROOT_USER:?defina no .env}
+      - MINIO_ROOT_PASSWORD=${CODEAPI_MINIO_ROOT_PASSWORD:?defina no .env}
+    volumes:
+      - code_minio_data:/data
+    networks:
+      - codeint
+    restart: always
+    stop_grace_period: 1s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 2g
+          pids: 512
+
+networks:
+  codeint:
+    driver: bridge
+
+volumes:
+  code_minio_data:
+
+# ---------------------------------------------------------------------------
+# Bloco para o .env de prod
+# ---------------------------------------------------------------------------
+#
+# O par de chaves de assinatura do manifesto e todos os segredos precisam ser
+# regenerados: os defaults do upstream são públicos, estão no compose deles.
+#
+#   openssl genpkey -algorithm ed25519 -out /tmp/ci.pem
+#   echo "CODEAPI_EXECUTION_MANIFEST_PRIVATE_KEY=$(openssl pkey -in /tmp/ci.pem -outform DER | base64 -w0)"
+#   echo "SANDBOX_EXECUTION_MANIFEST_PUBLIC_KEY=$(openssl pkey -in /tmp/ci.pem -pubout -outform DER | base64 -w0)"
+#   shred -u /tmp/ci.pem
+#
+#   echo "CODEAPI_INTERNAL_SERVICE_TOKEN=$(openssl rand -hex 32)"
+#   echo "CODEAPI_EGRESS_GRANT_SECRET=$(openssl rand -hex 32)"
+#   echo "CODEAPI_REDIS_PASSWORD=$(openssl rand -hex 24)"
+#   echo "CODEAPI_MINIO_ROOT_PASSWORD=$(openssl rand -hex 24)"
+#
+# Mais, no mesmo .env:
+#
+#   CODEAPI_MINIO_ROOT_USER=codeapi
+#
+#   # O nome antigo CODE_BASEURL não é lido por nada: getCodeBaseURL() só olha
+#   # LIBRECHAT_CODE_BASEURL, e sem ela cai na API paga que não existe mais.
+#   LIBRECHAT_CODE_BASEURL=http://code-api:3112/v1
+#
+#   # Não é usada na autenticação (o CodeExecutor.js manda o header User-Id),
+#   # mas precisa existir: o checkbox do execute_code no editor de agente fica
+#   # `disabled` quando ela vem vazia.
+#   LIBRECHAT_CODE_API_KEY=nao-usada-auth-via-header-user-id
+#
+# Opcionais, com o default entre parênteses:
+#
+#   CODE_INTERPRETER_PATH (../code-interpreter)
+#   CODEAPI_MAX_CONCURRENT_JOBS (4)
+#   CODEAPI_RUN_MEMORY_LIMIT (2147483648 = 2 GB, em bytes)
+#   CODEAPI_RLIMIT_AS (4096, em MB)
+#   CODEAPI_PYTHON_CONCURRENCY (2)   CODEAPI_OTHER_CONCURRENCY (4)
+#   CODEAPI_SANDBOX_LOG_LEVEL (INFO — o upstream usa DEBUG)
+#   CODEAPI_MINIO_BUCKET (codeapi)

@@ -1,10 +1,8 @@
 const { logger } = require('@librechat/data-schemas');
-const {
-  EnvVar,
-  Calculator,
-  createSearchTool,
-  createCodeExecutionTool,
-} = require('@librechat/agents');
+const { EnvVar, Calculator, createSearchTool } = require('@librechat/agents');
+/* Local tool instead of the lib's: the lib hardcodes `X-API-Key`, which the
+ * self-hosted Code Interpreter rejects with 401. See CodeExecutor.js. */
+const { createCodeExecutionTool } = require('../structured/CodeExecutor');
 const {
   checkAccess,
   createSafeUser,
@@ -264,13 +262,13 @@ const loadTools = async ({
         if (toolContext) {
           toolContextMap[tool] = toolContext;
         }
-        const CodeExecutionTool = createCodeExecutionTool({
+        /* `...authValues` is deliberately not spread here: the lib's tool used to
+         * forward the API key inside the POST body. Auth now travels in headers,
+         * built from `user_id` — see CodeExecutor.js `buildAuthHeaders`. */
+        return createCodeExecutionTool({
           user_id: user,
           files,
-          ...authValues,
         });
-        CodeExecutionTool.apiKey = codeApiKey;
-        return CodeExecutionTool;
       };
       continue;
     } else if (tool === Tools.file_search) {

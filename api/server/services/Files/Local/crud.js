@@ -67,7 +67,16 @@ async function saveLocalBuffer({ userId, buffer, fileName, basePath = 'images' }
   try {
     const { publicPath, uploads } = paths;
 
-    const directoryPath = path.join(basePath === 'images' ? publicPath : uploads, basePath, userId);
+    /* The two roots nest differently, so the `basePath` segment must only be
+     * added for images. `paths.imageOutput` already ends in `/images`, whereas
+     * `paths.uploads` IS the uploads root — appending 'uploads' again wrote to
+     * `<uploads>/uploads/<userId>` while the returned path said
+     * `/uploads/<userId>`, so `getLocalFileStream` looked one level too high and
+     * every read failed with ENOENT. This layout matches `uploadLocalFile`. */
+    const directoryPath =
+      basePath === 'images'
+        ? path.join(publicPath, basePath, userId)
+        : path.join(uploads, userId);
 
     if (!fs.existsSync(directoryPath)) {
       fs.mkdirSync(directoryPath, { recursive: true });
