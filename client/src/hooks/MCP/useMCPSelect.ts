@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
 import { useRecoilState } from 'recoil';
@@ -16,45 +16,42 @@ export function useMCPSelect({ conversationId }: { conversationId?: string | nul
   const configuredServerList = useMemo(() => [...configuredServers], [configuredServers]);
 
   const [isPinned, setIsPinned] = useAtom(mcpPinnedAtom);
-  // rawMcpValues: null = nunca configurado, [] = limpado, [...] = seleção
-  const [rawMcpValues, setMCPValuesRaw] = useAtom(mcpValuesAtomFamily(key));
-  // mcpValues exposto externamente é sempre string[] (referência estável p/ evitar re-render)
-  const mcpValues = useMemo(() => rawMcpValues ?? [], [rawMcpValues]);
+  const [mcpValues, setMCPValuesRaw] = useAtom(mcpValuesAtomFamily(key));
   const [ephemeralAgent, setEphemeralAgent] = useRecoilState(ephemeralAgentByConvoId(key));
+  const hasAutoSelectedRef = useRef(false);
 
-  // Nunca configurado (null em storage) + ephemeral zerado → auto-selecionar uma única vez
   useEffect(() => {
-    if (rawMcpValues !== null) return;
-    if (ephemeralAgent?.mcp !== undefined) return;
-    if (configuredServerList.length === 0) return;
-    setMCPValuesRaw(configuredServerList);
-  }, [rawMcpValues, ephemeralAgent?.mcp, configuredServerList, setMCPValuesRaw]);
+    hasAutoSelectedRef.current = false;
+  }, [key]);
 
-  /**
-   * Sincroniza ephemeralAgent → Jotai apenas quando o ephemeral muda por fora
-   * (ex: template de agente aplicado, fluxo OAuth). NÃO existe efeito no sentido
-   * inverso (Jotai → ephemeral): esse caminho é feito diretamente dentro de
-   * `setMCPValues`, evitando o ping-pong de dois efeitos se retro-alimentando.
-   */
+  // Sync Jotai state with ephemeral agent state; auto-enable visible MCPs once per conversation
   useEffect(() => {
-    const mcps = ephemeralAgent?.mcp;
-    if (mcps === undefined) {
-      return;
-    }
-
-    // mcp_clear = usuário explicitamente desligou tudo nesta sessão
+    const mcps = ephemeralAgent?.mcp ?? [];
     if (mcps.length === 1 && mcps[0] === Constants.mcp_clear) {
-      if (mcpValues.length !== 0) {
-        setMCPValuesRaw([]);
-      }
+      hasAutoSelectedRef.current = true;
+      setMCPValuesRaw([]);
       return;
     }
-
-    const activeMcps = mcps.filter((mcp) => configuredServers.has(mcp));
-    if (!isEqual(activeMcps, mcpValues)) {
+    if (mcps.length > 0) {
+      hasAutoSelectedRef.current = true;
+      const activeMcps = mcps.filter((mcp) => configuredServers.has(mcp));
       setMCPValuesRaw(activeMcps);
+      return;
     }
-  }, [ephemeralAgent?.mcp, configuredServers, mcpValues, setMCPValuesRaw]);
+    if (!hasAutoSelectedRef.current && configuredServerList.length > 0) {
+      hasAutoSelectedRef.current = true;
+      setMCPValuesRaw(configuredServerList);
+    }
+  }, [ephemeralAgent?.mcp, setMCPValuesRaw, configuredServers, configuredServerList]);
+
+  useEffect(() => {
+    setEphemeralAgent((prev) => {
+      if (!isEqual(prev?.mcp, mcpValues)) {
+        return { ...(prev ?? {}), mcp: mcpValues };
+      }
+      return prev;
+    });
+  }, [mcpValues, setEphemeralAgent]);
 
   useEffect(() => {
     const mcpStorageKey = `${LocalStorageKeys.LAST_MCP_}${key}`;
@@ -63,23 +60,15 @@ export function useMCPSelect({ conversationId }: { conversationId?: string | nul
     }
   }, [mcpValues, key]);
 
-  /** Escreve nos dois stores de uma vez (sem depender de efeito para o caminho de volta). */
+  /** Stable memoized setter */
   const setMCPValues = useCallback(
     (value: string[]) => {
       if (!Array.isArray(value)) {
         return;
       }
       setMCPValuesRaw(value);
-      setEphemeralAgent((prev) => {
-        // Vazio → propagar mcp_clear para que remontagem não re-ligue servidores desligados
-        const nextMcp = value.length === 0 ? [Constants.mcp_clear as string] : value;
-        if (!isEqual(prev?.mcp, nextMcp)) {
-          return { ...(prev ?? {}), mcp: nextMcp };
-        }
-        return prev;
-      });
     },
-    [setMCPValuesRaw, setEphemeralAgent],
+    [setMCPValuesRaw],
   );
 
   return {
