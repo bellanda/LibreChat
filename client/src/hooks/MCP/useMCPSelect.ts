@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
 import { useRecoilState } from 'recoil';
@@ -13,36 +13,27 @@ export function useMCPSelect({ conversationId }: { conversationId?: string | nul
   const configuredServers = useMemo(() => {
     return new Set(Object.keys(startupConfig?.mcpServers ?? {}));
   }, [startupConfig?.mcpServers]);
-  const configuredServerList = useMemo(() => [...configuredServers], [configuredServers]);
 
   const [isPinned, setIsPinned] = useAtom(mcpPinnedAtom);
   const [mcpValues, setMCPValuesRaw] = useAtom(mcpValuesAtomFamily(key));
   const [ephemeralAgent, setEphemeralAgent] = useRecoilState(ephemeralAgentByConvoId(key));
-  const hasAutoSelectedRef = useRef(false);
 
-  useEffect(() => {
-    hasAutoSelectedRef.current = false;
-  }, [key]);
-
-  // Sync Jotai state with ephemeral agent state; auto-enable visible MCPs once per conversation
+  // Sync Jotai state with ephemeral agent state only. No server is ever seeded here just
+  // because it's configured/visible: mcpValues comes exclusively from what the ephemeral
+  // agent already has recorded (mcp_clear, a filtered list) or from the user's own action via
+  // setMCPValues below. Auto-selecting configured servers was the source of the "MCP servers
+  // keep activating themselves" reports — do not reintroduce it.
   useEffect(() => {
     const mcps = ephemeralAgent?.mcp ?? [];
     if (mcps.length === 1 && mcps[0] === Constants.mcp_clear) {
-      hasAutoSelectedRef.current = true;
       setMCPValuesRaw([]);
       return;
     }
     if (mcps.length > 0) {
-      hasAutoSelectedRef.current = true;
       const activeMcps = mcps.filter((mcp) => configuredServers.has(mcp));
       setMCPValuesRaw(activeMcps);
-      return;
     }
-    if (!hasAutoSelectedRef.current && configuredServerList.length > 0) {
-      hasAutoSelectedRef.current = true;
-      setMCPValuesRaw(configuredServerList);
-    }
-  }, [ephemeralAgent?.mcp, setMCPValuesRaw, configuredServers, configuredServerList]);
+  }, [ephemeralAgent?.mcp, setMCPValuesRaw, configuredServers]);
 
   useEffect(() => {
     setEphemeralAgent((prev) => {
