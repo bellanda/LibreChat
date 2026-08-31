@@ -15,3 +15,7 @@ docs
 
 # Ignore all hidden files
 .*
+
+# Code Interpreter auto-hospedado: clone com 3,6 GB de runtimes em data/pkgs.
+# Sem esta linha todo `docker compose build api` manda tudo isso para o daemon.
+code-interpreter

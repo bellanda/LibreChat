@@ -189,3 +189,7 @@ packages/sandbox/
 storage/
 
 .tmp_pymongo/
+
+conversation-viewer/
+# Code Interpreter auto-hospedado (clone proprio, ver docker-compose.code-interpreter.yml)
+/code-interpreter/

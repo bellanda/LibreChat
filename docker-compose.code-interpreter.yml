@@ -8,8 +8,20 @@
 # Ativação em prod — uma vez
 # ---------------------------------------------------------------------------
 #
-#   1. Clonar o repo ao lado do LibreChat:
-#        git clone git@github.com:LibreChat-AI/code-interpreter.git ../code-interpreter
+#   1. Clonar o repo. Dentro da pasta do LibreChat, que é o layout usado:
+#        git clone git@github.com:LibreChat-AI/code-interpreter.git code-interpreter
+#        # e no .env:  CODE_INTERPRETER_PATH=./code-interpreter
+#
+#      Já está no .gitignore (`/code-interpreter/`) e no .dockerignore
+#      (`code-interpreter`). O segundo não é cosmético: o serviço `api` builda
+#      com `context: .`, então sem essa linha todo `docker compose build api`
+#      empacota os 3,6 GB de data/pkgs e manda para o daemon.
+#
+#      Cuidado com um efeito colateral do clone ignorado: um
+#      `git clean -xdf` na pasta do LibreChat apaga o clone inteiro, pkgs
+#      incluídos — 40-60 min para regerar. Se isso incomodar, clone como irmão
+#      (`../code-interpreter`, o default de CODE_INTERPRETER_PATH) e nada disso
+#      se aplica.
 #
 #   2. Gerar os runtimes de linguagem. São ~3,6 GB GERADOS na máquina, não
 #      versionados — por isso não existe pasta pronta para copiar:
