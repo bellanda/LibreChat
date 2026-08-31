@@ -13,6 +13,7 @@ const {
   mergeFileConfig,
 } = require('librechat-data-provider');
 const { toResourceId } = require('~/app/clients/tools/structured/CodeExecutor');
+const { primeSkillFiles } = require('~/server/services/Files/Code/skills');
 const { filterFilesByAgentAccess } = require('~/server/services/Files/permissions');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { convertImage } = require('~/server/services/Files/images/convert');
@@ -282,6 +283,19 @@ const primeFiles = async (options, apiKey) => {
   const sessions = new Map();
   let toolContext = '';
 
+  /* Skill packs go in before the user's own files, for two reasons: the sandbox
+   * lists them in that order in the working directory, and the tenant-wide
+   * baseline reads better ahead of "just attached by user" in the prompt.
+   * These are `kind: 'skill'`, so no agent has to carry them as attachments. */
+  const skills = primeSkillFiles();
+  for (const file of skills.files) {
+    if (!toolContext) {
+      toolContext = `- Note: The following files are available in the "${Tools.execute_code}" tool environment:`;
+    }
+    toolContext += `\n\t- /mnt/data/${file.name}`;
+    files.push(file);
+  }
+
   for (let i = 0; i < dbFiles.length; i++) {
     const file = dbFiles[i];
     if (!file) {
@@ -394,6 +408,13 @@ const primeFiles = async (options, apiKey) => {
    * packages/api/src/agents/run.ts), which makes it the natural place to say so.
    * Deliberately generic: what a given module offers belongs in the agent's own
    * instructions, not hardcoded here. */
+  /* A pack's own note goes after the file list so the indented list stays intact.
+   * This is where a brand pack says what its module is for — kept in the pack's
+   * `skill.json` rather than here, so adding a theme is data, not code. */
+  for (const note of skills.notes) {
+    toolContext += `\n- ${note}`;
+  }
+
   const pythonModules = files
     .filter((file) => file.name.toLowerCase().endsWith('.py'))
     .map((file) => file.name.replace(/\.py$/i, ''));

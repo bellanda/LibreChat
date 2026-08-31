@@ -193,3 +193,7 @@ storage/
 conversation-viewer/
 # Code Interpreter auto-hospedado (clone proprio, ver docker-compose.code-interpreter.yml)
 /code-interpreter/
+
+# Manifesto das skill packs do Code Interpreter: os ids de storage sao
+# especificos de cada deployment (local != prod), escritos por config/upload-code-skill.js
+config/code-skills.json

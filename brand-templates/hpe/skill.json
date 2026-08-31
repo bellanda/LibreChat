@@ -1,0 +1,6 @@
+{
+  "id": "hpe-brand",
+  "description": "Identidade visual HPE Automotores para PPTX, XLSX e DOCX gerados no Code Interpreter",
+  "include": ["hpe_brand.py", "assets/*", "assets/fonts/*"],
+  "prompt": "For any HPE-branded deliverable (apresentação/PPTX, planilha/XLSX, documento/DOCX), `import hpe_brand` instead of building the file from scratch — it carries the brand's real colors, 16:9 geometry, master art and typography. Slides: novo_deck, slide_capa, slide_secao, slide_conteudo, slide_cards, slide_tabela, slide_grafico, slide_livre, caixa_texto, aplicar_marca, salvar. Charts: call registrar_fontes() then estilo_grafico() before plotting, and cores(n) for the palette. Spreadsheets: nova_planilha, escrever_tabela, salvar_planilha. Documents: novo_documento, salvar_documento. Use slide_livre/aplicar_marca when a layout does not fit the ready-made helpers. Call diagnostico() if you need to know which assets are present. Ignore this module entirely when the user is not asking for an HPE-branded document."
+}

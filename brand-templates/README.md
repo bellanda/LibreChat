@@ -20,8 +20,9 @@ código empata os dois.
 
 ```
 <marca>/
+  skill.json                o que sobe e o que dizer ao modelo — ver abaixo
   <marca>_brand.py          módulo importado pelo modelo (autocontido)
-  INSTRUCOES-AGENTE.md      bloco para colar em "Instructions" do agente
+  INSTRUCOES-AGENTE.md      bloco para colar em "Instructions" (só se não usar skill)
   README.md                 decisões, valores da marca, evidência dos testes
   build_template_base.py    (opcional) regenera o template enxuto
   assets/
@@ -32,10 +33,65 @@ código empata os dois.
     origem/                 material de partida — NÃO vai para o sandbox
 ```
 
-A separação `assets/` × `assets/origem/` importa: só o primeiro nível é anexado
-ao agente. `origem/` guarda o `.pptx` original entregue pelo time e as artes de
-que os assets foram extraídos — material de referência, geralmente pesado
-(o original da HPE tem 8 MB contra 239 KB da base enxuta).
+A separação `assets/` × `assets/origem/` importa: `origem/` guarda o `.pptx`
+original entregue pelo time e as artes de que os assets foram extraídos —
+material de referência, geralmente pesado (o original da HPE tem 8 MB contra
+245 KB da base enxuta).
+
+## Como a marca chega ao sandbox
+
+Duas formas. A segunda é a preferida.
+
+**Anexar ao agente.** Sobe os arquivos de `assets/` como recursos do
+`execute_code` de um agente. Funciona, mas precisa ser repetido em cada agente
+e em cada ambiente, e o modelo só sabe o que fazer se você colar o
+`INSTRUCOES-AGENTE.md` nas Instructions.
+
+**Como skill pack (recomendado).** O Code Interpreter tem um escopo `kind:
+'skill'` cujo sessionKey omite a dimensão do usuário
+(`service/src/session-key.ts`), então um upload vale para todo o tenant. Sobe
+uma vez, do servidor, e entra em toda execução de todo agente — sem anexo em
+lugar nenhum:
+
+```bash
+npm run upload-code-skill -- hpe --dry-run   # confere o que vai subir
+npm run upload-code-skill -- hpe
+```
+
+O script grava `config/code-skills.json` (não versionado: os ids de storage são
+de cada deployment) e o servidor relê pelo mtime, sem restart. Cada reupload
+incrementa `version`, que é como o serviço invalida o cache da revisão
+anterior. Para desligar tudo: `CODE_SKILLS_ENABLED=false`.
+
+### skill.json
+
+```json
+{
+  "id": "hpe-brand",
+  "description": "para humanos, aparece no log do servidor",
+  "include": ["hpe_brand.py", "assets/*", "assets/fonts/*"],
+  "prompt": "instrução injetada no system message quando a pack está ativa"
+}
+```
+
+`id` é validado contra `/^[A-Za-z0-9_.:-]+$/` — o serviço devolve 400 na
+requisição inteira se fugir disso.
+
+`include` aceita caminho literal ou um `*` no fim de um diretório, e pega
+**apenas arquivos**. É intencionalmente limitado: um glob de verdade convidaria
+padrões que arrastam `assets/origem/` para dentro do sandbox. Cada
+subdiretório precisa do seu próprio padrão — daí `assets/fonts/*` estar
+listado separadamente.
+
+Os arquivos sobem achatados, com o nome base, que é o que o sandbox vê no
+diretório de trabalho. Dois padrões que resolvam para o mesmo nome base fazem
+o script falhar em vez de sobrescrever em silêncio.
+
+`prompt` é o que substitui o `INSTRUCOES-AGENTE.md`: ele entra no system
+message de toda execução, junto da lista de arquivos disponíveis. Vale escrever
+curto — é custo fixo em cada mensagem — e vale dizer explicitamente quando
+**não** usar o módulo, senão o modelo tenta aplicar marca em tarefa que não
+pede.
 
 ## Convenções
 

@@ -31,7 +31,12 @@ const localStorageAtoms = {
   enterToSend: atomWithLocalStorage('enterToSend', true),
   maximizeChatSpace: atomWithLocalStorage('maximizeChatSpace', false),
   chatDirection: atomWithLocalStorage('chatDirection', 'LTR'),
-  showCode: atomWithLocalStorage(LocalStorageKeys.SHOW_ANALYSIS_CODE, true),
+  /* Fechado por default, como os demais blocos de tool call. O upstream abre
+   * ("Sempre mostrar código ao usar o interpretador de código", Configurações ->
+   * Chat), o que empurra a resposta do modelo para fora da tela toda vez que o
+   * interpretador roda. Quem já mexeu no toggle mantém a própria escolha: o
+   * valor default só vale quando não há nada em localStorage. */
+  showCode: atomWithLocalStorage(LocalStorageKeys.SHOW_ANALYSIS_CODE, false),
   saveDrafts: atomWithLocalStorage('saveDrafts', true),
   showScrollButton: atomWithLocalStorage('showScrollButton', true),
   forkSetting: atomWithLocalStorage('forkSetting', ''),
